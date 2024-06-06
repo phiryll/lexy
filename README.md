@@ -20,7 +20,7 @@ different order. The only way to consistently order the semantic
 values of different numeric types is to convert everything to the same
 exact numeric type before encoding.
 
-Lexy has an alternative encoder/decoder that omits type information.
+Lexy has an alternate encoder/decoder that omits type information.
 This can be used if you know the exact type of what you're decoding.
 Note that instances of different types will necessarily be randomly
 ordered if you omit type information.
@@ -40,14 +40,15 @@ Lexy can encode:
   **TODO:** Describe this encoding.
 * `string`  
   A `string` is encoded simply as its bytes. The resulting ordering
-  may not reflect the semantic ordering of `string`s in your use case,
-  because a `string` in go is essentially an immutable `[]byte` with
-  no specific character encoding. If your `string` contains UTF-8
-  encoded text, then the encoded ordering will be the same as the
-  lexicographical ordering of the corresponding Unicode code points.
-  This does not always sort alphabetically, because (for example) the
-  code points for `a` and `&#E9` will sort after `Z`. Collation is
-  locale-dependent and Lexy makes no attempt to address this.
+  may not reflect the semantic ordering of your use case, because a
+  `string` in go is essentially an immutable `[]byte` with no specific
+  character encoding, or even text semantics. If your `string`
+  contains UTF-8 encoded text, then the encoded ordering will be the
+  same as the lexicographical ordering of the corresponding Unicode
+  code points. This is not alphabetical, because (for example) the
+  code points for `a` and <code>&#E9</code> will sort after `Z`.
+  Collation is locale-dependent and Lexy makes no attempt to address
+  this.
 * `time.Time`  
   A `time.Time` is encoded as `Time.MarshalText()` of its UTC instant
   followed by its time zone as returned by `Time.Location().String()`.
@@ -67,7 +68,7 @@ Lexy does not currently encode these, but might in the future:
 * `time.Duration`
 
 Lexy cannot encode:
-* `uint`, `int`, `uintptr`__
+* `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
 * `complex64`
 * `complex128`
