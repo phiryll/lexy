@@ -32,11 +32,11 @@ Lexy can encode:
   These are simply encoded in big-endian byte order.
 * `int8`, `int16`, `int32` (aka `rune`), `int64`  
   **TODO:** Describe this encoding.
-* `float32`, `float64`
+* `float32`, `float64`  
   **TODO:** Describe this encoding.
-* `math.big.Int`
+* `math.big.Int`  
   **TODO:** Describe this encoding.
-* `math.big.Float`
+* `math.big.Float`  
   **TODO:** Describe this encoding.
 * `string`  
   A `string` is encoded simply as its bytes. The resulting ordering
