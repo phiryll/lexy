@@ -15,15 +15,16 @@ allowing it to be decoded as `any`. A side effect of this is that
 encoded values are ordered by type first and value second. For
 example, the encodings of all `int8`s may be less than the encodings
 of all `int16`s, regardless of numeric value. Lexy has a default set
-of type prefix values which can be overridden to sort types in a
-different order. The only way to consistently order the semantic
-values of different numeric types is to convert everything to the same
-exact numeric type before encoding.
+of type prefix values which can be overridden to order types
+differently. The only way to consistently order the semantic values of
+different numeric types is to convert everything to the same exact
+numeric type before encoding.
 
 Lexy has an alternate encoder/decoder that omits type information.
 This can be used if you know the exact type of what you're decoding.
-Note that instances of different types will necessarily be randomly
-ordered if you omit type information.
+Note that instances of different types will necessarily be unordered
+with respect to each other if you omit type information, and range
+queries on a heterogeneous data set will return multiple types.
 
 Lexy can encode:
 * `bool`  
@@ -62,8 +63,15 @@ Lexy can encode:
   Lexy cannot access unexported struct fields. Otherwise, structs
   behave similarly to maps with string keys.
 
-Lexy does not currently encode these, but might in the future:
+Lexy does not currently encode these, but should in the future:
 * `nil`  
+  Most of the time it might be sufficient to just not encode `nil` at
+  all and treat it as an absence of a value. For example, just skip a
+  `nil`-valued struct field. However, `nil` maps and slices are not
+  the same as empty maps and slices.
+* pointer types  
+  Pointers are a mandatory use case, especially within slices and
+  structs.
 * `time.Duration`
 
 Lexy cannot encode:
@@ -72,7 +80,6 @@ Lexy cannot encode:
 * `complex64`
 * `complex128`
 * `math.big.Rat`
-* pointer types
 * function types
 * interface types
 * channel types
@@ -87,6 +94,8 @@ implies B is a spatial subset of A. This is essentially a binary
 variant of [geohash](https://en.wikipedia.org/wiki/Geohash). Because
 of the additional dependencies, geospatial support should either be
 optional in this project, or a separate project entirely.
+[This](https://pkg.go.dev/github.com/go-spatial/geom) might be an
+option.
 
 Provide some mechanism to handle user-defined types. The user would
 need to provide an encoder/decoder for that type, and a type prefix if
