@@ -56,7 +56,7 @@ Lexy can encode:
 * maps of supported types  
   Whether map keys are ordered is optional because of the sorting
   overhead. Encoding and decoding will be correct if unordered keys
-  are used, but the resulting byte slices will be neither orderable
+  are used, but the resulting byte strings will be neither orderable
   nor comparable.
 * structs of supported types  
   Lexy cannot access unexported struct fields. Otherwise, structs
@@ -87,3 +87,10 @@ implies B is a spatial subset of A. This is essentially a binary
 variant of [geohash](https://en.wikipedia.org/wiki/Geohash). Because
 of the additional dependencies, geospatial support should either be
 optional in this project, or a separate project entirely.
+
+Provide some mechanism to handle user-defined types. The user would
+need to provide a encoder/decoder for that type, and a type prefix if
+using that feature. This might be as simple as using the
+`encoding.BinaryMarshaler` and `encoding.BinaryUnmarshaler`
+interfaces. The WKT encoder/decoder would then be a specific instance
+of this.
