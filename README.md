@@ -10,15 +10,15 @@ use an [ordered key-value
 store](https://en.wikipedia.org/wiki/Ordered_Key-Value_Store), or an
 ordered binary trie.
 
-Lexy will normally prefix the encoded value with type information,
-allowing it to be decoded as `any`. A side effect of this is that
-encoded values are ordered by type first and value second. For
-example, the encodings of all `int8`s may be less than the encodings
-of all `int16`s, regardless of numeric value. Lexy has a default set
-of type prefix values which can be overridden to order types
-differently. The only way to consistently order the semantic values of
-different numeric types is to convert everything to the same exact
-numeric type before encoding.
+Lexy will prefix the encoded value with type information, allowing it
+to be decoded as `any`. A side effect of this is that encoded values
+are ordered by type first and value second. For example, the encodings
+of all `int8`s may be less than the encodings of all `int16`s,
+regardless of numeric value. Lexy has a default set of type prefix
+values which can be overridden to order types differently. The only
+way to consistently order the semantic values of different numeric
+types is to convert everything to the same exact numeric type before
+encoding.
 
 Lexy can encode:
 * `bool`  
@@ -73,7 +73,9 @@ Lexy cannot encode:
   These types have implementation-specific sizes.
 * `complex64`
 * `complex128`
-* `math.big.Rat`
+* `math.big.Rat`  
+  While rational numbers are ordered, there is no base in which they
+  can be represented at full precision.
 * function types
 * interface types
 * channel types
@@ -83,7 +85,7 @@ Lexy cannot encode:
 Provide an alternate encoder/decoder that omits type information. This
 can be used if you know the exact type of what you're decoding. Note
 that instances of different types will necessarily be unordered with
-respect to each other if you omit type information, and range queries
+respect to each other if you omit type information, and a range query
 on a heterogeneous data set could return multiple types.
 
 Provide some mechanism to handle user-defined types. The user would
