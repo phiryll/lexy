@@ -89,7 +89,7 @@ of the additional dependencies, geospatial support should either be
 optional in this project, or a separate project entirely.
 
 Provide some mechanism to handle user-defined types. The user would
-need to provide a encoder/decoder for that type, and a type prefix if
+need to provide an encoder/decoder for that type, and a type prefix if
 using that feature. This might be as simple as using the
 `encoding.BinaryMarshaler` and `encoding.BinaryUnmarshaler`
 interfaces. The WKT encoder/decoder would then be a specific instance
