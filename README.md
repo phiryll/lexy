@@ -46,8 +46,9 @@ Lexy can encode:
   contains UTF-8 encoded text, then the encoded ordering will be the
   same as the lexicographical ordering of the corresponding Unicode
   code points. This is not alphabetical, because (for example) the
-  code points for `a` and `&#E9;` will sort after `Z`. Collation is
-  locale-dependent and Lexy makes no attempt to address this.
+  code points for `a` and <code>&#E9;</code> will sort after `Z`.
+  Collation is locale-dependent and Lexy makes no attempt to address
+  this.
 * `time.Time`  
   A `time.Time` is encoded as `Time.MarshalText()` of its UTC instant
   followed by its time zone as returned by `Time.Location().String()`.
