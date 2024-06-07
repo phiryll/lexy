@@ -21,6 +21,7 @@ types is to convert everything to the same exact numeric type before
 encoding.
 
 Lexy can encode:
+
 * `bool`  
   `false` sorts before `true`.
 * `uint8` (aka `byte`), `uint16`, `uint32`, `uint64`  
@@ -58,6 +59,7 @@ Lexy can encode:
   behave similarly to maps with string keys.
 
 Lexy does not currently encode these, but should in the future:
+
 * `nil`  
   Most of the time it might be sufficient to just not encode `nil` at
   all and treat it as an absence of a value. For example, just skip a
@@ -69,6 +71,7 @@ Lexy does not currently encode these, but should in the future:
 * `time.Duration`
 
 Lexy cannot encode:
+
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
 * `complex64`
