@@ -47,8 +47,8 @@ Lexy can encode:
 * `time.Time`  
   A `time.Time` is encoded as `Time.MarshalText()` of its UTC instant
   followed by its time zone as returned by `Time.Location().String()`.
-* arrays and slices of supported types  
-  Arrays and slices are ordered lexicographically.
+* slices of supported types  
+  Slices are ordered lexicographically.
 * maps of supported types  
   Whether map keys are ordered is optional because of the sorting
   overhead. Encoding and decoding will be correct if unordered keys
@@ -70,7 +70,7 @@ Lexy does not currently encode these, but should in the future:
   structs.
 * `time.Duration`
 
-Lexy cannot encode:
+Lexy cannot encode these, but you can always write a custom Codec:
 
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
@@ -79,6 +79,7 @@ Lexy cannot encode:
 * `math.big.Rat`  
   While rational numbers are ordered, there is no base in which they
   can be represented at full precision.
+* array types
 * function types
 * interface types
 * channel types
