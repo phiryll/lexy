@@ -86,6 +86,9 @@ Lexy cannot encode these, but you can always write a custom Codec:
 
 ## TODO
 
+Determine if there's a way to bridge this with the `encoding.BinaryMarshaler`
+and `encoding.BinaryUnmarshaler` interfaces.
+
 Provide an alternate encoder/decoder that omits type information. This
 can be used if you know the exact type of what you're decoding. Note
 that instances of different types will necessarily be unordered with
@@ -94,18 +97,4 @@ on a heterogeneous data set could return multiple types.
 
 Provide some mechanism to handle user-defined types. The user would
 need to provide an encoder/decoder for that type, and a type prefix if
-using that feature. This might be as simple as using the
-`encoding.BinaryMarshaler` and `encoding.BinaryUnmarshaler`
-interfaces. The WKT encoder/decoder described next would then be a
-specific instance of this.
-
-Encode [WKT](https://en.wikipedia.org/wiki/Well-known_text) in a way
-allowing geospatial containment and intersection queries to be
-implemented using byte string prefix searches. In a sense, this is
-also a lexicographical ordering, except that A being a prefix of B
-implies B is a spatial subset of A. This is essentially a binary
-variant of [geohash](https://en.wikipedia.org/wiki/Geohash). Because
-of the additional dependencies, geospatial support should either be
-optional in this project, or a separate project entirely.
-[This](https://pkg.go.dev/github.com/go-spatial/geom) might be an
-option.
+using that feature.
