@@ -7,8 +7,7 @@ import (
 
 func TestEncode(t *testing.T) {
 	type args struct {
-		codec Codec[T]
-		value T
+		value int32
 	}
 	tests := []struct {
 		name    string
@@ -20,7 +19,7 @@ func TestEncode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Encode(tt.args.codec, tt.args.value)
+			got, err := Encode(Int32Codec(), tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -34,20 +33,19 @@ func TestEncode(t *testing.T) {
 
 func TestDecode(t *testing.T) {
 	type args struct {
-		codec Codec[T]
-		data  []byte
+		data []byte
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    T
+		want    int32
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Decode(tt.args.codec, tt.args.data)
+			got, err := Decode(Int32Codec(), tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
