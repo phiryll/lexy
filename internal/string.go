@@ -8,6 +8,6 @@ func (c StringCodec) Read(r io.Reader) (string, error) {
 	panic("unimplemented")
 }
 
-func (c StringCodec) Write(value string, w io.Writer) error {
+func (c StringCodec) Write(w io.Writer, value string) error {
 	panic("unimplemented")
 }

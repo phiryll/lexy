@@ -95,6 +95,8 @@ that instances of different types will necessarily be unordered with
 respect to each other if you omit type information, and a range query
 on a heterogeneous data set could return multiple types.
 
+Provide a mechanism to allow user-specified ordering of struct fields.
+
 Provide some mechanism to handle user-defined types. The user would
 need to provide an encoder/decoder for that type, and a type prefix if
 using that feature.

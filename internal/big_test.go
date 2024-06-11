@@ -53,7 +53,7 @@ func TestBigIntCodec_Write(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := BigIntCodec{}
 			w := &bytes.Buffer{}
-			if err := c.Write(tt.args.value, w); (err != nil) != tt.wantErr {
+			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("BigIntCodec.Write() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -109,7 +109,7 @@ func TestBigFloatCodec_Write(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := BigFloatCodec{}
 			w := &bytes.Buffer{}
-			if err := c.Write(tt.args.value, w); (err != nil) != tt.wantErr {
+			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("BigFloatCodec.Write() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

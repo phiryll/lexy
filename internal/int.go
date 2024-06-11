@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/binary"
 	"io"
+	"math"
 )
 
 // bool and the uints can use the same implementation.
@@ -14,7 +15,7 @@ func (c uintCodec[T]) Read(r io.Reader) (T, error) {
 	return value, err
 }
 
-func (c uintCodec[T]) Write(value T, w io.Writer) error {
+func (c uintCodec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, value)
 }
 
@@ -52,58 +53,46 @@ type Uint64Codec struct {
 // bit mask) and a type cast between the two. It's simpler to just write
 // out the code for each case.
 
-/*
-type intCodec[T int8 | int16 | int32 | int64] struct {
-	mask T
-}
-
-func (c intCodec[T]) Read(r io.Reader) (T, error) {
-	var value T
-	err := binary.Read(r, binary.BigEndian, &value)
-	return c.mask ^ value, err
-}
-
-func (c intCodec[T]) Write(value T, w io.Writer) error {
-	return binary.Write(w, binary.BigEndian, c.mask^value)
-}
-*/
-
 type Int8Codec struct{}
 
 func (c Int8Codec) Read(r io.Reader) (int8, error) {
-	panic("unimplemented")
+	value, err := Uint8Codec{}.Read(r)
+	return math.MinInt8 ^ int8(value), err
 }
 
-func (c Int8Codec) Write(value int8, w io.Writer) error {
-	panic("unimplemented")
+func (c Int8Codec) Write(w io.Writer, value int8) error {
+	return Uint8Codec{}.Write(w, uint8(math.MinInt8^value))
 }
 
 type Int16Codec struct{}
 
 func (c Int16Codec) Read(r io.Reader) (int16, error) {
-	panic("unimplemented")
+	value, err := Uint16Codec{}.Read(r)
+	return math.MinInt16 ^ int16(value), err
 }
 
-func (c Int16Codec) Write(value int16, w io.Writer) error {
-	panic("unimplemented")
+func (c Int16Codec) Write(w io.Writer, value int16) error {
+	return Uint16Codec{}.Write(w, uint16(math.MinInt16^value))
 }
 
 type Int32Codec struct{}
 
 func (c Int32Codec) Read(r io.Reader) (int32, error) {
-	panic("unimplemented")
+	value, err := Uint32Codec{}.Read(r)
+	return math.MinInt32 ^ int32(value), err
 }
 
-func (c Int32Codec) Write(value int32, w io.Writer) error {
-	panic("unimplemented")
+func (c Int32Codec) Write(w io.Writer, value int32) error {
+	return Uint32Codec{}.Write(w, uint32(math.MinInt32^value))
 }
 
 type Int64Codec struct{}
 
 func (c Int64Codec) Read(r io.Reader) (int64, error) {
-	panic("unimplemented")
+	value, err := Uint64Codec{}.Read(r)
+	return math.MinInt64 ^ int64(value), err
 }
 
-func (c Int64Codec) Write(value int64, w io.Writer) error {
-	panic("unimplemented")
+func (c Int64Codec) Write(w io.Writer, value int64) error {
+	return Uint64Codec{}.Write(w, uint64(math.MinInt8^value))
 }

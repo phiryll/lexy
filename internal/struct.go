@@ -8,6 +8,6 @@ func (c StructCodec[T]) Read(r io.Reader) (T, error) {
 	panic("unimplemented")
 }
 
-func (com StructCodec[T]) Write(value T, w io.Writer) error {
+func (com StructCodec[T]) Write(w io.Writer, value T) error {
 	panic("unimplemented")
 }

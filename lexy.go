@@ -17,7 +17,7 @@ type Codec[T any] interface {
 	// types require the value to be a receiver instead of an argument.
 
 	// Write writes a value to the given io.Writer.
-	Write(value T, w io.Writer) error
+	Write(w io.Writer, value T) error
 
 	// Read reads a value from the given io.Reader and returns it.
 	Read(r io.Reader) (T, error)
@@ -27,7 +27,7 @@ type Codec[T any] interface {
 // is a convenience function to create a new []byte.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	var b bytes.Buffer
-	if err := codec.Write(value, &b); err != nil {
+	if err := codec.Write(&b, value); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil

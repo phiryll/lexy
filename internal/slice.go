@@ -8,6 +8,6 @@ func (c SliceCodec[T]) Read(r io.Reader) ([]T, error) {
 	panic("unimplemented")
 }
 
-func (c SliceCodec[T]) Write(value []T, w io.Writer) error {
+func (c SliceCodec[T]) Write(w io.Writer, value []T) error {
 	panic("unimplemented")
 }

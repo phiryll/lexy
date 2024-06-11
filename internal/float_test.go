@@ -51,7 +51,7 @@ func TestFloat32Codec_Write(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Float32Codec{}
 			w := &bytes.Buffer{}
-			if err := c.Write(tt.args.value, w); (err != nil) != tt.wantErr {
+			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("Float32Codec.Write() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -107,7 +107,7 @@ func TestFloat64Codec_Write(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Float64Codec{}
 			w := &bytes.Buffer{}
-			if err := c.Write(tt.args.value, w); (err != nil) != tt.wantErr {
+			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("Float64Codec.Write() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

@@ -8,7 +8,7 @@ func (c Float32Codec) Read(r io.Reader) (float32, error) {
 	panic("unimplemented")
 }
 
-func (c Float32Codec) Write(value float32, w io.Writer) error {
+func (c Float32Codec) Write(w io.Writer, value float32) error {
 	panic("unimplemented")
 }
 
@@ -18,6 +18,6 @@ func (c Float64Codec) Read(r io.Reader) (float64, error) {
 	panic("unimplemented")
 }
 
-func (c Float64Codec) Write(value float64, w io.Writer) error {
+func (c Float64Codec) Write(w io.Writer, value float64) error {
 	panic("unimplemented")
 }
