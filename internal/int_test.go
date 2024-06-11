@@ -20,7 +20,7 @@ func TestBoolCodec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BoolCodec{}
+			c := UintCodec[bool]{}
 			got, err := c.Read(tt.r)
 			if err != nil {
 				if !tt.wantErr {
@@ -47,7 +47,7 @@ func TestBoolCodec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BoolCodec{}
+			c := UintCodec[bool]{}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.value); (err != nil) != tt.wantErr {
 				t.Errorf("BoolCodec.Write() error = %v, wantErr %v", err, tt.wantErr)
@@ -61,7 +61,7 @@ func TestBoolCodec_Write(t *testing.T) {
 }
 
 func TestBoolCodec_WriteFail(t *testing.T) {
-	c := BoolCodec{}
+	c := UintCodec[bool]{}
 	w := failWriter{}
 	if err := c.Write(w, true); err == nil {
 		t.Errorf("BoolCodec.Write() error = %v, wantErr %v", err, true)
@@ -84,7 +84,7 @@ func TestUint8Codec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Uint8Codec{}
+			c := UintCodec[uint8]{}
 			got, err := c.Read(tt.r)
 			if err != nil {
 				if !tt.wantErr {
@@ -114,7 +114,7 @@ func TestUint8Codec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Uint8Codec{}
+			c := UintCodec[uint8]{}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.value); (err != nil) != tt.wantErr {
 				t.Errorf("Uint8Codec.Write() error = %v, wantErr %v", err, tt.wantErr)
@@ -143,7 +143,7 @@ func TestInt8Codec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Int8Codec{}
+			c := IntCodec[int8]{Mask: math.MinInt8}
 			got, err := c.Read(tt.r)
 			if err != nil {
 				if !tt.wantErr {
@@ -173,7 +173,7 @@ func TestInt8Codec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Int8Codec{}
+			c := IntCodec[int8]{Mask: math.MinInt8}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.value); (err != nil) != tt.wantErr {
 				t.Errorf("Int8Codec.Write() error = %v, wantErr %v", err, tt.wantErr)
