@@ -36,9 +36,9 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 // Decode uses codec to decode data into a value and returns it. This is
 // a convenience function using a []byte.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	// TODO: NewBuffer takes ownership of data, this is probably a bad
-	// idea here.
-	return codec.Read(bytes.NewBuffer(data))
+	// bytes.NewBuffer takes ownership of its argument, so we need to
+	// clone it first.
+	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
 func BoolCodec() Codec[bool]                        { return internal.BoolCodec{} }
@@ -59,6 +59,3 @@ func TimeCodec() Codec[time.Time]                   { return internal.TimeCodec{
 func SliceCodec[T any]() Codec[[]T]                 { return internal.SliceCodec[T]{} }
 func MapCodec[K comparable, V any]() Codec[map[K]V] { return internal.MapCodec[K, V]{} }
 func StructCodec[T any]() Codec[T]                  { return internal.StructCodec[T]{} }
-
-// Decouple type prefixes, those are a feature of the aggregate Codec.
-// The int8, int16, ... Codecs should not have prefixes.
