@@ -1,17 +1,14 @@
 package lexy
 
 import (
-	"reflect"
+	"bytes"
 	"testing"
 )
 
 func TestEncode(t *testing.T) {
-	type args struct {
-		value int32
-	}
 	tests := []struct {
 		name    string
-		args    args
+		value   int32
 		want    []byte
 		wantErr bool
 	}{
@@ -19,12 +16,12 @@ func TestEncode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Encode(Int32Codec(), tt.args.value)
+			got, err := Encode(Int32Codec(), tt.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !bytes.Equal(got, tt.want) {
 				t.Errorf("Encode() = %v, want %v", got, tt.want)
 			}
 		})
@@ -32,12 +29,9 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	type args struct {
-		data []byte
-	}
 	tests := []struct {
 		name    string
-		args    args
+		data    []byte
 		want    int32
 		wantErr bool
 	}{
@@ -45,12 +39,12 @@ func TestDecode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Decode(Int32Codec(), tt.args.data)
+			got, err := Decode(Int32Codec(), tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if got != tt.want {
 				t.Errorf("Decode() = %v, want %v", got, tt.want)
 			}
 		})
