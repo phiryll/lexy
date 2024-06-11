@@ -9,12 +9,12 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-// Codec defines methods for encoding and decoding values to and from a binary
-// form.
+// Codec defines methods for encoding and decoding values to and from a
+// binary form.
 type Codec[T any] interface {
 	// Unfortunately, a Codec can't be defined or created using
-	// encoding.BinaryMarshaler and encoding.BinaryUnmarshaler. Those types
-	// require the value to be a receiver instead of an argument.
+	// encoding.BinaryMarshaler and encoding.BinaryUnmarshaler. Those
+	// types require the value to be a receiver instead of an argument.
 
 	// Write writes a value to the given io.Writer.
 	Write(value T, w io.Writer) error
@@ -23,8 +23,8 @@ type Codec[T any] interface {
 	Read(r io.Reader) (T, error)
 }
 
-// Encode uses codec to encode value into a []byte and returns it. This is a
-// convenience function to create a new []byte.
+// Encode uses codec to encode value into a []byte and returns it. This
+// is a convenience function to create a new []byte.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	var b bytes.Buffer
 	if err := codec.Write(value, &b); err != nil {
@@ -33,11 +33,11 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// Decode uses codec to decode data into a value and returns it. This is a
-// convenience function using a []byte.
+// Decode uses codec to decode data into a value and returns it. This is
+// a convenience function using a []byte.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	// TODO: NewBuffer takes ownership of data, this is probably a bad idea
-	// here.
+	// TODO: NewBuffer takes ownership of data, this is probably a bad
+	// idea here.
 	return codec.Read(bytes.NewBuffer(data))
 }
 
@@ -60,5 +60,5 @@ func SliceCodec[T any]() Codec[[]T]                 { return internal.SliceCodec
 func MapCodec[K comparable, V any]() Codec[map[K]V] { return internal.MapCodec[K, V]{} }
 func StructCodec[T any]() Codec[T]                  { return internal.StructCodec[T]{} }
 
-// Decouple type prefixes, those are a feature of the aggregate Codec. The int8,
-// int16, ... Codecs should not have prefixes.
+// Decouple type prefixes, those are a feature of the aggregate Codec.
+// The int8, int16, ... Codecs should not have prefixes.

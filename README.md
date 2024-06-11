@@ -86,8 +86,8 @@ Lexy cannot encode these, but you can always write a custom Codec:
 
 ## TODO
 
-Determine if there's a way to bridge this with the `encoding.BinaryMarshaler`
-and `encoding.BinaryUnmarshaler` interfaces.
+Determine if there's a way to bridge this with the
+`encoding.BinaryMarshaler` and `encoding.BinaryUnmarshaler` interfaces.
 
 Provide an alternate encoder/decoder that omits type information. This
 can be used if you know the exact type of what you're decoding. Note
