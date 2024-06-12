@@ -41,8 +41,10 @@ type IntCodec[T int8 | int16 | int32 | int64] struct {
 
 func (c IntCodec[T]) Read(r io.Reader) (T, error) {
 	var value T
-	err := binary.Read(r, binary.BigEndian, &value)
-	return c.Mask ^ value, err
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return c.Mask ^ value, nil
 }
 
 func (c IntCodec[T]) Write(w io.Writer, value T) error {
