@@ -4,9 +4,9 @@ Lexicographical Byte Order Encodings
 
 Lexy is a library for encoding/decoding data into byte slices whose
 lexicographical unsigned byte ordering is consistent with the data
-type's natural ordering. This library is only needed if you need to
-order encoded values. Lexy's primary purpose is to make it easier to
-use an [ordered key-value
+type's natural ordering. Lexy intentionally has no dependencies. This
+library is only needed if you need to order encoded values. Lexy's
+primary purpose is to make it easier to use an [ordered key-value
 store](https://en.wikipedia.org/wiki/Ordered_Key-Value_Store), or an
 ordered binary trie.
 
