@@ -1,67 +1,53 @@
 package internal
 
 import (
-	"bytes"
 	"math"
 	"testing"
 )
 
-func TestBoolCodec_Read(t *testing.T) {
-	testRead[bool](t, UintCodec[bool]{}, []readTestCase[bool]{
-		{"false", []byte{0}, false, false},
-		{"true", []byte{1}, true, false},
-		{"fail", []byte{}, false, true},
+func TestBoolCodec(t *testing.T) {
+	testCodec[bool](t, UintCodec[bool]{}, []testCase[bool]{
+		{"false", false, []byte{0}},
+		{"true", true, []byte{1}},
 	})
 }
 
-func TestBoolCodec_Write(t *testing.T) {
-	testWrite[bool](t, UintCodec[bool]{}, []writeTestCase[bool]{
-		{"false", &bytes.Buffer{}, false, []byte{0}, false},
-		{"true", &bytes.Buffer{}, true, []byte{1}, false},
-		{"fail", failWriter{}, true, nil, true},
+func TestUint8Codec(t *testing.T) {
+	testCodec[uint8](t, UintCodec[uint8]{}, []testCase[uint8]{
+		{"0x00", 0x00, []byte{0x00}},
+		{"0x01", 0x01, []byte{0x01}},
+		{"0x7F", 0x7F, []byte{0x7F}},
+		{"0x80", 0x80, []byte{0x80}},
+		{"0xFF", 0xFF, []byte{0xFF}},
 	})
 }
 
-func TestUint8Codec_Read(t *testing.T) {
-	testRead[uint8](t, UintCodec[uint8]{}, []readTestCase[uint8]{
-		{"0x00", []byte{0x00}, 0x00, false},
-		{"0x01", []byte{0x01}, 0x01, false},
-		{"0x7F", []byte{0x7F}, 0x7F, false},
-		{"0x80", []byte{0x80}, 0x80, false},
-		{"0xFF", []byte{0xFF}, 0xFF, false},
-		{"fail", []byte{}, 0, true},
+func TestUint32Codec(t *testing.T) {
+	testCodec[uint32](t, UintCodec[uint32]{}, []testCase[uint32]{
+		{"", 0x00000000, []byte{0x00, 0x00, 0x00, 0x00}},
+		{"", 0x00000001, []byte{0x00, 0x00, 0x00, 0x01}},
+		{"", 0x7FFFFFFF, []byte{0x7F, 0xFF, 0xFF, 0xFF}},
+		{"", 0x80000000, []byte{0x80, 0x00, 0x00, 0x00}},
+		{"", 0xFFFFFFFF, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
 	})
 }
 
-func TestUint8Codec_Write(t *testing.T) {
-	testWrite[uint8](t, UintCodec[uint8]{}, []writeTestCase[uint8]{
-		{"0x00", &bytes.Buffer{}, 0x00, []byte{0x00}, false},
-		{"0x01", &bytes.Buffer{}, 0x01, []byte{0x01}, false},
-		{"0x7F", &bytes.Buffer{}, 0x7F, []byte{0x7F}, false},
-		{"0x80", &bytes.Buffer{}, 0x80, []byte{0x80}, false},
-		{"0xFF", &bytes.Buffer{}, 0xFF, []byte{0xFF}, false},
-		{"fail", failWriter{}, 0, nil, true},
+func TestInt8Codec(t *testing.T) {
+	testCodec[int8](t, IntCodec[int8]{Mask: math.MinInt8}, []testCase[int8]{
+		{"min", math.MinInt8, []byte{0x00}},
+		{"-1", -1, []byte{0x7F}},
+		{"0", 0, []byte{0x80}},
+		{"+1", 1, []byte{0x81}},
+		{"max", math.MaxInt8, []byte{0xFF}},
 	})
 }
 
-func TestInt8Codec_Read(t *testing.T) {
-	testRead[int8](t, IntCodec[int8]{Mask: math.MinInt8}, []readTestCase[int8]{
-		{"min", []byte{0x00}, math.MinInt8, false},
-		{"-1", []byte{0x7F}, -1, false},
-		{"0", []byte{0x80}, 0, false},
-		{"+1", []byte{0x81}, 1, false},
-		{"max", []byte{0xFF}, math.MaxInt8, false},
-		{"fail", []byte{}, 0, true},
-	})
-}
-
-func TestInt8Codec_Write(t *testing.T) {
-	testWrite[int8](t, IntCodec[int8]{Mask: math.MinInt8}, []writeTestCase[int8]{
-		{"min", &bytes.Buffer{}, math.MinInt8, []byte{0x00}, false},
-		{"-1", &bytes.Buffer{}, -1, []byte{0x7F}, false},
-		{"0", &bytes.Buffer{}, 0, []byte{0x80}, false},
-		{"+1", &bytes.Buffer{}, 1, []byte{0x81}, false},
-		{"max", &bytes.Buffer{}, math.MaxInt8, []byte{0xFF}, false},
-		{"fail", failWriter{}, 0, nil, true},
+func TestInt32Codec(t *testing.T) {
+	testCodec[int32](t, IntCodec[int32]{Mask: math.MinInt32}, []testCase[int32]{
+		{"min", math.MinInt32, []byte{0x00, 0x00, 0x00, 0x00}},
+		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF}},
+		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00}},
+		{"+1", 1, []byte{0x80, 0x00, 0x00, 0x01}},
+		{"max", math.MaxInt32, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
 	})
 }
