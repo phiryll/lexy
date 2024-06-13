@@ -64,3 +64,5 @@ func TimeCodec() Codec[time.Time]                   { return internal.TimeCodec{
 func SliceCodec[T any]() Codec[[]T]                 { return internal.SliceCodec[T]{} }
 func MapCodec[K comparable, V any]() Codec[map[K]V] { return internal.MapCodec[K, V]{} }
 func StructCodec[T any]() Codec[T]                  { return internal.StructCodec[T]{} }
+
+// TODO: expose escaping functions, and document them well!
