@@ -23,8 +23,8 @@ type testCase[T comparable] struct {
 
 // Tests:
 // - codec.Read() and codec.Write() for the given test cases
-// - codec.Read() fails when reading from an empty []byte
-// - codec.Write() fails when given a failing io.Writer
+// - codec.Read() fails when reading from a failing io.Reader
+// - codec.Write() fails when writing to a failing io.Writer
 func testCodec[T comparable](t *testing.T, codec codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
@@ -40,7 +40,7 @@ func testCodec[T comparable](t *testing.T, codec codec[T], tests []testCase[T]) 
 			})
 		}
 		t.Run("fail", func(t *testing.T) {
-			if _, err := codec.Read(bytes.NewReader([]byte{})); err == nil {
+			if _, err := codec.Read(failReader{}); err == nil {
 				t.Errorf("Read() wantErr")
 			}
 		})
@@ -68,9 +68,15 @@ func testCodec[T comparable](t *testing.T, codec codec[T], tests []testCase[T]) 
 	})
 }
 
+type failReader struct{}
 type failWriter struct{}
 
+var _ io.Reader = failReader{}
 var _ io.Writer = failWriter{}
+
+func (f failReader) Read(p []byte) (int, error) {
+	return 0, fmt.Errorf("failed to read")
+}
 
 func (w failWriter) Write(p []byte) (int, error) {
 	return 0, fmt.Errorf("failed to write")
