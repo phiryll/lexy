@@ -5,6 +5,9 @@ import (
 	"testing"
 )
 
+// Testing bool, uint/int8, and uint/int32 should be sufficient. 16 and
+// 64 bit ints use the same logic.
+
 func TestBoolCodec(t *testing.T) {
 	testCodec[bool](t, UintCodec[bool]{}, []testCase[bool]{
 		{"false", false, []byte{0}},
