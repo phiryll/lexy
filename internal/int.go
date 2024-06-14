@@ -5,23 +5,28 @@ import (
 	"io"
 )
 
-// Unsigned ints and bool can use the same implementation. Instances are
-// instantiated as:
+// Unsigned ints and bool can use the same implementation. This encoding
+// is merely the value in big-endian order. Instances are instantiated
+// as:
 //
 //	UintCodec[<type>]{}
 type UintCodec[T bool | uint8 | uint16 | uint32 | uint64] struct{}
 
 func (c UintCodec[T]) Read(r io.Reader) (T, error) {
 	var value T
-	err := binary.Read(r, binary.BigEndian, &value)
-	return value, err
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		var zero T
+		return zero, err
+	}
+	return value, nil
 }
 
 func (c UintCodec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, value)
 }
 
-// Signed ints use nearly the same implementation. They should map:
+// Signed ints use nearly the same implementation. This encoding is the
+// value with its sign bit flipped in big-endian order. They should map:
 //
 //	0x8000... -> 0x0000...  most negative
 //	0xFFFF... -> 0x7FFF...  -1
@@ -29,8 +34,7 @@ func (c UintCodec[T]) Write(w io.Writer, value T) error {
 //	0x0000..1 -> 0x8000..1  1
 //	0x7FFF... -> 0xFFFF...  most positive
 //
-// This is merely flipping the sign bit and encoding big endian. The
-// mask should be the minimum signed value for that type, because that
+// Mask should be the minimum signed value for that type, because that
 // happens to be of the form 0x8000... for fixed length signed integral
 // types. Instances are instantiated as:
 //
@@ -42,7 +46,8 @@ type IntCodec[T int8 | int16 | int32 | int64] struct {
 func (c IntCodec[T]) Read(r io.Reader) (T, error) {
 	var value T
 	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
+		var zero T
+		return zero, err
 	}
 	return c.Mask ^ value, nil
 }
