@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // The same signatures as lexy.Codec, redefined here to avoid a cyclic
@@ -30,40 +33,29 @@ func testCodec[T comparable](t *testing.T, codec codec[T], tests []testCase[T]) 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				got, err := codec.Read(bytes.NewReader(tt.data))
-				if err != nil {
-					t.Errorf("Read() error = %v", err)
-					return
-				}
-				if got != tt.value {
-					t.Errorf("Read() = %v, want %v", got, tt.value)
-				}
+				require.NoError(t, err)
+				assert.Equal(t, tt.value, got)
 			})
 		}
 		t.Run("fail", func(t *testing.T) {
-			if _, err := codec.Read(failReader{}); err == nil {
-				t.Errorf("Read() wantErr")
-			}
+			_, err := codec.Read(failReader{})
+			assert.Error(t, err)
 		})
 	})
 
 	t.Run("write", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				w := &bytes.Buffer{}
-				if err := codec.Write(w, tt.value); err != nil {
-					t.Errorf("Write() error = %v", err)
-					return
-				}
-				if gotW := w.Bytes(); !bytes.Equal(gotW, tt.data) {
-					t.Errorf("Write() = %v, want %v", gotW, tt.data)
-				}
+				var b bytes.Buffer
+				err := codec.Write(&b, tt.value)
+				require.NoError(t, err)
+				assert.Equal(t, tt.data, b.Bytes())
 			})
 		}
 		t.Run("fail", func(t *testing.T) {
 			var value T
-			if err := codec.Write(failWriter{}, value); err == nil {
-				t.Errorf("Write() wantErr")
-			}
+			err := codec.Write(failWriter{}, value)
+			require.Error(t, err)
 		})
 	})
 }
