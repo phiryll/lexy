@@ -1,4 +1,4 @@
-package internal
+package internal_test
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/phiryll/lexy/internal"
 )
 
 func TestBigIntCodec_Read(t *testing.T) {
@@ -14,7 +16,7 @@ func TestBigIntCodec_Read(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       BigIntCodec
+		c       internal.BigIntCodec
 		args    args
 		want    big.Int
 		wantErr bool
@@ -23,7 +25,7 @@ func TestBigIntCodec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BigIntCodec{}
+			c := internal.BigIntCodec{}
 			got, err := c.Read(tt.args.r)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BigIntCodec.Read() error = %v, wantErr %v", err, tt.wantErr)
@@ -42,7 +44,7 @@ func TestBigIntCodec_Write(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       BigIntCodec
+		c       internal.BigIntCodec
 		args    args
 		wantW   string
 		wantErr bool
@@ -51,7 +53,7 @@ func TestBigIntCodec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BigIntCodec{}
+			c := internal.BigIntCodec{}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("BigIntCodec.Write() error = %v, wantErr %v", err, tt.wantErr)
@@ -70,7 +72,7 @@ func TestBigFloatCodec_Read(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       BigFloatCodec
+		c       internal.BigFloatCodec
 		args    args
 		want    big.Float
 		wantErr bool
@@ -79,7 +81,7 @@ func TestBigFloatCodec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BigFloatCodec{}
+			c := internal.BigFloatCodec{}
 			got, err := c.Read(tt.args.r)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BigFloatCodec.Read() error = %v, wantErr %v", err, tt.wantErr)
@@ -98,7 +100,7 @@ func TestBigFloatCodec_Write(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       BigFloatCodec
+		c       internal.BigFloatCodec
 		args    args
 		wantW   string
 		wantErr bool
@@ -107,7 +109,7 @@ func TestBigFloatCodec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := BigFloatCodec{}
+			c := internal.BigFloatCodec{}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("BigFloatCodec.Write() error = %v, wantErr %v", err, tt.wantErr)

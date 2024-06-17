@@ -1,10 +1,11 @@
-package internal
+package internal_test
 
 import (
 	"bytes"
 	"math"
 	"testing"
 
+	"github.com/phiryll/lexy/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -176,7 +177,7 @@ func TestNames32(t *testing.T) {
 // the floats
 func TestFloat32CodecOrdering(t *testing.T) {
 	encode := func(value float32) []byte {
-		c := Float32Codec{}
+		c := internal.Float32Codec{}
 		var b bytes.Buffer
 		if err := c.Write(&b, value); err != nil {
 			panic(err)
@@ -295,7 +296,7 @@ func TestNames64(t *testing.T) {
 // the floats
 func TestFloat64CodecOrdering(t *testing.T) {
 	encode := func(value float64) []byte {
-		c := Float64Codec{}
+		c := internal.Float64Codec{}
 		var b bytes.Buffer
 		if err := c.Write(&b, value); err != nil {
 			panic(err)

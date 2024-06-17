@@ -1,4 +1,4 @@
-package internal
+package internal_test
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/phiryll/lexy/internal"
 )
 
 func TestTimeCodec_Read(t *testing.T) {
@@ -14,7 +16,7 @@ func TestTimeCodec_Read(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       TimeCodec
+		c       internal.TimeCodec
 		args    args
 		want    time.Time
 		wantErr bool
@@ -23,7 +25,7 @@ func TestTimeCodec_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := TimeCodec{}
+			c := internal.TimeCodec{}
 			got, err := c.Read(tt.args.r)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TimeCodec.Read() error = %v, wantErr %v", err, tt.wantErr)
@@ -42,7 +44,7 @@ func TestTimeCodec_Write(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		c       TimeCodec
+		c       internal.TimeCodec
 		args    args
 		wantW   string
 		wantErr bool
@@ -51,7 +53,7 @@ func TestTimeCodec_Write(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := TimeCodec{}
+			c := internal.TimeCodec{}
 			w := &bytes.Buffer{}
 			if err := c.Write(w, tt.args.value); (err != nil) != tt.wantErr {
 				t.Errorf("TimeCodec.Write() error = %v, wantErr %v", err, tt.wantErr)
