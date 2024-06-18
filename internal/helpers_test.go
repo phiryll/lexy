@@ -1,7 +1,7 @@
 package internal_test
 
-// This file contains things that help in writing Codec tests, it
-// doesn't have any tests itself.
+// This file contains things that help in writing Codec tests,
+// it doesn't have any tests itself.
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ type testCase[T comparable] struct {
 }
 
 // Tests:
-// - codec.Read() and codec.Write() for the given test cases
+// - codec.Read() and codec.Write() are invertible for the given test cases
 // - codec.Read() fails when reading from a failing io.Reader
 // - codec.Write() fails when writing to a failing io.Writer
 func testCodec[T comparable](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {

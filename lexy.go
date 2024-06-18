@@ -1,3 +1,6 @@
+// Package lexy defines an API for lexicographically ordered unsigned byte encodings.
+//
+// TODO: Pull a lot from README.
 package lexy
 
 import (
@@ -10,26 +13,22 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-// Codec defines methods for encoding and decoding values to and from a
-// binary representation. In Lexy, the lexicographical unsigned byte
-// order of the representations of two values should have the same order
-// as the unencoded values. A Codec's Read and Write methods should be
-// lossless inverse operations if possible, and clearly documented if
-// not.
+// Codec defines methods for lexicographically ordered unsigned byte encodings.
+//
+// Encoded values must have the same order as the values they encode.
+// The Read and Write methods should be lossless inverse operations if possible, and clearly documented if not.
 type Codec[T any] interface {
-	// Unfortunately, a Codec can't be defined or created using
-	// encoding.BinaryMarshaler and encoding.BinaryUnmarshaler. Those
-	// types require the value to be a receiver instead of an argument.
-
-	// Read reads a value from the given io.Reader and returns it.
-	Read(r io.Reader) (T, error)
-
-	// Write writes a value to the given io.Writer.
+	// Write writes value to w.
 	Write(w io.Writer, value T) error
+
+	// Read reads a value from r and returns it.
+	Read(r io.Reader) (T, error)
 }
 
-// Encode uses codec to encode value into a []byte and returns it. This
-// is a convenience function to create a new []byte.
+// Encode returns value encoded using codec as a new []byte.
+//
+// This is a convenience function.
+// Use Codec.Write if you're encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	var b bytes.Buffer
 	if err := codec.Write(&b, value); err != nil {
@@ -38,11 +37,12 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// Decode uses codec to decode data into a value and returns it. This is
-// a convenience function using a []byte.
+// Decode returns a decoded value from a []byte using codec.
+//
+// This is a convenience function.
+// Use Codec.Read if you're decoding multiple values from the same byte stream.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	// bytes.NewBuffer takes ownership of its argument, so we need to
-	// clone it first.
+	// bytes.NewBuffer takes ownership of its argument, so we need to clone it first.
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 

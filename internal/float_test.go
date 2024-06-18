@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Bit masks for the sign, exponent, and matissa of the
+// IEEE 754 32- and 64- floating point representations.
 const (
 	maskSign32 uint32 = 0x80_00_00_00
 	maskExp32  uint32 = 0x7F_80_00_00
@@ -34,11 +36,10 @@ func mant64(value float64) uint64 {
 	return maskMant64 & math.Float64bits(value)
 }
 
+// IEEE 745 32- and 64-bit patterns at the boundaries between different semantics.
+// They are defined here in the same order that they should be in when encoded by the Codec.
+// "Min" and "Max" in these variable names denote absolute semantic distance from 0.
 var (
-	// All the IEEE 745 32-bit patterns on the boundaries between
-	// different semantics, defined here in the same order that they
-	// should be in when encoded by the Codec. "Min" and "Max" in these
-	// variable names denotes absolute magnitude (distance from 0).
 	negMaxNaN32       float32 = math.Float32frombits(0xFF_FF_FF_FF)
 	negMinNaN32       float32 = math.Float32frombits(0xFF_80_00_01)
 	negInf32          float32 = math.Float32frombits(0xFF_80_00_00)
@@ -56,7 +57,6 @@ var (
 	posMinNaN32       float32 = math.Float32frombits(0x7F_80_00_01)
 	posMaxNaN32       float32 = math.Float32frombits(0x7F_FF_FF_FF)
 
-	// Same for IEEE 745 64-bit patterns.
 	negMaxNaN64       float64 = math.Float64frombits(0xFF_FF_FF_FF_FF_FF_FF_FF)
 	negMinNaN64       float64 = math.Float64frombits(0xFF_F0_00_00_00_00_00_01)
 	negInf64          float64 = math.Float64frombits(0xFF_F0_00_00_00_00_00_00)
@@ -75,24 +75,21 @@ var (
 	posMaxNaN64       float64 = math.Float64frombits(0x7F_FF_FF_FF_FF_FF_FF_FF)
 )
 
-// Some of these tests are to make sure I didn't fat-finger any of the
-// values above, which I absolutely did the first time around. The
-// others test the semantics of the encoding.
+// Some of these tests are to make sure I didn't fat-finger anything,
+// which I absolutely did the first time around.
 
-// Asserts the the bits of b are exactly one more than the bits of a.
+// Assert that the bits of b are exactly one more than the bits of a.
 func assertNext32(t *testing.T, a, b float32) {
 	assert.Equal(t, math.Float32bits(a)+1, math.Float32bits(b))
 }
 
-// Asserts the the bits of b are exactly one more than the bits of a.
+// Assert that the bits of b are exactly one more than the bits of a.
 func assertNext64(t *testing.T, a, b float64) {
 	assert.Equal(t, math.Float64bits(a)+1, math.Float64bits(b))
 }
 
-// Tests the expected ordering of the IEEE 754 32-bit encodings, if
-// their bits are interpreted as a uint32. This ensures that none of the
-// types overlap (negative subnormals and negative normals, e.g.). Other
-// tests will test other semantics.
+// Test the expected ordering of the IEEE 754 32-bit encodings as uint32.
+// This ensures that none of the ranges defined by the bit patterns overlap.
 func TestIEEEOrdering32(t *testing.T) {
 	assert.IsIncreasing(t, []uint32{
 		math.Float32bits(posZero32),
@@ -113,6 +110,7 @@ func TestIEEEOrdering32(t *testing.T) {
 		math.Float32bits(negMaxNaN32),
 	})
 
+	// Verify the above IsIncreasing test covers the entire range of uint32s.
 	assert.Equal(t, uint32(0), math.Float32bits(posZero32))
 	assert.Equal(t, uint32(math.MaxUint32), math.Float32bits(negMaxNaN32))
 
@@ -127,9 +125,9 @@ func TestIEEEOrdering32(t *testing.T) {
 	assertNext32(t, negInf32, negMinNaN32)
 }
 
-// Test semantic ordering for orderable values (not the NaNs). This also
-// tests thoat all the normal/subnormal constants are neither NaN nor
-// infinite.
+// Test semantic ordering for orderable values (not the NaNs).
+// This also tests that all the normal/subnormal constants are neither NaN nor infinite,
+// because NaNs are not orderable, and negInf32 and posInf32 are at the extremes of this test.
 func TestSemanticOrdering32(t *testing.T) {
 	assert.IsIncreasing(t, []float32{
 		negInf32,
@@ -146,8 +144,7 @@ func TestSemanticOrdering32(t *testing.T) {
 	})
 }
 
-// Tests that the 32-bit constants are what their names say they are.
-// Other tests will test other semantics.
+// Test that the bit patterns are what their names say they are.
 func TestNames32(t *testing.T) {
 	// Testable exact values
 	assert.Equal(t, math.Inf(-1), float64(negInf32), "-Inf: %x", negInf32)
@@ -159,10 +156,12 @@ func TestNames32(t *testing.T) {
 	assert.Equal(t, float32(math.Copysign(0.0, -1.0)), negZero32, "should be -0.0: %x", negZero32)
 	assert.Equal(t, float32(math.Copysign(0.0, 1.0)), posZero32, "should be +0.0: %x", posZero32)
 
-	// Test NaN, exponents, and matissas
+	// Test NaNs
 	for _, x := range []float32{negMaxNaN32, negMinNaN32, posMinNaN32, posMaxNaN32} {
 		assert.True(t, math.IsNaN(float64(x)), "should be NaN: %x", x)
 	}
+
+	// Test exponents and matissas
 	for _, x := range []float32{negMaxNormal32, negMinNormal32, posMinNormal32, posMaxNormal32} {
 		assert.NotEqual(t, uint32(0), exp32(x), "non-zero normal numbers should have a non-zero exponent: %x", x)
 		assert.NotEqual(t, maskExp32, exp32(x), "non-zero normal numbers should have a non-0xFF exponent: %x", x)
@@ -173,8 +172,7 @@ func TestNames32(t *testing.T) {
 	}
 }
 
-// Test that the encoded forms have the right ordering. Note that unlike
-// the floats
+// Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
 	encode := func(value float32) []byte {
 		c := internal.Float32Codec{}
@@ -208,10 +206,8 @@ func TestFloat32CodecOrdering(t *testing.T) {
 	})
 }
 
-// Tests the expected ordering of the IEEE 754 64-bit encodings, if
-// their bits are interpreted as a uint64. This ensures that none of the
-// types overlap (negative subnormals and negative normals, e.g.). Other
-// tests will test other semantics.
+// The 64-bit float tests are the same as the 32-bit float tests.
+
 func TestIEEEOrdering64(t *testing.T) {
 	assert.IsIncreasing(t, []uint64{
 		math.Float64bits(posZero64),
@@ -246,9 +242,6 @@ func TestIEEEOrdering64(t *testing.T) {
 	assertNext64(t, negInf64, negMinNaN64)
 }
 
-// Test semantic ordering for orderable values (not the NaNs). This also
-// tests thoat all the normal/subnormal constants are neither NaN nor
-// infinite.
 func TestSemanticOrdering64(t *testing.T) {
 	assert.IsIncreasing(t, []float64{
 		negInf64,
@@ -265,10 +258,7 @@ func TestSemanticOrdering64(t *testing.T) {
 	})
 }
 
-// Tests that the 64-bit constants are what their names say they are.
-// Other tests will test other semantics.
 func TestNames64(t *testing.T) {
-	// Testable exact values
 	assert.Equal(t, math.Inf(-1), negInf64, "-Inf: %x", negInf64)
 	assert.Equal(t, math.Inf(1), posInf64, "+Inf: %x", posInf64)
 	assert.Equal(t, -math.MaxFloat64, negMaxNormal64, "max negative float64: %x", negMaxNormal64)
@@ -278,7 +268,6 @@ func TestNames64(t *testing.T) {
 	assert.Equal(t, math.Copysign(0.0, -1.0), negZero64, "should be -0.0: %x", negZero64)
 	assert.Equal(t, math.Copysign(0.0, 1.0), posZero64, "should be +0.0: %x", posZero64)
 
-	// Test NaN, exponents, and matissas
 	for _, x := range []float64{negMaxNaN64, negMinNaN64, posMinNaN64, posMaxNaN64} {
 		assert.True(t, math.IsNaN(x), "should be NaN: %x", x)
 	}
@@ -292,8 +281,6 @@ func TestNames64(t *testing.T) {
 	}
 }
 
-// Test that the encoded forms have the right ordering. Note that unlike
-// the floats
 func TestFloat64CodecOrdering(t *testing.T) {
 	encode := func(value float64) []byte {
 		c := internal.Float64Codec{}
