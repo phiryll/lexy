@@ -1,5 +1,8 @@
 package internal_test
 
+// This file contains things that help in writing Codec tests, it
+// doesn't have any tests itself.
+
 import (
 	"bytes"
 	"fmt"
