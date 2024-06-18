@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+// StringCodec is the Codec for strings.
+//
+// A string is encoded as its bytes. Nothing is written for an empty string.
+// Read will fully consume its argument io.Reader.
+//
+// The order of strings, and this encoding, may be surprising.
+// A string in go is essentially an immutable []byte without text semantics.
+// If your string is UTF-8, then the order is the same as the order of the Unicode code points.
+// However, even this is not intuitive. For example, 'Z' < 'a'.
+// Collation is locale-dependent. Any order you choose could be incorrect in another locale.
 type StringCodec struct{}
 
 func (c StringCodec) Read(r io.Reader) (string, error) {
