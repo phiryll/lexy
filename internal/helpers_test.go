@@ -6,17 +6,10 @@ import (
 	"io"
 	"testing"
 
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// The same signatures as lexy.Codec, redefined here to avoid a cyclic
-// dependency.
-
-type codec[T any] interface {
-	Read(r io.Reader) (T, error)
-	Write(w io.Writer, value T) error
-}
 
 type testCase[T comparable] struct {
 	name  string
@@ -28,7 +21,7 @@ type testCase[T comparable] struct {
 // - codec.Read() and codec.Write() for the given test cases
 // - codec.Read() fails when reading from a failing io.Reader
 // - codec.Write() fails when writing to a failing io.Writer
-func testCodec[T comparable](t *testing.T, codec codec[T], tests []testCase[T]) {
+func testCodec[T comparable](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
