@@ -1,6 +1,6 @@
 // Package lexy defines an API for lexicographically ordered unsigned byte encodings.
 //
-// TODO: Pull a lot from README.
+// TODO: Lots of usage details.
 package lexy
 
 import (
