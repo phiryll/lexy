@@ -9,6 +9,8 @@ import (
 //
 // A string is encoded as its bytes. Nothing is written for an empty string.
 // Read will fully consume its argument io.Reader.
+// If a string is part of a larger aggregate and not fixed-length,
+// it should be escaped and delimiter-terminated by the enclosing Codec.
 //
 // The order of strings, and this encoding, may be surprising.
 // A string in go is essentially an immutable []byte without text semantics.
