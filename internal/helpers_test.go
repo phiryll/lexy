@@ -59,8 +59,14 @@ func testCodec[T comparable](t *testing.T, codec lexy.Codec[T], tests []testCase
 type failReader struct{}
 type failWriter struct{}
 
+type boundedWriter struct {
+	count, limit int
+	data         []byte
+}
+
 var _ io.Reader = failReader{}
 var _ io.Writer = failWriter{}
+var _ io.Writer = &boundedWriter{}
 
 func (f failReader) Read(p []byte) (int, error) {
 	return 0, fmt.Errorf("failed to read")
@@ -68,4 +74,19 @@ func (f failReader) Read(p []byte) (int, error) {
 
 func (w failWriter) Write(p []byte) (int, error) {
 	return 0, fmt.Errorf("failed to write")
+}
+
+// return number written from p
+func (w *boundedWriter) Write(p []byte) (int, error) {
+	remaining := w.limit - w.count
+	numToWrite := len(p)
+	if numToWrite > remaining {
+		numToWrite = remaining
+	}
+	w.data = append(w.data, p[:numToWrite]...)
+	w.count += numToWrite
+	if len(p) > remaining {
+		return numToWrite, io.EOF
+	}
+	return numToWrite, nil
 }
