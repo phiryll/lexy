@@ -17,6 +17,14 @@ import (
 //
 // Encoded values must have the same order as the values they encode.
 // The Read and Write methods should be lossless inverse operations if possible, and clearly documented if not.
+//
+// Read will read until either it has all the data it needs, or the argument io.Reader stops returning data.
+// io.Reader.Read is permitted to return only immediately available data instead of waiting for more.
+// This may cause an error (IntCodec32), or it may silently return incomplete data (StringCodec).
+//
+// Read and Write may have to process data one byte at a time, so using buffered I/O is recommended.
+// Never use a buffered Reader wrapping the argument io.Reader within a Codec implementation.
+// If you use a buffered Writer within a Codec implementation, it must be flushed before returning.
 type Codec[T any] interface {
 	// Write writes value to w.
 	Write(w io.Writer, value T) error
