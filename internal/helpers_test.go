@@ -23,8 +23,8 @@ type testCase[T any] struct {
 // Tests:
 // - codec.Read() and codec.Write() are invertible for the given test cases
 // - codec.Read() fails when reading from a failing io.Reader
-// - codec.Write() fails when writing nonEmpty to a failing io.Writer
-func testCodecWithNonEmpty[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T, tests []testCase[T]) {
+// - codec.Write() fails when writing the zero value of T to a failing io.Writer
+func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -49,19 +49,11 @@ func testCodecWithNonEmpty[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T,
 			})
 		}
 		t.Run("fail", func(t *testing.T) {
-			err := codec.Write(failWriter{}, nonEmpty)
+			var zero T
+			err := codec.Write(failWriter{}, zero)
 			require.Error(t, err)
 		})
 	})
-}
-
-// Tests:
-// - codec.Read() and codec.Write() are invertible for the given test cases
-// - codec.Read() fails when reading from a failing io.Reader
-// - codec.Write() fails when writing the (non-empty) zero value of T to a failing io.Writer
-func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	var nonEmpty T
-	testCodecWithNonEmpty(t, codec, nonEmpty, tests)
 }
 
 type failReader struct{}
