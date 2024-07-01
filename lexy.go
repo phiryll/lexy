@@ -82,6 +82,17 @@ const (
 	PrefixNonZero byte = internal.PrefixNonZero
 )
 
+const (
+	// DelimiterByte is used to delimit elements of an aggregate value.
+	DelimiterByte byte = internal.DelimiterByte
+
+	// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
+	//
+	// This includes appearing in the encodings of nested aggregates,
+	// because those are still just data at the level of the enclosing aggregate.
+	EscapeByte byte = internal.EscapeByte
+)
+
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.

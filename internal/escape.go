@@ -33,21 +33,21 @@ import (
 // Since "," is less than everything else, E < D (first slice element "a," < "ab"). Therefore "a\,,bc" < "ab,c".
 // We can see "\" must be less than all other values except the delimiter, so it must be 0x01.
 
-// delimiterByte is used to delimit elements of an aggregate value.
-const delimiterByte byte = 0x00
+// DelimiterByte is used to delimit elements of an aggregate value.
+const DelimiterByte byte = 0x00
 
-// escapeByte is used the escape the delimiter and escape bytes when they appear in data.
+// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
 //
 // This includes appearing in the encodings of nested aggregates,
 // because those are still just data at the level of the enclosing aggregate.
-const escapeByte byte = 0x01
+const EscapeByte byte = 0x01
 
 // Convenience byte slices.
 var (
-	del    = []byte{delimiterByte}
-	esc    = []byte{escapeByte}
-	escDel = []byte{escapeByte, delimiterByte}
-	escEsc = []byte{escapeByte, escapeByte}
+	del    = []byte{DelimiterByte}
+	esc    = []byte{EscapeByte}
+	escDel = []byte{EscapeByte, DelimiterByte}
+	escEsc = []byte{EscapeByte, EscapeByte}
 )
 
 // Escape writes p to w, escaping all delimiters and escapes first.
@@ -57,7 +57,7 @@ func Escape(w io.Writer, p []byte) (int, error) {
 	var n int // running count of the number of bytes of p successfully processed.
 	for i, b := range p {
 		switch b {
-		case delimiterByte:
+		case DelimiterByte:
 			count, err := w.Write(p[n:i])
 			n += count
 			if err != nil {
@@ -67,7 +67,7 @@ func Escape(w io.Writer, p []byte) (int, error) {
 				return n, err
 			}
 			n++
-		case escapeByte:
+		case EscapeByte:
 			count, err := w.Write(p[n:i])
 			n += count
 			if err != nil {
@@ -112,12 +112,12 @@ func Unescape(r io.Reader) ([]byte, error) {
 			continue
 		}
 		switch in[0] {
-		case delimiterByte:
+		case DelimiterByte:
 			if !escaped {
 				return out.Bytes(), nil
 			}
 			escaped = false
-		case escapeByte:
+		case EscapeByte:
 			if !escaped {
 				escaped = true
 				continue
