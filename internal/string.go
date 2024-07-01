@@ -8,8 +8,8 @@ import (
 
 // StringCodec is the Codec for strings.
 //
-// A string is encoded as its bytes following PrefixZeroValue or PrefixNonZeroValue.
-// Read will fully consume its argument io.Reader.
+// A string is encoded as its bytes following PrefixZero or PrefixNonZero.
+// Read will fully consume its argument io.Reader if the string is non-empty.
 // If a string is part of a larger aggregate and not fixed-length,
 // its encoding should be escaped and delimiter-terminated by the enclosing Codec.
 //
@@ -30,7 +30,7 @@ func (c StringCodec) Read(r io.Reader) (string, error) {
 		}
 		return "", err
 	}
-	if prefix[0] == PrefixZeroValue {
+	if prefix[0] == PrefixZero {
 		if err == io.EOF {
 			return "", nil
 		}
@@ -39,7 +39,7 @@ func (c StringCodec) Read(r io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if prefix[0] != PrefixNonZeroValue {
+	if prefix[0] != PrefixNonZero {
 		return "", fmt.Errorf("unexpected prefix")
 	}
 	var buf strings.Builder

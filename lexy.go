@@ -40,46 +40,46 @@ type Codec[T any] interface {
 //
 // This prevents ambiguous encodings like these (0x00 is the delimiter between slice elements):
 //
-//  ""                     => []
+//	""                     => []
 //
-//  []string{}             => []
-//  []string{""}           => []
+//	[]string{}             => []
+//	[]string{""}           => []
 //
-//  [][]string{{}, {}}     => [0x00]
-//  [][]string{{}, {""}}   => [0x00]
-//  [][]string{{""}, {}}   => [0x00]
-//  [][]string{{""}, {""}} => [0x00]
+//	[][]string{{}, {}}     => [0x00]
+//	[][]string{{}, {""}}   => [0x00]
+//	[][]string{{""}, {}}   => [0x00]
+//	[][]string{{""}, {""}} => [0x00]
 //
 // which would instead be encoded as (in sort order within groups):
 //
-//  ""                     => [0x03]
-//                            [zero-string]
+//	""                     => [0x03]
+//	                          [zero-string]
 //
-//  []string{}             => [0x03]
-//                            [zero-slice]
-//  []string{""}           => [0x04, 0x03]
-//                            [non-zero-slice, esc[zero-string]]
+//	[]string{}             => [0x03]
+//	                          [zero-slice]
+//	[]string{""}           => [0x04, 0x03]
+//	                          [non-zero-slice, esc[zero-string]]
 //
-//  [][]string{{}, {}}     => [0x04, 0x03, 0x00, 0x03]
-//                            [non-zero-slice,
-//                               esc[zero-slice], delim,
-//                               esc[zero-slice]]
-//  [][]string{{}, {""}}   => [0x04, 0x03, 0x00, 0x04, 0x03]
-//                            [non-zero-slice,
-//                               esc[zero-slice], delim,
-//                               esc[non-zero-slice, esc[zero-string]]]
-//  [][]string{{""}, {}}   => [0x04, 0x04, 0x03, 0x00, 0x03]
-//                            [non-zero-slice,
-//                               esc[non-zero-slice, esc[zero-string]], delim,
-//                               esc[zero-slice]]
-//  [][]string{{""}, {""}} => [0x04, 0x04, 0x03, 0x00, 0x04, 0x03]
-//                            [non-zero-slice,
-//                               esc[non-zero-slice, esc[zero-string]], delim,
-//                               esc[non-zero-slice, esc[zero-string]]]
+//	[][]string{{}, {}}     => [0x04, 0x03, 0x00, 0x03]
+//	                          [non-zero-slice,
+//	                             esc[zero-slice], delim,
+//	                             esc[zero-slice]]
+//	[][]string{{}, {""}}   => [0x04, 0x03, 0x00, 0x04, 0x03]
+//	                          [non-zero-slice,
+//	                             esc[zero-slice], delim,
+//	                             esc[non-zero-slice, esc[zero-string]]]
+//	[][]string{{""}, {}}   => [0x04, 0x04, 0x03, 0x00, 0x03]
+//	                          [non-zero-slice,
+//	                             esc[non-zero-slice, esc[zero-string]], delim,
+//	                             esc[zero-slice]]
+//	[][]string{{""}, {""}} => [0x04, 0x04, 0x03, 0x00, 0x04, 0x03]
+//	                          [non-zero-slice,
+//	                             esc[non-zero-slice, esc[zero-string]], delim,
+//	                             esc[non-zero-slice, esc[zero-string]]]
 const (
 	// 0x02 is reserved for nil if that becomes necessary.
-	PrefixZeroValue    byte = internal.PrefixZeroValue
-	PrefixNonZeroValue byte = internal.PrefixNonZeroValue
+	PrefixZero    byte = internal.PrefixZero
+	PrefixNonZero byte = internal.PrefixNonZero
 )
 
 // Encode returns value encoded using codec as a new []byte.
