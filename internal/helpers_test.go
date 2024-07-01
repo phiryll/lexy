@@ -31,8 +31,6 @@ const (
 
 // Tests:
 // - codec.Read() and codec.Write() are invertible for the given test cases
-// - codec.Read() fails when reading from a failing io.Reader
-// - codec.Write() fails when writing the zero value of T to a failing io.Writer
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
@@ -42,12 +40,7 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 				assert.Equal(t, tt.value, got)
 			})
 		}
-		t.Run("fail", func(t *testing.T) {
-			_, err := codec.Read(failReader{})
-			assert.Error(t, err)
-		})
 	})
-
 	t.Run("write", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -57,11 +50,20 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 				assert.Equal(t, tt.data, b.Bytes())
 			})
 		}
-		t.Run("fail", func(t *testing.T) {
-			var zero T
-			err := codec.Write(failWriter{}, zero)
-			require.Error(t, err)
-		})
+	})
+}
+
+// Tests:
+// - codec.Read() fails when reading from a failing io.Reader
+// - codec.Write() fails when writing nonEmpty to a failing io.Writer
+func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
+	t.Run("read", func(t *testing.T) {
+		_, err := codec.Read(failReader{})
+		assert.Error(t, err)
+	})
+	t.Run("write", func(t *testing.T) {
+		err := codec.Write(failWriter{}, nonEmpty)
+		assert.Error(t, err)
 	})
 }
 
