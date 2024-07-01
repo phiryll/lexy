@@ -33,9 +33,9 @@ type Codec[T any] interface {
 	Read(r io.Reader) (T, error)
 }
 
-// Prefixes to use for encodings that would normally encode a zero value as zero bytes.
-// Only nil should be encoded as zero bytes, and zero is not nil in lexy.
-// The values were chosen so that nil < zero < non-zero, and the prefixes don't need to be escaped.
+// Prefixes to use for encodings that would normally encode an empty value as zero bytes.
+// Only nil should be encoded as zero bytes, empty is not nil in lexy for all types.
+// The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
 // This is normally only an issue for variable length encodings.
 //
 // This prevents ambiguous encodings like these (0x00 is the delimiter between slice elements):
@@ -53,33 +53,33 @@ type Codec[T any] interface {
 // which would instead be encoded as (in sort order within groups):
 //
 //	""                     => [0x03]
-//	                          [zero-string]
+//	                          [empty-string]
 //
 //	[]string{}             => [0x03]
-//	                          [zero-slice]
+//	                          [empty-slice]
 //	[]string{""}           => [0x04, 0x03]
-//	                          [non-zero-slice, esc[zero-string]]
+//	                          [non-empty-slice, empty-string]
 //
 //	[][]string{{}, {}}     => [0x04, 0x03, 0x00, 0x03]
-//	                          [non-zero-slice,
-//	                             esc[zero-slice], delim,
-//	                             esc[zero-slice]]
+//	                          [non-empty-slice,
+//	                             empty-slice, delim,
+//	                             empty-slice]
 //	[][]string{{}, {""}}   => [0x04, 0x03, 0x00, 0x04, 0x03]
-//	                          [non-zero-slice,
-//	                             esc[zero-slice], delim,
-//	                             esc[non-zero-slice, esc[zero-string]]]
+//	                          [non-empty-slice,
+//	                             empty-slice, delim,
+//	                             non-empty-slice, empty-string]
 //	[][]string{{""}, {}}   => [0x04, 0x04, 0x03, 0x00, 0x03]
-//	                          [non-zero-slice,
-//	                             esc[non-zero-slice, esc[zero-string]], delim,
-//	                             esc[zero-slice]]
+//	                          [non-empty-slice,
+//	                             non-empty-slice, empty-string, delim,
+//	                             empty-slice]
 //	[][]string{{""}, {""}} => [0x04, 0x04, 0x03, 0x00, 0x04, 0x03]
-//	                          [non-zero-slice,
-//	                             esc[non-zero-slice, esc[zero-string]], delim,
-//	                             esc[non-zero-slice, esc[zero-string]]]
+//	                          [non-empty-slice,
+//	                             non-empty-slice, empty-string, delim,
+//	                             non-empty-slice, empty-string]
 const (
 	// 0x02 is reserved for nil if that becomes necessary.
-	PrefixZero    byte = internal.PrefixZero
-	PrefixNonZero byte = internal.PrefixNonZero
+	PrefixEmpty    byte = internal.PrefixEmpty
+	PrefixNonEmpty byte = internal.PrefixNonEmpty
 )
 
 const (

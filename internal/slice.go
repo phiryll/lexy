@@ -10,9 +10,9 @@ import (
 // Use NewSliceCodec[T](codec[T]) to create a new SliceCodec.
 // A slice is encoded as:
 //
-//	if nil, nothing
-//	if empty, PrefixZero
-//	if non-empty, PrefixNonZero followed by its elements encoded and escaped separated by (unescaped) delimiters
+// - if nil, nothing
+// - if empty, PrefixEmpty
+// - if non-empty, PrefixNonEmpty followed by its elements encoded and escaped separated by (unescaped) delimiters
 type SliceCodec[T any] struct {
 	elementCodec codec[T]
 }
@@ -40,12 +40,12 @@ func (c SliceCodec[T]) Read(r io.Reader) ([]T, error) {
 		return nil, err
 	}
 	switch prefix[0] {
-	case PrefixZero:
+	case PrefixEmpty:
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
 		return []T{}, nil
-	case PrefixNonZero:
+	case PrefixNonEmpty:
 		var values []T
 		for {
 			// err1 = io.Reader failed, may be EOF
@@ -78,10 +78,10 @@ func (c SliceCodec[T]) Write(w io.Writer, values []T) error {
 		return nil
 	}
 	if len(values) == 0 {
-		_, err := w.Write(prefixZero)
+		_, err := w.Write(prefixEmpty)
 		return err
 	}
-	if _, err := w.Write(prefixNonZero); err != nil {
+	if _, err := w.Write(prefixNonEmpty); err != nil {
 		return err
 	}
 	var buf bytes.Buffer

@@ -14,12 +14,12 @@ type codec[T any] interface {
 // Prefixes, documented in lexy.go
 const (
 	// 0x02 is reserved for nil if that becomes necessary.
-	PrefixZero    byte = 0x03
-	PrefixNonZero byte = 0x04
+	PrefixEmpty    byte = 0x03
+	PrefixNonEmpty byte = 0x04
 )
 
 // Convenience byte slices.
 var (
-	prefixZero    = []byte{PrefixZero}
-	prefixNonZero = []byte{PrefixNonZero}
+	prefixEmpty    = []byte{PrefixEmpty}
+	prefixNonEmpty = []byte{PrefixNonEmpty}
 )

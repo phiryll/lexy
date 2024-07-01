@@ -23,10 +23,10 @@ type testCase[T any] struct {
 
 // Just to make the test cases terser.
 const (
-	del     byte = internal.DelimiterByte
-	esc     byte = internal.EscapeByte
-	zero    byte = internal.PrefixZero
-	nonZero byte = internal.PrefixNonZero
+	del      byte = internal.DelimiterByte
+	esc      byte = internal.EscapeByte
+	empty    byte = internal.PrefixEmpty
+	nonEmpty byte = internal.PrefixNonEmpty
 )
 
 // Tests:
