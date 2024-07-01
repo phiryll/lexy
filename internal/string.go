@@ -21,32 +21,37 @@ import (
 type StringCodec struct{}
 
 func (c StringCodec) Read(r io.Reader) (string, error) {
-	// TODO: clean this up a little bit, it's messy
 	prefix := []byte{0}
 	n, err := r.Read(prefix)
 	if n == 0 {
-		if err == nil {
-			return "", fmt.Errorf("no bytes read and no error")
+		if err == nil || err == io.EOF {
+			return "", io.ErrUnexpectedEOF
 		}
 		return "", err
 	}
-	if prefix[0] == PrefixZero {
-		if err == io.EOF {
-			return "", nil
+	switch prefix[0] {
+	case PrefixZero:
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+		return "", nil
+	case PrefixNonZero:
+		var buf strings.Builder
+		// io.Copy will not return io.EOF
+		n, err := io.Copy(&buf, r)
+		if err != nil {
+			return "", err
+		}
+		if n == 0 {
+			return "", io.ErrUnexpectedEOF
+		}
+		return buf.String(), nil
+	default:
+		if err == nil || err == io.EOF {
+			err = fmt.Errorf("unexpected prefix %X", prefix[0])
 		}
 		return "", err
 	}
-	if err != nil {
-		return "", err
-	}
-	if prefix[0] != PrefixNonZero {
-		return "", fmt.Errorf("unexpected prefix")
-	}
-	var buf strings.Builder
-	if _, err := io.Copy(&buf, r); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
 }
 
 func (c StringCodec) Write(w io.Writer, value string) error {
