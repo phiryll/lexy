@@ -8,9 +8,9 @@ import (
 
 func TestStringCodec(t *testing.T) {
 	testCodec[string](t, internal.StringCodec{}, []testCase[string]{
-		{"empty", "", []byte{0x03}},
-		{"a", "a", []byte{0x04, 'a'}},
-		{"xyz", "xyz", []byte{0x04, 'x', 'y', 'z'}},
-		{"⌘", "⌘", []byte{0x04, 0xE2, 0x8C, 0x98}},
+		{"empty", "", []byte{zero}},
+		{"a", "a", []byte{nonZero, 'a'}},
+		{"xyz", "xyz", []byte{nonZero, 'x', 'y', 'z'}},
+		{"⌘", "⌘", []byte{nonZero, 0xE2, 0x8C, 0x98}},
 	})
 }

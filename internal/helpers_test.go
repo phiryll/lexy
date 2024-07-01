@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/phiryll/lexy/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,6 +20,14 @@ type testCase[T any] struct {
 	value T
 	data  []byte
 }
+
+// Just to make the test cases terser.
+const (
+	del     byte = internal.DelimiterByte
+	esc     byte = internal.EscapeByte
+	zero    byte = internal.PrefixZero
+	nonZero byte = internal.PrefixNonZero
+)
 
 // Tests:
 // - codec.Read() and codec.Write() are invertible for the given test cases
