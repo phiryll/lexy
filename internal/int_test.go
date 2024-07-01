@@ -10,7 +10,7 @@ import (
 // Testing bool, uint/int8, and uint/int32 should be sufficient. 16 and
 // 64 bit ints use the same logic.
 
-func TestBoolCodec(t *testing.T) {
+func TestBool(t *testing.T) {
 	codec := internal.UintCodec[bool]{}
 	testCodec[bool](t, codec, []testCase[bool]{
 		{"false", false, []byte{0}},
@@ -19,7 +19,7 @@ func TestBoolCodec(t *testing.T) {
 	testCodecFail[bool](t, codec, false)
 }
 
-func TestUint8Codec(t *testing.T) {
+func TestUint8(t *testing.T) {
 	codec := internal.UintCodec[uint8]{}
 	testCodec[uint8](t, codec, []testCase[uint8]{
 		{"0x00", 0x00, []byte{0x00}},
@@ -31,7 +31,7 @@ func TestUint8Codec(t *testing.T) {
 	testCodecFail[uint8](t, codec, 0)
 }
 
-func TestUint32Codec(t *testing.T) {
+func TestUint32(t *testing.T) {
 	codec := internal.UintCodec[uint32]{}
 	testCodec[uint32](t, codec, []testCase[uint32]{
 		{"0x00000000", 0x00000000, []byte{0x00, 0x00, 0x00, 0x00}},
@@ -43,7 +43,7 @@ func TestUint32Codec(t *testing.T) {
 	testCodecFail[uint32](t, codec, 0)
 }
 
-func TestInt8Codec(t *testing.T) {
+func TestInt8(t *testing.T) {
 	codec := internal.IntCodec[int8]{Mask: math.MinInt8}
 	testCodec[int8](t, codec, []testCase[int8]{
 		{"min", math.MinInt8, []byte{0x00}},
@@ -55,7 +55,7 @@ func TestInt8Codec(t *testing.T) {
 	testCodecFail[int8](t, codec, 0)
 }
 
-func TestInt32Codec(t *testing.T) {
+func TestInt32(t *testing.T) {
 	codec := internal.IntCodec[int32]{Mask: math.MinInt32}
 	testCodec[int32](t, codec, []testCase[int32]{
 		{"min", math.MinInt32, []byte{0x00, 0x00, 0x00, 0x00}},

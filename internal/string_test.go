@@ -6,7 +6,7 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-func TestStringCodec(t *testing.T) {
+func TestString(t *testing.T) {
 	codec := internal.StringCodec{}
 	testCodec[string](t, codec, []testCase[string]{
 		{"empty", "", []byte{zero}},
