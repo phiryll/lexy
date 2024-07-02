@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 )
 
@@ -31,61 +30,45 @@ func NewSliceCodec[T any](elementCodec codec[T]) SliceCodec[T] {
 }
 
 func (c SliceCodec[T]) Read(r io.Reader) ([]T, error) {
-	prefix := []byte{0}
-	n, err := r.Read(prefix)
-	if n == 0 {
-		if err == nil || err == io.EOF {
-			return nil, nil
-		}
-		return nil, err
+	empty := []T{}
+	if value, done, err := readPrefix[[]T](r, true, &empty); done {
+		return value, err
 	}
-	switch prefix[0] {
-	case PrefixEmpty:
-		if err != nil && err != io.EOF {
-			return nil, err
+	var values []T
+	for {
+		b, readErr := Unescape(r)
+		if readErr != nil && readErr != io.EOF {
+			return values, readErr
 		}
-		return []T{}, nil
-	case PrefixNonEmpty:
-		var values []T
-		for {
-			// err1 = io.Reader failed, may be EOF
-			// err2 = Codec translation failed
-			b, err1 := Unescape(r)
-			value, err2 := c.elementCodec.Read(bytes.NewBuffer(b))
-			values = append(values, value)
-			if err1 == io.EOF {
-				break
-			}
-			if err1 != nil {
-				return values, err1
-			}
-			if err2 != nil {
-				return values, err2
-			}
+		value, codecErr := c.elementCodec.Read(bytes.NewBuffer(b))
+		if codecErr != nil && codecErr != io.EOF {
+			return values, codecErr
 		}
-		return values, nil
-	default:
-		if err == nil || err == io.EOF {
-			err = fmt.Errorf("unexpected prefix %X", prefix[0])
+		values = append(values, value)
+		if readErr == io.EOF {
+			break
 		}
-		return nil, err
-	}
-}
-
-func (c SliceCodec[T]) Write(w io.Writer, values []T) error {
-	// Enclosing Codec (if any) will write a trailing delimiter if needed.
-	if values == nil {
-		return nil
 	}
 	if len(values) == 0 {
-		_, err := w.Write(prefixEmpty)
-		return err
+		return nil, io.ErrUnexpectedEOF
 	}
-	if _, err := w.Write(prefixNonEmpty); err != nil {
+	return values, nil
+}
+
+func isNilSlice[T any](value []T) bool {
+	return value == nil
+}
+
+func isEmptySlice[T any](value []T) bool {
+	return len(value) == 0
+}
+
+func (c SliceCodec[T]) Write(w io.Writer, value []T) error {
+	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
 	var buf bytes.Buffer
-	for i, value := range values {
+	for i, value := range value {
 		if i != 0 {
 			if _, err := w.Write(del); err != nil {
 				return err

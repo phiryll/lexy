@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"io"
 	"strings"
 )
@@ -21,45 +20,25 @@ import (
 type StringCodec struct{}
 
 func (c StringCodec) Read(r io.Reader) (string, error) {
-	prefix := []byte{0}
-	n, err := r.Read(prefix)
+	if value, done, err := readPrefix[string](r, false, nil); done {
+		return value, err
+	}
+	var buf strings.Builder
+	// io.Copy will not return io.EOF
+	n, err := io.Copy(&buf, r)
+	if err != nil {
+		return "", err
+	}
 	if n == 0 {
-		if err == nil || err == io.EOF {
-			return "", io.ErrUnexpectedEOF
-		}
-		return "", err
+		return "", io.ErrUnexpectedEOF
 	}
-	switch prefix[0] {
-	case PrefixEmpty:
-		if err != nil && err != io.EOF {
-			return "", err
-		}
-		return "", nil
-	case PrefixNonEmpty:
-		var buf strings.Builder
-		// io.Copy will not return io.EOF
-		n, err := io.Copy(&buf, r)
-		if err != nil {
-			return "", err
-		}
-		if n == 0 {
-			return "", io.ErrUnexpectedEOF
-		}
-		return buf.String(), nil
-	default:
-		if err == nil || err == io.EOF {
-			err = fmt.Errorf("unexpected prefix %X", prefix[0])
-		}
-		return "", err
-	}
+	return buf.String(), nil
 }
 
+func isEmptyString(s string) bool { return len(s) == 0 }
+
 func (c StringCodec) Write(w io.Writer, value string) error {
-	if value == "" {
-		_, err := w.Write(prefixEmpty)
-		return err
-	}
-	if _, err := w.Write(prefixNonEmpty); err != nil {
+	if done, err := writePrefix(w, nil, isEmptyString, value); done {
 		return err
 	}
 	_, err := io.WriteString(w, value)
