@@ -7,7 +7,7 @@ import (
 )
 
 func TestString(t *testing.T) {
-	codec := internal.StringCodec{}
+	codec := internal.StringCodec
 	testCodec[string](t, codec, []testCase[string]{
 		{"empty", "", []byte{empty}},
 		{"a", "a", []byte{nonEmpty, 'a'}},

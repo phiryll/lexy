@@ -175,7 +175,7 @@ func TestNames32(t *testing.T) {
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
 	encode := func(value float32) []byte {
-		c := internal.Float32Codec{}
+		c := internal.Float32Codec
 		var b bytes.Buffer
 		if err := c.Write(&b, value); err != nil {
 			panic(err)
@@ -283,7 +283,7 @@ func TestNames64(t *testing.T) {
 
 func TestFloat64CodecOrdering(t *testing.T) {
 	encode := func(value float64) []byte {
-		c := internal.Float64Codec{}
+		c := internal.Float64Codec
 		var b bytes.Buffer
 		if err := c.Write(&b, value); err != nil {
 			panic(err)

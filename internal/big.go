@@ -5,22 +5,27 @@ import (
 	"math/big"
 )
 
-type BigIntCodec struct{}
+var (
+	BigIntCodec   codec[big.Int]   = bigIntCodec{}
+	BigFloatCodec codec[big.Float] = bigFloatCodec{}
+)
 
-func (c BigIntCodec) Read(r io.Reader) (big.Int, error) {
+type bigIntCodec struct{}
+
+func (c bigIntCodec) Read(r io.Reader) (big.Int, error) {
 	panic("unimplemented")
 }
 
-func (c BigIntCodec) Write(w io.Writer, value big.Int) error {
+func (c bigIntCodec) Write(w io.Writer, value big.Int) error {
 	panic("unimplemented")
 }
 
-type BigFloatCodec struct{}
+type bigFloatCodec struct{}
 
-func (c BigFloatCodec) Read(r io.Reader) (big.Float, error) {
+func (c bigFloatCodec) Read(r io.Reader) (big.Float, error) {
 	panic("unimplemented")
 }
 
-func (c BigFloatCodec) Write(w io.Writer, value big.Float) error {
+func (c bigFloatCodec) Write(w io.Writer, value big.Float) error {
 	panic("unimplemented")
 }

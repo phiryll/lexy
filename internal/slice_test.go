@@ -1,14 +1,13 @@
 package internal_test
 
 import (
-	"math"
 	"testing"
 
 	"github.com/phiryll/lexy/internal"
 )
 
 func TestSliceInt32(t *testing.T) {
-	elementCodec := internal.IntCodec[int32]{Mask: math.MinInt32}
+	elementCodec := internal.Int32Codec
 	codec := internal.NewSliceCodec[int32](elementCodec)
 	testCodec[[]int32](t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
@@ -26,7 +25,7 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
-	stringCodec := internal.StringCodec{}
+	stringCodec := internal.StringCodec
 	codec := internal.NewSliceCodec[string](stringCodec)
 	testCodec[[]string](t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
@@ -44,7 +43,7 @@ func TestSliceString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
-	int32Codec := internal.IntCodec[int32]{Mask: math.MinInt32}
+	int32Codec := internal.Int32Codec
 	sliceCodec := internal.NewSliceCodec[int32](int32Codec)
 	codec := internal.NewSliceCodec[[]int32](sliceCodec)
 	testCodec[[][]int32](t, codec, []testCase[[][]int32]{
@@ -80,7 +79,7 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
-	stringCodec := internal.StringCodec{}
+	stringCodec := internal.StringCodec
 	sliceCodec := internal.NewSliceCodec[string](stringCodec)
 	codec := internal.NewSliceCodec[[]string](sliceCodec)
 

@@ -5,7 +5,11 @@ import (
 	"strings"
 )
 
-// StringCodec is the Codec for strings.
+var (
+	StringCodec codec[string] = stringCodec{}
+)
+
+// stringCodec is the Codec for strings.
 //
 // A string is encoded as its bytes following PrefixEmpty or PrefixNonEmpty.
 // Read will fully consume its argument io.Reader if the string is non-empty.
@@ -17,9 +21,9 @@ import (
 // If your string is UTF-8, then the order is the same as the order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
 // Collation is locale-dependent. Any order you choose could be incorrect in another locale.
-type StringCodec struct{}
+type stringCodec struct{}
 
-func (c StringCodec) Read(r io.Reader) (string, error) {
+func (c stringCodec) Read(r io.Reader) (string, error) {
 	if value, done, err := readPrefix[string](r, false, nil); done {
 		return value, err
 	}
@@ -37,7 +41,7 @@ func (c StringCodec) Read(r io.Reader) (string, error) {
 
 func isEmptyString(s string) bool { return len(s) == 0 }
 
-func (c StringCodec) Write(w io.Writer, value string) error {
+func (c stringCodec) Write(w io.Writer, value string) error {
 	if done, err := writePrefix(w, nil, isEmptyString, value); done {
 		return err
 	}

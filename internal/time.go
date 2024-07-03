@@ -5,16 +5,20 @@ import (
 	"time"
 )
 
+var (
+	TimeCodec codec[time.Time] = timeCodec{}
+)
+
 // Needs to encode both the UTC instant and time zone.
 // UTC instant: Time.MarshalText() ?
 // Time zones should be meaningfully sorted, but how to distinguish daylight-savings from not?
 
-type TimeCodec struct{}
+type timeCodec struct{}
 
-func (c TimeCodec) Read(r io.Reader) (time.Time, error) {
+func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	panic("unimplemented")
 }
 
-func (c TimeCodec) Write(w io.Writer, value time.Time) error {
+func (c timeCodec) Write(w io.Writer, value time.Time) error {
 	panic("unimplemented")
 }

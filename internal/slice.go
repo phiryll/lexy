@@ -5,19 +5,19 @@ import (
 	"io"
 )
 
-// SliceCodec is the Codec for slices, using elementCodec to encode and decode its elements.
-// Use NewSliceCodec[T](codec[T]) to create a new SliceCodec.
+// sliceCodec is the Codec for slices, using elementCodec to encode and decode its elements.
+// Use NewSliceCodec[T](codec[T]) to create a new sliceCodec.
 // A slice is encoded as:
 //
 // - if nil, nothing
 // - if empty, PrefixEmpty
 // - if non-empty, PrefixNonEmpty followed by its elements encoded and escaped separated by (unescaped) delimiters
-type SliceCodec[T any] struct {
+type sliceCodec[T any] struct {
 	elementCodec codec[T]
 }
 
-func NewSliceCodec[T any](elementCodec codec[T]) SliceCodec[T] {
-	// TODO: check nil, use default if possible based on T
+func NewSliceCodec[T any](elementCodec codec[T]) codec[[]T] {
+	// TODO: use default if possible based on T
 	//
 	// TODO: Might want 2 implementations based on T,
 	// whether elements require escaping and delimiting or not.
@@ -26,10 +26,10 @@ func NewSliceCodec[T any](elementCodec codec[T]) SliceCodec[T] {
 	if elementCodec == nil {
 		panic("elementCodec must be non-nil")
 	}
-	return SliceCodec[T]{elementCodec}
+	return sliceCodec[T]{elementCodec}
 }
 
-func (c SliceCodec[T]) Read(r io.Reader) ([]T, error) {
+func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
 	empty := []T{}
 	if value, done, err := readPrefix[[]T](r, true, &empty); done {
 		return value, err
@@ -63,7 +63,7 @@ func isEmptySlice[T any](value []T) bool {
 	return len(value) == 0
 }
 
-func (c SliceCodec[T]) Write(w io.Writer, value []T) error {
+func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
