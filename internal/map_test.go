@@ -2,7 +2,6 @@ package internal_test
 
 import (
 	"bytes"
-	"maps"
 	"math"
 	"testing"
 
@@ -28,23 +27,37 @@ func TestMap(t *testing.T) {
 
 	// Can't easily test the encoded bytes, so we're testing the round trip instead.
 	t.Run("non-trivial", func(t *testing.T) {
-		original := map[string]int32{
+		m := map[string]int32{
 			"a": 0,
 			"b": -1,
 			"":  1000,
 			"c": math.MaxInt32,
 			"d": math.MinInt32,
 		}
-		// shallow clone, but that's fine for string and int32
-		clone := maps.Clone(original)
-
 		var b bytes.Buffer
-		err := codec.Write(&b, clone)
+		err := codec.Write(&b, m)
 		require.NoError(t, err)
 
 		got, err := codec.Read(bytes.NewReader(b.Bytes()))
 		require.NoError(t, err)
-		assert.Equal(t, original, got, "round trip")
+		assert.Equal(t, m, got, "round trip")
 		// Just double-checking that m was not mutated
+	})
+
+	t.Run("nested", func(t *testing.T) {
+		codec := internal.NewMapCodec(stringCodec, internal.NewSliceCodec(stringCodec))
+		m := map[string][]string{
+			"a": {"x", "y", "zq"},
+			"b": nil,
+			"":  {"p", "q"},
+			"c": {},
+		}
+		var b bytes.Buffer
+		err := codec.Write(&b, m)
+		require.NoError(t, err)
+
+		got, err := codec.Read(bytes.NewReader(b.Bytes()))
+		require.NoError(t, err)
+		assert.Equal(t, m, got, "round trip")
 	})
 }
