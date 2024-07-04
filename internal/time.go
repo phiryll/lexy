@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"io"
 	"time"
 )
@@ -9,16 +10,66 @@ var (
 	TimeCodec codec[time.Time] = timeCodec{}
 )
 
-// Needs to encode both the UTC instant and time zone.
-// UTC instant: Time.MarshalText() ?
-// Time zones should be meaningfully sorted, but how to distinguish daylight-savings from not?
-
+// timeCodec is the Codec for time.Time instances.
+//
+// Unlike most Codecs, timeCodec is lossy. It encodes the timezone's offset, but not its name.
+// It will therefore lose information about Daylight Saving Time.
+// The order of encoded instances is UTC time first, timezone offset second.
+//
+// A time.Time is encoded as the below values, using Int64Codec and Int32Codec.
+//
+//	int64 seconds since epoch (UTC)
+//	int32 nanoseconds with the second
+//	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
+func unexpectedIfEOF(err error) error {
+	if err == io.EOF {
+		return io.ErrUnexpectedEOF
+	}
+	return err
+}
+
+func formatOffset(seconds int32) string {
+	sign := '+'
+	if seconds < 0 {
+		sign = '-'
+		seconds = -seconds
+	}
+	minutes := seconds / 60
+	hours := minutes / 60
+	return fmt.Sprintf("%c%02d:%02d:%02d", sign, hours, minutes%60, seconds%60)
+}
+
 func (c timeCodec) Read(r io.Reader) (time.Time, error) {
-	panic("unimplemented")
+	var zero time.Time
+	seconds, err := Int64Codec.Read(r)
+	if err != nil {
+		return zero, unexpectedIfEOF(err)
+	}
+	nanos, err := Int32Codec.Read(r)
+	if err != nil {
+		return zero, unexpectedIfEOF(err)
+	}
+	offset, err := Int32Codec.Read(r)
+	if err != nil {
+		return zero, unexpectedIfEOF(err)
+	}
+	loc := time.FixedZone(formatOffset(offset), int(offset))
+	return time.Unix(seconds, int64(nanos)).In(loc), nil
 }
 
 func (c timeCodec) Write(w io.Writer, value time.Time) error {
-	panic("unimplemented")
+	utc := value.UTC()
+	seconds := utc.Unix()     // int64 seconds since epoch
+	nanos := utc.Nanosecond() // int nanoseconds within second (9 decimal digits, cast to int32)
+	_, offset := value.Zone() // abbreviation (ignored), int seconds east of UTC (cast to int32)
+
+	if err := Int64Codec.Write(w, seconds); err != nil {
+		return err
+	}
+	if err := Int32Codec.Write(w, int32(nanos)); err != nil {
+		return err
+	}
+	return Int32Codec.Write(w, int32(offset))
 }
