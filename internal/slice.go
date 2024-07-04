@@ -60,6 +60,7 @@ func isNilSlice[T any](value []T) bool {
 }
 
 func isEmptySlice[T any](value []T) bool {
+	// okay to be true for a nil slice, nil is tested first
 	return len(value) == 0
 }
 
@@ -69,7 +70,7 @@ func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 	}
 	var buf bytes.Buffer
 	for i, value := range value {
-		if i != 0 {
+		if i > 0 {
 			if _, err := w.Write(del); err != nil {
 				return err
 			}
