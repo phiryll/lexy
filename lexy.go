@@ -113,7 +113,7 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
-// Codecs that are safe to copy.
+// Codecs that only need one instance, and have only primitive fields.
 
 func BoolCodec() Codec[bool]          { return internal.BoolCodec }
 func UInt8Codec() Codec[uint8]        { return internal.Uint8Codec }
@@ -131,7 +131,7 @@ func BigFloatCodec() Codec[big.Float] { return internal.BigFloatCodec }
 func StringCodec() Codec[string]      { return internal.StringCodec }
 func TimeCodec() Codec[time.Time]     { return internal.TimeCodec }
 
-// Codecs with internal state that may not be safe to copy.
+// Codecs that delegate to other Codecs.
 
 func SliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
 	return internal.NewSliceCodec[T](elementCodec)
