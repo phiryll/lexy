@@ -14,12 +14,15 @@ var (
 //
 // Unlike most Codecs, timeCodec is lossy. It encodes the timezone's offset, but not its name.
 // It will therefore lose information about Daylight Saving Time.
+// Timezone names and DST behavior are defined outside go's control (as they must be),
+// and time.Time.Zone can return names that will fail with time.Location.LoadLocation.
 // The order of encoded instances is UTC time first, timezone offset second.
 //
-// A time.Time is encoded as the below values, using Int64Codec and Int32Codec.
+// A time.Time is encoded as the below values,
+// using the appropriate uint/int codecs so that the encoded sort order is correct.
 //
 //	int64 seconds since epoch (UTC)
-//	int32 nanoseconds with the second
+//	uint32 nanoseconds with the second
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
@@ -47,7 +50,7 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	if err != nil {
 		return zero, unexpectedIfEOF(err)
 	}
-	nanos, err := Int32Codec.Read(r)
+	nanos, err := Uint32Codec.Read(r)
 	if err != nil {
 		return zero, unexpectedIfEOF(err)
 	}
@@ -68,7 +71,7 @@ func (c timeCodec) Write(w io.Writer, value time.Time) error {
 	if err := Int64Codec.Write(w, seconds); err != nil {
 		return err
 	}
-	if err := Int32Codec.Write(w, int32(nanos)); err != nil {
+	if err := Uint32Codec.Write(w, uint32(nanos)); err != nil {
 		return err
 	}
 	return Int32Codec.Write(w, int32(offset))
