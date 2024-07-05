@@ -14,19 +14,11 @@ import (
 //   - if non-empty, PrefixNonEmpty followed by its entries separated by (unescaped) delimiters,
 //     each entry encoded as [escaped key, delimiter, escaped value]
 type mapCodec[K comparable, V any] struct {
-	keyCodec   codec[K]
-	valueCodec codec[V]
+	pairCodec pairCodec[K, V]
 }
 
 func NewMapCodec[K comparable, V any](keyCodec codec[K], valueCodec codec[V]) codec[map[K]V] {
-	// TODO: use default if possible based on types
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
-	return mapCodec[K, V]{keyCodec, valueCodec}
+	return mapCodec[K, V]{newPairCodec[K, V](keyCodec, valueCodec)}
 }
 
 func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
@@ -36,27 +28,14 @@ func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 	}
 	m := make(map[K]V)
 	for {
-		b, readErr := Unescape(r)
-		if readErr != nil && readErr != io.EOF {
-			return m, readErr
-		}
-		key, codecErr := c.keyCodec.Read(bytes.NewBuffer(b))
-		if codecErr != nil && codecErr != io.EOF {
-			return m, codecErr
-		}
-
-		b, readErr = Unescape(r)
-		if readErr != nil && readErr != io.EOF {
-			return m, readErr
-		}
-		value, codecErr := c.valueCodec.Read(bytes.NewBuffer(b))
-		if codecErr != nil && codecErr != io.EOF {
-			return m, codecErr
-		}
-		m[key] = value
-		if readErr == io.EOF {
+		key, value, err := c.pairCodec.read(r)
+		if err == io.EOF {
 			break
 		}
+		if err != nil {
+			return m, err
+		}
+		m[key] = value
 	}
 	if len(m) == 0 {
 		return nil, io.ErrUnexpectedEOF
@@ -86,25 +65,9 @@ func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 			}
 		}
 		notFirst = true
-
-		if err := c.keyCodec.Write(&buf, k); err != nil {
+		if err := c.pairCodec.write(w, k, v, &buf); err != nil {
 			return err
 		}
-		if _, err := Escape(w, buf.Bytes()); err != nil {
-			return err
-		}
-		if _, err := w.Write(del); err != nil {
-			return err
-		}
-		buf.Reset()
-
-		if err := c.valueCodec.Write(&buf, v); err != nil {
-			return err
-		}
-		if _, err := Escape(w, buf.Bytes()); err != nil {
-			return err
-		}
-		buf.Reset()
 	}
 	return nil
 }
