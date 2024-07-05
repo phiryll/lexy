@@ -33,6 +33,8 @@ func unexpectedIfEOF(err error) error {
 	return err
 }
 
+var formatCache = NewCache[int32, string](formatOffset)
+
 func formatOffset(seconds int32) string {
 	sign := '+'
 	if seconds < 0 {
@@ -58,7 +60,7 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	if err != nil {
 		return zero, unexpectedIfEOF(err)
 	}
-	loc := time.FixedZone(formatOffset(offset), int(offset))
+	loc := time.FixedZone(formatCache.Get(offset), int(offset))
 	return time.Unix(seconds, int64(nanos)).In(loc), nil
 }
 
