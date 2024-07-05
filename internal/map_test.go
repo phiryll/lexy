@@ -20,7 +20,9 @@ func TestMap(t *testing.T) {
 		{"nil", nil, []byte(nil)},
 		{"empty", map[string]int32{}, []byte{empty}},
 		{"{a:0}", map[string]int32{"a": 0}, []byte{
-			nonEmpty, nonEmpty, 'a', del, 0x80, esc, 0x00, esc, 0x00, esc, 0x00,
+			nonEmpty,
+			nonEmpty, 'a', del,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
 		}},
 	})
 	testCodecFail[map[string]int32](t, codec, map[string]int32{})
