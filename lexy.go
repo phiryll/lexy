@@ -24,6 +24,9 @@ import (
 // Read and Write may have to process data one byte at a time, so using buffered I/O is recommended.
 // Never use a buffered Reader wrapping the argument io.Reader within a Codec implementation.
 // If you use a buffered Writer within a Codec implementation, it must be flushed before returning.
+//
+// All Codec implementations in lexy are thread-safe,
+// including the codecs for slices, maps, and structs if their delegate Codecs are thread-safe.
 type Codec[T any] interface {
 	// Write writes value to w.
 	Write(w io.Writer, value T) error
