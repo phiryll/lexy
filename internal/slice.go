@@ -68,20 +68,20 @@ func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
-	var buf bytes.Buffer
+	var scratch bytes.Buffer
 	for i, value := range value {
 		if i > 0 {
 			if _, err := w.Write(del); err != nil {
 				return err
 			}
 		}
-		if err := c.elementCodec.Write(&buf, value); err != nil {
+		scratch.Reset()
+		if err := c.elementCodec.Write(&scratch, value); err != nil {
 			return err
 		}
-		if _, err := Escape(w, buf.Bytes()); err != nil {
+		if _, err := Escape(w, scratch.Bytes()); err != nil {
 			return err
 		}
-		buf.Reset()
 	}
 	return nil
 }
