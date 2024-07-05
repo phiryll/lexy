@@ -75,6 +75,9 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 		}
 		return zero, true, nil
 	case PrefixNonEmpty:
+		if err == io.EOF {
+			return zero, true, io.ErrUnexpectedEOF
+		}
 		return zero, false, err
 	default:
 		if err == nil || err == io.EOF {
