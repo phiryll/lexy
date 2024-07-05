@@ -54,7 +54,9 @@ var (
 // Escape does not write an unescaped trailing delimiter.
 // It returns the number of bytes read from p.
 func Escape(w io.Writer, p []byte) (int, error) {
-	var n int // running count of the number of bytes of p successfully processed.
+	// running count of the number of bytes of p successfully processed
+	// also used as the start of the next block of bytes to write
+	var n int
 	for i, b := range p {
 		switch b {
 		case DelimiterByte:
@@ -77,6 +79,8 @@ func Escape(w io.Writer, p []byte) (int, error) {
 				return n, err
 			}
 			n++
+		default:
+			// do nothing
 		}
 	}
 	if n < len(p) {
@@ -101,7 +105,7 @@ func Unescape(r io.Reader) ([]byte, error) {
 	in := []byte{0}
 	var out bytes.Buffer
 
-	var escaped bool // if the previous byte read is an escape
+	escaped := false // if the previous byte read is an escape
 	for {
 		n, err := r.Read(in)
 		if n == 0 {
@@ -111,14 +115,13 @@ func Unescape(r io.Reader) ([]byte, error) {
 			// no data read and err == nil is allowed
 			continue
 		}
-		switch in[0] {
-		case DelimiterByte:
-			if !escaped {
+		// handle unescaped delimiters and escapes
+		// everything else goes into the output as-is
+		if !escaped {
+			if in[0] == DelimiterByte {
 				return out.Bytes(), nil
 			}
-			escaped = false
-		case EscapeByte:
-			if !escaped {
+			if in[0] == EscapeByte {
 				escaped = true
 				continue
 			}
