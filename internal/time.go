@@ -50,8 +50,8 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 		return zero, unexpectedIfEOF(err)
 	}
 	offset, err := Int32Codec.Read(r)
-	if err != nil {
-		return zero, unexpectedIfEOF(err)
+	if err != nil && err != io.EOF {
+		return zero, err
 	}
 	loc := time.FixedZone(formatCache.Get(offset), int(offset))
 	return time.Unix(seconds, int64(nanos)).In(loc), nil
