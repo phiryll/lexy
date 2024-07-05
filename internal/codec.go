@@ -12,6 +12,13 @@ type codec[T any] interface {
 	Read(r io.Reader) (T, error)
 }
 
+func unexpectedIfEOF(err error) error {
+	if err == io.EOF {
+		return io.ErrUnexpectedEOF
+	}
+	return err
+}
+
 // Prefixes, documented in lexy.go
 const (
 	// 0x02 is reserved for nil if that becomes necessary.

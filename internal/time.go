@@ -26,13 +26,6 @@ var (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-func unexpectedIfEOF(err error) error {
-	if err == io.EOF {
-		return io.ErrUnexpectedEOF
-	}
-	return err
-}
-
 var formatCache = NewCache[int32, string](formatOffset)
 
 func formatOffset(seconds int32) string {
