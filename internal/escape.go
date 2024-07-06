@@ -42,10 +42,9 @@ const DelimiterByte byte = 0x00
 // because those are still just data at the level of the enclosing aggregate.
 const EscapeByte byte = 0x01
 
-// Convenience byte slices.
+// Convenience byte slices for writers.
 var (
 	del    = []byte{DelimiterByte}
-	esc    = []byte{EscapeByte}
 	escDel = []byte{EscapeByte, DelimiterByte}
 	escEsc = []byte{EscapeByte, EscapeByte}
 )
