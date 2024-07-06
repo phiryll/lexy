@@ -7,13 +7,13 @@ import (
 
 // Same interface as lexy.Codec, to avoid a circular dependency.
 // lexy.Codec cannot be a type alias to this, because generic type aliases are not permitted.
-type codec[T any] interface {
+type Codec[T any] interface {
 	Write(w io.Writer, value T) error
 	Read(r io.Reader) (T, error)
 }
 
-// The function signatures of codec.Read and codec.Write.
-// These are useful for implementing some codecs.
+// The function signatures of Codec.Read and Codec.Write.
+// These are useful for implementing some Codecs.
 type (
 	reader[T any] func(io.Reader) (T, error)
 	writer[T any] func(io.Writer, T) error

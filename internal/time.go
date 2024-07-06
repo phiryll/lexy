@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	TimeCodec codec[time.Time] = timeCodec{}
+	TimeCodec Codec[time.Time] = timeCodec{}
 )
 
 // timeCodec is the Codec for time.Time instances.
@@ -19,7 +19,7 @@ var (
 // The order of encoded instances is UTC time first, timezone offset second.
 //
 // A time.Time is encoded as the below values,
-// using the appropriate uint/int codecs so that the encoded sort order is correct.
+// using the appropriate uint/int Codecs so that the encoded sort order is correct.
 //
 //	int64 seconds since epoch (UTC)
 //	uint32 nanoseconds with the second

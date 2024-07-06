@@ -26,7 +26,7 @@ import (
 // If you use a buffered Writer within a Codec implementation, it must be flushed before returning.
 //
 // All Codec implementations in lexy are thread-safe,
-// including the codecs for slices, maps, and structs if their delegate Codecs are thread-safe.
+// including the Codecs for slices, maps, and structs if their delegate Codecs are thread-safe.
 type Codec[T any] interface {
 	// Write writes value to w.
 	Write(w io.Writer, value T) error

@@ -7,7 +7,7 @@ import (
 )
 
 // mapCodec is the unordered Codec for maps.
-// Use NewMapCodec[K,V](codec[K], codec[V], bool) to create a new mapCodec.
+// Use NewMapCodec[K,V](Codec[K], Codec[V], bool) to create a new mapCodec.
 // A map is encoded as:
 //
 //   - if nil, nothing
@@ -30,14 +30,14 @@ type orderedMapCodec[K comparable, V any] struct {
 	pairWriter pairWriter[[]byte, V]
 }
 
-func NewMapCodec[K comparable, V any](keyCodec codec[K], valueCodec codec[V]) codec[map[K]V] {
+func NewMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return mapCodec[K, V]{
 		pairReader[K, V]{keyCodec.Read, valueCodec.Read},
 		pairWriter[K, V]{keyCodec.Write, valueCodec.Write},
 	}
 }
 
-func NewOrderedMapCodec[K comparable, V any](keyCodec codec[K], valueCodec codec[V]) codec[map[K]V] {
+func NewOrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return orderedMapCodec[K, V]{
 		keyCodec.Write,
 		pairReader[K, V]{keyCodec.Read, valueCodec.Read},

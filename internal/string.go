@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	StringCodec codec[string] = stringCodec{}
+	StringCodec Codec[string] = stringCodec{}
 )
 
 // stringCodec is the Codec for strings.

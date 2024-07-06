@@ -30,7 +30,7 @@ const (
 )
 
 // Tests:
-// - codec.Read() and codec.Write() are invertible for the given test cases
+// - Codec.Read() and Codec.Write() are invertible for the given test cases
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
@@ -54,8 +54,8 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 }
 
 // Tests:
-// - codec.Read() fails when reading from a failing io.Reader
-// - codec.Write() fails when writing nonEmpty to a failing io.Writer
+// - Codec.Read() fails when reading from a failing io.Reader
+// - Codec.Write() fails when writing nonEmpty to a failing io.Writer
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("read", func(t *testing.T) {
 		_, err := codec.Read(failReader{})

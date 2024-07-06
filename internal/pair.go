@@ -6,7 +6,8 @@ import (
 )
 
 // Helpers for encoding and decoding key-value pairs.
-// Readers and writers are intentionally decoupled, because generic types can be inconsistent.
+// Readers and writers are intentionally decoupled,
+// because generic types can be inconsistent within a Codec implementation.
 // Pairs are encoded as [escaped encoded key, delimeter, escaped encoded value].
 
 type pairReader[K any, V any] struct {

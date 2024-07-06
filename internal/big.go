@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	BigIntCodec   codec[big.Int]   = bigIntCodec{}
-	BigFloatCodec codec[big.Float] = bigFloatCodec{}
+	BigIntCodec   Codec[big.Int]   = bigIntCodec{}
+	BigFloatCodec Codec[big.Float] = bigFloatCodec{}
 )
 
 type bigIntCodec struct{}

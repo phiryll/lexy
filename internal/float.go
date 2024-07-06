@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	Float32Codec codec[float32] = float32Codec{}
-	Float64Codec codec[float64] = float64Codec{}
+	Float32Codec Codec[float32] = float32Codec{}
+	Float64Codec Codec[float64] = float64Codec{}
 )
 
 // float32Codec is the Codec for float32.
