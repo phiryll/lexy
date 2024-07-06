@@ -3,32 +3,66 @@ package internal
 import (
 	"bytes"
 	"io"
+	"slices"
 )
 
-// mapCodec is the Codec for maps, without sorting the keys.
-// Use NewMapCodec[K,V](codec[K], codec[V]) to create a new mapCodec.
+// mapCodec is the unordered Codec for maps.
+// Use NewMapCodec[K,V](codec[K], codec[V], bool) to create a new mapCodec.
 // A map is encoded as:
 //
 //   - if nil, nothing
 //   - if empty, PrefixEmpty
-//   - if non-empty, PrefixNonEmpty followed by its entries separated by (unescaped) delimiters,
-//     each entry encoded as [escaped key, delimiter, escaped value]
+//   - if non-empty,
+//     [ PrefixNonEmpty,
+//     escaped encoded key, delimiter, escaped encoded value, delimiter,
+//     escaped encoded key, delimiter, escaped encoded value, delimiter,
+//     ...
+//     escaped encoded key, delimiter, escaped encoded value]
 type mapCodec[K comparable, V any] struct {
-	pairCodec pairCodec[K, V]
+	pairReader pairReader[K, V]
+	pairWriter pairWriter[K, V]
+}
+
+// Similar to mapCodec, except for a Codec ordered by the map's key encodings.
+type orderedMapCodec[K comparable, V any] struct {
+	keyWriter  writer[K]
+	pairReader pairReader[K, V]
+	pairWriter pairWriter[[]byte, V]
 }
 
 func NewMapCodec[K comparable, V any](keyCodec codec[K], valueCodec codec[V]) codec[map[K]V] {
-	return mapCodec[K, V]{newPairCodec[K, V](keyCodec, valueCodec)}
+	return mapCodec[K, V]{
+		pairReader[K, V]{keyCodec.Read, valueCodec.Read},
+		pairWriter[K, V]{keyCodec.Write, valueCodec.Write},
+	}
 }
 
-func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
+func NewOrderedMapCodec[K comparable, V any](keyCodec codec[K], valueCodec codec[V]) codec[map[K]V] {
+	return orderedMapCodec[K, V]{
+		keyCodec.Write,
+		pairReader[K, V]{keyCodec.Read, valueCodec.Read},
+		pairWriter[[]byte, V]{writeBytes, valueCodec.Write},
+	}
+}
+
+func isNilMap[K comparable, V any](value map[K]V) bool {
+	return value == nil
+}
+
+func isEmptyMap[K comparable, V any](value map[K]V) bool {
+	// okay to be true for a nil map, nil is tested first
+	return len(value) == 0
+}
+
+// Read implementation is the same for unordered and ordered encodings.
+func readMap[K comparable, V any](r io.Reader, pairReader pairReader[K, V]) (map[K]V, error) {
 	empty := make(map[K]V)
 	if m, done, err := readPrefix[map[K]V](r, true, &empty); done {
 		return m, err
 	}
 	m := make(map[K]V)
 	for {
-		key, value, err := c.pairCodec.read(r)
+		key, value, err := pairReader.read(r)
 		if err == io.EOF {
 			break
 		}
@@ -43,20 +77,15 @@ func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 	return m, nil
 }
 
-func isNilMap[K comparable, V any](value map[K]V) bool {
-	return value == nil
-}
-
-func isEmptyMap[K comparable, V any](value map[K]V) bool {
-	// okay to be true for a nil map, nil is tested first
-	return len(value) == 0
+func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
+	return readMap(r, c.pairReader)
 }
 
 func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	if done, err := writePrefix(w, isNilMap, isEmptyMap, value); done {
 		return err
 	}
-	var buf bytes.Buffer
+	var scratch bytes.Buffer
 	notFirst := false
 	for k, v := range value {
 		if notFirst {
@@ -65,7 +94,55 @@ func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 			}
 		}
 		notFirst = true
-		if err := c.pairCodec.write(w, k, v, &buf); err != nil {
+		if err := c.pairWriter.write(w, k, v, &scratch); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c orderedMapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
+	return readMap(r, c.pairReader)
+}
+
+func (c orderedMapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
+	if done, err := writePrefix(w, isNilMap, isEmptyMap, value); done {
+		return err
+	}
+
+	// It would be cleaner to sort a slice of encoded key-value pairs,
+	// but this will be more space-efficient if value encodings are large.
+	// OTOH, if keys are large, this may be worse since we're creating a copy of each key.
+	type keyBytes struct {
+		key K
+		b   []byte
+	}
+	sorted := make([]keyBytes, len(value))
+	i := 0
+	for key := range value {
+		// We can't reuse this buffer, buf.Bytes() is shared.
+		var buf bytes.Buffer
+		if err := c.keyWriter(&buf, key); err != nil {
+			return err
+		}
+		sorted[i] = keyBytes{key, buf.Bytes()}
+		i++
+	}
+	slices.SortFunc(sorted, func(a, b keyBytes) int {
+		return bytes.Compare(a.b, b.b)
+	})
+
+	// The rest is very similar to mapCodec.Write
+	var scratch bytes.Buffer
+	notFirst := false
+	for _, kb := range sorted {
+		if notFirst {
+			if _, err := w.Write(del); err != nil {
+				return err
+			}
+		}
+		notFirst = true
+		if err := c.pairWriter.write(w, kb.b, value[kb.key], &scratch); err != nil {
 			return err
 		}
 	}

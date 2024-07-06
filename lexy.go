@@ -144,6 +144,12 @@ func MapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec
 	return internal.NewMapCodec[K, V](keyCodec, valueCodec)
 }
 
+// The entries in the encoded map are ordered by the encodings of its keys.
+// The map created by Codec.Read is a normal map, it is not ordered.
+func OrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
+	return internal.NewOrderedMapCodec[K, V](keyCodec, valueCodec)
+}
+
 func StructCodec[T any, F any](fieldCodec Codec[F]) Codec[T] {
 	// TBD
 	return internal.NewStructCodec[T, F](fieldCodec)

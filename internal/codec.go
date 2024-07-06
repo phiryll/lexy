@@ -12,6 +12,21 @@ type codec[T any] interface {
 	Read(r io.Reader) (T, error)
 }
 
+// The function signatures of codec.Read and codec.Write.
+// These are useful for implementing some codecs.
+type (
+	reader[T any] func(io.Reader) (T, error)
+	writer[T any] func(io.Writer, T) error
+)
+
+// implementation of writer[[]byte] that just writes the bytes
+func writeBytes(w io.Writer, b []byte) error {
+	_, err := w.Write(b)
+	return err
+}
+
+var _ writer[[]byte] = writeBytes
+
 func unexpectedIfEOF(err error) error {
 	if err == io.EOF {
 		return io.ErrUnexpectedEOF
