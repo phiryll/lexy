@@ -15,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func ptr[T any](value T) *T {
+	return &value
+}
+
 type testCase[T any] struct {
 	name  string
 	value T

@@ -136,6 +136,10 @@ func TimeCodec() Codec[time.Time]     { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.
 
+func PointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
+	return internal.NewPointerCodec[T](valueCodec)
+}
+
 func SliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
 	return internal.NewSliceCodec[T](elementCodec)
 }
