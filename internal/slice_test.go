@@ -42,6 +42,26 @@ func TestSliceString(t *testing.T) {
 	testCodecFail[[]string](t, codec, []string{})
 }
 
+func TestSlicePtrString(t *testing.T) {
+	stringCodec := internal.StringCodec
+	pointerCodec := internal.NewPointerCodec(stringCodec)
+	codec := internal.NewSliceCodec(pointerCodec)
+	testCodec[[]*string](t, codec, []testCase[[]*string]{
+		{"nil", nil, []byte(nil)},
+		{"empty", []*string{}, []byte{empty}},
+		{"[nil]", []*string{nil}, []byte{nonEmpty}},
+		{"[*a]", []*string{ptr("a")}, []byte{nonEmpty, nonEmpty, nonEmpty, 'a'}},
+		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, []byte{
+			nonEmpty,
+			nonEmpty, nonEmpty, 'a', del,
+			del,
+			nonEmpty, empty, del,
+			nonEmpty, nonEmpty, 'x', 'y', 'z',
+		}},
+	})
+	testCodecFail[[]*string](t, codec, []*string{})
+}
+
 func TestSliceSliceInt32(t *testing.T) {
 	int32Codec := internal.Int32Codec
 	sliceCodec := internal.NewSliceCodec[int32](int32Codec)
