@@ -53,15 +53,31 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	})
 }
 
+// Tests input == output, where input => Codec.Write => Codec.Read => output.
+// Does not use testCase.data.
+// This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
+func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var b bytes.Buffer
+			err := codec.Write(&b, tt.value)
+			require.NoError(t, err)
+			got, err := codec.Read(bytes.NewReader(b.Bytes()))
+			require.NoError(t, err)
+			assert.Equal(t, tt.value, got)
+		})
+	}
+}
+
 // Tests:
 // - Codec.Read() fails when reading from a failing io.Reader
 // - Codec.Write() fails when writing nonEmpty to a failing io.Writer
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
-	t.Run("read", func(t *testing.T) {
+	t.Run("fail read", func(t *testing.T) {
 		_, err := codec.Read(failReader{})
 		assert.Error(t, err)
 	})
-	t.Run("write", func(t *testing.T) {
+	t.Run("fail write", func(t *testing.T) {
 		err := codec.Write(failWriter{}, nonEmpty)
 		assert.Error(t, err)
 	})
