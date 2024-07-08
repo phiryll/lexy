@@ -14,7 +14,6 @@ or an ordered binary trie.
 
 Lexy can encode:
 
-* `nil`
 * `bool`  
   `false` sorts before `true`.
 * `uint8` (aka `byte`), `uint16`, `uint32`, `uint64`
@@ -24,7 +23,9 @@ Lexy can encode:
 * `math.big.Float`
 * `string`
 * `time.Time`  
-  Time instances are sorted by UTC time first, timezone second.
+  Time instances are sorted by UTC time first, timezone offset (at that instant) second.
+* `time.Duration`
+* pointers to supported types
 * slices of supported types
 * maps of supported types  
   Whether map keys are ordered is optional because of the sorting overhead.
@@ -34,18 +35,15 @@ Lexy can encode:
   Lexy cannot access unexported struct fields.
   Otherwise, structs behave similarly to maps with string keys.
 
-Lexy does not currently encode these, but should in the future:
-
-* `time.Duration`
-* pointer types
-
 Lexy cannot encode these, but you can always write a custom Codec:
 
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
-* `complex64`
-* `complex128`
+* `complex64`, `complex128`
+  Complex types have no commonly understood ordering.
 * `math.big.Rat`
+  There is no good way to encode rational numbers with a lexicographical order that isn't lossy.
+  The closest you can get is to convert it to a (possibly rounded) big.Float and encoded that.
 * array types
 * function types
 * interface types
