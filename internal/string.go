@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	StringCodec Codec[string] = stringCodec{}
+	StringCodec Codec[string] = stringCodec[string]{}
 )
 
 // stringCodec is the Codec for strings.
@@ -21,30 +21,30 @@ var (
 // If your string is UTF-8, then the order is the same as the order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
 // Collation is locale-dependent. Any order you choose could be incorrect in another locale.
-type stringCodec struct{}
+type stringCodec[T ~string] struct{}
 
-func (c stringCodec) Read(r io.Reader) (string, error) {
+func (c stringCodec[T]) Read(r io.Reader) (T, error) {
 	if value, done, err := readPrefix[string](r, false, nil); done {
-		return value, err
+		return T(value), err
 	}
 	var buf strings.Builder
 	// io.Copy will not return io.EOF
 	n, err := io.Copy(&buf, r)
 	if err != nil {
-		return "", err
+		return T(""), err
 	}
 	if n == 0 {
-		return "", io.ErrUnexpectedEOF
+		return T(""), io.ErrUnexpectedEOF
 	}
-	return buf.String(), nil
+	return T(buf.String()), nil
 }
 
 func isEmptyString(s string) bool { return len(s) == 0 }
 
-func (c stringCodec) Write(w io.Writer, value string) error {
-	if done, err := writePrefix(w, nil, isEmptyString, value); done {
+func (c stringCodec[T]) Write(w io.Writer, value T) error {
+	if done, err := writePrefix(w, nil, isEmptyString, string(value)); done {
 		return err
 	}
-	_, err := io.WriteString(w, value)
+	_, err := io.WriteString(w, string(value))
 	return err
 }

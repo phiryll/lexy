@@ -28,7 +28,7 @@ var (
 //   - uint64
 //
 // This encodes a value in big-endian order.
-type uintCodec[T bool | uint8 | uint16 | uint32 | uint64] struct{}
+type uintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64] struct{}
 
 func (c uintCodec[T]) Read(r io.Reader) (T, error) {
 	var value T
@@ -59,7 +59,7 @@ func (c uintCodec[T]) Write(w io.Writer, value T) error {
 //	0x0000... -> 0x8000...  0
 //	0x0000..1 -> 0x8000..1  1
 //	0x7FFF... -> 0xFFFF...  most positive
-type intCodec[T int8 | int16 | int32 | int64] struct {
+type intCodec[T ~int8 | ~int16 | ~int32 | ~int64] struct {
 	signBit T
 }
 

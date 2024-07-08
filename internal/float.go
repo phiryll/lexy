@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	Float32Codec Codec[float32] = float32Codec{}
-	Float64Codec Codec[float64] = float64Codec{}
+	Float32Codec Codec[float32] = float32Codec[float32]{}
+	Float64Codec Codec[float64] = float64Codec[float64]{}
 )
 
 // float32Codec is the Codec for float32.
@@ -65,26 +65,26 @@ var (
 //
 //	flip the high bit if the sign bit is 0
 //	flip all the bits if the sign bit is 1
-type float32Codec struct{}
+type float32Codec[T ~float32] struct{}
 
 const highBit32 uint32 = 0x80_00_00_00
 const allBits32 uint32 = 0xFF_FF_FF_FF
 
-func (c float32Codec) Read(r io.Reader) (float32, error) {
+func (c float32Codec[T]) Read(r io.Reader) (T, error) {
 	var bits uint32
 	if err := binary.Read(r, binary.BigEndian, &bits); err != nil {
-		return 0.0, err
+		return T(0.0), err
 	}
 	if bits&highBit32 == 0 {
 		bits ^= allBits32
 	} else {
 		bits ^= highBit32
 	}
-	return math.Float32frombits(bits), nil
+	return T(math.Float32frombits(bits)), nil
 }
 
-func (c float32Codec) Write(w io.Writer, value float32) error {
-	bits := math.Float32bits(value)
+func (c float32Codec[T]) Write(w io.Writer, value T) error {
+	bits := math.Float32bits(float32(value))
 	if bits&highBit32 == 0 {
 		bits ^= highBit32
 	} else {
@@ -100,26 +100,26 @@ func (c float32Codec) Write(w io.Writer, value float32) error {
 //	sign - 1 bit
 //	exponent - 11 bits
 //	mantissa - 52 bits
-type float64Codec struct{}
+type float64Codec[T ~float64] struct{}
 
 const highBit64 uint64 = 0x80_00_00_00_00_00_00_00
 const allBits64 uint64 = 0xFF_FF_FF_FF_FF_FF_FF_FF
 
-func (c float64Codec) Read(r io.Reader) (float64, error) {
+func (c float64Codec[T]) Read(r io.Reader) (T, error) {
 	var bits uint64
 	if err := binary.Read(r, binary.BigEndian, &bits); err != nil {
-		return 0.0, err
+		return T(0.0), err
 	}
 	if bits&highBit64 == 0 {
 		bits ^= allBits64
 	} else {
 		bits ^= highBit64
 	}
-	return math.Float64frombits(bits), nil
+	return T(math.Float64frombits(bits)), nil
 }
 
-func (c float64Codec) Write(w io.Writer, value float64) error {
-	bits := math.Float64bits(value)
+func (c float64Codec[T]) Write(w io.Writer, value T) error {
+	bits := math.Float64bits(float64(value))
 	if bits&highBit64 == 0 {
 		bits ^= highBit64
 	} else {
