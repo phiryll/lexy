@@ -95,7 +95,7 @@ func (c float32Codec[T]) Write(w io.Writer, value T) error {
 
 // float64Codec is the Codec for float64, and has the same general behavior as Float32Codec.
 //
-// The IEEE 754 format differs slightly, but is otherwise analagous.
+// The IEEE 754 format differs slightly, but is otherwise analogous.
 //
 //	sign - 1 bit
 //	exponent - 11 bits
