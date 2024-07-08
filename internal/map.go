@@ -25,7 +25,7 @@ type mapCodec[K comparable, V any] struct {
 
 // Similar to mapCodec, except for a Codec ordered by the map's key encodings.
 type orderedMapCodec[K comparable, V any] struct {
-	keyWriter  writer[K]
+	keyWriter  Writer[K]
 	pairReader pairReader[K, V]
 	pairWriter pairWriter[[]byte, V]
 }

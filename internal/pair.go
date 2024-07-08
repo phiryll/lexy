@@ -11,13 +11,13 @@ import (
 // Pairs are encoded as [escaped encoded key, delimeter, escaped encoded value].
 
 type pairReader[K any, V any] struct {
-	keyReader   reader[K]
-	valueReader reader[V]
+	keyReader   Reader[K]
+	valueReader Reader[V]
 }
 
 type pairWriter[K any, V any] struct {
-	keyWriter   writer[K]
-	valueWriter writer[V]
+	keyWriter   Writer[K]
+	valueWriter Writer[V]
 }
 
 func (p pairReader[K, V]) read(r io.Reader) (K, V, error) {

@@ -28,11 +28,11 @@ import (
 // All Codec implementations in lexy are thread-safe,
 // including the Codecs for slices, maps, and structs if their delegate Codecs are thread-safe.
 type Codec[T any] interface {
-	// Write writes value to w.
-	Write(w io.Writer, value T) error
-
 	// Read reads a value from r and returns it.
 	Read(r io.Reader) (T, error)
+
+	// Write writes value to w.
+	Write(w io.Writer, value T) error
 }
 
 // Prefixes to use for encodings that would normally encode an empty value as zero bytes.
