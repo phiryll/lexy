@@ -39,9 +39,9 @@ Lexy cannot encode these, but you can always write a custom Codec:
 
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
-* `complex64`, `complex128`
+* `complex64`, `complex128`  
   Complex types have no commonly understood ordering.
-* `math.big.Rat`
+* `math.big.Rat`  
   There is no good way to encode rational numbers with a lexicographical order that isn't lossy.
   The closest you can get is to convert it to a (possibly rounded) big.Float and encoded that.
 * array types
