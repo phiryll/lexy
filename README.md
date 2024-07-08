@@ -43,7 +43,7 @@ Lexy cannot encode these, but you can always write a custom Codec:
   Complex types have no commonly understood ordering.
 * `math.big.Rat`  
   There is no good way to encode rational numbers with a lexicographical order that isn't lossy.
-  The closest you can get is to convert it to a (possibly rounded) big.Float and encoded that.
+  The closest you can get is to convert it to a (possibly rounded) big.Float and encode that.
 * array types
 * function types
 * interface types
