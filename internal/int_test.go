@@ -3,6 +3,7 @@ package internal_test
 import (
 	"math"
 	"testing"
+	"time"
 
 	"github.com/phiryll/lexy/internal"
 )
@@ -65,4 +66,16 @@ func TestInt32(t *testing.T) {
 		{"max", math.MaxInt32, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
 	})
 	testCodecFail[int32](t, codec, 0)
+}
+
+func TestDuration(t *testing.T) {
+	codec := internal.DurationCodec
+	testCodec[time.Duration](t, codec, []testCase[time.Duration]{
+		{"min", math.MinInt64 * time.Nanosecond, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"-1", -time.Nanosecond, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+		{"0", 0 * time.Nanosecond, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"+1", time.Nanosecond, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
+		{"max", math.MaxInt64 * time.Nanosecond, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+	})
+	testCodecFail[time.Duration](t, codec, 0)
 }
