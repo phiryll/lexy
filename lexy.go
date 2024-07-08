@@ -129,8 +129,8 @@ func Int32Codec() Codec[int32]            { return internal.Int32Codec }
 func Int64Codec() Codec[int64]            { return internal.Int64Codec }
 func Float32Codec() Codec[float32]        { return internal.Float32Codec }
 func Float64Codec() Codec[float64]        { return internal.Float64Codec }
-func BigIntCodec() Codec[big.Int]         { return internal.BigIntCodec }
-func BigFloatCodec() Codec[big.Float]     { return internal.BigFloatCodec }
+func BigIntCodec() Codec[*big.Int]        { return internal.BigIntCodec }
+func BigFloatCodec() Codec[*big.Float]    { return internal.BigFloatCodec }
 func StringCodec() Codec[string]          { return internal.StringCodec }
 func TimeCodec() Codec[time.Time]         { return internal.TimeCodec }
 func DurationCodec() Codec[time.Duration] { return internal.DurationCodec }

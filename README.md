@@ -19,8 +19,8 @@ Lexy can encode:
 * `uint8` (aka `byte`), `uint16`, `uint32`, `uint64`
 * `int8`, `int16`, `int32` (aka `rune`), `int64`
 * `float32`, `float64`
-* `math.big.Int`
-* `math.big.Float`
+* `*math.big.Int`
+* `*math.big.Float`
 * `string`
 * `time.Time`  
   Time instances are sorted by UTC time first, timezone offset (at that instant) second.
