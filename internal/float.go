@@ -11,6 +11,13 @@ var (
 	Float64Codec Codec[float64] = float64Codec[float64]{}
 )
 
+const (
+	highBit32 uint32 = 0x80_00_00_00
+	allBits32 uint32 = 0xFF_FF_FF_FF
+	highBit64 uint64 = 0x80_00_00_00_00_00_00_00
+	allBits64 uint64 = 0xFF_FF_FF_FF_FF_FF_FF_FF
+)
+
 // float32Codec is the Codec for float32.
 //
 // The order of the encoded values is:
@@ -67,9 +74,6 @@ var (
 //	flip all the bits if the sign bit is 1
 type float32Codec[T ~float32] struct{}
 
-const highBit32 uint32 = 0x80_00_00_00
-const allBits32 uint32 = 0xFF_FF_FF_FF
-
 func (c float32Codec[T]) Read(r io.Reader) (T, error) {
 	var bits uint32
 	if err := binary.Read(r, binary.BigEndian, &bits); err != nil {
@@ -101,9 +105,6 @@ func (c float32Codec[T]) Write(w io.Writer, value T) error {
 //	exponent - 11 bits
 //	mantissa - 52 bits
 type float64Codec[T ~float64] struct{}
-
-const highBit64 uint64 = 0x80_00_00_00_00_00_00_00
-const allBits64 uint64 = 0xFF_FF_FF_FF_FF_FF_FF_FF
 
 func (c float64Codec[T]) Read(r io.Reader) (T, error) {
 	var bits uint64

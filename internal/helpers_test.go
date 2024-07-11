@@ -95,9 +95,11 @@ type boundedWriter struct {
 	data         []byte
 }
 
-var _ io.Reader = failReader{}
-var _ io.Writer = failWriter{}
-var _ io.Writer = &boundedWriter{}
+var (
+	_ io.Reader = failReader{}
+	_ io.Writer = failWriter{}
+	_ io.Writer = &boundedWriter{}
+)
 
 func (f failReader) Read(p []byte) (int, error) {
 	return 0, fmt.Errorf("failed to read")

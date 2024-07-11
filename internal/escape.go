@@ -16,13 +16,13 @@ import (
 // All input characters have their natural meaning (no delimiters or escapes).
 // The encodings for maps and structs will be analogous.
 //
-//      input slice  -> encoded string
-//   A: ["a", "bc"]  -> a,bc
-//   B: ["a", ",bc"] -> a,\,bc
-//   C: ["a", "\bc"] -> a,\\bc
-//   D: ["ab", "c"]  -> ab,c
-//   E: ["a,", "bc"] -> a\,,bc
-//   F: ["a\", "bc"] -> a\\,bc
+//	input slice  -> encoded string
+//	A: ["a", "bc"]  -> a,bc
+//	B: ["a", ",bc"] -> a,\,bc
+//	C: ["a", "\bc"] -> a,\\bc
+//	D: ["ab", "c"]  -> ab,c
+//	E: ["a,", "bc"] -> a\,,bc
+//	F: ["a\", "bc"] -> a\\,bc
 //
 // B and E are an example of why the delimiter can't be its own escape,
 // the encoded strings would both be "a,,,b".
@@ -32,15 +32,16 @@ import (
 //
 // Since "," is less than everything else, E < D (first slice element "a," < "ab"). Therefore "a\,,bc" < "ab,c".
 // We can see "\" must be less than all other values except the delimiter, so it must be 0x01.
+const (
+	// DelimiterByte is used to delimit elements of an aggregate value.
+	DelimiterByte byte = 0x00
 
-// DelimiterByte is used to delimit elements of an aggregate value.
-const DelimiterByte byte = 0x00
-
-// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
-//
-// This includes appearing in the encodings of nested aggregates,
-// because those are still just data at the level of the enclosing aggregate.
-const EscapeByte byte = 0x01
+	// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
+	//
+	// This includes appearing in the encodings of nested aggregates,
+	// because those are still just data at the level of the enclosing aggregate.
+	EscapeByte byte = 0x01
+)
 
 // Convenience byte slices for writers.
 var (
