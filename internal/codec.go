@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"io"
+	"slices"
 )
 
 // The function signatures of Codec.Read and Codec.Write.
@@ -39,6 +40,33 @@ func invertSlice(b []byte) {
 		b[i] ^= 0xFF
 	}
 }
+
+// inverseReader is an io.Reader which flips all the bits.
+type inverseReader struct {
+	io.Reader
+}
+
+func (r inverseReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	invertSlice(p)
+	return n, err
+}
+
+// inverseWriter is an io.Writer which flips all the bits.
+type inverseWriter struct {
+	io.Writer
+}
+
+func (w inverseWriter) Write(p []byte) (int, error) {
+	b := slices.Clone(p)
+	invertSlice(b)
+	return w.Writer.Write(b)
+}
+
+var (
+	_ io.Reader = inverseReader{}
+	_ io.Writer = inverseWriter{}
+)
 
 // Prefixes, documented in lexy.go
 const (
