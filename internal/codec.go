@@ -34,6 +34,12 @@ func unexpectedIfEOF(err error) error {
 	return err
 }
 
+func invertSlice(b []byte) {
+	for i := range b {
+		b[i] ^= 0xFF
+	}
+}
+
 // Prefixes, documented in lexy.go
 const (
 	// 0x02 is reserved for nil if that becomes necessary.

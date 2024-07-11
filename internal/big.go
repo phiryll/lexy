@@ -52,9 +52,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		err = nil
 	}
 	if neg {
-		for i := range b {
-			b[i] ^= 0xFF
-		}
+		invertSlice(b)
 	}
 	var value big.Int
 	value.SetBytes(b)
@@ -70,9 +68,7 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 	size := len(b)
 	if sign < 0 {
 		size = -size
-		for i := range b {
-			b[i] ^= 0xFF
-		}
+		invertSlice(b)
 	}
 	if err := Int64Codec.Write(w, int64(size)); err != nil {
 		return err
