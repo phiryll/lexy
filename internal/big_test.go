@@ -32,7 +32,7 @@ func encodeBigInt(s string) []byte {
 
 func TestBigInt(t *testing.T) {
 	codec := internal.BigIntCodec
-	testCodec[*big.Int](t, codec, []testCase[*big.Int]{
+	testCodec(t, codec, []testCase[*big.Int]{
 		{"-257", big.NewInt(-257), append(encodeSize(-2),
 			[]byte{0xFE, 0xFE}...)},
 		{"-256", big.NewInt(-256), append(encodeSize(-2),
@@ -61,7 +61,7 @@ func TestBigInt(t *testing.T) {
 			[]byte{0x01, 0x01}...)},
 	})
 
-	testCodecRoundTrip[*big.Int](t, codec, []testCase[*big.Int]{
+	testCodecRoundTrip(t, codec, []testCase[*big.Int]{
 		{"big positive", newBigInt("1234567890123456789012345678901234567890"), nil},
 		{"big negative", newBigInt("-1234567890123456789012345678901234567890"), nil},
 	})
