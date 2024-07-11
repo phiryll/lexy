@@ -138,24 +138,24 @@ func DurationCodec() Codec[time.Duration] { return internal.DurationCodec }
 // Codecs that delegate to other Codecs.
 
 func PointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
-	return internal.NewPointerCodec(valueCodec)
+	return internal.MakePointerCodec(valueCodec)
 }
 
 func SliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
-	return internal.NewSliceCodec(elementCodec)
+	return internal.MakeSliceCodec(elementCodec)
 }
 
 func MapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
-	return internal.NewMapCodec(keyCodec, valueCodec)
+	return internal.MakeMapCodec(keyCodec, valueCodec)
 }
 
 // The entries in the encoded map are ordered by the encodings of its keys.
 // The map created by Codec.Read is a normal map, it is not ordered.
 func OrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
-	return internal.NewOrderedMapCodec(keyCodec, valueCodec)
+	return internal.MakeOrderedMapCodec(keyCodec, valueCodec)
 }
 
 func StructCodec[T any, F any](fieldCodec Codec[F]) Codec[T] {
 	// TBD
-	return internal.NewStructCodec[T](fieldCodec)
+	return internal.MakeStructCodec[T](fieldCodec)
 }

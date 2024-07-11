@@ -6,7 +6,7 @@ import (
 )
 
 // sliceCodec is the Codec for slices, using elementCodec to encode and decode its elements.
-// Use NewSliceCodec(Codec[T]) to create a new sliceCodec.
+// Use MakeSliceCodec(Codec[T]) to create a new sliceCodec.
 // A slice is encoded as:
 //
 // - if nil, nothing
@@ -16,7 +16,7 @@ type sliceCodec[T any] struct {
 	elementCodec Codec[T]
 }
 
-func NewSliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
+func MakeSliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
 	// TODO: use default if possible based on T
 	//
 	// TODO: Might want 2 implementations based on T,

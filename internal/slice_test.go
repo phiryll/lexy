@@ -8,7 +8,7 @@ import (
 
 func TestSliceInt32(t *testing.T) {
 	elementCodec := internal.Int32Codec
-	codec := internal.NewSliceCodec(elementCodec)
+	codec := internal.MakeSliceCodec(elementCodec)
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []int32{}, []byte{empty}},
@@ -26,7 +26,7 @@ func TestSliceInt32(t *testing.T) {
 
 func TestSliceString(t *testing.T) {
 	stringCodec := internal.StringCodec
-	codec := internal.NewSliceCodec(stringCodec)
+	codec := internal.MakeSliceCodec(stringCodec)
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []string{}, []byte{empty}},
@@ -44,8 +44,8 @@ func TestSliceString(t *testing.T) {
 
 func TestSlicePtrString(t *testing.T) {
 	stringCodec := internal.StringCodec
-	pointerCodec := internal.NewPointerCodec(stringCodec)
-	codec := internal.NewSliceCodec(pointerCodec)
+	pointerCodec := internal.MakePointerCodec(stringCodec)
+	codec := internal.MakeSliceCodec(pointerCodec)
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []*string{}, []byte{empty}},
@@ -64,8 +64,8 @@ func TestSlicePtrString(t *testing.T) {
 
 func TestSliceSliceInt32(t *testing.T) {
 	int32Codec := internal.Int32Codec
-	sliceCodec := internal.NewSliceCodec(int32Codec)
-	codec := internal.NewSliceCodec(sliceCodec)
+	sliceCodec := internal.MakeSliceCodec(int32Codec)
+	codec := internal.MakeSliceCodec(sliceCodec)
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]int32{}, []byte{empty}},
@@ -100,8 +100,8 @@ func TestSliceSliceInt32(t *testing.T) {
 
 func TestSliceSliceString(t *testing.T) {
 	stringCodec := internal.StringCodec
-	sliceCodec := internal.NewSliceCodec(stringCodec)
-	codec := internal.NewSliceCodec(sliceCodec)
+	sliceCodec := internal.MakeSliceCodec(stringCodec)
+	codec := internal.MakeSliceCodec(sliceCodec)
 
 	testCodec(t, codec, []testCase[[][]string]{
 		// unescaped delimiters are the top level are on separate lines for clarity

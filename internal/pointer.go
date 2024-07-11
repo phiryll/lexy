@@ -5,7 +5,7 @@ import (
 )
 
 // pointerCodec is the Codec for pointers, using valueCodec to encode and decode its pointee.
-// Use NewPointerCodec(Codec[T]) to create a new pointerCodec.
+// Use MakePointerCodec(Codec[T]) to create a new pointerCodec.
 // A pointer is encoded as:
 //
 // - if nil, nothing
@@ -16,7 +16,7 @@ type pointerCodec[T any] struct {
 	valueCodec Codec[T]
 }
 
-func NewPointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
+func MakePointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
 	// TODO: use default if possible based on T
 	//
 	// TODO: Might want 2 implementations based on T,

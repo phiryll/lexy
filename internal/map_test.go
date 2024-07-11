@@ -107,32 +107,32 @@ func testMapPointerPointer(t *testing.T, codec internal.Codec[map[*string]*strin
 var (
 	sCodec       = internal.StringCodec
 	iCodec       = internal.Int32Codec
-	sliceCodec   = internal.NewSliceCodec(sCodec)
-	pointerCodec = internal.NewPointerCodec(sCodec)
+	sliceCodec   = internal.MakeSliceCodec(sCodec)
+	pointerCodec = internal.MakePointerCodec(sCodec)
 )
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.NewMapCodec(sCodec, iCodec))
+	testBasicMap(t, internal.MakeMapCodec(sCodec, iCodec))
 }
 
 func TestMapSlice(t *testing.T) {
-	testMapSliceValue(t, internal.NewMapCodec(sCodec, sliceCodec))
+	testMapSliceValue(t, internal.MakeMapCodec(sCodec, sliceCodec))
 }
 
 func TestMapPointerPointer(t *testing.T) {
-	testMapPointerPointer(t, internal.NewMapCodec(pointerCodec, pointerCodec))
+	testMapPointerPointer(t, internal.MakeMapCodec(pointerCodec, pointerCodec))
 }
 
 func TestOrderedMapInt(t *testing.T) {
-	testBasicMap(t, internal.NewOrderedMapCodec(sCodec, iCodec))
+	testBasicMap(t, internal.MakeOrderedMapCodec(sCodec, iCodec))
 }
 
 func TestOrderedMapSlice(t *testing.T) {
-	testMapSliceValue(t, internal.NewOrderedMapCodec(sCodec, sliceCodec))
+	testMapSliceValue(t, internal.MakeOrderedMapCodec(sCodec, sliceCodec))
 }
 
 func TestOrderedMapPointerPointer(t *testing.T) {
-	testMapPointerPointer(t, internal.NewOrderedMapCodec(pointerCodec, pointerCodec))
+	testMapPointerPointer(t, internal.MakeOrderedMapCodec(pointerCodec, pointerCodec))
 }
 
 func TestOrderedMapOrdering(t *testing.T) {
@@ -141,7 +141,7 @@ func TestOrderedMapOrdering(t *testing.T) {
 	// because go randomizes the initial start for map iteration to prevent depending on iteration order.
 	// Because of this, this test might not fail on any particular run,
 	// but it should absolutely fail on enough repeated runs if the codec isn't working.
-	codec := internal.NewOrderedMapCodec(sCodec, sCodec)
+	codec := internal.MakeOrderedMapCodec(sCodec, sCodec)
 	testCodec(t, codec, []testCase[map[string]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", map[string]string{}, []byte{empty}},
