@@ -6,7 +6,7 @@ import (
 )
 
 // sliceCodec is the Codec for slices, using elementCodec to encode and decode its elements.
-// Use NewSliceCodec[T](Codec[T]) to create a new sliceCodec.
+// Use NewSliceCodec(Codec[T]) to create a new sliceCodec.
 // A slice is encoded as:
 //
 // - if nil, nothing
@@ -31,7 +31,7 @@ func NewSliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
 
 func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
 	empty := []T{}
-	if value, done, err := readPrefix[[]T](r, true, &empty); done {
+	if value, done, err := readPrefix(r, true, &empty); done {
 		return value, err
 	}
 	var values []T

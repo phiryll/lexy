@@ -7,7 +7,7 @@ import (
 )
 
 // mapCodec is the unordered Codec for maps.
-// Use NewMapCodec[K,V](Codec[K], Codec[V], bool) to create a new mapCodec.
+// Use NewMapCodec(Codec[K], Codec[V], bool) to create a new mapCodec.
 // A map is encoded as:
 //
 //   - if nil, nothing
@@ -57,7 +57,7 @@ func isEmptyMap[K comparable, V any](value map[K]V) bool {
 // Read implementation is the same for unordered and ordered encodings.
 func readMap[K comparable, V any](r io.Reader, pairReader pairReader[K, V]) (map[K]V, error) {
 	empty := make(map[K]V)
-	if m, done, err := readPrefix[map[K]V](r, true, &empty); done {
+	if m, done, err := readPrefix(r, true, &empty); done {
 		return m, err
 	}
 	m := make(map[K]V)

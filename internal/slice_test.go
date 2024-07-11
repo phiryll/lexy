@@ -8,8 +8,8 @@ import (
 
 func TestSliceInt32(t *testing.T) {
 	elementCodec := internal.Int32Codec
-	codec := internal.NewSliceCodec[int32](elementCodec)
-	testCodec[[]int32](t, codec, []testCase[[]int32]{
+	codec := internal.NewSliceCodec(elementCodec)
+	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []int32{}, []byte{empty}},
 		{"[0]", []int32{0}, []byte{nonEmpty, 0x80, esc, 0x00, esc, 0x00, esc, 0x00}},
@@ -21,13 +21,13 @@ func TestSliceInt32(t *testing.T) {
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
-	testCodecFail[[]int32](t, codec, []int32{})
+	testCodecFail(t, codec, []int32{})
 }
 
 func TestSliceString(t *testing.T) {
 	stringCodec := internal.StringCodec
-	codec := internal.NewSliceCodec[string](stringCodec)
-	testCodec[[]string](t, codec, []testCase[[]string]{
+	codec := internal.NewSliceCodec(stringCodec)
+	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []string{}, []byte{empty}},
 		{"[\"\"]", []string{""}, []byte{nonEmpty, empty}},
@@ -39,14 +39,14 @@ func TestSliceString(t *testing.T) {
 			nonEmpty, 'x', 'y', 'z',
 		}},
 	})
-	testCodecFail[[]string](t, codec, []string{})
+	testCodecFail(t, codec, []string{})
 }
 
 func TestSlicePtrString(t *testing.T) {
 	stringCodec := internal.StringCodec
 	pointerCodec := internal.NewPointerCodec(stringCodec)
 	codec := internal.NewSliceCodec(pointerCodec)
-	testCodec[[]*string](t, codec, []testCase[[]*string]{
+	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []*string{}, []byte{empty}},
 		{"[nil]", []*string{nil}, []byte{nonEmpty}},
@@ -59,14 +59,14 @@ func TestSlicePtrString(t *testing.T) {
 			nonEmpty, nonEmpty, 'x', 'y', 'z',
 		}},
 	})
-	testCodecFail[[]*string](t, codec, []*string{})
+	testCodecFail(t, codec, []*string{})
 }
 
 func TestSliceSliceInt32(t *testing.T) {
 	int32Codec := internal.Int32Codec
-	sliceCodec := internal.NewSliceCodec[int32](int32Codec)
-	codec := internal.NewSliceCodec[[]int32](sliceCodec)
-	testCodec[[][]int32](t, codec, []testCase[[][]int32]{
+	sliceCodec := internal.NewSliceCodec(int32Codec)
+	codec := internal.NewSliceCodec(sliceCodec)
+	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]int32{}, []byte{empty}},
 		{"[nil]", [][]int32{[]int32(nil)}, []byte{nonEmpty}},
@@ -95,15 +95,15 @@ func TestSliceSliceInt32(t *testing.T) {
 			// nil
 		}},
 	})
-	testCodecFail[[][]int32](t, codec, [][]int32{})
+	testCodecFail(t, codec, [][]int32{})
 }
 
 func TestSliceSliceString(t *testing.T) {
 	stringCodec := internal.StringCodec
-	sliceCodec := internal.NewSliceCodec[string](stringCodec)
-	codec := internal.NewSliceCodec[[]string](sliceCodec)
+	sliceCodec := internal.NewSliceCodec(stringCodec)
+	codec := internal.NewSliceCodec(sliceCodec)
 
-	testCodec[[][]string](t, codec, []testCase[[][]string]{
+	testCodec(t, codec, []testCase[[][]string]{
 		// unescaped delimiters are the top level are on separate lines for clarity
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]string{}, []byte{empty}},

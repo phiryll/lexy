@@ -12,7 +12,7 @@ import (
 
 func testBasicMap(t *testing.T, codec internal.Codec[map[string]int32]) {
 	// at most one key so order does not matter
-	testCodec[map[string]int32](t, codec, []testCase[map[string]int32]{
+	testCodec(t, codec, []testCase[map[string]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", map[string]int32{}, []byte{empty}},
 		{"{a:0}", map[string]int32{"a": 0}, []byte{
@@ -21,7 +21,7 @@ func testBasicMap(t *testing.T, codec internal.Codec[map[string]int32]) {
 			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
 		}},
 	})
-	testCodecFail[map[string]int32](t, codec, map[string]int32{})
+	testCodecFail(t, codec, map[string]int32{})
 
 	testCodecRoundTrip(t, codec, []testCase[map[string]int32]{
 		{"non-trivial", map[string]int32{
@@ -142,7 +142,7 @@ func TestOrderedMapOrdering(t *testing.T) {
 	// Because of this, this test might not fail on any particular run,
 	// but it should absolutely fail on enough repeated runs if the codec isn't working.
 	codec := internal.NewOrderedMapCodec(sCodec, sCodec)
-	testCodec[map[string]string](t, codec, []testCase[map[string]string]{
+	testCodec(t, codec, []testCase[map[string]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", map[string]string{}, []byte{empty}},
 		{"non-empty", map[string]string{

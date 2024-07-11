@@ -59,7 +59,7 @@ func TestTime(t *testing.T) {
 		})
 	}
 
-	testCodecFail[time.Time](t, codec, local)
+	testCodecFail(t, codec, local)
 }
 
 func TestTimeOrder(t *testing.T) {

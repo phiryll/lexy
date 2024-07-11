@@ -26,7 +26,7 @@ var (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-var formatCache = NewCache[int32, string](formatOffset)
+var formatCache = NewCache(formatOffset)
 
 func formatOffset(seconds int32) string {
 	sign := '+'
