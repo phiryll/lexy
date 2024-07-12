@@ -32,16 +32,16 @@ type orderedMapCodec[K comparable, V any] struct {
 
 func MakeMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return mapCodec[K, V]{
-		pairReader[K, V]{keyCodec.Read, valueCodec.Read},
-		pairWriter[K, V]{keyCodec.Write, valueCodec.Write},
+		pairReader[K, V]{keyCodec, valueCodec},
+		pairWriter[K, V]{keyCodec, valueCodec},
 	}
 }
 
 func MakeOrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return orderedMapCodec[K, V]{
-		keyCodec.Write,
-		pairReader[K, V]{keyCodec.Read, valueCodec.Read},
-		pairWriter[[]byte, V]{writeBytes, valueCodec.Write},
+		keyCodec,
+		pairReader[K, V]{keyCodec, valueCodec},
+		pairWriter[[]byte, V]{bytesWriter, valueCodec},
 	}
 }
 
@@ -122,7 +122,7 @@ func (c orderedMapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	for key := range value {
 		// We can't reuse this buffer, buf.Bytes() is shared.
 		var buf bytes.Buffer
-		if err := c.keyWriter(&buf, key); err != nil {
+		if err := c.keyWriter.Write(&buf, key); err != nil {
 			return err
 		}
 		sorted[i] = keyBytes{key, buf.Bytes()}

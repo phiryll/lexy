@@ -6,27 +6,35 @@ import (
 	"slices"
 )
 
-// The function signatures of Codec.Read and Codec.Write.
-// These are useful for implementing some Codecs.
-type (
-	Reader[T any] func(io.Reader) (T, error)
-	Writer[T any] func(io.Writer, T) error
-)
+// Same interface as lexy.Reader, to avoid a circular dependency.
+// lexy.Reader cannot be a type alias to this, because generic type aliases are not permitted.
+type Reader[T any] interface {
+	Read(io.Reader) (T, error)
+}
+
+// Same interface as lexy.Writer, to avoid a circular dependency.
+// lexy.Writer cannot be a type alias to this, because generic type aliases are not permitted.
+type Writer[T any] interface {
+	Write(io.Writer, T) error
+}
 
 // Same interface as lexy.Codec, to avoid a circular dependency.
 // lexy.Codec cannot be a type alias to this, because generic type aliases are not permitted.
 type Codec[T any] interface {
-	Read(r io.Reader) (T, error)
-	Write(w io.Writer, value T) error
+	Reader[T]
+	Writer[T]
 }
 
-// implementation of writer[[]byte] that just writes the bytes
-func writeBytes(w io.Writer, b []byte) error {
-	_, err := w.Write(b)
+// implementation of Writer[[]byte] that just writes the bytes
+type byteSliceWriter struct {
+}
+
+var bytesWriter Writer[[]byte] = byteSliceWriter{}
+
+func (b byteSliceWriter) Write(w io.Writer, value []byte) error {
+	_, err := w.Write(value)
 	return err
 }
-
-var _ Writer[[]byte] = writeBytes
 
 func unexpectedIfEOF(err error) error {
 	if err == io.EOF {

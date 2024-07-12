@@ -31,7 +31,7 @@ func (p pairReader[K, V]) read(r io.Reader) (K, V, error) {
 	if readErr != nil {
 		return zeroKey, zeroValue, unexpectedIfEOF(readErr)
 	}
-	key, codecErr := p.keyReader(bytes.NewBuffer(b))
+	key, codecErr := p.keyReader.Read(bytes.NewBuffer(b))
 	if codecErr != nil {
 		return zeroKey, zeroValue, unexpectedIfEOF(codecErr)
 	}
@@ -42,7 +42,7 @@ func (p pairReader[K, V]) read(r io.Reader) (K, V, error) {
 	if readErr != nil && readErr != io.EOF {
 		return zeroKey, zeroValue, readErr
 	}
-	value, codecErr := p.valueReader(bytes.NewBuffer(b))
+	value, codecErr := p.valueReader.Read(bytes.NewBuffer(b))
 	if codecErr != nil {
 		return zeroKey, zeroValue, unexpectedIfEOF(codecErr)
 	}
@@ -51,7 +51,7 @@ func (p pairReader[K, V]) read(r io.Reader) (K, V, error) {
 
 func (p pairWriter[K, V]) write(w io.Writer, key K, value V, scratch *bytes.Buffer) error {
 	scratch.Reset()
-	if err := p.keyWriter(scratch, key); err != nil {
+	if err := p.keyWriter.Write(scratch, key); err != nil {
 		return err
 	}
 	if _, err := Escape(w, scratch.Bytes()); err != nil {
@@ -62,7 +62,7 @@ func (p pairWriter[K, V]) write(w io.Writer, key K, value V, scratch *bytes.Buff
 	}
 
 	scratch.Reset()
-	if err := p.valueWriter(scratch, value); err != nil {
+	if err := p.valueWriter.Write(scratch, value); err != nil {
 		return err
 	}
 	if _, err := Escape(w, scratch.Bytes()); err != nil {
