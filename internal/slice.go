@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// sliceCodec is the Codec for slices, using elementCodec to encode and decode its elements.
+// sliceCodec is the Codec for slices, using elemCodec to encode and decode its elements.
 // Use MakeSliceCodec(Codec[T]) to create a new sliceCodec.
 // A slice is encoded as:
 //
@@ -13,20 +13,20 @@ import (
 // - if empty, PrefixEmpty
 // - if non-empty, PrefixNonEmpty followed by its elements encoded and escaped separated by (unescaped) delimiters
 type sliceCodec[T any] struct {
-	elementCodec Codec[T]
+	elemCodec Codec[T]
 }
 
-func MakeSliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
+func MakeSliceCodec[T any](elemCodec Codec[T]) Codec[[]T] {
 	// TODO: use default if possible based on T
 	//
 	// TODO: Might want 2 implementations based on T,
 	// whether elements require escaping and delimiting or not.
-	// Does whether elementCodec requires termination answer that question?
+	// Does whether elemCodec requires termination answer that question?
 
-	if elementCodec == nil {
-		panic("elementCodec must be non-nil")
+	if elemCodec == nil {
+		panic("elemCodec must be non-nil")
 	}
-	return sliceCodec[T]{elementCodec}
+	return sliceCodec[T]{elemCodec}
 }
 
 func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
@@ -40,7 +40,7 @@ func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
 		if readErr != nil && readErr != io.EOF {
 			return values, readErr
 		}
-		value, codecErr := c.elementCodec.Read(bytes.NewBuffer(b))
+		value, codecErr := c.elemCodec.Read(bytes.NewBuffer(b))
 		if codecErr != nil && codecErr != io.EOF {
 			return values, codecErr
 		}
@@ -76,7 +76,7 @@ func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 			}
 		}
 		scratch.Reset()
-		if err := c.elementCodec.Write(&scratch, value); err != nil {
+		if err := c.elemCodec.Write(&scratch, value); err != nil {
 			return err
 		}
 		if _, err := Escape(w, scratch.Bytes()); err != nil {

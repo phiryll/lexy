@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// pointerCodec is the Codec for pointers, using valueCodec to encode and decode its pointee.
+// pointerCodec is the Codec for pointers, using elemCodec to encode and decode its pointee.
 // Use MakePointerCodec(Codec[T]) to create a new pointerCodec.
 // A pointer is encoded as:
 //
@@ -13,27 +13,27 @@ import (
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
 type pointerCodec[T any] struct {
-	valueCodec Codec[T]
+	elemCodec Codec[T]
 }
 
-func MakePointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
+func MakePointerCodec[T any](elemCodec Codec[T]) Codec[*T] {
 	// TODO: use default if possible based on T
 	//
 	// TODO: Might want 2 implementations based on T,
 	// whether values require escaping and delimiting or not.
-	// Does whether valueCodec requires termination answer that question?
+	// Does whether elemCodec requires termination answer that question?
 
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
+	if elemCodec == nil {
+		panic("elemCodec must be non-nil")
 	}
-	return pointerCodec[T]{valueCodec}
+	return pointerCodec[T]{elemCodec}
 }
 
 func (c pointerCodec[T]) Read(r io.Reader) (*T, error) {
 	if ptr, done, err := readPrefix[*T](r, true, nil); done {
 		return ptr, err
 	}
-	value, err := c.valueCodec.Read(r)
+	value, err := c.elemCodec.Read(r)
 	if err != nil {
 		return nil, err
 	}
@@ -48,5 +48,5 @@ func (c pointerCodec[T]) Write(w io.Writer, value *T) error {
 	if done, err := writePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
-	return c.valueCodec.Write(w, *value)
+	return c.elemCodec.Write(w, *value)
 }
