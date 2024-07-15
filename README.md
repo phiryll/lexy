@@ -32,7 +32,7 @@ Lexy can encode:
   Encoding and decoding will be correct if unordered keys are used,
   but the results will be randomly ordered.
 * structs of supported types  
-  Lexy cannot access unexported struct fields.
+  Lexy does not access unexported struct fields.
   Otherwise, structs behave similarly to maps with string keys.
 
 Lexy cannot encode these, but you can always write a custom Codec:
