@@ -17,12 +17,9 @@ type sliceCodec[T any] struct {
 }
 
 func MakeSliceCodec[T any](elemCodec Codec[T]) Codec[[]T] {
-	// TODO: use default if possible based on T
-	//
 	// TODO: Might want 2 implementations based on T,
 	// whether elements require escaping and delimiting or not.
 	// Does whether elemCodec requires termination answer that question?
-
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}

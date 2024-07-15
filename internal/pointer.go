@@ -17,8 +17,6 @@ type pointerCodec[T any] struct {
 }
 
 func MakePointerCodec[T any](elemCodec Codec[T]) Codec[*T] {
-	// TODO: use default if possible based on T
-	//
 	// TODO: Might want 2 implementations based on T,
 	// whether values require escaping and delimiting or not.
 	// Does whether elemCodec requires termination answer that question?
