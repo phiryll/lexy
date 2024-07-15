@@ -21,3 +21,9 @@ func (c structCodec[T, F]) Read(r io.Reader) (T, error) {
 func (com structCodec[T, F]) Write(w io.Writer, value T) error {
 	panic("unimplemented")
 }
+
+func (c structCodec[T, F]) RequiresTerminator() bool {
+	// should only be true if some field requires it,
+	// but we can't figure that out here.
+	return true
+}

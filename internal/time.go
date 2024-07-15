@@ -71,3 +71,7 @@ func (c timeCodec) Write(w io.Writer, value time.Time) error {
 	}
 	return Int32Codec.Write(w, int32(offset))
 }
+
+func (c timeCodec) RequiresTerminator() bool {
+	return false
+}

@@ -48,3 +48,7 @@ func (c stringCodec[T]) Write(w io.Writer, value T) error {
 	_, err := io.WriteString(w, string(value))
 	return err
 }
+
+func (c stringCodec[T]) RequiresTerminator() bool {
+	return true
+}

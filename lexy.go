@@ -44,6 +44,10 @@ type Writer[T any] interface {
 type Codec[T any] interface {
 	Reader[T]
 	Writer[T]
+
+	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
+	// when used in an aggregate Codec (pointer, slice, map, or struct).
+	RequiresTerminator() bool
 }
 
 // Prefixes to use for encodings that would normally encode an empty value as zero bytes.

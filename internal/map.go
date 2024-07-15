@@ -148,3 +148,11 @@ func (c orderedMapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	}
 	return nil
 }
+
+func (c mapCodec[K, V]) RequiresTerminator() bool {
+	return true
+}
+
+func (c orderedMapCodec[K, V]) RequiresTerminator() bool {
+	return true
+}

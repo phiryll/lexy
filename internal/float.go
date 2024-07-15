@@ -97,6 +97,10 @@ func (c float32Codec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, bits)
 }
 
+func (c float32Codec[T]) RequiresTerminator() bool {
+	return false
+}
+
 // float64Codec is the Codec for float64, and has the same general behavior as Float32Codec.
 //
 // The IEEE 754 format differs slightly, but is otherwise analogous.
@@ -127,4 +131,8 @@ func (c float64Codec[T]) Write(w io.Writer, value T) error {
 		bits ^= allBits64
 	}
 	return binary.Write(w, binary.BigEndian, bits)
+}
+
+func (c float64Codec[T]) RequiresTerminator() bool {
+	return false
 }

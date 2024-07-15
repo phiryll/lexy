@@ -48,3 +48,7 @@ func (c pointerCodec[T]) Write(w io.Writer, value *T) error {
 	}
 	return c.elemCodec.Write(w, *value)
 }
+
+func (c pointerCodec[T]) RequiresTerminator() bool {
+	return c.elemCodec.RequiresTerminator()
+}

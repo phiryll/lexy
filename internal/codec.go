@@ -23,6 +23,7 @@ type Writer[T any] interface {
 type Codec[T any] interface {
 	Reader[T]
 	Writer[T]
+	RequiresTerminator() bool
 }
 
 // implementation of Writer[[]byte] that just writes the bytes

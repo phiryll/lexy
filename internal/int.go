@@ -45,6 +45,10 @@ func (c uintCodec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, value)
 }
 
+func (c uintCodec[T]) RequiresTerminator() bool {
+	return false
+}
+
 // intCodec is the Codec for fixed-length signed integral types.
 //
 // These are:
@@ -76,4 +80,8 @@ func (c intCodec[T]) Read(r io.Reader) (T, error) {
 
 func (c intCodec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, c.signBit^value)
+}
+
+func (c intCodec[T]) RequiresTerminator() bool {
+	return false
 }

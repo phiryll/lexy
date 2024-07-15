@@ -82,3 +82,7 @@ func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 	}
 	return nil
 }
+
+func (c sliceCodec[T]) RequiresTerminator() bool {
+	return true
+}

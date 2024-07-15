@@ -77,6 +77,10 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 	return err
 }
 
+func (c bigIntCodec) RequiresTerminator() bool {
+	return false
+}
+
 // bigFloatCodec is the Codec for big.Float values.
 //
 // This is roughly similar to the float32/64 Codecs, but there are some wrinkles.
@@ -295,4 +299,8 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		return err
 	}
 	return modeCodec.Write(w, mode)
+}
+
+func (c bigFloatCodec) RequiresTerminator() bool {
+	return true
 }
