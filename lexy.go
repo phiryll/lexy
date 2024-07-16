@@ -131,23 +131,26 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
-// Codecs that do not delegate to other Codecs.
+// Codecs that do not delegate to other Codecs, for types with builtin underlying types.
 
 func BoolCodec[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
 func UIntCodec[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
 func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
 func Float32Codec[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
 func Float64Codec[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
-func BigIntCodec() Codec[*big.Int]                                { return internal.BigIntCodec }
-func BigFloatCodec() Codec[*big.Float]                            { return internal.BigFloatCodec }
 func StringCodec[T ~string]() Codec[T]                            { return internal.StringCodec[T]() }
-func TimeCodec() Codec[time.Time]                                 { return internal.TimeCodec }
 func DurationCodec() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
+
+// Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
+
+func BigIntCodec() Codec[*big.Int]     { return internal.BigIntCodec }
+func BigFloatCodec() Codec[*big.Float] { return internal.BigFloatCodec }
+func TimeCodec() Codec[time.Time]      { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.
 
-func PointerCodec[T any](valueCodec Codec[T]) Codec[*T] {
-	return internal.MakePointerCodec(valueCodec)
+func PointerCodec[P ~*T, T any](valueCodec Codec[T]) Codec[P] {
+	return internal.MakePointerCodec[P](valueCodec)
 }
 
 func SliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {

@@ -108,7 +108,7 @@ var (
 	sCodec       = stringCodec
 	iCodec       = int32Codec
 	sliceCodec   = internal.MakeSliceCodec(sCodec)
-	pointerCodec = internal.MakePointerCodec(sCodec)
+	pointerCodec = internal.MakePointerCodec[*string](sCodec)
 )
 
 func TestMapInt(t *testing.T) {
