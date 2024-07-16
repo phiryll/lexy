@@ -105,7 +105,7 @@ func testMapPointerPointer(t *testing.T, codec internal.Codec[map[*string]*strin
 
 // just making map codec declarations terser
 var (
-	sCodec       = internal.StringCodec
+	sCodec       = stringCodec
 	iCodec       = int32Codec
 	sliceCodec   = internal.MakeSliceCodec(sCodec)
 	pointerCodec = internal.MakePointerCodec(sCodec)

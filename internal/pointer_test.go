@@ -17,7 +17,6 @@ func TestPointerInt32(t *testing.T) {
 }
 
 func TestPointerString(t *testing.T) {
-	stringCodec := internal.StringCodec
 	codec := internal.MakePointerCodec(stringCodec)
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte(nil)},
@@ -28,7 +27,6 @@ func TestPointerString(t *testing.T) {
 }
 
 func TestPointerPointerString(t *testing.T) {
-	stringCodec := internal.StringCodec
 	pointerCodec := internal.MakePointerCodec(stringCodec)
 	codec := internal.MakePointerCodec(pointerCodec)
 	testCodec(t, codec, []testCase[**string]{

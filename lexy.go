@@ -140,7 +140,7 @@ func Float32Codec[T ~float32]() Codec[T]                          { return inter
 func Float64Codec[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
 func BigIntCodec() Codec[*big.Int]                                { return internal.BigIntCodec }
 func BigFloatCodec() Codec[*big.Float]                            { return internal.BigFloatCodec }
-func StringCodec() Codec[string]                                  { return internal.StringCodec }
+func StringCodec[T ~string]() Codec[T]                            { return internal.StringCodec[T]() }
 func TimeCodec() Codec[time.Time]                                 { return internal.TimeCodec }
 func DurationCodec() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
 

@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-var (
-	StringCodec Codec[string] = stringCodec[string]{}
-)
+func StringCodec[T ~string]() Codec[T] {
+	return stringCodec[T]{}
+}
 
 // stringCodec is the Codec for strings.
 //

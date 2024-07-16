@@ -2,12 +2,10 @@ package internal_test
 
 import (
 	"testing"
-
-	"github.com/phiryll/lexy/internal"
 )
 
 func TestString(t *testing.T) {
-	codec := internal.StringCodec
+	codec := stringCodec
 	testCodec(t, codec, []testCase[string]{
 		{"empty", "", []byte{empty}},
 		{"a", "a", []byte{nonEmpty, 'a'}},

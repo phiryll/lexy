@@ -31,7 +31,7 @@ var (
 	float64Codec  = internal.Float64Codec[float64]()
 	bigIntCodec   = internal.BigIntCodec
 	bigFloatCodec = internal.BigFloatCodec
-	stringCodec   = internal.StringCodec
+	stringCodec   = internal.StringCodec[string]()
 	timeCodec     = internal.TimeCodec
 	durationCodec = internal.IntCodec[time.Duration]()
 )

@@ -24,7 +24,6 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
-	stringCodec := internal.StringCodec
 	codec := internal.MakeSliceCodec(stringCodec)
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
@@ -42,7 +41,6 @@ func TestSliceString(t *testing.T) {
 }
 
 func TestSlicePtrString(t *testing.T) {
-	stringCodec := internal.StringCodec
 	pointerCodec := internal.MakePointerCodec(stringCodec)
 	codec := internal.MakeSliceCodec(pointerCodec)
 	testCodec(t, codec, []testCase[[]*string]{
@@ -97,7 +95,6 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
-	stringCodec := internal.StringCodec
 	sliceCodec := internal.MakeSliceCodec(stringCodec)
 	codec := internal.MakeSliceCodec(sliceCodec)
 
