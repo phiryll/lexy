@@ -136,8 +136,8 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 func BoolCodec[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
 func UIntCodec[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
 func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
-func Float32Codec() Codec[float32]                                { return internal.Float32Codec }
-func Float64Codec() Codec[float64]                                { return internal.Float64Codec }
+func Float32Codec[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
+func Float64Codec[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
 func BigIntCodec() Codec[*big.Int]                                { return internal.BigIntCodec }
 func BigFloatCodec() Codec[*big.Float]                            { return internal.BigFloatCodec }
 func StringCodec() Codec[string]                                  { return internal.StringCodec }
