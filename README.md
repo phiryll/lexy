@@ -30,12 +30,13 @@ Lexy can encode:
 * maps of supported types  
   Whether map keys are ordered is optional because of the sorting overhead.
   Encoding and decoding will be correct if unordered keys are used,
-  but the results will be randomly ordered.
-* structs of supported types  
-  Lexy does not access unexported struct fields.
-  Otherwise, structs behave similarly to maps with string keys.
+  but the encodings of key/value pairs will be randomly ordered.
 
-Lexy cannot encode these, but you can always write a custom Codec:
+Lexy provides functionality to help clients to write their own Codecs for struct types.
+The inherent limitations of generic types and reflection in go make it impossible
+to do this in a general way without having a parallel, but completely separate, set of non-generic Codecs.
+
+Lexy does not encode these, but you can always write a custom Codec:
 
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
@@ -43,7 +44,7 @@ Lexy cannot encode these, but you can always write a custom Codec:
   Complex types have no commonly understood ordering.
 * `math.big.Rat`  
   There is no good way to encode rational numbers with a lexicographical order that isn't lossy.
-  The closest you can get is to convert it to a (possibly rounded) big.Float and encode that.
+  The closest you can get is to convert them to (possibly rounded) big.Floats and encode those.
 * array types
 * function types
 * interface types

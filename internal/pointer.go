@@ -17,10 +17,6 @@ type pointerCodec[P ~*T, T any] struct {
 }
 
 func MakePointerCodec[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
-	// TODO: Might want 2 implementations based on T,
-	// whether values require escaping and delimiting or not.
-	// Does whether elemCodec requires termination answer that question?
-
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}

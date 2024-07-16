@@ -40,13 +40,16 @@ type Writer[T any] interface {
 // The Read and Write methods should be lossless inverse operations if possible, and clearly documented if not.
 //
 // All Codec implementations in lexy are thread-safe,
-// including the Codecs for pointers, slices, maps, and structs if their delegate Codecs are thread-safe.
+// including the Codecs for pointers, slices, and maps if their delegate Codecs are thread-safe.
 type Codec[T any] interface {
 	Reader[T]
 	Writer[T]
 
 	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
-	// when used in an aggregate Codec (pointer, slice, map, or struct).
+	// when used within an aggregate Codec (pointer, slice, map, or struct).
+	// Codecs returned by PointerCodec(elemCodec) require a terminator if their elemCodec does,
+	// and won't terminate and escape when encoding an element
+	// (that's done by the containing aggregate codec, if any).
 	RequiresTerminator() bool
 }
 
