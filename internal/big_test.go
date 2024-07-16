@@ -11,7 +11,7 @@ import (
 
 func encodeSize(size int64) []byte {
 	var buf bytes.Buffer
-	internal.IntCodec[int64]().Write(&buf, size)
+	int64Codec.Write(&buf, size)
 	return buf.Bytes()
 }
 

@@ -7,8 +7,7 @@ import (
 )
 
 func TestSliceInt32(t *testing.T) {
-	elementCodec := internal.IntCodec[int32]()
-	codec := internal.MakeSliceCodec(elementCodec)
+	codec := internal.MakeSliceCodec(int32Codec)
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []int32{}, []byte{empty}},
@@ -63,7 +62,6 @@ func TestSlicePtrString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
-	int32Codec := internal.IntCodec[int32]()
 	sliceCodec := internal.MakeSliceCodec(int32Codec)
 	codec := internal.MakeSliceCodec(sliceCodec)
 	testCodec(t, codec, []testCase[[][]int32]{

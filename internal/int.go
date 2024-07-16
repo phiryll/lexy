@@ -26,7 +26,7 @@ func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
 	return intCodec[T]{signBit: signBit}
 }
 
-// Underlying types only, and only if needed for other lexy Codecs.
+// Underlying types only, and only if needed by other lexy Codecs.
 var (
 	// boolCodec   Codec[bool]   = uintCodec[bool]{}
 	// uint8Codec  Codec[uint8]  = uintCodec[uint8]{}

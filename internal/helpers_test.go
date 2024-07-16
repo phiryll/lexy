@@ -8,11 +8,32 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/phiryll/lexy"
 	"github.com/phiryll/lexy/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+// Codecs used by tests
+var (
+	boolCodec     = internal.UintCodec[bool]()
+	uint8Codec    = internal.UintCodec[uint8]()
+	uint16Codec   = internal.UintCodec[uint16]()
+	uint32Codec   = internal.UintCodec[uint32]()
+	uint64Codec   = internal.UintCodec[uint64]()
+	int8Codec     = internal.IntCodec[int8]()
+	int16Codec    = internal.IntCodec[int16]()
+	int32Codec    = internal.IntCodec[int32]()
+	int64Codec    = internal.IntCodec[int64]()
+	float32Codec  = internal.Float32Codec[float32]()
+	float64Codec  = internal.Float64Codec[float64]()
+	bigIntCodec   = internal.BigIntCodec
+	bigFloatCodec = internal.BigFloatCodec
+	stringCodec   = internal.StringCodec
+	timeCodec     = internal.TimeCodec
+	durationCodec = internal.IntCodec[time.Duration]()
 )
 
 func ptr[T any](value T) *T {
