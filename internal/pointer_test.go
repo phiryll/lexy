@@ -7,7 +7,7 @@ import (
 )
 
 func TestPointerInt32(t *testing.T) {
-	valueCodec := internal.Int32Codec
+	valueCodec := internal.IntCodec[int32]()
 	codec := internal.MakePointerCodec(valueCodec)
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte(nil)},
@@ -42,7 +42,7 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
-	int32Codec := internal.Int32Codec
+	int32Codec := internal.IntCodec[int32]()
 	sliceCodec := internal.MakeSliceCodec(int32Codec)
 	codec := internal.MakePointerCodec(sliceCodec)
 	testCodec(t, codec, []testCase[*[]int32]{

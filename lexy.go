@@ -131,24 +131,18 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
-// Codecs that only need one instance, and have only primitive fields.
+// Codecs that do not delegate to other Codecs.
 
-func BoolCodec() Codec[bool]              { return internal.BoolCodec }
-func UInt8Codec() Codec[uint8]            { return internal.Uint8Codec }
-func UInt16Codec() Codec[uint16]          { return internal.Uint16Codec }
-func UInt32Codec() Codec[uint32]          { return internal.Uint32Codec }
-func UInt64Codec() Codec[uint64]          { return internal.Uint64Codec }
-func Int8Codec() Codec[int8]              { return internal.Int8Codec }
-func Int16Codec() Codec[int16]            { return internal.Int16Codec }
-func Int32Codec() Codec[int32]            { return internal.Int32Codec }
-func Int64Codec() Codec[int64]            { return internal.Int64Codec }
-func Float32Codec() Codec[float32]        { return internal.Float32Codec }
-func Float64Codec() Codec[float64]        { return internal.Float64Codec }
-func BigIntCodec() Codec[*big.Int]        { return internal.BigIntCodec }
-func BigFloatCodec() Codec[*big.Float]    { return internal.BigFloatCodec }
-func StringCodec() Codec[string]          { return internal.StringCodec }
-func TimeCodec() Codec[time.Time]         { return internal.TimeCodec }
-func DurationCodec() Codec[time.Duration] { return internal.DurationCodec }
+func BoolCodec[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
+func UIntCodec[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
+func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
+func Float32Codec() Codec[float32]                                { return internal.Float32Codec }
+func Float64Codec() Codec[float64]                                { return internal.Float64Codec }
+func BigIntCodec() Codec[*big.Int]                                { return internal.BigIntCodec }
+func BigFloatCodec() Codec[*big.Float]                            { return internal.BigFloatCodec }
+func StringCodec() Codec[string]                                  { return internal.StringCodec }
+func TimeCodec() Codec[time.Time]                                 { return internal.TimeCodec }
+func DurationCodec() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
 
 // Codecs that delegate to other Codecs.
 

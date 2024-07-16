@@ -4,20 +4,39 @@ import (
 	"encoding/binary"
 	"io"
 	"math"
-	"time"
+	"reflect"
 )
 
+func UintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] {
+	return uintCodec[T]{}
+}
+
+func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
+	var signBit T
+	switch reflect.TypeFor[T]().Kind() {
+	case reflect.Int8:
+		signBit = T(1) << 7
+	case reflect.Int16:
+		signBit = T(1) << 15
+	case reflect.Int32:
+		signBit = T(1) << 31
+	case reflect.Int64:
+		signBit = T(1) << 63
+	}
+	return intCodec[T]{signBit: signBit}
+}
+
+// Underlying types only, and only if needed for other lexy Codecs.
 var (
-	BoolCodec     Codec[bool]          = uintCodec[bool]{}
-	Uint8Codec    Codec[uint8]         = uintCodec[uint8]{}
-	Uint16Codec   Codec[uint16]        = uintCodec[uint16]{}
-	Uint32Codec   Codec[uint32]        = uintCodec[uint32]{}
-	Uint64Codec   Codec[uint64]        = uintCodec[uint64]{}
-	Int8Codec     Codec[int8]          = intCodec[int8]{signBit: math.MinInt8}
-	Int16Codec    Codec[int16]         = intCodec[int16]{signBit: math.MinInt16}
-	Int32Codec    Codec[int32]         = intCodec[int32]{signBit: math.MinInt32}
-	Int64Codec    Codec[int64]         = intCodec[int64]{signBit: math.MinInt64}
-	DurationCodec Codec[time.Duration] = intCodec[time.Duration]{signBit: math.MinInt64}
+	// boolCodec   Codec[bool]   = uintCodec[bool]{}
+	// uint8Codec  Codec[uint8]  = uintCodec[uint8]{}
+	// uint16Codec Codec[uint16] = uintCodec[uint16]{}
+	uint32Codec Codec[uint32] = uintCodec[uint32]{}
+	// uint64Codec Codec[uint64] = uintCodec[uint64]{}
+	int8Codec Codec[int8] = intCodec[int8]{signBit: math.MinInt8}
+	// int16Codec  Codec[int16]  = intCodec[int16]{signBit: math.MinInt16}
+	int32Codec Codec[int32] = intCodec[int32]{signBit: math.MinInt32}
+	int64Codec Codec[int64] = intCodec[int64]{signBit: math.MinInt64}
 )
 
 // uintCodec is the Codec for bool and fixed-length unsigned integral types.

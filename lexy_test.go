@@ -18,7 +18,7 @@ func TestEncode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := lexy.Encode(lexy.Int32Codec(), tt.value)
+			got, err := lexy.Encode(lexy.IntCodec[int32](), tt.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -41,7 +41,7 @@ func TestDecode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := lexy.Decode(lexy.Int32Codec(), tt.data)
+			got, err := lexy.Decode(lexy.IntCodec[int32](), tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -32,7 +32,7 @@ type bigIntCodec struct{}
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	neg := false
-	size, err := Int64Codec.Read(r)
+	size, err := int64Codec.Read(r)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 		size = -size
 		invertSlice(b)
 	}
-	if err := Int64Codec.Write(w, int64(size)); err != nil {
+	if err := int64Codec.Write(w, int64(size)); err != nil {
 		return err
 	}
 	_, err := w.Write(b)
@@ -171,7 +171,7 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	prefix, err := Int8Codec.Read(r)
+	prefix, err := int8Codec.Read(r)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 		mantReader = inverseReader{r}
 	}
 
-	exp, err := Int32Codec.Read(r)
+	exp, err := int32Codec.Read(r)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if err != nil {
 		return nil, err
 	}
-	prec, err := Int32Codec.Read(r)
+	prec, err := int32Codec.Read(r)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	case !signbit:
 		prefix = nonNegFinite
 	}
-	if err := Int8Codec.Write(w, prefix); err != nil {
+	if err := int8Codec.Write(w, prefix); err != nil {
 		return err
 	}
 	if isInf || isZero {
@@ -270,7 +270,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		mantWriter = inverseWriter{w}
 	}
 
-	if err := Int32Codec.Write(w, exp); err != nil {
+	if err := int32Codec.Write(w, exp); err != nil {
 		return err
 	}
 
@@ -295,7 +295,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		return err
 	}
 
-	if err := Int32Codec.Write(w, prec); err != nil {
+	if err := int32Codec.Write(w, prec); err != nil {
 		return err
 	}
 	return modeCodec.Write(w, mode)
