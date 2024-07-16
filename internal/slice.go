@@ -12,26 +12,26 @@ import (
 // - if nil, nothing
 // - if empty, PrefixEmpty
 // - if non-empty, PrefixNonEmpty followed by its elements encoded and escaped separated by (unescaped) delimiters
-type sliceCodec[T any] struct {
+type sliceCodec[S ~[]T, T any] struct {
 	elemCodec Codec[T]
 }
 
-func MakeSliceCodec[T any](elemCodec Codec[T]) Codec[[]T] {
+func MakeSliceCodec[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
 	// TODO: Might want 2 implementations based on T,
 	// whether elements require escaping and delimiting or not.
 	// Does whether elemCodec requires termination answer that question?
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return sliceCodec[T]{elemCodec}
+	return sliceCodec[S, T]{elemCodec}
 }
 
-func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
-	empty := []T{}
+func (c sliceCodec[S, T]) Read(r io.Reader) (S, error) {
+	empty := S{}
 	if value, done, err := readPrefix(r, true, &empty); done {
 		return value, err
 	}
-	var values []T
+	var values S
 	for {
 		b, readErr := Unescape(r)
 		if readErr != nil && readErr != io.EOF {
@@ -52,16 +52,16 @@ func (c sliceCodec[T]) Read(r io.Reader) ([]T, error) {
 	return values, nil
 }
 
-func isNilSlice[T any](value []T) bool {
+func isNilSlice[S ~[]T, T any](value S) bool {
 	return value == nil
 }
 
-func isEmptySlice[T any](value []T) bool {
+func isEmptySlice[S ~[]T, T any](value S) bool {
 	// okay to be true for a nil slice, nil is tested first
 	return len(value) == 0
 }
 
-func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
+func (c sliceCodec[S, T]) Write(w io.Writer, value S) error {
 	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
@@ -83,6 +83,6 @@ func (c sliceCodec[T]) Write(w io.Writer, value []T) error {
 	return nil
 }
 
-func (c sliceCodec[T]) RequiresTerminator() bool {
+func (c sliceCodec[P, T]) RequiresTerminator() bool {
 	return true
 }

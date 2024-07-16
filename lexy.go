@@ -153,8 +153,8 @@ func PointerCodec[P ~*T, T any](valueCodec Codec[T]) Codec[P] {
 	return internal.MakePointerCodec[P](valueCodec)
 }
 
-func SliceCodec[T any](elementCodec Codec[T]) Codec[[]T] {
-	return internal.MakeSliceCodec(elementCodec)
+func SliceCodec[S ~[]T, T any](elementCodec Codec[T]) Codec[S] {
+	return internal.MakeSliceCodec[S](elementCodec)
 }
 
 func MapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {

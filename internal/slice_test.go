@@ -7,7 +7,7 @@ import (
 )
 
 func TestSliceInt32(t *testing.T) {
-	codec := internal.MakeSliceCodec(int32Codec)
+	codec := internal.MakeSliceCodec[[]int32](int32Codec)
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []int32{}, []byte{empty}},
@@ -24,7 +24,7 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
-	codec := internal.MakeSliceCodec(stringCodec)
+	codec := internal.MakeSliceCodec[[]string](stringCodec)
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []string{}, []byte{empty}},
@@ -42,7 +42,7 @@ func TestSliceString(t *testing.T) {
 
 func TestSlicePtrString(t *testing.T) {
 	pointerCodec := internal.MakePointerCodec[*string](stringCodec)
-	codec := internal.MakeSliceCodec(pointerCodec)
+	codec := internal.MakeSliceCodec[[]*string](pointerCodec)
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []*string{}, []byte{empty}},
@@ -60,8 +60,8 @@ func TestSlicePtrString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
-	sliceCodec := internal.MakeSliceCodec(int32Codec)
-	codec := internal.MakeSliceCodec(sliceCodec)
+	sliceCodec := internal.MakeSliceCodec[[]int32](int32Codec)
+	codec := internal.MakeSliceCodec[[][]int32](sliceCodec)
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]int32{}, []byte{empty}},
@@ -95,8 +95,8 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
-	sliceCodec := internal.MakeSliceCodec(stringCodec)
-	codec := internal.MakeSliceCodec(sliceCodec)
+	sliceCodec := internal.MakeSliceCodec[[]string](stringCodec)
+	codec := internal.MakeSliceCodec[[][]string](sliceCodec)
 
 	testCodec(t, codec, []testCase[[][]string]{
 		// unescaped delimiters are the top level are on separate lines for clarity
@@ -166,4 +166,23 @@ func TestSliceSliceString(t *testing.T) {
 			empty,
 		}},
 	})
+}
+
+type sInt []int32
+
+func TestSliceUnderlyingType(t *testing.T) {
+	codec := internal.MakeSliceCodec[sInt](int32Codec)
+	testCodec(t, codec, []testCase[sInt]{
+		{"nil", sInt(nil), []byte(nil)},
+		{"empty", sInt([]int32{}), []byte{empty}},
+		{"[0]", sInt([]int32{0}), []byte{nonEmpty, 0x80, esc, 0x00, esc, 0x00, esc, 0x00}},
+		{"[-1]", sInt([]int32{-1}), []byte{nonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
+		{"[0, 1, -1]", sInt([]int32{0, 1, -1}), []byte{
+			nonEmpty,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x00, del,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x01, del,
+			0x7F, 0xFF, 0xFF, 0xFF,
+		}},
+	})
+	testCodecFail(t, codec, []int32{})
 }
