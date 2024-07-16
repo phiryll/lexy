@@ -18,49 +18,49 @@ import (
 //     escaped encoded key, delimiter, escaped encoded value, delimiter,
 //     ...
 //     escaped encoded key, delimiter, escaped encoded value]
-type mapCodec[K comparable, V any] struct {
+type mapCodec[M ~map[K]V, K comparable, V any] struct {
 	pairReader pairReader[K, V]
 	pairWriter pairWriter[K, V]
 }
 
 // Similar to mapCodec, except for a Codec ordered by the map's key encodings.
-type orderedMapCodec[K comparable, V any] struct {
+type orderedMapCodec[M ~map[K]V, K comparable, V any] struct {
 	keyWriter  Writer[K]
 	pairReader pairReader[K, V]
 	pairWriter pairWriter[[]byte, V]
 }
 
-func MakeMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
-	return mapCodec[K, V]{
+func MakeMapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+	return mapCodec[M, K, V]{
 		pairReader[K, V]{keyCodec, valueCodec},
 		pairWriter[K, V]{keyCodec, valueCodec},
 	}
 }
 
-func MakeOrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
-	return orderedMapCodec[K, V]{
+func MakeOrderedMapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+	return orderedMapCodec[M, K, V]{
 		keyCodec,
 		pairReader[K, V]{keyCodec, valueCodec},
 		pairWriter[[]byte, V]{bytesWriter, valueCodec},
 	}
 }
 
-func isNilMap[K comparable, V any](value map[K]V) bool {
+func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value == nil
 }
 
-func isEmptyMap[K comparable, V any](value map[K]V) bool {
+func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
 	// okay to be true for a nil map, nil is tested first
 	return len(value) == 0
 }
 
 // Read implementation is the same for unordered and ordered encodings.
-func readMap[K comparable, V any](r io.Reader, pairReader pairReader[K, V]) (map[K]V, error) {
-	empty := make(map[K]V)
+func readMap[M ~map[K]V, K comparable, V any](r io.Reader, pairReader pairReader[K, V]) (M, error) {
+	empty := make(M)
 	if m, done, err := readPrefix(r, true, &empty); done {
 		return m, err
 	}
-	m := make(map[K]V)
+	m := make(M)
 	for {
 		key, value, err := pairReader.read(r)
 		if err == io.EOF {
@@ -77,11 +77,11 @@ func readMap[K comparable, V any](r io.Reader, pairReader pairReader[K, V]) (map
 	return m, nil
 }
 
-func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
-	return readMap(r, c.pairReader)
+func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
+	return readMap[M](r, c.pairReader)
 }
 
-func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
+func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
 	if done, err := writePrefix(w, isNilMap, isEmptyMap, value); done {
 		return err
 	}
@@ -101,11 +101,11 @@ func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	return nil
 }
 
-func (c orderedMapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
-	return readMap(r, c.pairReader)
+func (c orderedMapCodec[M, K, V]) Read(r io.Reader) (M, error) {
+	return readMap[M](r, c.pairReader)
 }
 
-func (c orderedMapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
+func (c orderedMapCodec[M, K, V]) Write(w io.Writer, value M) error {
 	if done, err := writePrefix(w, isNilMap, isEmptyMap, value); done {
 		return err
 	}
@@ -149,10 +149,10 @@ func (c orderedMapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	return nil
 }
 
-func (c mapCodec[K, V]) RequiresTerminator() bool {
+func (c mapCodec[M, K, V]) RequiresTerminator() bool {
 	return true
 }
 
-func (c orderedMapCodec[K, V]) RequiresTerminator() bool {
+func (c orderedMapCodec[M, K, V]) RequiresTerminator() bool {
 	return true
 }

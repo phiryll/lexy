@@ -10,21 +10,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testBasicMap(t *testing.T, codec internal.Codec[map[string]int32]) {
+func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 	// at most one key so order does not matter
-	testCodec(t, codec, []testCase[map[string]int32]{
+	testCodec(t, codec, []testCase[M]{
 		{"nil", nil, []byte(nil)},
-		{"empty", map[string]int32{}, []byte{empty}},
-		{"{a:0}", map[string]int32{"a": 0}, []byte{
+		{"empty", M{}, []byte{empty}},
+		{"{a:0}", M{"a": 0}, []byte{
 			nonEmpty,
 			nonEmpty, 'a', del,
 			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
 		}},
 	})
-	testCodecFail(t, codec, map[string]int32{})
+	testCodecFail(t, codec, M{})
 
-	testCodecRoundTrip(t, codec, []testCase[map[string]int32]{
-		{"non-trivial", map[string]int32{
+	testCodecRoundTrip(t, codec, []testCase[M]{
+		{"non-trivial", M{
 			"a": 0,
 			"b": -1,
 			"":  1000,
@@ -112,27 +112,27 @@ var (
 )
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.MakeMapCodec(sCodec, iCodec))
+	testBasicMap(t, internal.MakeMapCodec[map[string]int32](sCodec, iCodec))
 }
 
 func TestMapSlice(t *testing.T) {
-	testMapSliceValue(t, internal.MakeMapCodec(sCodec, sliceCodec))
+	testMapSliceValue(t, internal.MakeMapCodec[map[string][]string](sCodec, sliceCodec))
 }
 
 func TestMapPointerPointer(t *testing.T) {
-	testMapPointerPointer(t, internal.MakeMapCodec(pointerCodec, pointerCodec))
+	testMapPointerPointer(t, internal.MakeMapCodec[map[*string]*string](pointerCodec, pointerCodec))
 }
 
 func TestOrderedMapInt(t *testing.T) {
-	testBasicMap(t, internal.MakeOrderedMapCodec(sCodec, iCodec))
+	testBasicMap(t, internal.MakeOrderedMapCodec[map[string]int32](sCodec, iCodec))
 }
 
 func TestOrderedMapSlice(t *testing.T) {
-	testMapSliceValue(t, internal.MakeOrderedMapCodec(sCodec, sliceCodec))
+	testMapSliceValue(t, internal.MakeOrderedMapCodec[map[string][]string](sCodec, sliceCodec))
 }
 
 func TestOrderedMapPointerPointer(t *testing.T) {
-	testMapPointerPointer(t, internal.MakeOrderedMapCodec(pointerCodec, pointerCodec))
+	testMapPointerPointer(t, internal.MakeOrderedMapCodec[map[*string]*string](pointerCodec, pointerCodec))
 }
 
 func TestOrderedMapOrdering(t *testing.T) {
@@ -141,7 +141,7 @@ func TestOrderedMapOrdering(t *testing.T) {
 	// because go randomizes the initial start for map iteration to prevent depending on iteration order.
 	// Because of this, this test might not fail on any particular run,
 	// but it should absolutely fail on enough repeated runs if the codec isn't working.
-	codec := internal.MakeOrderedMapCodec(sCodec, sCodec)
+	codec := internal.MakeOrderedMapCodec[map[string]string](sCodec, sCodec)
 	testCodec(t, codec, []testCase[map[string]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", map[string]string{}, []byte{empty}},
@@ -158,4 +158,14 @@ func TestOrderedMapOrdering(t *testing.T) {
 			nonEmpty, 'c', del, nonEmpty, '4',
 		}},
 	})
+}
+
+type mStringInt map[string]int32
+
+func TestMapUnderlyingType(t *testing.T) {
+	testBasicMap(t, internal.MakeMapCodec[mStringInt](sCodec, iCodec))
+}
+
+func TestOrderedMapUnderlyingType(t *testing.T) {
+	testBasicMap(t, internal.MakeOrderedMapCodec[mStringInt](sCodec, iCodec))
 }
