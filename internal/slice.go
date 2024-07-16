@@ -26,18 +26,28 @@ func MakeSliceCodec[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
 	return sliceCodec[S, T]{elemCodec}
 }
 
-func (c sliceCodec[S, T]) Read(r io.Reader) (S, error) {
-	empty := S{}
-	if value, done, err := readPrefix(r, true, &empty); done {
-		return value, err
+func readElements[S ~[]T, T any](r io.Reader, elemCodec Codec[T]) (S, error) {
+	var values S
+	for {
+		value, codecErr := elemCodec.Read(r)
+		if codecErr == io.EOF {
+			return values, nil
+		}
+		if codecErr != nil {
+			return values, codecErr
+		}
+		values = append(values, value)
 	}
+}
+
+func readDelimitedElements[S ~[]T, T any](r io.Reader, elemCodec Codec[T]) (S, error) {
 	var values S
 	for {
 		b, readErr := Unescape(r)
 		if readErr != nil && readErr != io.EOF {
 			return values, readErr
 		}
-		value, codecErr := c.elemCodec.Read(bytes.NewBuffer(b))
+		value, codecErr := elemCodec.Read(bytes.NewBuffer(b))
 		if codecErr != nil && codecErr != io.EOF {
 			return values, codecErr
 		}
@@ -45,6 +55,24 @@ func (c sliceCodec[S, T]) Read(r io.Reader) (S, error) {
 		if readErr == io.EOF {
 			break
 		}
+	}
+	return values, nil
+}
+
+func (c sliceCodec[S, T]) Read(r io.Reader) (S, error) {
+	empty := S{}
+	if value, done, err := readPrefix(r, true, &empty); done {
+		return value, err
+	}
+	var values S
+	var err error
+	if c.elemCodec.RequiresTerminator() {
+		values, err = readDelimitedElements[S](r, c.elemCodec)
+	} else {
+		values, err = readElements[S](r, c.elemCodec)
+	}
+	if err != nil {
+		return values, err
 	}
 	if len(values) == 0 {
 		return nil, io.ErrUnexpectedEOF
@@ -61,19 +89,25 @@ func isEmptySlice[S ~[]T, T any](value S) bool {
 	return len(value) == 0
 }
 
-func (c sliceCodec[S, T]) Write(w io.Writer, value S) error {
-	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
-		return err
+func writeElements[S ~[]T, T any](w io.Writer, elemCodec Codec[T], value S) error {
+	for _, elem := range value {
+		if err := elemCodec.Write(w, elem); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func writeDelimitedElements[S ~[]T, T any](w io.Writer, elemCodec Codec[T], value S) error {
 	var scratch bytes.Buffer
-	for i, value := range value {
+	for i, elem := range value {
 		if i > 0 {
 			if _, err := w.Write(del); err != nil {
 				return err
 			}
 		}
 		scratch.Reset()
-		if err := c.elemCodec.Write(&scratch, value); err != nil {
+		if err := elemCodec.Write(&scratch, elem); err != nil {
 			return err
 		}
 		if _, err := Escape(w, scratch.Bytes()); err != nil {
@@ -81,6 +115,17 @@ func (c sliceCodec[S, T]) Write(w io.Writer, value S) error {
 		}
 	}
 	return nil
+}
+
+func (c sliceCodec[S, T]) Write(w io.Writer, value S) error {
+	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
+		return err
+	}
+	if c.elemCodec.RequiresTerminator() {
+		return writeDelimitedElements(w, c.elemCodec, value)
+	} else {
+		return writeElements(w, c.elemCodec, value)
+	}
 }
 
 func (c sliceCodec[P, T]) RequiresTerminator() bool {

@@ -11,12 +11,12 @@ func TestSliceInt32(t *testing.T) {
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []int32{}, []byte{empty}},
-		{"[0]", []int32{0}, []byte{nonEmpty, 0x80, esc, 0x00, esc, 0x00, esc, 0x00}},
+		{"[0]", []int32{0}, []byte{nonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"[-1]", []int32{-1}, []byte{nonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
 		{"[0, 1, -1]", []int32{0, 1, -1}, []byte{
 			nonEmpty,
-			0x80, esc, 0x00, esc, 0x00, esc, 0x00, del,
-			0x80, esc, 0x00, esc, 0x00, esc, 0x01, del,
+			0x80, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
@@ -74,8 +74,8 @@ func TestSliceSliceInt32(t *testing.T) {
 			del,
 			// {0, 1, -1}, escaped
 			nonEmpty,
-			0x80, esc, esc, esc, 0x00, esc, esc, esc, 0x00, esc, esc, esc, 0x00, esc, del,
-			0x80, esc, esc, esc, 0x00, esc, esc, esc, 0x00, esc, esc, esc, 0x01, esc, del,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
 			del,
 			// {}
@@ -83,7 +83,7 @@ func TestSliceSliceInt32(t *testing.T) {
 			del,
 			// {-2, -3}, escaped
 			nonEmpty,
-			0x7F, 0xFF, 0xFF, 0xFE, esc, del,
+			0x7F, 0xFF, 0xFF, 0xFE,
 			0x7F, 0xFF, 0xFF, 0xFD,
 			del,
 			// nil
@@ -175,12 +175,12 @@ func TestSliceUnderlyingType(t *testing.T) {
 	testCodec(t, codec, []testCase[sInt]{
 		{"nil", sInt(nil), []byte(nil)},
 		{"empty", sInt([]int32{}), []byte{empty}},
-		{"[0]", sInt([]int32{0}), []byte{nonEmpty, 0x80, esc, 0x00, esc, 0x00, esc, 0x00}},
+		{"[0]", sInt([]int32{0}), []byte{nonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"[-1]", sInt([]int32{-1}), []byte{nonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
 		{"[0, 1, -1]", sInt([]int32{0, 1, -1}), []byte{
 			nonEmpty,
-			0x80, esc, 0x00, esc, 0x00, esc, 0x00, del,
-			0x80, esc, 0x00, esc, 0x00, esc, 0x01, del,
+			0x80, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
