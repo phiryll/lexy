@@ -169,8 +169,3 @@ func MapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec
 func OrderedMapCodec[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return internal.MakeOrderedMapCodec(keyCodec, valueCodec)
 }
-
-func StructCodec[T any, F any](fieldCodec Codec[F]) Codec[T] {
-	// TBD
-	return internal.MakeStructCodec[T](fieldCodec)
-}
