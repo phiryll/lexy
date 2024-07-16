@@ -152,12 +152,12 @@ func TimeCodec() Codec[time.Time]      { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.
 
-func PointerCodec[P ~*T, T any](valueCodec Codec[T]) Codec[P] {
-	return internal.MakePointerCodec[P](valueCodec)
+func PointerCodec[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
+	return internal.MakePointerCodec[P](elemCodec)
 }
 
-func SliceCodec[S ~[]T, T any](elementCodec Codec[T]) Codec[S] {
-	return internal.MakeSliceCodec[S](elementCodec)
+func SliceCodec[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
+	return internal.MakeSliceCodec[S](elemCodec)
 }
 
 func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
