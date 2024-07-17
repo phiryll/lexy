@@ -5,15 +5,15 @@ import (
 	"io"
 )
 
-// Functions for delimiting and escaping.
+// Functions for terminating and escaping.
 // The lexicographical binary ordering of encoded aggregates is preserved.
 // For example, ["ab", "cde"] is less than ["aba", "de"], because "ab" is less than "aba".
-// The delimiter can't itself be used to escape a delimiter because it leads to ambiguities,
+// The terminator can't itself be used to escape a terminator because it leads to ambiguities,
 // so there needs to be a distinct escape character.
 
-// This comment explains why the delimiter and escape values must be 0x00 and 0x01.
-// Strings are used for clarity, with "," and "\" denoting the delimiter and escape bytes.
-// All input characters have their natural meaning (no delimiters or escapes).
+// This comment explains why the terminator and escape values must be 0x00 and 0x01.
+// Strings are used for clarity, with "," and "\" denoting the terminator and escape bytes.
+// All input characters have their natural meaning (no terminators or escapes).
 // The encodings for maps and structs will be analogous.
 //
 //	input slice  -> encoded string
@@ -24,30 +24,29 @@ import (
 //	E: ["a,", "bc"] -> a\,,bc
 //	F: ["a\", "bc"] -> a\\,bc
 //
-// B and E are an example of why the delimiter can't be its own escape,
+// B and E are an example of why the terminator can't be its own escape,
 // the encoded strings would both be "a,,,b".
 //
 // A, B, and C must all be less than D, E, and F.
 // We can see "," must be less than all other values including the escape, so it must be 0x00.
 //
 // Since "," is less than everything else, E < D (first slice element "a," < "ab"). Therefore "a\,,bc" < "ab,c".
-// We can see "\" must be less than all other values except the delimiter, so it must be 0x01.
+// We can see "\" must be less than all other values except the terminator, so it must be 0x01.
 const (
-	// DelimiterByte is used to delimit elements of an aggregate value.
-	DelimiterByte byte = 0x00
+	// TerminatorByte is used to terminate elements, when necessary.
+	TerminatorByte byte = 0x00
 
-	// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
-	//
-	// This includes appearing in the encodings of nested aggregates,
+	// EscapeByte is used the escape the terminator and escape bytes when they appear in data, when necessary.
+	// This includes those values appearing in the encodings of nested aggregates,
 	// because those are still just data at the level of the enclosing aggregate.
 	EscapeByte byte = 0x01
 )
 
 // Convenience byte slices for writers.
 var (
-	del    = []byte{DelimiterByte}
-	escDel = []byte{EscapeByte, DelimiterByte}
-	escEsc = []byte{EscapeByte, EscapeByte}
+	term    = []byte{TerminatorByte}
+	escTerm = []byte{EscapeByte, TerminatorByte}
+	escEsc  = []byte{EscapeByte, EscapeByte}
 )
 
 // TerminateIfNeeded returns a Codec that uses codec,
@@ -100,7 +99,7 @@ func (c terminator[T]) RequiresTerminator() bool {
 var ExportEscapeForTesting = escape
 var ExportUnescapeForTesting = unescape
 
-// escape writes p to w, escaping all delimiters and escapes first, and writing a final terminator.
+// escape writes p to w, escaping all terminators and escapes first, and then writes a final terminator.
 // It returns the number of bytes read from p.
 func escape(w io.Writer, p []byte) (int, error) {
 	// running count of the number of bytes of p successfully processed
@@ -108,13 +107,13 @@ func escape(w io.Writer, p []byte) (int, error) {
 	var n int
 	for i, b := range p {
 		switch b {
-		case DelimiterByte:
+		case TerminatorByte:
 			count, err := w.Write(p[n:i])
 			n += count
 			if err != nil {
 				return n, err
 			}
-			if _, err = w.Write(escDel); err != nil {
+			if _, err = w.Write(escTerm); err != nil {
 				return n, err
 			}
 			n++
@@ -139,14 +138,14 @@ func escape(w io.Writer, p []byte) (int, error) {
 			return n, err
 		}
 	}
-	if _, err := w.Write(del); err != nil {
+	if _, err := w.Write(term); err != nil {
 		return n, err
 	}
 	return n, nil
 }
 
-// unescape reads from r until the first unescaped delimiter or io.EOF,
-// returning the unescaped data without the trailing delimiter, if any.
+// unescape reads from r until the first unescaped terminator or io.EOF,
+// returning the unescaped data without the trailing terminator, if any.
 //
 // unescape inherits its error behavior from r.
 // In particular, it may return a non-nil error from the same call when encountered,
@@ -167,10 +166,10 @@ func unescape(r io.Reader) ([]byte, error) {
 			// no data read and err == nil is allowed
 			continue
 		}
-		// handle unescaped delimiters and escapes
+		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {
-			if in[0] == DelimiterByte {
+			if in[0] == TerminatorByte {
 				return out.Bytes(), nil
 			}
 			if in[0] == EscapeByte {

@@ -28,13 +28,13 @@ func TestSliceString(t *testing.T) {
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte{pNil}},
 		{"empty", []string{}, []byte{empty}},
-		{"[\"\"]", []string{""}, []byte{nonEmpty, empty, del}},
-		{"[a]", []string{"a"}, []byte{nonEmpty, nonEmpty, 'a', del}},
+		{"[\"\"]", []string{""}, []byte{nonEmpty, empty, term}},
+		{"[a]", []string{"a"}, []byte{nonEmpty, nonEmpty, 'a', term}},
 		{"[a, \"\", xyz]", []string{"a", "", "xyz"}, []byte{
 			nonEmpty,
-			nonEmpty, 'a', del,
-			empty, del,
-			nonEmpty, 'x', 'y', 'z', del,
+			nonEmpty, 'a', term,
+			empty, term,
+			nonEmpty, 'x', 'y', 'z', term,
 		}},
 	})
 	testCodecFail(t, codec, []string{})
@@ -46,14 +46,14 @@ func TestSlicePtrString(t *testing.T) {
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte{pNil}},
 		{"empty", []*string{}, []byte{empty}},
-		{"[nil]", []*string{nil}, []byte{nonEmpty, pNil, del}},
-		{"[*a]", []*string{ptr("a")}, []byte{nonEmpty, nonEmpty, nonEmpty, 'a', del}},
+		{"[nil]", []*string{nil}, []byte{nonEmpty, pNil, term}},
+		{"[*a]", []*string{ptr("a")}, []byte{nonEmpty, nonEmpty, nonEmpty, 'a', term}},
 		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, []byte{
 			nonEmpty,
-			nonEmpty, nonEmpty, 'a', del,
-			pNil, del,
-			nonEmpty, empty, del,
-			nonEmpty, nonEmpty, 'x', 'y', 'z', del,
+			nonEmpty, nonEmpty, 'a', term,
+			pNil, term,
+			nonEmpty, empty, term,
+			nonEmpty, nonEmpty, 'x', 'y', 'z', term,
 		}},
 	})
 	testCodecFail(t, codec, []*string{})
@@ -65,31 +65,30 @@ func TestSliceSliceInt32(t *testing.T) {
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte{pNil}},
 		{"[]", [][]int32{}, []byte{empty}},
-		{"[nil]", [][]int32{[]int32(nil)}, []byte{nonEmpty, pNil, del}},
-		{"[[]]", [][]int32{{}}, []byte{nonEmpty, empty, del}},
+		{"[nil]", [][]int32{[]int32(nil)}, []byte{nonEmpty, pNil, term}},
+		{"[[]]", [][]int32{{}}, []byte{nonEmpty, empty, term}},
 		{"[nil, {0, 1, -1}, {}, {-2, -3}, nil, nil]", [][]int32{nil, {0, 1, -1}, {}, {-2, -3}, nil, nil}, []byte{
-			// unescaped delimiters are the top level are on separate lines for clarity
 			nonEmpty,
 			// nil
-			pNil, del,
+			pNil, term,
 			// {0, 1, -1}, escaped
 			nonEmpty,
 			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
 			0x80, esc, 0x00, esc, 0x00, esc, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
-			del,
+			term,
 			// {}
 			empty,
-			del,
+			term,
 			// {-2, -3}, escaped
 			nonEmpty,
 			0x7F, 0xFF, 0xFF, 0xFE,
 			0x7F, 0xFF, 0xFF, 0xFD,
-			del,
+			term,
 			// nil
-			pNil, del,
+			pNil, term,
 			// nil
-			pNil, del,
+			pNil, term,
 		}},
 	})
 	testCodecFail(t, codec, [][]int32{})
@@ -100,56 +99,55 @@ func TestSliceSliceString(t *testing.T) {
 	codec := internal.MakeSliceCodec[[][]string](sliceCodec)
 
 	testCodec(t, codec, []testCase[[][]string]{
-		// unescaped delimiters are the top level are on separate lines for clarity
 		{"nil", nil, []byte{pNil}},
 		{"[]", [][]string{}, []byte{empty}},
-		{"[nil]", [][]string{[]string(nil)}, []byte{nonEmpty, pNil, del}},
-		{"[[]]", [][]string{{}}, []byte{nonEmpty, empty, del}},
+		{"[nil]", [][]string{[]string(nil)}, []byte{nonEmpty, pNil, term}},
+		{"[[]]", [][]string{{}}, []byte{nonEmpty, empty, term}},
 		{"[[\"\"]]", [][]string{{""}}, []byte{
-			nonEmpty,        // prefix outer
-			nonEmpty,        // prefix {""}
-			empty, esc, del, // "", escaped
-			del, // terminator {""}, within outer
+			nonEmpty,         // prefix outer
+			nonEmpty,         // prefix {""}
+			empty, esc, term, // "", escaped
+			term, // terminator {""}, within outer
 		}},
 
 		// pairwise permutations of nil, [], and [""]
 		{"[nil, []]", [][]string{nil, {}}, []byte{
-			nonEmpty,  // outer
-			pNil, del, // nil = outer[0]
-			empty, del, // {} = outer[1]
+			nonEmpty,   // outer
+			pNil, term, // nil = outer[0]
+			empty, term, // {} = outer[1]
 		}},
 		{"[[], nil]", [][]string{{}, nil}, []byte{
-			nonEmpty,   // outer
-			empty, del, // {} = outer[0]
-			pNil, del, // nil = outer[1]
+			nonEmpty,    // outer
+			empty, term, // {} = outer[0]
+			pNil, term, // nil = outer[1]
 		}},
 		{"[nil, [\"\"]]", [][]string{nil, {""}}, []byte{
-			nonEmpty,  // outer
-			pNil, del, // nil = outer[0]
-			nonEmpty,        // prefix {""}
-			empty, esc, del, // "", escaped
-			del, // terminator {""}, within outer
+			nonEmpty,   // outer
+			pNil, term, // nil = outer[0]
+			nonEmpty,         // prefix {""}
+			empty, esc, term, // "", escaped
+			term, // terminator {""}, within outer
 		}},
 		{"[[\"\"], nil]", [][]string{{""}, nil}, []byte{
-			nonEmpty,        // outer
-			nonEmpty,        // prefix {""}
-			empty, esc, del, // "", escaped
-			del,       // terminator {""}, within outer
-			pNil, del, // nil = outer[1]
+			nonEmpty,         // outer
+			nonEmpty,         // prefix {""}
+			empty, esc, term, // "", escaped
+			term,       // terminator {""}, within outer
+			pNil, term, // nil = outer[1]
 		}},
 		{"[[], [\"\"]]", [][]string{{}, {""}}, []byte{
-			nonEmpty,   // outer
-			empty, del, // {} = outer[0]
-			nonEmpty,        // prefix {""}
-			empty, esc, del, // "", escaped
-			del, // terminator {""}, within outer
+			nonEmpty,    // outer
+			empty, term, // {} = outer[0]
+			nonEmpty,         // prefix {""}
+			empty, esc, term, // "", escaped
+			term, // terminator {""}, within outer
 		}},
 		{"[[\"\"], []]", [][]string{{""}, {}}, []byte{
-			nonEmpty,        // outer
-			nonEmpty,        // prefix {""}
-			empty, esc, del, // "", escaped
-			del,        // terminator {""}, within outer
-			empty, del, // {} = outer[1]
+			nonEmpty,         // outer
+			nonEmpty,         // prefix {""}
+			empty, esc, term, // "", escaped
+			term,        // terminator {""}, within outer
+			empty, term, // {} = outer[1]
 		}},
 
 		// a complex example
@@ -162,20 +160,20 @@ func TestSliceSliceString(t *testing.T) {
 		}, []byte{
 			nonEmpty,
 			// nil
-			pNil, del,
+			pNil, term,
 			// {"a", "", "xyz"}, escaped
 			nonEmpty,
-			nonEmpty, 'a', esc, del,
-			empty, esc, del,
-			nonEmpty, 'x', 'y', 'z', esc, del,
-			del,
+			nonEmpty, 'a', esc, term,
+			empty, esc, term,
+			nonEmpty, 'x', 'y', 'z', esc, term,
+			term,
 			// nil
-			pNil, del,
+			pNil, term,
 			// {""}, escaped
-			nonEmpty, empty, esc, del,
-			del,
+			nonEmpty, empty, esc, term,
+			term,
 			// {}
-			empty, del,
+			empty, term,
 		}},
 	})
 }

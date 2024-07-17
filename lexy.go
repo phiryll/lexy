@@ -47,7 +47,8 @@ type Codec[T any] interface {
 // The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
 // This is normally only an issue for variable length encodings.
 //
-// This prevents ambiguous encodings like these (0x00 is the delimiter between slice elements):
+// This prevents ambiguous encodings like these
+// (0x00 is the terminator between slice elements, if required):
 //
 //	""                     => []
 //
@@ -65,12 +66,11 @@ const (
 )
 
 const (
-	// DelimiterByte is used to delimit elements of an aggregate value.
-	DelimiterByte byte = internal.DelimiterByte
+	// TerminatorByte is used to terminate elements, when necessary.
+	TerminatorByte byte = internal.TerminatorByte
 
-	// EscapeByte is used the escape the delimiter and escape bytes when they appear in data.
-	//
-	// This includes appearing in the encodings of nested aggregates,
+	// EscapeByte is used the escape the terminator and escape bytes when they appear in data, when necessary.
+	// This includes those values appearing in the encodings of nested aggregates,
 	// because those are still just data at the level of the enclosing aggregate.
 	EscapeByte byte = internal.EscapeByte
 )

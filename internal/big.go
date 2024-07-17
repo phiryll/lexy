@@ -124,7 +124,7 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //		prec = 10, prec - exp = 7
 //	    Int mant  = 1110 0000 00-- ---- = 57344
 //
-// Since the mantissa is variable length, it must be escaped and delimiter-terminated.
+// Since the mantissa is variable length, it must be escaped and terminated.
 // The precision and rounding mode must be encoded following
 // the sign, exponent, and mantissa to keep the lexicographical ordering correct.
 //
@@ -143,7 +143,7 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //	write the (big-endian) bytes of the big.Int of the shifted mantissa
 //		do *not* encode with bitIntCodec, write the raw bytes
 //		trailing non-sigificant bits will already be zero, the conversion to big.Int requires it
-//		escape and delimiter terminate, then flip bits (including the terminator) if Float is negative
+//		escape and terminate, then flip bits (including the terminator) if Float is negative
 //	write int32 precision
 //		negate precision first if Float is negative
 //	write uint8 rounding mode

@@ -14,7 +14,7 @@ func StringCodec[T ~string]() Codec[T] {
 // A string is encoded as its bytes following PrefixEmpty or PrefixNonEmpty.
 // Read will fully consume its argument io.Reader if the string is non-empty.
 // If a string is part of a larger aggregate and not fixed-length,
-// its encoding should be escaped and delimiter-terminated by the enclosing Codec.
+// its encoding should be escaped and terminated by the enclosing Codec.
 //
 // The order of strings, and this encoding, may be surprising.
 // A string in go is essentially an immutable []byte without text semantics.

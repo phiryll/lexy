@@ -25,7 +25,7 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 		{"empty", M{}, []byte{empty}},
 		{"{a:0}", M{"a": 0}, []byte{
 			nonEmpty,
-			nonEmpty, 'a', del,
+			nonEmpty, 'a', term,
 			0x80, 0x00, 0x00, 0x00,
 		}},
 	})
