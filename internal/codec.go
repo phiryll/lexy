@@ -34,13 +34,14 @@ func unexpectedIfEOF(err error) error {
 
 // Prefixes, documented in lexy.go
 const (
-	// 0x02 is reserved for nil if that becomes necessary.
+	PrefixNil      byte = 0x02
 	PrefixEmpty    byte = 0x03
 	PrefixNonEmpty byte = 0x04
 )
 
 // Convenience byte slices.
 var (
+	prefixNil      = []byte{PrefixNil}
 	prefixEmpty    = []byte{PrefixEmpty}
 	prefixNonEmpty = []byte{PrefixNonEmpty}
 )
@@ -48,7 +49,7 @@ var (
 // Reads the prefix and handles nil and empty values.
 // nilable should be true if and only if nil is an allowed value of type T.
 // emptyValue should point to the empty value of type T if it differs from the zero value of T.
-// Returns done = false only if the value itself still needs to be read
+// Returns done = false only if the value itself still needs to be read (neither nil nor empty),
 // and there was no error reading the prefix.
 // Examples of types with differing nil and empty possibilities:
 //
@@ -67,17 +68,18 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 	prefix := []byte{0}
 	n, err := r.Read(prefix)
 	if n == 0 {
-		// 0 bytes read
-		if !nilable && (err == nil || err == io.EOF) {
-			// cannot be nil, 0 bytes read is always an error
-			err = io.ErrUnexpectedEOF
-		} else if err == io.EOF {
+		return zero, true, io.ErrUnexpectedEOF
+	}
+	switch prefix[0] {
+	case PrefixNil:
+		if !nilable {
+			return zero, true, fmt.Errorf("read nil for non-nilable type %T", zero)
+		}
+		if err == io.EOF {
 			// no EOF if nil is allowed
 			err = nil
 		}
 		return zero, true, err
-	}
-	switch prefix[0] {
 	case PrefixEmpty:
 		if err != nil && err != io.EOF {
 			return zero, true, err
@@ -100,10 +102,10 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 	}
 }
 
-// Writes the correct prefix for value, or nothing if the value is nil.
+// Writes the correct prefix for value.
 // isNil or isEmpty should be non-nil if type T allows nil or empty values respectively.
 // isEmpty is used after isNil, so isEmpty can also return true for nil values.
-// Returns done = false only if the value itself still needs to be written
+// Returns done = false only if the value itself still needs to be written (neither nil nor empty),
 // and there was no error writing the prefix.
 // Examples of types with differing nil and empty possibilities:
 //
@@ -115,8 +117,8 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 //	slice    Yes   Yes
 func writePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	if isNil != nil && isNil(value) {
-		// do nothing
-		return true, nil
+		_, err := w.Write(prefixNil)
+		return true, err
 	}
 	if isEmpty != nil && isEmpty(value) {
 		_, err := w.Write(prefixEmpty)

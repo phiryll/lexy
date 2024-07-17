@@ -44,8 +44,7 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// Prefixes to use for encodings that would normally encode an empty value as zero bytes.
-// Only nil should be encoded as zero bytes, empty is not nil in lexy for all types.
+// Prefixes to use for encodings that would normally encode nil or an empty value as zero bytes.
 // The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
 // This is normally only an issue for variable length encodings.
 //
@@ -88,7 +87,7 @@ type Codec[T any] interface {
 //	                             non-empty-slice, empty-string, delim,
 //	                             non-empty-slice, empty-string]
 const (
-	// 0x02 is reserved for nil if that becomes necessary.
+	PrefixNil      byte = internal.PrefixNil
 	PrefixEmpty    byte = internal.PrefixEmpty
 	PrefixNonEmpty byte = internal.PrefixNonEmpty
 )

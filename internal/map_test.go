@@ -21,7 +21,7 @@ var (
 func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
-		{"nil", nil, []byte(nil)},
+		{"nil", nil, []byte{pNil}},
 		{"empty", M{}, []byte{empty}},
 		{"{a:0}", M{"a": 0}, []byte{
 			nonEmpty,

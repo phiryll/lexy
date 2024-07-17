@@ -8,11 +8,11 @@ import (
 // Use MakeSliceCodec(Codec[T]) to create a new sliceCodec.
 // A slice is encoded as:
 //
-// - if nil, nothing
+// - if nil, PrefixNil
 // - if empty, PrefixEmpty
 // - if non-empty, PrefixNonEmpty followed by its encoded elements
 //
-// Each element is escaped and termninated if elemCodec requires termination.
+// Encoded elements are escaped and termninated if elemCodec requires it.
 type sliceCodec[S ~[]T, T any] struct {
 	elemCodec Codec[T]
 }

@@ -47,6 +47,7 @@ type testCase[T any] struct {
 const (
 	del      byte = internal.DelimiterByte
 	esc      byte = internal.EscapeByte
+	pNil     byte = internal.PrefixNil
 	empty    byte = internal.PrefixEmpty
 	nonEmpty byte = internal.PrefixNonEmpty
 )

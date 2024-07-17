@@ -9,7 +9,7 @@ import (
 func TestPointerInt32(t *testing.T) {
 	codec := internal.MakePointerCodec[*int32](int32Codec)
 	testCodec(t, codec, []testCase[*int32]{
-		{"nil", nil, []byte(nil)},
+		{"nil", nil, []byte{pNil}},
 		{"*0", ptr(int32(0)), []byte{nonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"*-1", ptr(int32(-1)), []byte{nonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
 	})
@@ -19,7 +19,7 @@ func TestPointerInt32(t *testing.T) {
 func TestPointerString(t *testing.T) {
 	codec := internal.MakePointerCodec[*string](stringCodec)
 	testCodec(t, codec, []testCase[*string]{
-		{"nil", nil, []byte(nil)},
+		{"nil", nil, []byte{pNil}},
 		{"*empty", ptr(""), []byte{nonEmpty, empty}},
 		{"*abc", ptr("abc"), []byte{nonEmpty, nonEmpty, 'a', 'b', 'c'}},
 	})
@@ -30,8 +30,8 @@ func TestPointerPointerString(t *testing.T) {
 	pointerCodec := internal.MakePointerCodec[*string](stringCodec)
 	codec := internal.MakePointerCodec[**string](pointerCodec)
 	testCodec(t, codec, []testCase[**string]{
-		{"nil", nil, []byte(nil)},
-		{"*nil", ptr((*string)(nil)), []byte{nonEmpty}},
+		{"nil", nil, []byte{pNil}},
+		{"*nil", ptr((*string)(nil)), []byte{nonEmpty, pNil}},
 		{"**empty", ptr(ptr("")), []byte{nonEmpty, nonEmpty, empty}},
 		{"**abc", ptr(ptr("abc")), []byte{nonEmpty, nonEmpty, nonEmpty, 'a', 'b', 'c'}},
 	})
@@ -42,8 +42,8 @@ func TestPointerSliceInt32(t *testing.T) {
 	sliceCodec := internal.MakeSliceCodec[[]int32](int32Codec)
 	codec := internal.MakePointerCodec[*[]int32](sliceCodec)
 	testCodec(t, codec, []testCase[*[]int32]{
-		{"nil", nil, []byte(nil)},
-		{"*nil", ptr([]int32(nil)), []byte{nonEmpty}},
+		{"nil", nil, []byte{pNil}},
+		{"*nil", ptr([]int32(nil)), []byte{nonEmpty, pNil}},
 		{"*[]", &[]int32{}, []byte{nonEmpty, empty}},
 		{"*[0, 1, -1]", &[]int32{0, 1, -1}, []byte{
 			nonEmpty,
@@ -61,7 +61,7 @@ type pInt *int32
 func TestPointerUnderlyingType(t *testing.T) {
 	codec := internal.MakePointerCodec[pInt](int32Codec)
 	testCodec(t, codec, []testCase[pInt]{
-		{"nil", pInt(nil), []byte(nil)},
+		{"nil", pInt(nil), []byte{pNil}},
 		{"*0", pInt(ptr(int32(0))), []byte{nonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"*-1", pInt(ptr(int32(-1))), []byte{nonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
 	})

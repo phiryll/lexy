@@ -8,7 +8,7 @@ import (
 // Use MakePointerCodec[P](Codec[T]) for P with underlying type *T to create a new pointerCodec.
 // A pointer is encoded as:
 //
-// - if nil, nothing
+// - if nil, PrefixNil
 // - if non-nil, PrefixNonEmpty followed by its encoded pointee
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
