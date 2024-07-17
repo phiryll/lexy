@@ -71,7 +71,7 @@ type terminator[T any] struct {
 
 func (c terminator[T]) Read(r io.Reader) (T, error) {
 	var value T
-	b, readErr := Unescape(r)
+	b, readErr := unescape(r)
 	if readErr != nil && (readErr != io.EOF || len(b) == 0) {
 		return value, readErr
 	}
@@ -87,7 +87,7 @@ func (c terminator[T]) Write(w io.Writer, value T) error {
 	if err := c.codec.Write(&c.scratch, value); err != nil {
 		return err
 	}
-	if _, err := Escape(w, c.scratch.Bytes()); err != nil {
+	if _, err := escape(w, c.scratch.Bytes()); err != nil {
 		return err
 	}
 	return nil
@@ -97,9 +97,12 @@ func (c terminator[T]) RequiresTerminator() bool {
 	return false
 }
 
-// Escape writes p to w, escaping all delimiters and escapes first, and writing a final terminator.
+var ExportEscapeForTesting = escape
+var ExportUnescapeForTesting = unescape
+
+// escape writes p to w, escaping all delimiters and escapes first, and writing a final terminator.
 // It returns the number of bytes read from p.
-func Escape(w io.Writer, p []byte) (int, error) {
+func escape(w io.Writer, p []byte) (int, error) {
 	// running count of the number of bytes of p successfully processed
 	// also used as the start of the next block of bytes to write
 	var n int
@@ -142,14 +145,14 @@ func Escape(w io.Writer, p []byte) (int, error) {
 	return n, nil
 }
 
-// Unescape reads from r until the first unescaped delimiter or io.EOF,
+// unescape reads from r until the first unescaped delimiter or io.EOF,
 // returning the unescaped data without the trailing delimiter, if any.
 //
-// Unescape inherits its error behavior from r.
+// unescape inherits its error behavior from r.
 // In particular, it may return a non-nil error from the same call when encountered,
 // or return the error (and no data) from a subsequent call.
 // If err is non-nil, the data is valid for what was read from r.
-func Unescape(r io.Reader) ([]byte, error) {
+func unescape(r io.Reader) ([]byte, error) {
 	// Reading from r one byte at a time, because we can't unread.
 	in := []byte{0}
 	var out bytes.Buffer

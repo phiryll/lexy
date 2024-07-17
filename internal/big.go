@@ -196,7 +196,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if err != nil {
 		return nil, err
 	}
-	mantBytes, err := Unescape(mantReader)
+	mantBytes, err := unescape(mantReader)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 			mantBytes[i] ^= 0xFF
 		}
 	}
-	if _, err := Escape(mantWriter, mantBytes); err != nil {
+	if _, err := escape(mantWriter, mantBytes); err != nil {
 		return err
 	}
 
