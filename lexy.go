@@ -143,6 +143,11 @@ func TimeCodec() Codec[time.Time]      { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.
 
+// NegateCodec returns a new Codec reversing the encoding order produced by codec.
+func NegateCodec[T any](codec Codec[T]) Codec[T] {
+	return internal.MakeNegateCodec(codec)
+}
+
 func PointerCodec[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
 	return internal.MakePointerCodec[P](elemCodec)
 }
