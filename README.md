@@ -28,9 +28,7 @@ Lexy can encode:
 * pointers to supported types
 * slices of supported types
 * maps of supported types  
-  Whether map keys are ordered is optional because of the sorting overhead.
-  Encoding and decoding will be correct if unordered keys are used,
-  but the encodings of key/value pairs will be randomly ordered.
+  Maps are inherently unordered, but are included because they are such a basic type.
 
 Lexy provides functionality to help clients to write their own Codecs for struct types.
 The inherent limitations of generic types and reflection in go make it impossible

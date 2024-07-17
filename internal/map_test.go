@@ -123,49 +123,8 @@ func TestMapPointerPointer(t *testing.T) {
 	testMapPointerPointer(t, internal.MakeMapCodec[map[*string]*string](pointerCodec, pointerCodec))
 }
 
-func TestOrderedMapInt(t *testing.T) {
-	testBasicMap(t, internal.MakeOrderedMapCodec[map[string]int32](sCodec, iCodec))
-}
-
-func TestOrderedMapSlice(t *testing.T) {
-	testMapSliceValue(t, internal.MakeOrderedMapCodec[map[string][]string](sCodec, sliceCodec))
-}
-
-func TestOrderedMapPointerPointer(t *testing.T) {
-	testMapPointerPointer(t, internal.MakeOrderedMapCodec[map[*string]*string](pointerCodec, pointerCodec))
-}
-
-func TestOrderedMapOrdering(t *testing.T) {
-	// There's no way to force a map to iterate in a particular order, so this test might be accidentally working.
-	// We can't even test a map that we've found does not iterate in key order,
-	// because go randomizes the initial start for map iteration to prevent depending on iteration order.
-	// Because of this, this test might not fail on any particular run,
-	// but it should absolutely fail on enough repeated runs if the codec isn't working.
-	codec := internal.MakeOrderedMapCodec[map[string]string](sCodec, sCodec)
-	testCodec(t, codec, []testCase[map[string]string]{
-		{"nil", nil, []byte(nil)},
-		{"empty", map[string]string{}, []byte{empty}},
-		{"non-empty", map[string]string{
-			"b": "3",
-			"":  "1",
-			"c": "4",
-			"a": "2",
-		}, []byte{
-			nonEmpty,
-			empty, del, nonEmpty, '1', del,
-			nonEmpty, 'a', del, nonEmpty, '2', del,
-			nonEmpty, 'b', del, nonEmpty, '3', del,
-			nonEmpty, 'c', del, nonEmpty, '4', del,
-		}},
-	})
-}
-
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
 	testBasicMap(t, internal.MakeMapCodec[mStringInt](sCodec, iCodec))
-}
-
-func TestOrderedMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, internal.MakeOrderedMapCodec[mStringInt](sCodec, iCodec))
 }

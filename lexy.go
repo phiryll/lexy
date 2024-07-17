@@ -154,9 +154,3 @@ func SliceCodec[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
 func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	return internal.MakeMapCodec[M](keyCodec, valueCodec)
 }
-
-// The entries in the encoded map are ordered by the encodings of its keys.
-// The map created by Codec.Read is a normal map, it is not ordered.
-func OrderedMapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	return internal.MakeOrderedMapCodec[M](keyCodec, valueCodec)
-}

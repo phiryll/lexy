@@ -26,17 +26,6 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// implementation of Writer[[]byte] that just writes the bytes
-type byteSliceWriter struct {
-}
-
-var bytesWriter Writer[[]byte] = byteSliceWriter{}
-
-func (b byteSliceWriter) Write(w io.Writer, value []byte) error {
-	_, err := w.Write(value)
-	return err
-}
-
 func unexpectedIfEOF(err error) error {
 	if err == io.EOF {
 		return io.ErrUnexpectedEOF
