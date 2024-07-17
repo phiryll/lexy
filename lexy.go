@@ -12,44 +12,35 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-// Reader is the interface that wraps the basic typed Read method.
-//
-// Read will read from r until either it has all the data it needs, or r stops returning data.
-// r.Read is permitted to return only immediately available data instead of waiting for more.
-// This may cause an error, or it may silently return incomplete data, depending on this Reader's imlementation.
-//
-// Read may have to process data one byte at a time, so using a buffered io.Reader is recommended if appropriate.
-// However, never create a buffered io.Reader wrapping the argument io.Reader within a Codec implementation.
-// A buffered io.Reader will read more than necessary to fill its buffer,
-// making any unused bytes unavailable for the next Read, preventing that Codec's use within an aggregate Codec.
-type Reader[T any] interface {
-	Read(r io.Reader) (T, error)
-}
-
-// Writer is the interface that wraps the basic typed Write method.
-//
-// Write may have to process data one byte at a time, so using a buffered io.Writer is recommended if appropriate.
-// If you use a buffered io.Writer within a Codec implementation, it must be flushed before returning from Write.
-type Writer[T any] interface {
-	Write(w io.Writer, value T) error
-}
-
 // Codec defines methods for lexicographically ordered unsigned byte encodings.
 //
-// Encoded values must have the same order as the values they encode.
-// The Read and Write methods should be lossless inverse operations if possible, and clearly documented if not.
+// Encoded values should have the same order as the values they encode.
+// The Read and Write methods should be lossless inverse operations.
+// Exceptions to these berhaviors should be clearly documented.
 //
 // All Codec implementations in lexy are thread-safe,
 // including the Codecs for pointers, slices, and maps if their delegate Codecs are thread-safe.
 type Codec[T any] interface {
-	Reader[T]
-	Writer[T]
+	// Read will read from r and decode a value of type T.
+	//
+	// Read will read from r until either it has all the data it needs, or r stops returning data.
+	// r.Read is permitted to return only immediately available data instead of waiting for more.
+	// This may cause an error, or it may silently return incomplete data, depending on this Reader's imlementation.
+	//
+	// Read may have to process data one byte at a time, so using a buffered io.Reader is recommended if appropriate.
+	// However, never create a buffered io.Reader wrapping the argument io.Reader within a Codec implementation.
+	// A buffered io.Reader will read more than necessary to fill its buffer,
+	// making any unused bytes unavailable for the next Read, preventing that Codec's use within an aggregate Codec.
+	Read(r io.Reader) (T, error)
+
+	// Writer will encode value and write the resulting bytes to w.
+	//
+	// Write may have to process data one byte at a time, so using a buffered io.Writer is recommended if appropriate.
+	// If you use a buffered io.Writer within a Codec implementation, it must be flushed before returning from Write.
+	Write(w io.Writer, value T) error
 
 	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
-	// when used within an aggregate Codec (pointer, slice, map, or struct).
-	// Codecs returned by PointerCodec(elemCodec) require a terminator if their elemCodec does,
-	// and won't terminate and escape when encoding an element
-	// (that's done by the containing aggregate codec, if any).
+	// when used within an aggregate Codec (slice, map, or struct).
 	RequiresTerminator() bool
 }
 
