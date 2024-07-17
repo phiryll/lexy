@@ -86,14 +86,7 @@ func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
 		return err
 	}
 	var scratch bytes.Buffer
-	notFirst := false
 	for k, v := range value {
-		if notFirst {
-			if _, err := w.Write(del); err != nil {
-				return err
-			}
-		}
-		notFirst = true
 		if err := c.pairWriter.write(w, k, v, &scratch); err != nil {
 			return err
 		}
@@ -134,14 +127,7 @@ func (c orderedMapCodec[M, K, V]) Write(w io.Writer, value M) error {
 
 	// The rest is very similar to mapCodec.Write
 	var scratch bytes.Buffer
-	notFirst := false
 	for _, kb := range sorted {
-		if notFirst {
-			if _, err := w.Write(del); err != nil {
-				return err
-			}
-		}
-		notFirst = true
 		if err := c.pairWriter.write(w, kb.b, value[kb.key], &scratch); err != nil {
 			return err
 		}

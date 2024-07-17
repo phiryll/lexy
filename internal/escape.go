@@ -90,9 +90,6 @@ func (c terminator[T]) Write(w io.Writer, value T) error {
 	if _, err := Escape(w, c.scratch.Bytes()); err != nil {
 		return err
 	}
-	if _, err := w.Write(del); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -100,8 +97,7 @@ func (c terminator[T]) RequiresTerminator() bool {
 	return false
 }
 
-// Escape writes p to w, escaping all delimiters and escapes first.
-// Escape does not write an unescaped trailing delimiter.
+// Escape writes p to w, escaping all delimiters and escapes first, and writing a final terminator.
 // It returns the number of bytes read from p.
 func Escape(w io.Writer, p []byte) (int, error) {
 	// running count of the number of bytes of p successfully processed
@@ -139,6 +135,9 @@ func Escape(w io.Writer, p []byte) (int, error) {
 		if err != nil {
 			return n, err
 		}
+	}
+	if _, err := w.Write(del); err != nil {
+		return n, err
 	}
 	return n, nil
 }

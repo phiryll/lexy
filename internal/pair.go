@@ -57,9 +57,6 @@ func (p pairWriter[K, V]) write(w io.Writer, key K, value V, scratch *bytes.Buff
 	if _, err := Escape(w, scratch.Bytes()); err != nil {
 		return err
 	}
-	if _, err := w.Write(del); err != nil {
-		return err
-	}
 
 	scratch.Reset()
 	if err := p.valueWriter.Write(scratch, value); err != nil {

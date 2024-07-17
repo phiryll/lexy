@@ -18,7 +18,7 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 		{"{a:0}", M{"a": 0}, []byte{
 			nonEmpty,
 			nonEmpty, 'a', del,
-			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
+			0x80, esc, 0x00, esc, 0x00, esc, 0x00, del,
 		}},
 	})
 	testCodecFail(t, codec, M{})
@@ -155,7 +155,7 @@ func TestOrderedMapOrdering(t *testing.T) {
 			empty, del, nonEmpty, '1', del,
 			nonEmpty, 'a', del, nonEmpty, '2', del,
 			nonEmpty, 'b', del, nonEmpty, '3', del,
-			nonEmpty, 'c', del, nonEmpty, '4',
+			nonEmpty, 'c', del, nonEmpty, '4', del,
 		}},
 	})
 }

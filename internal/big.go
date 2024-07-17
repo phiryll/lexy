@@ -291,9 +291,6 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	if _, err := Escape(mantWriter, mantBytes); err != nil {
 		return err
 	}
-	if _, err := mantWriter.Write(del); err != nil {
-		return err
-	}
 
 	if err := int32Codec.Write(w, prec); err != nil {
 		return err

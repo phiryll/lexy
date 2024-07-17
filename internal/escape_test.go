@@ -18,25 +18,25 @@ func TestEscape(t *testing.T) {
 	}{
 		{"no special bytes",
 			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6}},
+			[]byte{2, 3, 5, 4, 7, 6, 0}},
 		{"with special bytes",
 			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6}},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0}},
 		{"empty",
 			[]byte{},
-			[]byte(nil)}, // buf.Bytes() returns nil if not written to
+			[]byte{0}},
 		{"delimiter",
 			[]byte{0},
-			[]byte{1, 0}},
+			[]byte{1, 0, 0}},
 		{"escape",
 			[]byte{1},
-			[]byte{1, 1}},
+			[]byte{1, 1, 0}},
 		{"trailing delimiter",
 			[]byte{0, 1, 2, 3, 1, 4, 0},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0}},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0}},
 		{"trailing escape",
 			[]byte{0, 1, 2, 3, 1, 4, 1},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1}},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -59,38 +59,38 @@ func TestEscapeFail(t *testing.T) {
 	}{
 		{"no special bytes, at limit",
 			[]byte{2, 3, 5, 4, 7},
-			[]byte{2, 3, 5, 4, 7},
+			[]byte{2, 3, 5, 4, 7, 0},
 			5,
 			false},
 		{"no special bytes, over limit",
 			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7},
-			5,
+			[]byte{2, 3, 5, 4, 7, 6},
+			6,
 			true},
 		{"with special bytes, at limit",
 			[]byte{0, 1, 2},
-			[]byte{1, 0, 1, 1, 2},
+			[]byte{1, 0, 1, 1, 2, 0},
 			3,
 			false},
 		{"with special bytes, over limit",
 			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2},
-			3,
+			[]byte{1, 0, 1, 1, 2, 3},
+			4,
 			true},
 		{"special at limit",
 			[]byte{2, 3, 4, 0},
-			[]byte{2, 3, 4, 1, 0},
+			[]byte{2, 3, 4, 1, 0, 0},
 			4,
 			false},
 		{"escaped crosses limit",
 			[]byte{2, 3, 4, 5, 0},
-			[]byte{2, 3, 4, 5, 1},
-			4,
+			[]byte{2, 3, 4, 5, 1, 0},
+			5,
 			true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := boundedWriter{limit: 5}
+			w := boundedWriter{limit: 6}
 			count, err := internal.Escape(&w, tt.data)
 			if tt.wantErr {
 				assert.Error(t, err)
