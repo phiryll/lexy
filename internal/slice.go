@@ -11,6 +11,7 @@ import (
 // - if nil, nothing
 // - if empty, PrefixEmpty
 // - if non-empty, PrefixNonEmpty followed by its encoded elements
+//
 // Each element is escaped and termninated if elemCodec requires termination.
 type sliceCodec[S ~[]T, T any] struct {
 	elemCodec Codec[T]
