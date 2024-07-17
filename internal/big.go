@@ -282,12 +282,6 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		panic("unexpected failure while encoding big.Float")
 	}
 	mantBytes := mantInt.Bytes()
-	if signbit {
-		negate(mantBytes)
-		for i := range mantBytes {
-			mantBytes[i] ^= 0xFF
-		}
-	}
 	if _, err := escape(mantWriter, mantBytes); err != nil {
 		return err
 	}
