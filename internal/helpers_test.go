@@ -37,6 +37,16 @@ func ptr[T any](value T) *T {
 	return &value
 }
 
+func encoderFor[T any](codec internal.Codec[T]) func(value T) []byte {
+	return func(value T) []byte {
+		data, err := internal.Encode(codec, value)
+		if err != nil {
+			panic(err)
+		}
+		return data
+	}
+}
+
 type testCase[T any] struct {
 	name  string
 	value T

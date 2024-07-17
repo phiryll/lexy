@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"bytes"
 	"math/big"
 	"testing"
 
@@ -9,29 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func encodeSize(size int64) []byte {
-	var buf bytes.Buffer
-	int64Codec.Write(&buf, size)
-	return buf.Bytes()
-}
-
 func newBigInt(s string) *big.Int {
 	var value big.Int
 	value.SetString(s, 10)
 	return &value
 }
 
-func encodeBigInt(s string) []byte {
-	value := newBigInt(s)
-	var b bytes.Buffer
-	if err := internal.BigIntCodec.Write(&b, value); err != nil {
-		panic(err)
-	}
-	return b.Bytes()
-}
-
 func TestBigInt(t *testing.T) {
 	codec := internal.BigIntCodec
+	encodeSize := encoderFor(int64Codec)
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"-257", big.NewInt(-257), append(encodeSize(-2),
 			[]byte{0xFE, 0xFE}...)},
@@ -68,22 +53,23 @@ func TestBigInt(t *testing.T) {
 }
 
 func TestBigIntOrdering(t *testing.T) {
+	encode := encoderFor(internal.BigIntCodec)
 	assert.IsIncreasing(t, [][]byte{
-		encodeBigInt("-12345"),
-		encodeBigInt("-12344"),
-		encodeBigInt("-12343"),
-		encodeBigInt("-257"),
-		encodeBigInt("-256"),
-		encodeBigInt("-255"),
-		encodeBigInt("-1"),
-		encodeBigInt("0"),
-		encodeBigInt("1"),
-		encodeBigInt("255"),
-		encodeBigInt("256"),
-		encodeBigInt("257"),
-		encodeBigInt("12343"),
-		encodeBigInt("12344"),
-		encodeBigInt("12345"),
+		encode(newBigInt("-12345")),
+		encode(newBigInt("-12344")),
+		encode(newBigInt("-12343")),
+		encode(newBigInt("-257")),
+		encode(newBigInt("-256")),
+		encode(newBigInt("-255")),
+		encode(newBigInt("-1")),
+		encode(newBigInt("0")),
+		encode(newBigInt("1")),
+		encode(newBigInt("255")),
+		encode(newBigInt("256")),
+		encode(newBigInt("257")),
+		encode(newBigInt("12343")),
+		encode(newBigInt("12344")),
+		encode(newBigInt("12345")),
 	})
 }
 
@@ -92,14 +78,6 @@ func newBigFloat(f float64, shift int, prec uint) *big.Float {
 	value.SetPrec(prec)
 	value.SetMantExp(value, shift)
 	return value
-}
-
-func encodeBigFloat(value *big.Float) []byte {
-	var b bytes.Buffer
-	if err := internal.BigFloatCodec.Write(&b, value); err != nil {
-		panic(err)
-	}
-	return b.Bytes()
 }
 
 func TestBigFloat(t *testing.T) {
@@ -170,73 +148,74 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
+	encode := encoderFor(internal.BigFloatCodec)
 	assert.IsIncreasing(t, [][]byte{
-		encodeBigFloat(&negInf),
+		encode(&negInf),
 
 		// Negative Numbers
 		// for the same matissa, a higher exponent (first) or precision is more negative
 
 		// large negative numbers
-		encodeBigFloat(newBigFloat(-12345.0, 10000, 21)),
-		encodeBigFloat(newBigFloat(-12345.0, 10000, 20)),
-		encodeBigFloat(newBigFloat(-12345.0, 10000, 19)),
-		encodeBigFloat(newBigFloat(-12345.0, 9999, 21)),
-		encodeBigFloat(newBigFloat(-12345.0, 9999, 20)),
-		encodeBigFloat(newBigFloat(-12345.0, 9999, 19)),
+		encode(newBigFloat(-12345.0, 10000, 21)),
+		encode(newBigFloat(-12345.0, 10000, 20)),
+		encode(newBigFloat(-12345.0, 10000, 19)),
+		encode(newBigFloat(-12345.0, 9999, 21)),
+		encode(newBigFloat(-12345.0, 9999, 20)),
+		encode(newBigFloat(-12345.0, 9999, 19)),
 
 		// both whole and fractional parts
-		encodeBigFloat(newBigFloat(-12345.0, 10, 21)),
-		encodeBigFloat(newBigFloat(-12345.0, 10, 20)),
-		encodeBigFloat(newBigFloat(-12345.0, 10, 19)),
+		encode(newBigFloat(-12345.0, 10, 21)),
+		encode(newBigFloat(-12345.0, 10, 20)),
+		encode(newBigFloat(-12345.0, 10, 19)),
 
 		// numbers near -7.0
-		encodeBigFloat(newBigFloat(-7.1, 0, 21)),
-		encodeBigFloat(newBigFloat(-7.1, 0, 20)),
-		encodeBigFloat(newBigFloat(-7.0, 0, 10)), // shift 13
-		encodeBigFloat(newBigFloat(-7.0, 0, 4)),  // shift 5
-		encodeBigFloat(newBigFloat(-7.0, 0, 3)),  // shift 5
-		encodeBigFloat(newBigFloat(-6.9, 0, 21)),
-		encodeBigFloat(newBigFloat(-6.9, 0, 20)),
+		encode(newBigFloat(-7.1, 0, 21)),
+		encode(newBigFloat(-7.1, 0, 20)),
+		encode(newBigFloat(-7.0, 0, 10)), // shift 13
+		encode(newBigFloat(-7.0, 0, 4)),  // shift 5
+		encode(newBigFloat(-7.0, 0, 3)),  // shift 5
+		encode(newBigFloat(-6.9, 0, 21)),
+		encode(newBigFloat(-6.9, 0, 20)),
 
 		// very small negative numbers
-		encodeBigFloat(newBigFloat(-12345.0, -10000, 21)),
-		encodeBigFloat(newBigFloat(-12345.0, -10000, 20)),
-		encodeBigFloat(newBigFloat(-12345.0, -10000, 19)),
+		encode(newBigFloat(-12345.0, -10000, 21)),
+		encode(newBigFloat(-12345.0, -10000, 20)),
+		encode(newBigFloat(-12345.0, -10000, 19)),
 
 		// zeros
-		encodeBigFloat(&negZero),
-		encodeBigFloat(&posZero),
+		encode(&negZero),
+		encode(&posZero),
 
 		// Positive Numbers
 		// for the same matissa, a higher exponent (first) or precision is more positive
 
 		// very small positive numbers
-		encodeBigFloat(newBigFloat(12345.0, -10000, 19)),
-		encodeBigFloat(newBigFloat(12345.0, -10000, 20)),
-		encodeBigFloat(newBigFloat(12345.0, -10000, 21)),
+		encode(newBigFloat(12345.0, -10000, 19)),
+		encode(newBigFloat(12345.0, -10000, 20)),
+		encode(newBigFloat(12345.0, -10000, 21)),
 
 		// numbers near 7.0
-		encodeBigFloat(newBigFloat(6.9, 0, 20)),
-		encodeBigFloat(newBigFloat(6.9, 0, 21)),
-		encodeBigFloat(newBigFloat(7.0, 0, 3)),  // shift
-		encodeBigFloat(newBigFloat(7.0, 0, 4)),  // shift 5
-		encodeBigFloat(newBigFloat(7.0, 0, 10)), // shift 13
-		encodeBigFloat(newBigFloat(7.1, 0, 20)),
-		encodeBigFloat(newBigFloat(7.1, 0, 21)),
+		encode(newBigFloat(6.9, 0, 20)),
+		encode(newBigFloat(6.9, 0, 21)),
+		encode(newBigFloat(7.0, 0, 3)),  // shift
+		encode(newBigFloat(7.0, 0, 4)),  // shift 5
+		encode(newBigFloat(7.0, 0, 10)), // shift 13
+		encode(newBigFloat(7.1, 0, 20)),
+		encode(newBigFloat(7.1, 0, 21)),
 
 		// both whole and fractional parts
-		encodeBigFloat(newBigFloat(12345.0, 10, 19)),
-		encodeBigFloat(newBigFloat(12345.0, 10, 20)),
-		encodeBigFloat(newBigFloat(12345.0, 10, 21)),
+		encode(newBigFloat(12345.0, 10, 19)),
+		encode(newBigFloat(12345.0, 10, 20)),
+		encode(newBigFloat(12345.0, 10, 21)),
 
 		// large positive numbers
-		encodeBigFloat(newBigFloat(12345.0, 9999, 19)),
-		encodeBigFloat(newBigFloat(12345.0, 9999, 20)),
-		encodeBigFloat(newBigFloat(12345.0, 9999, 21)),
-		encodeBigFloat(newBigFloat(12345.0, 10000, 19)),
-		encodeBigFloat(newBigFloat(12345.0, 10000, 20)),
-		encodeBigFloat(newBigFloat(12345.0, 10000, 21)),
+		encode(newBigFloat(12345.0, 9999, 19)),
+		encode(newBigFloat(12345.0, 9999, 20)),
+		encode(newBigFloat(12345.0, 9999, 21)),
+		encode(newBigFloat(12345.0, 10000, 19)),
+		encode(newBigFloat(12345.0, 10000, 20)),
+		encode(newBigFloat(12345.0, 10000, 21)),
 
-		encodeBigFloat(&posInf),
+		encode(&posInf),
 	})
 }

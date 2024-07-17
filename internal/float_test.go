@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"bytes"
 	"math"
 	"testing"
 
@@ -173,14 +172,7 @@ func TestNames32(t *testing.T) {
 
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
-	encode := func(value float32) []byte {
-		var b bytes.Buffer
-		if err := float32Codec.Write(&b, value); err != nil {
-			panic(err)
-		}
-		return b.Bytes()
-	}
-
+	encode := encoderFor(float32Codec)
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN32))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN32))
 
@@ -280,14 +272,7 @@ func TestNames64(t *testing.T) {
 }
 
 func TestFloat64CodecOrdering(t *testing.T) {
-	encode := func(value float64) []byte {
-		var b bytes.Buffer
-		if err := float64Codec.Write(&b, value); err != nil {
-			panic(err)
-		}
-		return b.Bytes()
-	}
-
+	encode := encoderFor(float64Codec)
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN64))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN64))
 

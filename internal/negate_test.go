@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"bytes"
 	"math"
 	"testing"
 
@@ -19,13 +18,7 @@ func TestNegateInt32(t *testing.T) {
 		{"max", math.MaxInt32, nil},
 	})
 
-	encode := func(value int32) []byte {
-		var b bytes.Buffer
-		if err := codec.Write(&b, value); err != nil {
-			panic(err)
-		}
-		return b.Bytes()
-	}
+	encode := encoderFor(codec)
 	assert.IsIncreasing(t, [][]byte{
 		encode(math.MaxInt32),
 		encode(100),
@@ -47,17 +40,11 @@ func TestNegatePtrString(t *testing.T) {
 		{"*def", ptr("def"), nil},
 	})
 
-	encode := func(value *string) []byte {
-		var b bytes.Buffer
-		if err := codec.Write(&b, value); err != nil {
-			panic(err)
-		}
-		return b.Bytes()
-	}
+	encode := encoderFor(codec)
 	assert.IsIncreasing(t, [][]byte{
 		encode(ptr("def")),
 		encode(ptr("abc")),
 		encode(ptr("")),
-		// encode(nil),
+		encode(nil),
 	})
 }
