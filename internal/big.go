@@ -39,6 +39,9 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	if size < 0 {
 		neg = true
 		size = -size
+		// r is only used to read the value bits at this point,
+		// so we can reassign it safely.
+		r = negateReader{r}
 	}
 	b := make([]byte, size)
 	n, err := r.Read(b)
@@ -51,9 +54,6 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		}
 		err = nil
 	}
-	if neg {
-		negate(b)
-	}
 	var value big.Int
 	value.SetBytes(b)
 	if neg {
@@ -63,15 +63,19 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
+	neg := false
 	sign := value.Sign()
 	b := value.Bytes()
 	size := len(b)
 	if sign < 0 {
 		size = -size
-		negate(b)
+		neg = true
 	}
 	if err := int64Codec.Write(w, int64(size)); err != nil {
 		return err
+	}
+	if neg {
+		w = negateWriter{w}
 	}
 	_, err := w.Write(b)
 	return err
