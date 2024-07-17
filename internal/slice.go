@@ -31,12 +31,12 @@ func (c sliceCodec[S, T]) Read(r io.Reader) (S, error) {
 	codec := TerminateIfNeeded(c.elemCodec)
 	var values S
 	for {
-		value, codecErr := codec.Read(r)
-		if codecErr == io.EOF {
+		value, err := codec.Read(r)
+		if err == io.EOF {
 			break
 		}
-		if codecErr != nil {
-			return values, codecErr
+		if err != nil {
+			return values, err
 		}
 		values = append(values, value)
 	}
