@@ -52,7 +52,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		err = nil
 	}
 	if neg {
-		invertSlice(b)
+		negate(b)
 	}
 	var value big.Int
 	value.SetBytes(b)
@@ -68,7 +68,7 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 	size := len(b)
 	if sign < 0 {
 		size = -size
-		invertSlice(b)
+		negate(b)
 	}
 	if err := int64Codec.Write(w, int64(size)); err != nil {
 		return err
@@ -189,7 +189,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	}
 	mantReader := r
 	if signbit {
-		mantReader = inverseReader{r}
+		mantReader = negateReader{r}
 	}
 
 	exp, err := int32Codec.Read(r)
@@ -267,7 +267,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		// These values are no longer being used except to write them
 		exp = -exp
 		prec = -prec
-		mantWriter = inverseWriter{w}
+		mantWriter = negateWriter{w}
 	}
 
 	if err := int32Codec.Write(w, exp); err != nil {
@@ -283,7 +283,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	}
 	mantBytes := mantInt.Bytes()
 	if signbit {
-		invertSlice(mantBytes)
+		negate(mantBytes)
 		for i := range mantBytes {
 			mantBytes[i] ^= 0xFF
 		}
