@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
@@ -23,6 +24,27 @@ type Codec[T any] interface {
 	Reader[T]
 	Writer[T]
 	RequiresTerminator() bool
+}
+
+// Encode returns value encoded using codec as a new []byte.
+//
+// This is a convenience function.
+// Use Codec.Write if you're encoding multiple values to the same byte stream.
+func Encode[T any](codec Codec[T], value T) ([]byte, error) {
+	var b bytes.Buffer
+	if err := codec.Write(&b, value); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
+// Decode returns a decoded value from a []byte using codec.
+//
+// This is a convenience function.
+// Use Codec.Read if you're decoding multiple values from the same byte stream.
+func Decode[T any](codec Codec[T], data []byte) (T, error) {
+	// bytes.NewBuffer takes ownership of its argument, so we need to clone it first.
+	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
 func unexpectedIfEOF(err error) error {
