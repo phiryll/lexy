@@ -28,13 +28,13 @@ func TestSliceString(t *testing.T) {
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []string{}, []byte{empty}},
-		{"[\"\"]", []string{""}, []byte{nonEmpty, empty}},
-		{"[a]", []string{"a"}, []byte{nonEmpty, nonEmpty, 'a'}},
+		{"[\"\"]", []string{""}, []byte{nonEmpty, empty, del}},
+		{"[a]", []string{"a"}, []byte{nonEmpty, nonEmpty, 'a', del}},
 		{"[a, \"\", xyz]", []string{"a", "", "xyz"}, []byte{
 			nonEmpty,
 			nonEmpty, 'a', del,
 			empty, del,
-			nonEmpty, 'x', 'y', 'z',
+			nonEmpty, 'x', 'y', 'z', del,
 		}},
 	})
 	testCodecFail(t, codec, []string{})
@@ -46,14 +46,14 @@ func TestSlicePtrString(t *testing.T) {
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte(nil)},
 		{"empty", []*string{}, []byte{empty}},
-		{"[nil]", []*string{nil}, []byte{nonEmpty}},
-		{"[*a]", []*string{ptr("a")}, []byte{nonEmpty, nonEmpty, nonEmpty, 'a'}},
+		{"[nil]", []*string{nil}, []byte{nonEmpty, del}},
+		{"[*a]", []*string{ptr("a")}, []byte{nonEmpty, nonEmpty, nonEmpty, 'a', del}},
 		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, []byte{
 			nonEmpty,
 			nonEmpty, nonEmpty, 'a', del,
 			del,
 			nonEmpty, empty, del,
-			nonEmpty, nonEmpty, 'x', 'y', 'z',
+			nonEmpty, nonEmpty, 'x', 'y', 'z', del,
 		}},
 	})
 	testCodecFail(t, codec, []*string{})
@@ -65,8 +65,8 @@ func TestSliceSliceInt32(t *testing.T) {
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]int32{}, []byte{empty}},
-		{"[nil]", [][]int32{[]int32(nil)}, []byte{nonEmpty}},
-		{"[[]]", [][]int32{{}}, []byte{nonEmpty, empty}},
+		{"[nil]", [][]int32{[]int32(nil)}, []byte{nonEmpty, del}},
+		{"[[]]", [][]int32{{}}, []byte{nonEmpty, empty, del}},
 		{"[nil, {0, 1, -1}, {}, {-2, -3}, nil, nil]", [][]int32{nil, {0, 1, -1}, {}, {-2, -3}, nil, nil}, []byte{
 			// unescaped delimiters are the top level are on separate lines for clarity
 			nonEmpty,
@@ -89,6 +89,7 @@ func TestSliceSliceInt32(t *testing.T) {
 			// nil
 			del,
 			// nil
+			del,
 		}},
 	})
 	testCodecFail(t, codec, [][]int32{})
@@ -102,42 +103,53 @@ func TestSliceSliceString(t *testing.T) {
 		// unescaped delimiters are the top level are on separate lines for clarity
 		{"nil", nil, []byte(nil)},
 		{"[]", [][]string{}, []byte{empty}},
-		{"[nil]", [][]string{[]string(nil)}, []byte{nonEmpty}},
-		{"[[]]", [][]string{{}}, []byte{nonEmpty, empty}},
-		{"[[\"\"]]", [][]string{{""}}, []byte{nonEmpty, nonEmpty, empty}},
+		{"[nil]", [][]string{[]string(nil)}, []byte{nonEmpty, del}},
+		{"[[]]", [][]string{{}}, []byte{nonEmpty, empty, del}},
+		{"[[\"\"]]", [][]string{{""}}, []byte{
+			nonEmpty,        // prefix outer
+			nonEmpty,        // prefix {""}
+			empty, esc, del, // "", escaped
+			del, // terminator {""}, within outer
+		}},
 
 		// pairwise permutations of nil, [], and [""]
 		{"[nil, []]", [][]string{nil, {}}, []byte{
-			nonEmpty,
-			del,
-			empty,
+			nonEmpty,   // outer
+			del,        // nil = outer[0]
+			empty, del, // {} = outer[1]
 		}},
 		{"[[], nil]", [][]string{{}, nil}, []byte{
-			nonEmpty,
-			empty,
-			del,
+			nonEmpty,   // outer
+			empty, del, // {} = outer[0]
+			del, // nil = outer[1]
 		}},
 		{"[nil, [\"\"]]", [][]string{nil, {""}}, []byte{
-			nonEmpty,
-			del,
-			nonEmpty, empty,
+			nonEmpty,        // outer
+			del,             // nil = outer[0]
+			nonEmpty,        // prefix {""}
+			empty, esc, del, // "", escaped
+			del, // terminator {""}, within outer
 		}},
 		{"[[\"\"], nil]", [][]string{{""}, nil}, []byte{
-			nonEmpty,
-			nonEmpty, empty,
-			del,
+			nonEmpty,        // outer
+			nonEmpty,        // prefix {""}
+			empty, esc, del, // "", escaped
+			del, // terminator {""}, within outer
+			del, // nil = outer[1]
 		}},
 		{"[[], [\"\"]]", [][]string{{}, {""}}, []byte{
-			nonEmpty,
-			empty,
-			del,
-			nonEmpty, empty,
+			nonEmpty,   // outer
+			empty, del, // {} = outer[0]
+			nonEmpty,        // prefix {""}
+			empty, esc, del, // "", escaped
+			del, // terminator {""}, within outer
 		}},
 		{"[[\"\"], []]", [][]string{{""}, {}}, []byte{
-			nonEmpty,
-			nonEmpty, empty,
-			del,
-			empty,
+			nonEmpty,        // outer
+			nonEmpty,        // prefix {""}
+			empty, esc, del, // "", escaped
+			del,        // terminator {""}, within outer
+			empty, del, // {} = outer[1]
 		}},
 
 		// a complex example
@@ -155,15 +167,15 @@ func TestSliceSliceString(t *testing.T) {
 			nonEmpty,
 			nonEmpty, 'a', esc, del,
 			empty, esc, del,
-			nonEmpty, 'x', 'y', 'z',
+			nonEmpty, 'x', 'y', 'z', esc, del,
 			del,
 			// nil
 			del,
 			// {""}, escaped
-			nonEmpty, empty,
+			nonEmpty, empty, esc, del,
 			del,
 			// {}
-			empty,
+			empty, del,
 		}},
 	})
 }
