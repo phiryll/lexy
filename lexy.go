@@ -59,33 +59,6 @@ type Codec[T any] interface {
 //	[][]string{{}, {""}}   => [0x00]
 //	[][]string{{""}, {}}   => [0x00]
 //	[][]string{{""}, {""}} => [0x00]
-//
-// which would instead be encoded as (in sort order within groups):
-//
-//	""                     => [0x03]
-//	                          [empty-string]
-//
-//	[]string{}             => [0x03]
-//	                          [empty-slice]
-//	[]string{""}           => [0x04, 0x03]
-//	                          [non-empty-slice, empty-string]
-//
-//	[][]string{{}, {}}     => [0x04, 0x03, 0x00, 0x03]
-//	                          [non-empty-slice,
-//	                             empty-slice, delim,
-//	                             empty-slice]
-//	[][]string{{}, {""}}   => [0x04, 0x03, 0x00, 0x04, 0x03]
-//	                          [non-empty-slice,
-//	                             empty-slice, delim,
-//	                             non-empty-slice, empty-string]
-//	[][]string{{""}, {}}   => [0x04, 0x04, 0x03, 0x00, 0x03]
-//	                          [non-empty-slice,
-//	                             non-empty-slice, empty-string, delim,
-//	                             empty-slice]
-//	[][]string{{""}, {""}} => [0x04, 0x04, 0x03, 0x00, 0x04, 0x03]
-//	                          [non-empty-slice,
-//	                             non-empty-slice, empty-string, delim,
-//	                             non-empty-slice, empty-string]
 const (
 	PrefixNil      byte = internal.PrefixNil
 	PrefixEmpty    byte = internal.PrefixEmpty
