@@ -50,6 +50,56 @@ var (
 	escEsc = []byte{EscapeByte, EscapeByte}
 )
 
+// TerminateIfNeeded returns a Codec that uses codec,
+// escaping and terminating if codec.RequiresTerminator() is true.
+// The returned Codec may not be thread-safe, and MUST be created anew when used.
+func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	// This also covers the case if codec is an escaper.
+	if !codec.RequiresTerminator() {
+		return codec
+	}
+	return terminator[T]{codec: codec}
+}
+
+type terminator[T any] struct {
+	codec   Codec[T]
+	scratch bytes.Buffer
+}
+
+func (c terminator[T]) Read(r io.Reader) (T, error) {
+	var value T
+	b, readErr := Unescape(r)
+	if readErr != nil && (readErr != io.EOF || len(b) == 0) {
+		return value, readErr
+	}
+	value, codecErr := c.codec.Read(bytes.NewBuffer(b))
+	if codecErr != nil && codecErr != io.EOF {
+		return value, codecErr
+	}
+	return value, nil
+}
+
+func (c terminator[T]) Write(w io.Writer, value T) error {
+	c.scratch.Reset()
+	if err := c.codec.Write(&c.scratch, value); err != nil {
+		return err
+	}
+	if _, err := Escape(w, c.scratch.Bytes()); err != nil {
+		return err
+	}
+	if _, err := w.Write(del); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c terminator[T]) RequiresTerminator() bool {
+	return false
+}
+
 // Escape writes p to w, escaping all delimiters and escapes first.
 // Escape does not write an unescaped trailing delimiter.
 // It returns the number of bytes read from p.
