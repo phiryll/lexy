@@ -43,38 +43,6 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// Prefixes to use for encodings that would normally encode nil or an empty value as zero bytes.
-// The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
-// This is normally only an issue for variable length encodings.
-//
-// This prevents ambiguous encodings like these
-// (0x00 is the terminator between slice elements, if required):
-//
-//	""                     => []
-//
-//	[]string{}             => []
-//	[]string{""}           => []
-//
-//	[][]string{{}, {}}     => [0x00]
-//	[][]string{{}, {""}}   => [0x00]
-//	[][]string{{""}, {}}   => [0x00]
-//	[][]string{{""}, {""}} => [0x00]
-const (
-	PrefixNil      byte = internal.PrefixNil
-	PrefixEmpty    byte = internal.PrefixEmpty
-	PrefixNonEmpty byte = internal.PrefixNonEmpty
-)
-
-const (
-	// TerminatorByte is used to terminate elements, when necessary.
-	TerminatorByte byte = internal.TerminatorByte
-
-	// EscapeByte is used the escape the terminator and escape bytes when they appear in data, when necessary.
-	// This includes those values appearing in the encodings of nested aggregates,
-	// because those are still just data at the level of the enclosing aggregate.
-	EscapeByte byte = internal.EscapeByte
-)
-
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.
