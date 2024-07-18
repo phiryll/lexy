@@ -98,6 +98,8 @@ func UIntCodec[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return inter
 func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
 func Float32Codec[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
 func Float64Codec[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
+func Complex64Codec() Codec[complex64]                            { return internal.Complex64Codec }
+func Complex128Codec() Codec[complex128]                          { return internal.Complex128Codec }
 func StringCodec[T ~string]() Codec[T]                            { return internal.StringCodec[T]() }
 func DurationCodec() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
 
