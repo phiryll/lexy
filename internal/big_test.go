@@ -2,6 +2,7 @@ package internal_test
 
 import (
 	"math/big"
+	"slices"
 	"testing"
 
 	"github.com/phiryll/lexy/internal"
@@ -17,33 +18,35 @@ func newBigInt(s string) *big.Int {
 func TestBigInt(t *testing.T) {
 	codec := internal.BigIntCodec
 	encodeSize := encoderFor(int64Codec)
+	prefix := []byte{nonEmpty}
 	testCodec(t, codec, []testCase[*big.Int]{
-		{"-257", big.NewInt(-257), append(encodeSize(-2),
-			[]byte{0xFE, 0xFE}...)},
-		{"-256", big.NewInt(-256), append(encodeSize(-2),
-			[]byte{0xFE, 0xFF}...)},
-		{"-255", big.NewInt(-255), append(encodeSize(-1),
-			[]byte{0x00}...)},
-		{"-254", big.NewInt(-254), append(encodeSize(-1),
-			[]byte{0x01}...)},
-		{"-2", big.NewInt(-2), append(encodeSize(-1),
-			[]byte{0xFD}...)},
-		{"-1", big.NewInt(-1), append(encodeSize(-1),
-			[]byte{0xFE}...)},
-		{"0", big.NewInt(0), append(encodeSize(0),
-			[]byte{}...)},
-		{"+1", big.NewInt(1), append(encodeSize(1),
-			[]byte{0x01}...)},
-		{"+2", big.NewInt(2), append(encodeSize(1),
-			[]byte{0x02}...)},
-		{"254", big.NewInt(254), append(encodeSize(1),
-			[]byte{0xFE}...)},
-		{"255", big.NewInt(255), append(encodeSize(1),
-			[]byte{0xFF}...)},
-		{"256", big.NewInt(256), append(encodeSize(2),
-			[]byte{0x01, 0x00}...)},
-		{"257", big.NewInt(257), append(encodeSize(2),
-			[]byte{0x01, 0x01}...)},
+		{"nil", nil, []byte{pNil}},
+		{"-257", big.NewInt(-257), slices.Concat(prefix, encodeSize(-2),
+			[]byte{0xFE, 0xFE})},
+		{"-256", big.NewInt(-256), slices.Concat(prefix, encodeSize(-2),
+			[]byte{0xFE, 0xFF})},
+		{"-255", big.NewInt(-255), slices.Concat(prefix, encodeSize(-1),
+			[]byte{0x00})},
+		{"-254", big.NewInt(-254), slices.Concat(prefix, encodeSize(-1),
+			[]byte{0x01})},
+		{"-2", big.NewInt(-2), slices.Concat(prefix, encodeSize(-1),
+			[]byte{0xFD})},
+		{"-1", big.NewInt(-1), slices.Concat(prefix, encodeSize(-1),
+			[]byte{0xFE})},
+		{"0", big.NewInt(0), slices.Concat(prefix, encodeSize(0),
+			[]byte{})},
+		{"+1", big.NewInt(1), slices.Concat(prefix, encodeSize(1),
+			[]byte{0x01})},
+		{"+2", big.NewInt(2), slices.Concat(prefix, encodeSize(1),
+			[]byte{0x02})},
+		{"254", big.NewInt(254), slices.Concat(prefix, encodeSize(1),
+			[]byte{0xFE})},
+		{"255", big.NewInt(255), slices.Concat(prefix, encodeSize(1),
+			[]byte{0xFF})},
+		{"256", big.NewInt(256), slices.Concat(prefix, encodeSize(2),
+			[]byte{0x01, 0x00})},
+		{"257", big.NewInt(257), slices.Concat(prefix, encodeSize(2),
+			[]byte{0x01, 0x01})},
 	})
 
 	testCodecRoundTrip(t, codec, []testCase[*big.Int]{
@@ -55,6 +58,7 @@ func TestBigInt(t *testing.T) {
 func TestBigIntOrdering(t *testing.T) {
 	encode := encoderFor(internal.BigIntCodec)
 	assert.IsIncreasing(t, [][]byte{
+		encode(nil),
 		encode(newBigInt("-12345")),
 		encode(newBigInt("-12344")),
 		encode(newBigInt("-12343")),
@@ -112,6 +116,7 @@ func TestBigFloat(t *testing.T) {
 
 	codec := internal.BigFloatCodec
 	testCodecRoundTrip(t, codec, []testCase[*big.Float]{
+		{"nil", nil, nil},
 		// example in implementation comments
 		{"seven(3)", newBigFloat(7.0, 0, 3), nil},
 		{"seven(4)", newBigFloat(7.0, 0, 4), nil},
@@ -150,6 +155,7 @@ func TestBigFloatOrdering(t *testing.T) {
 
 	encode := encoderFor(internal.BigFloatCodec)
 	assert.IsIncreasing(t, [][]byte{
+		encode(nil),
 		encode(&negInf),
 
 		// Negative Numbers

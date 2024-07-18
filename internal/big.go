@@ -10,10 +10,12 @@ var (
 	BigFloatCodec Codec[*big.Float] = bigFloatCodec{}
 )
 
-// bigIntCodec is the Codec for big.Int values.
+// bigIntCodec is the Codec for *big.Int values.
 //
 // Values are encoded using this logic:
 //
+//	write PrefixNil if value is nil and return immediately
+//	write PrefixNonEmpty
 //	b := value.Bytes() // absolute value as a big-endian byte slice
 //	size := len(b)
 //	if value < 0 {
@@ -31,6 +33,9 @@ var (
 type bigIntCodec struct{}
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
+	if value, done, err := readPrefix[*big.Int](r, true, nil); done {
+		return value, err
+	}
 	neg := false
 	size, err := int64Codec.Read(r)
 	if err != nil {
@@ -63,6 +68,9 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
+	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+		return err
+	}
 	neg := false
 	sign := value.Sign()
 	b := value.Bytes()
@@ -85,7 +93,7 @@ func (c bigIntCodec) RequiresTerminator() bool {
 	return false
 }
 
-// bigFloatCodec is the Codec for big.Float values.
+// bigFloatCodec is the Codec for *big.Float values.
 //
 // This is roughly similar to the float32/64 Codecs, but there are some wrinkles.
 // There is no good way to get the mantissa in a binary form,
@@ -135,7 +143,9 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //
 // Encode:
 //
-//	write prefix int8: -3/-2/-1/+1/+2/+3 for
+//	write PrefixNil if value is nil and return immediately
+//	write PrefixNonEmpty
+//	write int8: -3/-2/-1/+1/+2/+3 for
 //		-Inf / (-Inf,0) / -0 / +0 / (0,+Inf) / +Inf
 //	if infinite or zero, we're done
 //	write int32 exponent
@@ -149,6 +159,8 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //	write uint8 rounding mode
 type bigFloatCodec struct{}
 
+// The second byte written in the *big.Float encoding after the initial
+// PrefixNonEmpty byte if non-nil.
 const (
 	negInf       int8 = -3
 	negFinite    int8 = -2
@@ -175,16 +187,19 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	prefix, err := int8Codec.Read(r)
+	if value, done, err := readPrefix[*big.Float](r, true, nil); done {
+		return value, err
+	}
+	kind, err := int8Codec.Read(r)
 	if err != nil {
 		return nil, err
 	}
-	signbit := prefix < 0
-	if prefix == negInf || prefix == posInf {
+	signbit := kind < 0
+	if kind == negInf || kind == posInf {
 		var value big.Float
 		return value.SetInf(signbit), nil
 	}
-	if prefix == negZero || prefix == posZero {
+	if kind == negZero || kind == posZero {
 		var value big.Float
 		if signbit {
 			value.Neg(&value)
@@ -233,6 +248,9 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 }
 
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
+	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+		return err
+	}
 	// exp and prec are int and uint, but internally they're 32 bits
 	// use a signed prec here because we're doing possibly negative calculations with it
 	signbit := value.Signbit() // true if negative or negative zero
@@ -244,22 +262,22 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	isInf := value.IsInf()
 	isZero := prec == 0
 
-	var prefix int8
+	var kind int8
 	switch {
 	case isInf && signbit:
-		prefix = negInf
+		kind = negInf
 	case isInf && !signbit:
-		prefix = posInf
+		kind = posInf
 	case isZero && signbit:
-		prefix = negZero
+		kind = negZero
 	case isZero && !signbit:
-		prefix = posZero
+		kind = posZero
 	case signbit:
-		prefix = negFinite
+		kind = negFinite
 	case !signbit:
-		prefix = nonNegFinite
+		kind = nonNegFinite
 	}
-	if err := int8Codec.Write(w, prefix); err != nil {
+	if err := int8Codec.Write(w, kind); err != nil {
 		return err
 	}
 	if isInf || isZero {

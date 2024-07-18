@@ -47,6 +47,10 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
 }
 
+func isNilPointer[T any](value *T) bool {
+	return value == nil
+}
+
 func unexpectedIfEOF(err error) error {
 	if err == io.EOF {
 		return io.ErrUnexpectedEOF

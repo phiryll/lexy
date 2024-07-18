@@ -34,10 +34,6 @@ func (c pointerCodec[P, T]) Read(r io.Reader) (P, error) {
 	return &value, nil
 }
 
-func isNilPointer[T any](value *T) bool {
-	return value == nil
-}
-
 func (c pointerCodec[P, T]) Write(w io.Writer, value P) error {
 	if done, err := writePrefix(w, isNilPointer, nil, value); done {
 		return err
