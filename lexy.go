@@ -93,37 +93,37 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
 
-func BoolCodec[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
-func UIntCodec[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
-func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
-func Float32Codec[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
-func Float64Codec[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
-func Complex64Codec() Codec[complex64]                            { return internal.Complex64Codec }
-func Complex128Codec() Codec[complex128]                          { return internal.Complex128Codec }
-func StringCodec[T ~string]() Codec[T]                            { return internal.StringCodec[T]() }
-func DurationCodec() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
+func Bool[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
+func UInt[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
+func Int[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
+func Float32[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
+func Float64[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
+func Complex64() Codec[complex64]                            { return internal.Complex64Codec }
+func Complex128() Codec[complex128]                          { return internal.Complex128Codec }
+func String[T ~string]() Codec[T]                            { return internal.StringCodec[T]() }
+func Duration() Codec[time.Duration]                         { return internal.IntCodec[time.Duration]() }
 
 // Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
 
-func BigIntCodec() Codec[*big.Int]     { return internal.BigIntCodec }
-func BigFloatCodec() Codec[*big.Float] { return internal.BigFloatCodec }
-func TimeCodec() Codec[time.Time]      { return internal.TimeCodec }
+func BigInt() Codec[*big.Int]     { return internal.BigIntCodec }
+func BigFloat() Codec[*big.Float] { return internal.BigFloatCodec }
+func Time() Codec[time.Time]      { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.
 
-// NegateCodec returns a new Codec reversing the encoding order produced by codec.
-func NegateCodec[T any](codec Codec[T]) Codec[T] {
+// Negate returns a new Codec reversing the encoding order produced by codec.
+func Negate[T any](codec Codec[T]) Codec[T] {
 	return internal.MakeNegateCodec(codec)
 }
 
-func PointerCodec[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
+func PointerTo[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
 	return internal.MakePointerCodec[P](elemCodec)
 }
 
-func SliceCodec[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
+func SliceOf[S ~[]T, T any](elemCodec Codec[T]) Codec[S] {
 	return internal.MakeSliceCodec[S](elemCodec)
 }
 
-func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	return internal.MakeMapCodec[M](keyCodec, valueCodec)
 }
