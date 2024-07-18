@@ -21,15 +21,15 @@ Lexy can encode these types while preserving their natural ordering.
 * `int8`, `int16`, `int32` (aka `rune`), `int64`
 * `float32`, `float64`
 * `*math.big.Int`  
-  `nil` is less than all non-nil values.
+  `nil` is less than all non-`nil` values.
 * `*math.big.Float`  
-  `nil` is less than all non-nil values.
+  `nil` is less than all non-`nil` values.
 * `string`
 * `time.Time`  
   Instances are ordered by UTC time first, timezone offset (at that instant) second.
 * `time.Duration`
 * pointers  
-  `nil` is less than all non-nil values.
+  `nil` is less than all non-`nil` values.
 * slices  
   Slices are ordered lexicographically by their elements.
   For example, `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
@@ -47,17 +47,18 @@ The ordering of the encoding is noted.
 * `complex64`, `complex128`  
   The encoded order is real part first, imaginary part second.
 * `*math.big.Rat`  
-  `nil` is less than all non-nil values.
-  The encoded order for non-nil values is signed numerator first, positive denominator second.
+  `nil` is less than all non-`nil` values.
+  The encoded order for non-`nil` values is signed numerator first, positive denominator second.
   There is no way to encode rational numbers with a lexicographical order that isn't lossy.
   The closest you can get is to convert them to (possibly rounded) big.Floats and encode those.
 
-Lexy does not encode these out-of-the-box, but you can always write a custom Codec.
+Lexy does not encode these out-of-the-box, but you can always write a custom `Codec`.
 
 * struct types  
-  Examples are provided to show how to build your own Codecs, including for struct types.
+  Examples are provided to show how to build your own `Codec`s, including for struct types.
   The inherent limitations of generic types and reflection in go make it impossible
-  to do this in a general way without having a parallel, but completely separate, set of non-generic Codecs.
+  to do this in a general way without having a parallel, but completely separate, set of non-generic `Codec`s.
+  Writing your own `Codec` is much simpler and safer alternative.
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
 * function types
