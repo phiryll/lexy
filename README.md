@@ -4,6 +4,7 @@ Lexicographical Byte Order Encodings
 
 Lexy is a library for encoding/decoding strongly-typed values into a binary form whose
 lexicographical unsigned byte ordering is consistent with the type's natural ordering.
+Users can build their own encoding with a different encoded ordering than the type's natural ordering.
 Types defined with a different underlying type will work correctly (`type MyInt int16`, e.g.).
 Encoded values of different data types will not have a consistent ordering with each other.
 Lexy has no non-test dependencies.
@@ -55,10 +56,10 @@ The ordering of the encoding is noted.
 Lexy does not encode these out-of-the-box, but you can always write a custom `Codec`.
 
 * struct types  
-  Examples are provided to show how to build your own `Codec`s, including for struct types.
+  Examples are provided to show how to build your own `Codecs`, including for struct types.
   The inherent limitations of generic types and reflection in go make it impossible
-  to do this in a general way without having a parallel, but completely separate, set of non-generic `Codec`s.
-  Writing your own `Codec` is much simpler and safer alternative.
+  to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
+  Writing your own `Codec` is a much simpler and safer alternative.
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
 * function types
