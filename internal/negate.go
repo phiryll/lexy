@@ -75,12 +75,15 @@ type negateReader struct {
 
 func (r negateReader) Read(p []byte) (int, error) {
 	n, err := r.Reader.Read(p)
-	negate(p)
+	negate(p[:n])
 	return n, err
 }
 
 // negateWriter is an io.Writer which flips all the bits,
 // negating in the sense in the sense of lexicographical ordering.
+// The argument []byte is cloned and the clone's bits are flipped,
+// because delegate Writer is assumed to be more efficient writing the entire slice
+// than it would be writing multiple smaller slices to avoid the allocation.
 type negateWriter struct {
 	io.Writer
 }
