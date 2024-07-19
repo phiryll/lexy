@@ -56,10 +56,11 @@ type negateTest struct {
 	string string
 }
 
-// order is [uint8, neg(pInt16), string]
+// order is [uint8, neg(pInt16), neg(string)]
 type negateTestCodec struct{}
 
 var negPIntCodec = internal.MakeNegateCodec(internal.MakePointerCodec[*int16](int16Codec))
+var negStringCodec = internal.MakeNegateCodec(stringCodec)
 
 func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
@@ -71,7 +72,7 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	if err != nil {
 		return zero, err
 	}
-	s, err := stringCodec.Read(r)
+	s, err := negStringCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -85,7 +86,7 @@ func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
 	if err := negPIntCodec.Write(w, value.pInt16); err != nil {
 		return err
 	}
-	return stringCodec.Write(w, value.string)
+	return negStringCodec.Write(w, value.string)
 }
 
 func (n negateTestCodec) RequiresTerminator() bool {
@@ -93,42 +94,49 @@ func (n negateTestCodec) RequiresTerminator() bool {
 }
 
 func TestNegateComplex(t *testing.T) {
-	encode := encoderFor(negateTestCodec{})
+	codec := negateTestCodec{}
+	encode := encoderFor(codec)
 	ptr := func(x int) *int16 {
 		i16 := int16(x)
 		return &i16
 	}
-	assert.IsIncreasing(t, [][]byte{
-		// sort order is [first, neg(second), third]
-		encode(negateTest{5, ptr(100), ""}),
-		encode(negateTest{5, ptr(100), "abc"}),
-		encode(negateTest{5, ptr(100), "def"}),
-		encode(negateTest{5, ptr(0), ""}),
-		encode(negateTest{5, ptr(0), "abc"}),
-		encode(negateTest{5, ptr(0), "def"}),
-		encode(negateTest{5, ptr(-1), ""}),
-		encode(negateTest{5, ptr(-1), "abc"}),
-		encode(negateTest{5, ptr(-1), "def"}),
-		encode(negateTest{5, ptr(-100), ""}),
-		encode(negateTest{5, ptr(-100), "abc"}),
-		encode(negateTest{5, ptr(-100), "def"}),
-		encode(negateTest{5, nil, ""}),
-		encode(negateTest{5, nil, "abc"}),
-		encode(negateTest{5, nil, "def"}),
+	testCodecRoundTrip(t, codec, []testCase[negateTest]{
+		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, nil},
+		{"{5, nil, \"\"}", negateTest{5, nil, ""}, nil},
+	})
 
-		encode(negateTest{10, ptr(100), ""}),
-		encode(negateTest{10, ptr(100), "abc"}),
+	assert.IsIncreasing(t, [][]byte{
+		// sort order is [first, neg(second), neg(third)]
+		encode(negateTest{5, ptr(100), "def"}),
+		encode(negateTest{5, ptr(100), "abc"}),
+		encode(negateTest{5, ptr(100), ""}),
+		encode(negateTest{5, ptr(0), "def"}),
+		encode(negateTest{5, ptr(0), "abc"}),
+		encode(negateTest{5, ptr(0), ""}),
+		encode(negateTest{5, ptr(-1), "def"}),
+		encode(negateTest{5, ptr(-1), "abc"}),
+		encode(negateTest{5, ptr(-1), ""}),
+		encode(negateTest{5, ptr(-100), "def"}),
+		encode(negateTest{5, ptr(-100), "abc"}),
+		encode(negateTest{5, ptr(-100), ""}),
+		encode(negateTest{5, nil, "def"}),
+		encode(negateTest{5, nil, "abc"}),
+		encode(negateTest{5, nil, ""}),
+
 		encode(negateTest{10, ptr(100), "def"}),
-		encode(negateTest{10, ptr(0), ""}),
-		encode(negateTest{10, ptr(0), "abc"}),
+		encode(negateTest{10, ptr(100), "abc"}),
+		encode(negateTest{10, ptr(100), ""}),
 		encode(negateTest{10, ptr(0), "def"}),
-		encode(negateTest{10, ptr(-1), ""}),
-		encode(negateTest{10, ptr(-1), "abc"}),
+		encode(negateTest{10, ptr(0), "abc"}),
+		encode(negateTest{10, ptr(0), ""}),
 		encode(negateTest{10, ptr(-1), "def"}),
-		encode(negateTest{10, ptr(-100), ""}),
-		encode(negateTest{10, ptr(-100), "abc"}),
+		encode(negateTest{10, ptr(-1), "abc"}),
+		encode(negateTest{10, ptr(-1), ""}),
 		encode(negateTest{10, ptr(-100), "def"}),
-		encode(negateTest{10, nil, ""}),
+		encode(negateTest{10, ptr(-100), "abc"}),
+		encode(negateTest{10, ptr(-100), ""}),
+		encode(negateTest{10, nil, "def"}),
 		encode(negateTest{10, nil, "abc"}),
-		encode(negateTest{10, nil, "def"})})
+		encode(negateTest{10, nil, ""}),
+	})
 }
