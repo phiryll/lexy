@@ -56,7 +56,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
 	}
-	// This also covers the case if codec is an escaper.
+	// This also covers the case if codec is a terminator.
 	if !codec.RequiresTerminator() {
 		return codec
 	}
