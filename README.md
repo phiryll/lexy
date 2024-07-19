@@ -37,7 +37,9 @@ Lexy can encode these types while preserving their natural ordering.
 * arrays  
   Arrays are ordered lexicographically by their elements.
   For example, `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`
-  Arrays of different sizes are different types in go.
+  Arrays of different sizes are different types in go, and will require different codecs.
+  The provided array Codec makes heavy use of reflection, and should be avoided if possible.
+  See the provided examples for how you can write your own.
 
 Lexy can encode these types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
