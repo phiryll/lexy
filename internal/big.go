@@ -107,7 +107,7 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //	the low byte is not 0
 //
 // Get the big.Int value of the shifted big.Float.
-// This is the mantissa if you interpret it as being immediately to the right of the point,
+// This is the mantissa if interpreted as being immediately to the right of the point,
 // which is the standard for representing a mantissa, 0.5 <= mantissa < 1.0.
 // The only purpose of this is to get the exact []byte of the mantissa
 // out of a big.Float without resorting to parsing.

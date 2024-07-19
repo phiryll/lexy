@@ -77,7 +77,7 @@ func (c uintCodec[T]) RequiresTerminator() bool {
 //   - int64
 //
 // This encodes a value by flipping the sign bit and writing in big-endian order.
-// You can see that this works from the following signed int -> encoded table.
+// That this works can be seen from the following signed int -> encoded table.
 //
 //	0x8000... -> 0x0000...  most negative
 //	0xFFFF... -> 0x7FFF...  -1

@@ -35,7 +35,7 @@ type Codec[T any] interface {
 	// Writer will encode value and write the resulting bytes to w.
 	//
 	// Write may have to process data one byte at a time, so using a buffered io.Writer is recommended if appropriate.
-	// If you use a buffered io.Writer within a Codec implementation, it must be flushed before returning from Write.
+	// If a buffered io.Writer is used within a Codec implementation, it must be flushed before returning from Write.
 	Write(w io.Writer, value T) error
 
 	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
@@ -46,7 +46,7 @@ type Codec[T any] interface {
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.
-// Use Codec.Write if you're encoding multiple values to the same byte stream.
+// Use Codec.Write when encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	return internal.Encode(codec, value)
 }
@@ -54,7 +54,7 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 // Decode returns a decoded value from a []byte using codec.
 //
 // This is a convenience function.
-// Use Codec.Read if you're decoding multiple values from the same byte stream.
+// Use Codec.Read when decoding multiple values from the same byte stream.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return internal.Decode(codec, data)
 }

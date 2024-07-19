@@ -2,17 +2,23 @@
 
 Lexicographical Byte Order Encodings
 
-Lexy is a library for encoding/decoding strongly-typed values into a binary form whose
+Lexy is a library for encoding strongly-typed values (using generics) into a binary form whose
 lexicographical unsigned byte ordering is consistent with the type's natural ordering.
-Users can build their own encoding with a different encoded ordering than the type's natural ordering.
-Types defined with a different underlying type will work correctly (`type MyInt int16`, e.g.).
-Encoded values of different data types will not have a consistent ordering with each other.
+Custom encodings can be created with a different ordering than the type's natural ordering.
 Lexy has no non-test dependencies.
 
-This library is only needed if you need to order encoded values.
+It may be more efficient to use another encoding if lexicographical unsigned byte ordering is not needed.
 Lexy's primary purpose is to make it easier to use things like an
 [ordered key-value store](https://en.wikipedia.org/wiki/Ordered_Key-Value_Store),
 or an ordered binary trie.
+
+Lexy does not encode the types of encoded data, users must know what is being decoded.
+Types defined with a different underlying type will work correctly if the `Codec` is defined appropriately.
+For example, values of type `type MyInt int16` used with a `Codec` created by `lexy.Int[MyInt]()`.
+Encoded values of different data types will not have a consistent ordering with respect to each other.
+For example, the encoded value of `int32(1)` is greater than the encoded value of `uint32(2)`.
+A custom `Codec` that handles multiple types could be created,
+but it would require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Lexy can encode these types while preserving their natural ordering.
 
@@ -37,9 +43,9 @@ Lexy can encode these types while preserving their natural ordering.
 * arrays  
   Arrays are ordered lexicographically by their elements.
   For example, `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`
-  Arrays of different sizes are different types in go, and will require different codecs.
-  The provided array Codec makes heavy use of reflection, and should be avoided if possible.
-  See the provided examples for how you can write your own.
+  Arrays of different sizes are different types in go, and will require different `Codecs`.
+  The `Codec` created by `lexy.ArrayOf` makes heavy use of reflection, and should be avoided if possible.
+  See the provided examples for how to create custom Codecs.
 
 Lexy can encode these types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
@@ -53,15 +59,15 @@ The ordering of the encoding is noted.
   `nil` is less than all non-`nil` values.
   The encoded order for non-`nil` values is signed numerator first, positive denominator second.
   There is no way to encode rational numbers with a lexicographical order that isn't lossy.
-  The closest you can get is to convert them to (possibly rounded) big.Floats and encode those.
+  A lossy approximation can be made by converting to (possibly rounded) `big.Floats` and encoding those.
 
-Lexy does not encode these out-of-the-box, but you can always write a custom `Codec`.
+Lexy does not encode these out-of-the-box, but a custom `Codec` can always be created.
 
 * struct types  
-  Examples are provided to show how to build your own `Codecs`, including for struct types.
+  Examples are provided to show how to build custom `Codecs`, including for struct types.
   The inherent limitations of generic types and reflection in go make it impossible
   to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
-  Writing your own `Codec` is a much simpler and safer alternative.
+  Writing a custom `Codec` is a much simpler and safer alternative.
 * `uint`, `int`, `uintptr`  
   These types have implementation-specific sizes.
 * function types

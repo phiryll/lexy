@@ -29,7 +29,7 @@ type Codec[T any] interface {
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.
-// Use Codec.Write if you're encoding multiple values to the same byte stream.
+// Use Codec.Write when encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	var b bytes.Buffer
 	if err := codec.Write(&b, value); err != nil {
@@ -41,7 +41,7 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 // Decode returns a decoded value from a []byte using codec.
 //
 // This is a convenience function.
-// Use Codec.Read if you're decoding multiple values from the same byte stream.
+// Use Codec.Read when decoding multiple values from the same byte stream.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	// bytes.NewBuffer takes ownership of its argument, so we need to clone it first.
 	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))

@@ -18,9 +18,9 @@ func StringCodec[T ~string]() Codec[T] {
 //
 // The order of strings, and this encoding, may be surprising.
 // A string in go is essentially an immutable []byte without text semantics.
-// If your string is UTF-8, then the order is the same as the order of the Unicode code points.
+// For an encoded UTF-8 string, the order is the same as the lexicographical order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
-// Collation is locale-dependent. Any order you choose could be incorrect in another locale.
+// Collation is locale-dependent. Any ordering could be incorrect in another locale.
 type stringCodec[T ~string] struct{}
 
 func (c stringCodec[T]) Read(r io.Reader) (T, error) {
