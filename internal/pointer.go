@@ -5,25 +5,25 @@ import (
 )
 
 // pointerCodec is the Codec for pointers, using elemCodec to encode and decode its pointee.
-// Use MakePointerCodec[P](Codec[T]) for P with underlying type *T to create a new pointerCodec.
+// Use MakePointerCodec[P](Codec[E]) for P with underlying type *E to create a new pointerCodec.
 // A pointer is encoded as:
 //
 // - if nil, PrefixNil
 // - if non-nil, PrefixNonEmpty followed by its encoded pointee
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
-type pointerCodec[P ~*T, T any] struct {
-	elemCodec Codec[T]
+type pointerCodec[P ~*E, E any] struct {
+	elemCodec Codec[E]
 }
 
-func MakePointerCodec[P ~*T, T any](elemCodec Codec[T]) Codec[P] {
+func MakePointerCodec[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return pointerCodec[P, T]{elemCodec}
+	return pointerCodec[P, E]{elemCodec}
 }
 
-func (c pointerCodec[P, T]) Read(r io.Reader) (P, error) {
+func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 	if ptr, done, err := readPrefix[P](r, true, nil); done {
 		return ptr, err
 	}
@@ -34,13 +34,13 @@ func (c pointerCodec[P, T]) Read(r io.Reader) (P, error) {
 	return &value, nil
 }
 
-func (c pointerCodec[P, T]) Write(w io.Writer, value P) error {
+func (c pointerCodec[P, E]) Write(w io.Writer, value P) error {
 	if done, err := writePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	return c.elemCodec.Write(w, *value)
 }
 
-func (c pointerCodec[P, T]) RequiresTerminator() bool {
+func (c pointerCodec[P, E]) RequiresTerminator() bool {
 	return c.elemCodec.RequiresTerminator()
 }
