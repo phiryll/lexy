@@ -94,6 +94,10 @@ func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	return internal.MakeSliceCodec[S](elemCodec)
 }
 
+func Bytes[S ~[]byte]() Codec[S] {
+	return internal.MakeBytesCodec[S]()
+}
+
 func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	return internal.MakeMapCodec[M](keyCodec, valueCodec)
 }
