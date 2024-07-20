@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"io"
 	"slices"
 )
@@ -9,11 +8,33 @@ import (
 // negateCodec negates codec, reversing the ordering of its encoding.
 // Use MakeNegateCodec(Codec[T]) to create a new negateCodec.
 //
-// negateCodec must escape and terminate when encoding,
-// because otherwise it wouldn't know when to stop reading when decoding.
+// Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
+// For example, consider these encodings:
+//
+//	A = [0x00, 0x02, 0x03]
+//	B = [0x00, 0x02, 0x03, 0x00]
+//	A < B
+//
+// This Codec must effectively reverse that for what the delegate codec produces.
+// Just flipping all the bits works except when one encoding is the prefix of another.
+// The above example with all bits flipped is:
+//
+//	^A = [0xFF, 0xFD, 0xFC]
+//	^B = [0xFF, 0xFD, 0xFC, 0xFF]
+//
+// We need to transform these results so that -B is less than -A.
+// Adding a 0xFF terminator accomplishes this,
+// but then we have another escape/terminator problem, just with 0xFF and 0xFE instead of 0x00 and 0x01.
+// We can achieve the same effect by always escaping and terminating the normal way,
+// and then flip all the bits, inluding the trailing terminator.
+// If we do that for the above example, we get the correctly negated ordering.
+//
+//	esc+term(A) = [0x01, 0x00, 0x02, 0x03, 0x00]
+//	esc+term(B) = [0x01, 0x00, 0x02, 0x03, 0x01, 0x00, 0x00]
+//
+//	^esc+term(A) = [0xFE, 0xFF, 0xFD, 0xFC, 0xFF]
+//	^esc+term(B) = [0xFE, 0xFF, 0xFD, 0xFC, 0xFE, 0xFF, 0xFF]
 type negateCodec[T any] struct {
-	// This implementation is essentially the same as terminator,
-	// but with bit flipping, and being thread-safe if codec is.
 	codec Codec[T]
 }
 
@@ -25,30 +46,11 @@ func MakeNegateCodec[T any](codec Codec[T]) Codec[T] {
 }
 
 func (c negateCodec[T]) Read(r io.Reader) (T, error) {
-	var value T
-	b, readErr := unescape(r)
-	if readErr != nil && (readErr != io.EOF || len(b) == 0) {
-		return value, readErr
-	}
-	negate(b)
-	value, codecErr := c.codec.Read(bytes.NewBuffer(b))
-	if codecErr != nil && codecErr != io.EOF {
-		return value, codecErr
-	}
-	return value, nil
+	return Terminate(c.codec).Read(negateReader{r})
 }
 
 func (c negateCodec[T]) Write(w io.Writer, value T) error {
-	var scratch bytes.Buffer
-	if err := c.codec.Write(&scratch, value); err != nil {
-		return err
-	}
-	b := scratch.Bytes()
-	negate(b)
-	if _, err := escape(w, b); err != nil {
-		return err
-	}
-	return nil
+	return Terminate(c.codec).Write(negateWriter{w}, value)
 }
 
 func (c negateCodec[T]) RequiresTerminator() bool {

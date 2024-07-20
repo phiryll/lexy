@@ -49,6 +49,12 @@ var (
 	escEsc  = []byte{EscapeByte, EscapeByte}
 )
 
+// Terminate returns a Codec that uses codec, always escaping and terminating.
+// The returned Codec is not thread-safe, and MUST be created anew when used.
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	return terminator[T]{codec: codec}
+}
+
 // TerminateIfNeeded returns a Codec that uses codec,
 // escaping and terminating if codec.RequiresTerminator() is true.
 // The returned Codec may not be thread-safe, and MUST be created anew when used.

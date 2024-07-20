@@ -31,6 +31,13 @@ func TestNegateInt32(t *testing.T) {
 	})
 }
 
+// The simple implementation is to simply invert all the bits, but it doesn't work.
+// This tests for that regression, see the comments on negateCodec for details.
+func TestNegateLength(t *testing.T) {
+	encode := encoderFor(internal.MakeNegateCodec(stringCodec))
+	assert.Less(t, encode("ab"), encode("a"))
+}
+
 func TestNegatePtrString(t *testing.T) {
 	ptrCodec := internal.MakePointerCodec[*string](stringCodec)
 	codec := internal.MakeNegateCodec(ptrCodec)
@@ -45,7 +52,41 @@ func TestNegatePtrString(t *testing.T) {
 	assert.IsIncreasing(t, [][]byte{
 		encode(ptr("def")),
 		encode(ptr("abc")),
+		encode(ptr("ab")),
 		encode(ptr("")),
+		encode(nil),
+	})
+}
+
+var negPIntCodec = internal.MakeNegateCodec(internal.MakePointerCodec[*int16](int16Codec))
+var negStringCodec = internal.MakeNegateCodec(stringCodec)
+var ptrStringCodec = internal.MakePointerCodec[*string](stringCodec)
+var slicePtrStringCodec = internal.MakeSliceCodec[[]*string](ptrStringCodec)
+var negSlicePtrStringCodec = internal.MakeNegateCodec(slicePtrStringCodec)
+
+func TestNegateSlicePtrString(t *testing.T) {
+	codec := negSlicePtrStringCodec
+
+	testCodecRoundTrip(t, codec, []testCase[[]*string]{
+		{"nil", nil, nil},
+		{"[]", []*string{}, nil},
+		{"[nil]", []*string{nil}, nil},
+		{"*a", []*string{ptr("a")}, nil},
+		{"*a, nil, *\"\", *xyz", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, nil},
+	})
+
+	encode := encoderFor(codec)
+	assert.IsIncreasing(t, [][]byte{
+		encode([]*string{ptr("b"), nil}),
+		encode([]*string{ptr("b")}),
+		encode([]*string{ptr("a"), ptr("a")}),
+		encode([]*string{ptr("a"), ptr("")}),
+		encode([]*string{ptr("a"), nil, ptr("z")}),
+		encode([]*string{ptr("a"), nil, nil, nil, nil}),
+		encode([]*string{ptr("a"), nil}),
+		encode([]*string{ptr("a")}),
+		encode([]*string{nil}),
+		encode([]*string{}),
 		encode(nil),
 	})
 }
@@ -56,11 +97,9 @@ type negateTest struct {
 	string string
 }
 
-// order is [uint8, neg(pInt16), neg(string)]
+// order is [uint8, neg(string), neg(pInt16)]
+// putting the negated varying length field in the middle is intentional
 type negateTestCodec struct{}
-
-var negPIntCodec = internal.MakeNegateCodec(internal.MakePointerCodec[*int16](int16Codec))
-var negStringCodec = internal.MakeNegateCodec(stringCodec)
 
 func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
@@ -68,11 +107,11 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	if err != nil {
 		return zero, err
 	}
-	pInt, err := negPIntCodec.Read(r)
+	s, err := internal.TerminateIfNeeded(negStringCodec).Read(r)
 	if err != nil {
 		return zero, err
 	}
-	s, err := negStringCodec.Read(r)
+	pInt, err := negPIntCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -83,10 +122,10 @@ func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
 	if err := uint8Codec.Write(w, value.uint8); err != nil {
 		return err
 	}
-	if err := negPIntCodec.Write(w, value.pInt16); err != nil {
+	if err := internal.TerminateIfNeeded(negStringCodec).Write(w, value.string); err != nil {
 		return err
 	}
-	return negStringCodec.Write(w, value.string)
+	return negPIntCodec.Write(w, value.pInt16)
 }
 
 func (n negateTestCodec) RequiresTerminator() bool {
@@ -106,37 +145,41 @@ func TestNegateComplex(t *testing.T) {
 	})
 
 	assert.IsIncreasing(t, [][]byte{
-		// sort order is [first, neg(second), neg(third)]
+		// sort order is [first, neg(third), neg(second)]
 		encode(negateTest{5, ptr(100), "def"}),
-		encode(negateTest{5, ptr(100), "abc"}),
-		encode(negateTest{5, ptr(100), ""}),
 		encode(negateTest{5, ptr(0), "def"}),
-		encode(negateTest{5, ptr(0), "abc"}),
-		encode(negateTest{5, ptr(0), ""}),
 		encode(negateTest{5, ptr(-1), "def"}),
-		encode(negateTest{5, ptr(-1), "abc"}),
-		encode(negateTest{5, ptr(-1), ""}),
 		encode(negateTest{5, ptr(-100), "def"}),
-		encode(negateTest{5, ptr(-100), "abc"}),
-		encode(negateTest{5, ptr(-100), ""}),
 		encode(negateTest{5, nil, "def"}),
+
+		encode(negateTest{5, ptr(100), "abc"}),
+		encode(negateTest{5, ptr(0), "abc"}),
+		encode(negateTest{5, ptr(-1), "abc"}),
+		encode(negateTest{5, ptr(-100), "abc"}),
 		encode(negateTest{5, nil, "abc"}),
+
+		encode(negateTest{5, ptr(100), ""}),
+		encode(negateTest{5, ptr(0), ""}),
+		encode(negateTest{5, ptr(-1), ""}),
+		encode(negateTest{5, ptr(-100), ""}),
 		encode(negateTest{5, nil, ""}),
 
 		encode(negateTest{10, ptr(100), "def"}),
-		encode(negateTest{10, ptr(100), "abc"}),
-		encode(negateTest{10, ptr(100), ""}),
 		encode(negateTest{10, ptr(0), "def"}),
-		encode(negateTest{10, ptr(0), "abc"}),
-		encode(negateTest{10, ptr(0), ""}),
 		encode(negateTest{10, ptr(-1), "def"}),
-		encode(negateTest{10, ptr(-1), "abc"}),
-		encode(negateTest{10, ptr(-1), ""}),
 		encode(negateTest{10, ptr(-100), "def"}),
-		encode(negateTest{10, ptr(-100), "abc"}),
-		encode(negateTest{10, ptr(-100), ""}),
 		encode(negateTest{10, nil, "def"}),
+
+		encode(negateTest{10, ptr(100), "abc"}),
+		encode(negateTest{10, ptr(0), "abc"}),
+		encode(negateTest{10, ptr(-1), "abc"}),
+		encode(negateTest{10, ptr(-100), "abc"}),
 		encode(negateTest{10, nil, "abc"}),
+
+		encode(negateTest{10, ptr(100), ""}),
+		encode(negateTest{10, ptr(0), ""}),
+		encode(negateTest{10, ptr(-1), ""}),
+		encode(negateTest{10, ptr(-100), ""}),
 		encode(negateTest{10, nil, ""}),
 	})
 }
