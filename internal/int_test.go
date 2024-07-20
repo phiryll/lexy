@@ -8,8 +8,7 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-// Testing bool, uint/int8, and uint/int32 should be sufficient. 16 and
-// 64 bit ints use the same logic.
+// Testing bool, uint/int, uint/int8, and uint/int32 should be sufficient.
 
 func TestBool(t *testing.T) {
 	codec := boolCodec
@@ -44,6 +43,17 @@ func TestUint32(t *testing.T) {
 	testCodecFail(t, codec, 0)
 }
 
+func TestUint(t *testing.T) {
+	codec := uintCodec
+	testCodec(t, codec, []testCase[uint]{
+		{"0", 0, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"1", 1, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
+		{"0xFFFFFFFF", 0xFFFFFFFF, []byte{0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF}},
+		// can't go bigger, uints might be 32 bits
+	})
+	testCodecFail(t, codec, 0)
+}
+
 func TestInt8(t *testing.T) {
 	codec := int8Codec
 	testCodec(t, codec, []testCase[int8]{
@@ -64,6 +74,16 @@ func TestInt32(t *testing.T) {
 		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00}},
 		{"+1", 1, []byte{0x80, 0x00, 0x00, 0x01}},
 		{"max", math.MaxInt32, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
+	})
+	testCodecFail(t, codec, 0)
+}
+
+func TestInt(t *testing.T) {
+	codec := intCodec
+	testCodec(t, codec, []testCase[int]{
+		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"+1", 1, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
 	})
 	testCodecFail(t, codec, 0)
 }

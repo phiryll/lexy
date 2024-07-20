@@ -11,6 +11,10 @@ func UintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] {
 	return uintCodec[T]{}
 }
 
+func AsUInt64Codec[T ~uint]() Codec[T] {
+	return asUInt64Codec[T]{}
+}
+
 func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
 	var signBit T
 	switch reflect.TypeFor[T]().Kind() {
@@ -26,14 +30,18 @@ func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
 	return intCodec[T]{signBit: signBit}
 }
 
+func AsInt64Codec[T ~int]() Codec[T] {
+	return asInt64Codec[T]{}
+}
+
 // Builtin types only, and only if needed by other lexy Codecs.
 var (
 	// boolCodec   Codec[bool]   = uintCodec[bool]{}
 	// uint8Codec  Codec[uint8]  = uintCodec[uint8]{}
 	// uint16Codec Codec[uint16] = uintCodec[uint16]{}
 	uint32Codec Codec[uint32] = uintCodec[uint32]{}
-	// uint64Codec Codec[uint64] = uintCodec[uint64]{}
-	int8Codec Codec[int8] = intCodec[int8]{signBit: math.MinInt8}
+	uint64Codec Codec[uint64] = uintCodec[uint64]{}
+	int8Codec   Codec[int8]   = intCodec[int8]{signBit: math.MinInt8}
 	// int16Codec  Codec[int16]  = intCodec[int16]{signBit: math.MinInt16}
 	int32Codec Codec[int32] = intCodec[int32]{signBit: math.MinInt32}
 	int64Codec Codec[int64] = intCodec[int64]{signBit: math.MinInt64}
@@ -65,6 +73,21 @@ func (c uintCodec[T]) Write(w io.Writer, value T) error {
 }
 
 func (c uintCodec[T]) RequiresTerminator() bool {
+	return false
+}
+
+type asUInt64Codec[T ~uint] struct{}
+
+func (b asUInt64Codec[T]) Read(r io.Reader) (T, error) {
+	value, err := uint64Codec.Read(r)
+	return T(value), err
+}
+
+func (b asUInt64Codec[T]) Write(w io.Writer, value T) error {
+	return uint64Codec.Write(w, uint64(value))
+}
+
+func (b asUInt64Codec[T]) RequiresTerminator() bool {
 	return false
 }
 
@@ -102,5 +125,20 @@ func (c intCodec[T]) Write(w io.Writer, value T) error {
 }
 
 func (c intCodec[T]) RequiresTerminator() bool {
+	return false
+}
+
+type asInt64Codec[T ~int] struct{}
+
+func (b asInt64Codec[T]) Read(r io.Reader) (T, error) {
+	value, err := int64Codec.Read(r)
+	return T(value), err
+}
+
+func (b asInt64Codec[T]) Write(w io.Writer, value T) error {
+	return int64Codec.Write(w, int64(value))
+}
+
+func (b asInt64Codec[T]) RequiresTerminator() bool {
 	return false
 }

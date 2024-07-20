@@ -24,7 +24,11 @@ Lexy can encode these types while preserving their natural ordering.
 
 * `bool`  
   `false` is ordered before `true`.
+* `uint`  
+  Instances are encoded using the `uint64` Codec.
 * `uint8` (aka `byte`), `uint16`, `uint32`, `uint64`
+* `int`  
+  Instances are encoded using the `int64` Codec.
 * `int8`, `int16`, `int32` (aka `rune`), `int64`
 * `float32`, `float64`
 * `*math.big.Int`  
@@ -70,8 +74,8 @@ Lexy does not encode these out-of-the-box, but a custom `Codec` can always be cr
   The inherent limitations of generic types and reflection in go make it impossible
   to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
   Writing a custom `Codec` is a much simpler and safer alternative.
-* `uint`, `int`, `uintptr`  
-  These types have implementation-specific sizes.
+* `uintptr`  
+  This type has an implementation-specific size.
 * function types
 * interface types
 * channel types
