@@ -45,6 +45,9 @@ Lexy can encode these types while preserving their natural ordering.
   Slices are ordered lexicographically by their elements.
   For example,  
   `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
+* `[]byte`  
+  This is a `Codec` optimized for byte slices, more efficient than a slice `Codec` would be.
+  It differs from the `string` `Codec` in that a `[]byte` can be `nil`.
 * arrays  
   Arrays are ordered lexicographically by their elements.
   For example,  
