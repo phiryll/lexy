@@ -45,7 +45,7 @@ Lexy can encode these types while preserving their natural ordering.
   For example, `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`
   Arrays of different sizes are different types in go, and will require different `Codecs`.
   The `Codec` created by `lexy.ArrayOf` makes heavy use of reflection, and should be avoided if possible.
-  See the provided examples for how to create custom Codecs.
+  See the provided examples for how to create custom `Codecs`.
 
 Lexy can encode these types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
@@ -58,7 +58,7 @@ The ordering of the encoding is noted.
 * `*math.big.Rat`  
   `nil` is less than all non-`nil` values.
   The encoded order for non-`nil` values is signed numerator first, positive denominator second.
-  There is no way to encode rational numbers with a lexicographical order that isn't lossy.
+  There is no way to finitely encode rational numbers with a lexicographical order that isn't lossy.
   A lossy approximation can be made by converting to (possibly rounded) `big.Floats` and encoding those.
 
 Lexy does not encode these out-of-the-box, but a custom `Codec` can always be created.
