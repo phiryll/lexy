@@ -225,3 +225,29 @@ func TestBigFloatOrdering(t *testing.T) {
 		encode(&posInf),
 	})
 }
+
+func newBigRat(num, denom string) *big.Rat {
+	var value big.Rat
+	return value.SetFrac(newBigInt(num), newBigInt(denom))
+}
+
+func TestBigRat(t *testing.T) {
+	// Note that big.Rat normalizes values when set using SetFrac.
+	// So 2/4 => 1/2, and 0/100 => 0/1
+	codec := internal.BigRatCodec
+	testCodecRoundTrip(t, codec, []testCase[*big.Rat]{
+		{"-1/3", newBigRat("-1", "3"), nil},
+		{"0/123", newBigRat("0", "123"), nil},
+		{"5432/42", newBigRat("5432", "42"), nil},
+	})
+
+	encode := encoderFor(codec)
+	assert.IsIncreasing(t, [][]byte{
+		encode(nil),
+		encode(newBigRat("-1", "1")),
+		encode(newBigRat("-1", "2")),
+		encode(newBigRat("0", "1")),
+		encode(newBigRat("1", "1")),
+		encode(newBigRat("1", "2")),
+	})
+}

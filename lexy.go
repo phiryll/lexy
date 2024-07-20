@@ -75,6 +75,7 @@ func Duration() Codec[time.Duration]                         { return internal.I
 
 func BigInt() Codec[*big.Int]     { return internal.BigIntCodec }
 func BigFloat() Codec[*big.Float] { return internal.BigFloatCodec }
+func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec }
 func Time() Codec[time.Time]      { return internal.TimeCodec }
 
 // Codecs that delegate to other Codecs.

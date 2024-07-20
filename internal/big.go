@@ -8,6 +8,7 @@ import (
 var (
 	BigIntCodec   Codec[*big.Int]   = bigIntCodec{}
 	BigFloatCodec Codec[*big.Float] = bigFloatCodec{}
+	BigRatCodec   Codec[*big.Rat]   = bigRatCodec{}
 )
 
 // bigIntCodec is the Codec for *big.Int values.
@@ -316,4 +317,46 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 
 func (c bigFloatCodec) RequiresTerminator() bool {
 	return true
+}
+
+// bigRatCodec is the Codec for *big.Rat values.
+// The denominator cannot be zero.
+// Note that big.Rat will normalize the numerator and denominator to lowest terms, including 0/N to 0/1.
+//
+// Values are encoded using this logic:
+//
+//	write PrefixNil if value is nil and return immediately
+//	write PrefixNonEmpty
+//	write the numerator with bigIntCodec
+//	write the denominator with bigIntCodec
+type bigRatCodec struct{}
+
+func (b bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
+	if value, done, err := readPrefix[*big.Rat](r, true, nil); done {
+		return value, err
+	}
+	num, err := BigIntCodec.Read(r)
+	if err != nil {
+		return nil, unexpectedIfEOF(err)
+	}
+	denom, err := BigIntCodec.Read(r)
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+	var value big.Rat
+	return value.SetFrac(num, denom), nil
+}
+
+func (b bigRatCodec) Write(w io.Writer, value *big.Rat) error {
+	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+		return err
+	}
+	if err := BigIntCodec.Write(w, value.Num()); err != nil {
+		return err
+	}
+	return BigIntCodec.Write(w, value.Denom())
+}
+
+func (b bigRatCodec) RequiresTerminator() bool {
+	return false
 }
