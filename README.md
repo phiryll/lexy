@@ -14,7 +14,7 @@ or an ordered binary trie.
 
 Lexy does not encode the types of encoded data, users must know what is being decoded.
 Types defined with a different underlying type will work correctly if the `Codec` is defined appropriately.
-For example, values of type `type MyInt int16` used with a `Codec` created by `lexy.Int[MyInt]()`.
+For example, values of type `type MyInt int16` can be used with a `Codec` created by `lexy.Int[MyInt]()`.
 Encoded values of different data types will not have a consistent ordering with respect to each other.
 For example, the encoded value of `int32(1)` is greater than the encoded value of `uint32(2)`.
 A custom `Codec` that handles multiple types could be created,
@@ -39,10 +39,12 @@ Lexy can encode these types while preserving their natural ordering.
   `nil` is less than all non-`nil` values.
 * slices  
   Slices are ordered lexicographically by their elements.
-  For example, `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
+  For example,  
+  `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
 * arrays  
   Arrays are ordered lexicographically by their elements.
-  For example, `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`
+  For example,  
+  `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`  
   Arrays of different sizes are different types in go, and will require different `Codecs`.
   The `Codec` created by `lexy.ArrayOf` makes heavy use of reflection, and should be avoided if possible.
   See the provided examples for how to create custom `Codecs`.
