@@ -78,16 +78,16 @@ func (c uintCodec[T]) RequiresTerminator() bool {
 
 type asUInt64Codec[T ~uint] struct{}
 
-func (b asUInt64Codec[T]) Read(r io.Reader) (T, error) {
+func (c asUInt64Codec[T]) Read(r io.Reader) (T, error) {
 	value, err := uint64Codec.Read(r)
 	return T(value), err
 }
 
-func (b asUInt64Codec[T]) Write(w io.Writer, value T) error {
+func (c asUInt64Codec[T]) Write(w io.Writer, value T) error {
 	return uint64Codec.Write(w, uint64(value))
 }
 
-func (b asUInt64Codec[T]) RequiresTerminator() bool {
+func (c asUInt64Codec[T]) RequiresTerminator() bool {
 	return false
 }
 
@@ -130,15 +130,15 @@ func (c intCodec[T]) RequiresTerminator() bool {
 
 type asInt64Codec[T ~int] struct{}
 
-func (b asInt64Codec[T]) Read(r io.Reader) (T, error) {
+func (c asInt64Codec[T]) Read(r io.Reader) (T, error) {
 	value, err := int64Codec.Read(r)
 	return T(value), err
 }
 
-func (b asInt64Codec[T]) Write(w io.Writer, value T) error {
+func (c asInt64Codec[T]) Write(w io.Writer, value T) error {
 	return int64Codec.Write(w, int64(value))
 }
 
-func (b asInt64Codec[T]) RequiresTerminator() bool {
+func (c asInt64Codec[T]) RequiresTerminator() bool {
 	return false
 }

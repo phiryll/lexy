@@ -331,7 +331,7 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 //	write the denominator with bigIntCodec
 type bigRatCodec struct{}
 
-func (b bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
+func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if value, done, err := readPrefix[*big.Rat](r, true, nil); done {
 		return value, err
 	}
@@ -347,7 +347,7 @@ func (b bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	return value.SetFrac(num, denom), nil
 }
 
-func (b bigRatCodec) Write(w io.Writer, value *big.Rat) error {
+func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	if done, err := writePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
@@ -357,6 +357,6 @@ func (b bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	return BigIntCodec.Write(w, value.Denom())
 }
 
-func (b bigRatCodec) RequiresTerminator() bool {
+func (c bigRatCodec) RequiresTerminator() bool {
 	return false
 }
