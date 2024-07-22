@@ -43,22 +43,6 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// Encode returns value encoded using codec as a new []byte.
-//
-// This is a convenience function.
-// Use Codec.Write when encoding multiple values to the same byte stream.
-func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	return internal.Encode(codec, value)
-}
-
-// Decode returns a decoded value from a []byte using codec.
-//
-// This is a convenience function.
-// Use Codec.Read when decoding multiple values from the same byte stream.
-func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	return internal.Decode(codec, data)
-}
-
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
 
 func Bool[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
@@ -105,4 +89,20 @@ func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[
 // Negate returns a new Codec reversing the encoding order produced by codec.
 func Negate[T any](codec Codec[T]) Codec[T] {
 	return internal.MakeNegateCodec(codec)
+}
+
+// Encode returns value encoded using codec as a new []byte.
+//
+// This is a convenience function.
+// Use Codec.Write when encoding multiple values to the same byte stream.
+func Encode[T any](codec Codec[T], value T) ([]byte, error) {
+	return internal.Encode(codec, value)
+}
+
+// Decode returns a decoded value from a []byte using codec.
+//
+// This is a convenience function.
+// Use Codec.Read when decoding multiple values from the same byte stream.
+func Decode[T any](codec Codec[T], data []byte) (T, error) {
+	return internal.Decode(codec, data)
 }
