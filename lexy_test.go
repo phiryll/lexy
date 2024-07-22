@@ -339,9 +339,10 @@ func ExampleArrayOf() {
 }
 
 func ExamplePointerToArrayOf() {
-	codec := lexy.PointerToArrayOf[*[3]uint8](lexy.Uint[uint8]())
+	type quaternion *[4]float64
+	codec := lexy.PointerToArrayOf[quaternion](lexy.Float64[float64]())
 	var buf bytes.Buffer
-	value := &[3]uint8{12, 0, 23}
+	value := quaternion(&[4]float64{5.7, 1.2, 3.5, 2.9})
 	if err := codec.Write(&buf, value); err != nil {
 		panic(err)
 	}
@@ -353,7 +354,7 @@ func ExamplePointerToArrayOf() {
 	fmt.Println(value == decoded)
 	fmt.Println(*value == *decoded)
 	// Output:
-	// &[12 0 23]
+	// &[5.7 1.2 3.5 2.9]
 	// false
 	// true
 }
