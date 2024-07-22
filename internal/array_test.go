@@ -93,6 +93,23 @@ func TestPtrToArrayInt32(t *testing.T) {
 	})
 }
 
+func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
+	type aType *[5]int32
+	codec := internal.MakePointerToArrayCodec[aType](int32Codec)
+	testCodec(t, codec, []testCase[aType]{
+		{"nil", nil, []byte{pNil}},
+		{"[0, 1, -1, min, max]", aType(&[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}), []byte{
+			nonEmpty,
+			0x80, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x01,
+			0x7F, 0xFF, 0xFF, 0xFF,
+			0x00, 0x00, 0x00, 0x00,
+			0xFF, 0xFF, 0xFF, 0xFF,
+		}},
+	})
+	testCodecFail(t, codec, aType(&[5]int32{1, 2, 3, 4, 5}))
+}
+
 func TestArrayPtrToArrayInt32(t *testing.T) {
 	rowCodec := internal.MakePointerToArrayCodec[*[5]int32](int32Codec)
 	codec := internal.MakeArrayCodec[[3]*[5]int32](rowCodec)

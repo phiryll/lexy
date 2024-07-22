@@ -14,8 +14,9 @@ import (
 //
 // pointerToArrayCodec makes heavy use of reflection, and should be avoided if possible.
 type pointerToArrayCodec[P ~*A, A any, E any] struct {
-	arrayType reflect.Type
-	elemCodec Codec[E]
+	pointerType reflect.Type
+	arrayType   reflect.Type
+	elemCodec   Codec[E]
 }
 
 // arrayCodec is the Codec for arrays, using elemCodec to encode and decode its elements.
@@ -32,6 +33,7 @@ type arrayCodec[A any, E any] struct {
 }
 
 func MakePointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
+	pointerType := reflect.TypeFor[P]()
 	arrayType := reflect.TypeFor[A]()
 	elemType := reflect.TypeFor[E]()
 	if arrayType.Kind() != reflect.Array {
@@ -43,7 +45,7 @@ func MakePointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return pointerToArrayCodec[P, A, E]{arrayType, elemCodec}
+	return pointerToArrayCodec[P, A, E]{pointerType, arrayType, elemCodec}
 }
 
 func MakeArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
@@ -54,8 +56,9 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 	if ptr, done, err := readPrefix[P](r, true, nil); done {
 		return ptr, err
 	}
-	values := reflect.New(c.arrayType)
-	array := values.Elem()
+	ptrToPtrToArray := reflect.New(c.pointerType)
+	ptrToPtrToArray.Elem().Set(reflect.New(c.arrayType))
+	array := ptrToPtrToArray.Elem().Elem()
 	codec := TerminateIfNeeded(c.elemCodec)
 	size := c.arrayType.Len()
 	for i := range size {
@@ -71,7 +74,7 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 		}
 		array.Index(i).Set(reflect.ValueOf(value))
 	}
-	return values.Interface().(P), nil
+	return ptrToPtrToArray.Elem().Interface().(P), nil
 }
 
 func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
