@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"reflect"
 	"testing"
 	"time"
 
@@ -72,6 +73,7 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 			t.Run(tt.name, func(t *testing.T) {
 				got, err := codec.Read(bytes.NewReader(tt.data))
 				require.NoError(t, err)
+				assert.Equal(t, reflect.TypeOf(tt.value), reflect.TypeOf(got))
 				assert.Equal(t, tt.value, got)
 			})
 		}
@@ -99,6 +101,7 @@ func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCa
 			require.NoError(t, err)
 			got, err := codec.Read(bytes.NewReader(b.Bytes()))
 			require.NoError(t, err)
+			assert.Equal(t, reflect.TypeOf(tt.value), reflect.TypeOf(got))
 			assert.Equal(t, tt.value, got)
 		})
 	}
