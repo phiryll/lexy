@@ -3,6 +3,7 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"math"
 	"math/big"
 	"time"
@@ -390,4 +391,32 @@ func ExampleBytes() {
 	fmt.Println(decoded)
 	// Output:
 	// [1 2 3 11 17]
+}
+
+func ExampleMapOf() {
+	type word string
+	type count int
+	type wordCounts map[word]count
+	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.AsInt64[count]())
+	var buf bytes.Buffer
+	value := wordCounts{
+		"Now":  23,
+		"is":   42,
+		"the":  59,
+		"time": 12,
+	}
+	if err := codec.Write(&buf, value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T\n", decoded)
+	fmt.Printf("%T\n", decoded["not-found"])
+	fmt.Println(maps.Equal(value, decoded))
+	// Output:
+	// lexy_test.wordCounts
+	// lexy_test.count
+	// true
 }
