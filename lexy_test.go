@@ -304,3 +304,56 @@ func ExampleBigRat() {
 	// Output:
 	// -823/6
 }
+
+func ExamplePointerTo() {
+	codec := lexy.PointerTo[*string](lexy.String[string]())
+	value := "abc"
+	var buf bytes.Buffer
+	if err := codec.Write(&buf, &value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(value == *decoded)
+	fmt.Println(&value == decoded)
+	// Output:
+	// true
+	// false
+}
+
+func ExampleArrayOf() {
+	codec := lexy.ArrayOf[[3]uint8](lexy.Uint[uint8]())
+	var buf bytes.Buffer
+	if err := codec.Write(&buf, [3]uint8{12, 0, 23}); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(decoded)
+	// Output:
+	// [12 0 23]
+}
+
+func ExamplePointerToArrayOf() {
+	codec := lexy.PointerToArrayOf[*[3]uint8](lexy.Uint[uint8]())
+	var buf bytes.Buffer
+	value := &[3]uint8{12, 0, 23}
+	if err := codec.Write(&buf, value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(decoded)
+	fmt.Println(value == decoded)
+	fmt.Println(*value == *decoded)
+	// Output:
+	// &[12 0 23]
+	// false
+	// true
+}
