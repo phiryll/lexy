@@ -420,3 +420,32 @@ func ExampleMapOf() {
 	// lexy_test.count
 	// true
 }
+
+func ExampleNegate() {
+	// Exactly the same as the lexy.Int() example, except negated.
+	codec := lexy.Negate(lexy.Int[int32]())
+	var buf bytes.Buffer
+	var encoded [][]byte
+	for _, value := range []int32{
+		math.MinInt32,
+		-1,
+		0,
+		1,
+		math.MaxInt32,
+	} {
+		buf.Reset()
+		if err := codec.Write(&buf, value); err != nil {
+			panic(err)
+		}
+		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+	}
+	// Verify the encodings are decreasing.
+	for i, b := range encoded[1:] {
+		fmt.Println(bytes.Compare(encoded[i], b))
+	}
+	// Output:
+	// 1
+	// 1
+	// 1
+	// 1
+}
