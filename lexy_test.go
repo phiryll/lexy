@@ -64,7 +64,7 @@ func ExampleAsUint64() {
 	// 4567890
 }
 
-func ExampleUint_underlying_type() {
+func ExampleUint_underlyingType() {
 	type size uint32
 	codec := lexy.Uint[size]()
 	var buf bytes.Buffer
