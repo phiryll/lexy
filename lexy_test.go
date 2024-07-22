@@ -358,3 +358,36 @@ func ExamplePointerToArrayOf() {
 	// false
 	// true
 }
+
+func ExampleSliceOf() {
+	type words []string
+	codec := lexy.SliceOf[words](lexy.String[string]())
+	var buf bytes.Buffer
+	if err := codec.Write(&buf, words{"The", "time", "is", "now"}); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T\n", decoded)
+	fmt.Println(decoded)
+	// Output:
+	// lexy_test.words
+	// [The time is now]
+}
+
+func ExampleBytes() {
+	codec := lexy.Bytes[[]byte]()
+	var buf bytes.Buffer
+	if err := codec.Write(&buf, []byte{1, 2, 3, 11, 17}); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(decoded)
+	// Output:
+	// [1 2 3 11 17]
+}
