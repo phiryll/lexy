@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/phiryll/lexy"
 )
@@ -214,4 +215,36 @@ func ExampleString() {
 	// Output:
 	// ""
 	// "Go rocks!"
+}
+
+func ExampleDuration() {
+	codec := lexy.Duration()
+	var buf bytes.Buffer
+	duration := time.Hour * 57
+	if err := codec.Write(&buf, duration); err != nil {
+		panic(err)
+	}
+	value, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(value)
+	// Output:
+	// 57h0m0s
+}
+
+func ExampleTime() {
+	codec := lexy.Time()
+	var buf bytes.Buffer
+	aTime := time.Date(2000, 1, 2, 3, 4, 5, 678_901_234, time.UTC)
+	if err := codec.Write(&buf, aTime); err != nil {
+		panic(err)
+	}
+	value, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(value.Format(time.RFC3339Nano))
+	// Output:
+	// 2000-01-02T03:04:05.678901234Z
 }
