@@ -60,6 +60,9 @@ var (
 // Terminate returns a Codec that uses codec, always escaping and terminating.
 // The returned Codec is not thread-safe, and MUST be created anew when used.
 func Terminate[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
 	return terminatorCodec[T]{codec: codec}
 }
 

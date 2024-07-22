@@ -95,6 +95,14 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 	return internal.NegateCodec(codec)
 }
 
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	return internal.Terminate(codec)
+}
+
+func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
+	return internal.TerminateIfNeeded(codec)
+}
+
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.
