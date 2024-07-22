@@ -11,8 +11,8 @@ func UintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] {
 	return uintCodec[T]{}
 }
 
-func AsUInt64Codec[T ~uint]() Codec[T] {
-	return asUInt64Codec[T]{}
+func AsUint64Codec[T ~uint]() Codec[T] {
+	return asUint64Codec[T]{}
 }
 
 func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
@@ -76,18 +76,18 @@ func (c uintCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-type asUInt64Codec[T ~uint] struct{}
+type asUint64Codec[T ~uint] struct{}
 
-func (c asUInt64Codec[T]) Read(r io.Reader) (T, error) {
+func (c asUint64Codec[T]) Read(r io.Reader) (T, error) {
 	value, err := uint64Codec.Read(r)
 	return T(value), err
 }
 
-func (c asUInt64Codec[T]) Write(w io.Writer, value T) error {
+func (c asUint64Codec[T]) Write(w io.Writer, value T) error {
 	return uint64Codec.Write(w, uint64(value))
 }
 
-func (c asUInt64Codec[T]) RequiresTerminator() bool {
+func (c asUint64Codec[T]) RequiresTerminator() bool {
 	return false
 }
 

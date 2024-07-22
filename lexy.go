@@ -24,7 +24,7 @@ type Codec[T any] interface {
 	//
 	// Read will read from r until either it has all the data it needs, or r stops returning data.
 	// r.Read is permitted to return only immediately available data instead of waiting for more.
-	// This may cause an error, or it may silently return incomplete data, depending on this Reader's imlementation.
+	// This may cause an error, or it may silently return incomplete data, depending on this Reader's implementation.
 	//
 	// Read may have to process data one byte at a time, so using a buffered io.Reader is recommended if appropriate.
 	// However, never create a buffered io.Reader wrapping the argument io.Reader within a Codec implementation.
@@ -62,9 +62,9 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
 
 func Bool[T ~bool]() Codec[T]                                { return internal.UintCodec[T]() }
-func UInt[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
+func Uint[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
 func Int[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T]      { return internal.IntCodec[T]() }
-func AsUInt64[T ~uint]() Codec[T]                            { return internal.AsUInt64Codec[T]() }
+func AsUint64[T ~uint]() Codec[T]                            { return internal.AsUint64Codec[T]() }
 func AsInt64[T ~int]() Codec[T]                              { return internal.AsInt64Codec[T]() }
 func Float32[T ~float32]() Codec[T]                          { return internal.Float32Codec[T]() }
 func Float64[T ~float64]() Codec[T]                          { return internal.Float64Codec[T]() }
