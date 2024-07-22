@@ -16,7 +16,7 @@ type pointerCodec[P ~*E, E any] struct {
 	elemCodec Codec[E]
 }
 
-func MakePointerCodec[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
+func PointerCodec[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}

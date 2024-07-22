@@ -32,7 +32,7 @@ type arrayCodec[A any, E any] struct {
 	delegate Codec[*A]
 }
 
-func MakePointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
+func PointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
 	pointerType := reflect.TypeFor[P]()
 	arrayType := reflect.TypeFor[A]()
 	elemType := reflect.TypeFor[E]()
@@ -48,8 +48,8 @@ func MakePointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
 	return pointerToArrayCodec[P, A, E]{pointerType, arrayType, elemCodec}
 }
 
-func MakeArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
-	return arrayCodec[A, E]{MakePointerToArrayCodec[*A, A, E](elemCodec)}
+func ArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
+	return arrayCodec[A, E]{PointerToArrayCodec[*A, A, E](elemCodec)}
 }
 
 func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {

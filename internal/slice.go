@@ -17,7 +17,7 @@ type sliceCodec[S ~[]E, E any] struct {
 	elemCodec Codec[E]
 }
 
-func MakeSliceCodec[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
+func SliceCodec[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}

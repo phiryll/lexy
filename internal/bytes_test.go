@@ -7,7 +7,7 @@ import (
 )
 
 func TestBytes(t *testing.T) {
-	codec := internal.MakeBytesCodec[[]byte]()
+	codec := internal.BytesCodec[[]byte]()
 	testCodec(t, codec, []testCase[[]byte]{
 		{"nil", nil, []byte{pNil}},
 		{"empty", []byte{}, []byte{empty}},
@@ -19,7 +19,7 @@ func TestBytes(t *testing.T) {
 
 func TestBytesUnderlyingType(t *testing.T) {
 	type header []byte
-	codec := internal.MakeBytesCodec[header]()
+	codec := internal.BytesCodec[header]()
 	testCodec(t, codec, []testCase[header]{
 		{"nil", header(nil), []byte{pNil}},
 		{"empty", header{}, []byte{empty}},

@@ -18,7 +18,7 @@ type mapCodec[M ~map[K]V, K comparable, V any] struct {
 	valueCodec Codec[V]
 }
 
-func MakeMapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	if keyCodec == nil {
 		panic("keyCodec must be non-nil")
 	}

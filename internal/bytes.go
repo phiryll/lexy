@@ -12,7 +12,7 @@ import (
 // This is more efficient than sliceCodec would be.
 type bytesCodec[S ~[]byte] struct{}
 
-func MakeBytesCodec[S ~[]byte]() Codec[S] {
+func BytesCodec[S ~[]byte]() Codec[S] {
 	return bytesCodec[S]{}
 }
 

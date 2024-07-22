@@ -14,8 +14,8 @@ import (
 var (
 	sCodec       = stringCodec
 	iCodec       = int32Codec
-	sliceCodec   = internal.MakeSliceCodec[[]string](sCodec)
-	pointerCodec = internal.MakePointerCodec[*string](sCodec)
+	sliceCodec   = internal.SliceCodec[[]string](sCodec)
+	pointerCodec = internal.PointerCodec[*string](sCodec)
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
@@ -58,17 +58,17 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.MakeMapCodec[map[string]int32](sCodec, iCodec))
+	testBasicMap(t, internal.MapCodec[map[string]int32](sCodec, iCodec))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, internal.MakeMapCodec[mStringInt](sCodec, iCodec))
+	testBasicMap(t, internal.MapCodec[mStringInt](sCodec, iCodec))
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := internal.MakeMapCodec[map[string][]string](sCodec, sliceCodec)
+	codec := internal.MapCodec[map[string][]string](sCodec, sliceCodec)
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -91,7 +91,7 @@ func TestMapSlice(t *testing.T) {
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the pointees into a new map and compare that.
-	codec := internal.MakeMapCodec[map[*string]*string](pointerCodec, pointerCodec)
+	codec := internal.MapCodec[map[*string]*string](pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},

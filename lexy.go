@@ -67,32 +67,32 @@ func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec }
 // Codecs that delegate to other Codecs.
 
 func PointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.MakePointerCodec[P](elemCodec)
+	return internal.PointerCodec[P](elemCodec)
 }
 
 func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {
-	return internal.MakeArrayCodec[A](elemCodec)
+	return internal.ArrayCodec[A](elemCodec)
 }
 
 func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.MakePointerToArrayCodec[P](elemCodec)
+	return internal.PointerToArrayCodec[P](elemCodec)
 }
 
 func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
-	return internal.MakeSliceCodec[S](elemCodec)
+	return internal.SliceCodec[S](elemCodec)
 }
 
 func Bytes[S ~[]byte]() Codec[S] {
-	return internal.MakeBytesCodec[S]()
+	return internal.BytesCodec[S]()
 }
 
 func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	return internal.MakeMapCodec[M](keyCodec, valueCodec)
+	return internal.MapCodec[M](keyCodec, valueCodec)
 }
 
 // Negate returns a new Codec reversing the encoding order produced by codec.
 func Negate[T any](codec Codec[T]) Codec[T] {
-	return internal.MakeNegateCodec(codec)
+	return internal.NegateCodec(codec)
 }
 
 // Encode returns value encoded using codec as a new []byte.

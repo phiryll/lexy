@@ -10,7 +10,7 @@ import (
 )
 
 func TestNegateInt32(t *testing.T) {
-	codec := internal.MakeNegateCodec(int32Codec)
+	codec := internal.NegateCodec(int32Codec)
 	testCodecRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
 		{"-1", -1, nil},
@@ -34,13 +34,13 @@ func TestNegateInt32(t *testing.T) {
 // The simple implementation is to simply invert all the bits, but it doesn't work.
 // This tests for that regression, see the comments on negateCodec for details.
 func TestNegateLength(t *testing.T) {
-	encode := encoderFor(internal.MakeNegateCodec(stringCodec))
+	encode := encoderFor(internal.NegateCodec(stringCodec))
 	assert.Less(t, encode("ab"), encode("a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
-	ptrCodec := internal.MakePointerCodec[*string](stringCodec)
-	codec := internal.MakeNegateCodec(ptrCodec)
+	ptrCodec := internal.PointerCodec[*string](stringCodec)
+	codec := internal.NegateCodec(ptrCodec)
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
 		{"*empty", ptr(""), nil},
@@ -58,11 +58,11 @@ func TestNegatePtrString(t *testing.T) {
 	})
 }
 
-var negPIntCodec = internal.MakeNegateCodec(internal.MakePointerCodec[*int16](int16Codec))
-var negStringCodec = internal.MakeNegateCodec(stringCodec)
-var ptrStringCodec = internal.MakePointerCodec[*string](stringCodec)
-var slicePtrStringCodec = internal.MakeSliceCodec[[]*string](ptrStringCodec)
-var negSlicePtrStringCodec = internal.MakeNegateCodec(slicePtrStringCodec)
+var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec))
+var negStringCodec = internal.NegateCodec(stringCodec)
+var ptrStringCodec = internal.PointerCodec[*string](stringCodec)
+var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec)
+var negSlicePtrStringCodec = internal.NegateCodec(slicePtrStringCodec)
 
 func TestNegateSlicePtrString(t *testing.T) {
 	codec := negSlicePtrStringCodec

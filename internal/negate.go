@@ -38,7 +38,7 @@ type negateCodec[T any] struct {
 	codec Codec[T]
 }
 
-func MakeNegateCodec[T any](codec Codec[T]) Codec[T] {
+func NegateCodec[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
 	}
