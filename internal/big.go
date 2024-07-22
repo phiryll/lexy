@@ -216,7 +216,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if err != nil {
 		return nil, err
 	}
-	mantBytes, err := unescape(mantReader)
+	mantBytes, err := doUnescape(mantReader)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		panic("unexpected failure while encoding big.Float")
 	}
 	mantBytes := mantInt.Bytes()
-	if _, err := escape(mantWriter, mantBytes); err != nil {
+	if _, err := doEscape(mantWriter, mantBytes); err != nil {
 		return err
 	}
 

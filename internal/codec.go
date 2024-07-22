@@ -75,16 +75,20 @@ func unexpectedIfEOF(err error) error {
 //	[][]string{{""}, {}}   => [0x00]
 //	[][]string{{""}, {""}} => [0x00]
 const (
-	PrefixNil      byte = 0x02
-	PrefixEmpty    byte = 0x03
-	PrefixNonEmpty byte = 0x04
+	prefixNil      byte = 0x02
+	prefixEmpty    byte = 0x03
+	prefixNonEmpty byte = 0x04
+
+	ExportForTestingPrefixNil      = prefixNil
+	ExportForTestingPrefixEmpty    = prefixEmpty
+	ExportForTestingPrefixNonEmpty = prefixNonEmpty
 )
 
 // Convenience byte slices.
 var (
-	prefixNil      = []byte{PrefixNil}
-	prefixEmpty    = []byte{PrefixEmpty}
-	prefixNonEmpty = []byte{PrefixNonEmpty}
+	pNil      = []byte{prefixNil}
+	pEmpty    = []byte{prefixEmpty}
+	pNonEmpty = []byte{prefixNonEmpty}
 )
 
 // Reads the prefix and handles nil and empty values.
@@ -112,7 +116,7 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 		return zero, true, io.ErrUnexpectedEOF
 	}
 	switch prefix[0] {
-	case PrefixNil:
+	case prefixNil:
 		if !nilable {
 			return zero, true, fmt.Errorf("read nil for non-nilable type %T", zero)
 		}
@@ -121,7 +125,7 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 			err = nil
 		}
 		return zero, true, err
-	case PrefixEmpty:
+	case prefixEmpty:
 		if err != nil && err != io.EOF {
 			return zero, true, err
 		}
@@ -130,7 +134,7 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 			return *emptyValue, true, nil
 		}
 		return zero, true, nil
-	case PrefixNonEmpty:
+	case prefixNonEmpty:
 		if err == io.EOF {
 			return zero, true, io.ErrUnexpectedEOF
 		}
@@ -158,14 +162,14 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 //	slice    Yes   Yes
 func writePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	if isNil != nil && isNil(value) {
-		_, err := w.Write(prefixNil)
+		_, err := w.Write(pNil)
 		return true, err
 	}
 	if isEmpty != nil && isEmpty(value) {
-		_, err := w.Write(prefixEmpty)
+		_, err := w.Write(pEmpty)
 		return true, err
 	}
-	if _, err := w.Write(prefixNonEmpty); err != nil {
+	if _, err := w.Write(pNonEmpty); err != nil {
 		return true, err
 	}
 	return false, nil

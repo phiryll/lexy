@@ -58,11 +58,11 @@ type testCase[T any] struct {
 
 // Just to make the test cases terser.
 const (
-	term     byte = internal.TerminatorByte
-	esc      byte = internal.EscapeByte
-	pNil     byte = internal.PrefixNil
-	empty    byte = internal.PrefixEmpty
-	nonEmpty byte = internal.PrefixNonEmpty
+	term      byte = internal.ExportForTestingTerminator
+	esc       byte = internal.ExportForTestingEscape
+	pNil      byte = internal.ExportForTestingPrefixNil
+	pEmpty    byte = internal.ExportForTestingPrefixEmpty
+	pNonEmpty byte = internal.ExportForTestingPrefixNonEmpty
 )
 
 // Tests:

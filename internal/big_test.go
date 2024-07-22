@@ -18,7 +18,7 @@ func newBigInt(s string) *big.Int {
 func TestBigInt(t *testing.T) {
 	codec := internal.BigIntCodec
 	encodeSize := encoderFor(int64Codec)
-	prefix := []byte{nonEmpty}
+	prefix := []byte{pNonEmpty}
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNil}},
 		{"-257", big.NewInt(-257), slices.Concat(prefix, encodeSize(-2),
