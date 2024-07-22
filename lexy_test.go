@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"math/big"
 	"time"
 
 	"github.com/phiryll/lexy"
@@ -247,4 +248,59 @@ func ExampleTime() {
 	fmt.Println(value.Format(time.RFC3339Nano))
 	// Output:
 	// 2000-01-02T03:04:05.678901234Z
+}
+
+func ExampleBigInt() {
+	codec := lexy.BigInt()
+	var buf bytes.Buffer
+	var value big.Int
+	value.SetString("-1234567890123456789012345678901234567890", 10)
+	if err := codec.Write(&buf, &value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(decoded)
+	// Output:
+	// -1234567890123456789012345678901234567890
+}
+
+func ExampleBigFloat() {
+	codec := lexy.BigFloat()
+	var buf bytes.Buffer
+	var value big.Float
+	value.SetString("-1.23456789e+50732")
+	if err := codec.Write(&buf, &value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(value.Cmp(decoded))
+	// Output:
+	// 0
+}
+
+func ExampleBigRat() {
+	codec := lexy.BigRat()
+	var buf bytes.Buffer
+	var value big.Rat
+	// value will be -832/6 in lowest terms
+	var num, denom big.Int
+	num.SetString("12345", 10)
+	denom.SetString("-90", 10)
+	value.SetFrac(&num, &denom)
+	if err := codec.Write(&buf, &value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(decoded)
+	// Output:
+	// -823/6
 }
