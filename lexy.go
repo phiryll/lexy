@@ -74,6 +74,10 @@ func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {
 	return internal.MakeArrayCodec[A](elemCodec)
 }
 
+func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
+	return internal.MakePointerToArrayCodec[P](elemCodec)
+}
+
 func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	return internal.MakeSliceCodec[S](elemCodec)
 }

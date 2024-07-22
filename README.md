@@ -48,12 +48,13 @@ Lexy can encode these types while preserving their natural ordering.
 * `[]byte`  
   This is a `Codec` optimized for byte slices, more efficient than a slice `Codec` would be.
   It differs from the `string` `Codec` in that a `[]byte` can be `nil`.
-* arrays  
+* arrays, pointers to arrays  
   Arrays are ordered lexicographically by their elements.
   For example,  
   `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`  
   Arrays of different sizes are different types in go, and will require different `Codecs`.
-  The `Codec` created by `lexy.ArrayOf` makes heavy use of reflection, and should be avoided if possible.
+  The `Codecs` created by `lexy.ArrayOf` and `lexy.PointerToArrayOf` make heavy use of reflection,
+  and should be avoided if possible.
   See the provided examples for how to create custom `Codecs`.
 
 Lexy can encode these types which either have no natural ordering,
