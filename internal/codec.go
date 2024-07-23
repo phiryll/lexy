@@ -5,23 +5,11 @@ import (
 	"io"
 )
 
-// Same interface as lexy.Reader, to avoid a circular dependency.
-// lexy.Reader cannot be a type alias to this, because generic type aliases are not permitted.
-type Reader[T any] interface {
-	Read(io.Reader) (T, error)
-}
-
-// Same interface as lexy.Writer, to avoid a circular dependency.
-// lexy.Writer cannot be a type alias to this, because generic type aliases are not permitted.
-type Writer[T any] interface {
-	Write(io.Writer, T) error
-}
-
 // Same interface as lexy.Codec, to avoid a circular dependency.
 // lexy.Codec cannot be a type alias to this, because generic type aliases are not permitted.
 type Codec[T any] interface {
-	Reader[T]
-	Writer[T]
+	Read(io.Reader) (T, error)
+	Write(io.Writer, T) error
 	RequiresTerminator() bool
 }
 
