@@ -18,7 +18,7 @@ func BytesCodec[S ~[]byte]() Codec[S] {
 
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 	empty := S{}
-	if value, done, err := readPrefix(r, true, &empty); done {
+	if value, done, err := ReadPrefix(r, true, &empty); done {
 		return value, err
 	}
 	var buf bytes.Buffer
@@ -34,7 +34,7 @@ func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 }
 
 func (c bytesCodec[S]) Write(w io.Writer, value S) error {
-	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
+	if done, err := WritePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
 	_, err := w.Write([]byte(value))

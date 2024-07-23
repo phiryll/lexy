@@ -34,7 +34,7 @@ var (
 type bigIntCodec struct{}
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if value, done, err := readPrefix[*big.Int](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Int](r, true, nil); done {
 		return value, err
 	}
 	neg := false
@@ -69,7 +69,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	neg := false
@@ -188,7 +188,7 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if value, done, err := readPrefix[*big.Float](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Float](r, true, nil); done {
 		return value, err
 	}
 	kind, err := int8Codec.Read(r)
@@ -249,7 +249,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 }
 
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
@@ -332,7 +332,7 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 type bigRatCodec struct{}
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if value, done, err := readPrefix[*big.Rat](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Rat](r, true, nil); done {
 		return value, err
 	}
 	num, err := BigIntCodec.Read(r)
@@ -348,7 +348,7 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 }
 
 func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	if err := BigIntCodec.Write(w, value.Num()); err != nil {

@@ -77,7 +77,7 @@ func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
 //	string   No    Yes
 //	pointer  Yes   No
 //	slice    Yes   Yes
-func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done bool, err error) {
+func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done bool, err error) {
 	// nil for types that can be nil (slices, maps, pointers)
 	// empty value for non-nil types that can be empty (string)
 	// non-nil, non-empty zero value otherwise (bool, int8, ...)
@@ -133,7 +133,7 @@ func readPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 //	string   No    Yes
 //	pointer  Yes   No
 //	slice    Yes   Yes
-func writePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+func WritePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	if isNil != nil && isNil(value) {
 		_, err := w.Write(pNil)
 		return true, err

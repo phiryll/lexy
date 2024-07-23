@@ -103,6 +103,14 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return internal.TerminateIfNeeded(codec)
 }
 
+func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done bool, err error) {
+	return internal.ReadPrefix(r, nilable, emptyValue)
+}
+
+func WritePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+	return internal.WritePrefix(w, isNil, isEmpty, value)
+}
+
 // Encode returns value encoded using codec as a new []byte.
 //
 // This is a convenience function.

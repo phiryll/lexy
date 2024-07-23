@@ -24,7 +24,7 @@ func StringCodec[T ~string]() Codec[T] {
 type stringCodec[T ~string] struct{}
 
 func (c stringCodec[T]) Read(r io.Reader) (T, error) {
-	if value, done, err := readPrefix[string](r, false, nil); done {
+	if value, done, err := ReadPrefix[string](r, false, nil); done {
 		return T(value), err
 	}
 	var buf strings.Builder
@@ -40,7 +40,7 @@ func (c stringCodec[T]) Read(r io.Reader) (T, error) {
 }
 
 func (c stringCodec[T]) Write(w io.Writer, value T) error {
-	if done, err := writePrefix(w, nil, isEmptyString, value); done {
+	if done, err := WritePrefix(w, nil, isEmptyString, value); done {
 		return err
 	}
 	_, err := io.WriteString(w, string(value))

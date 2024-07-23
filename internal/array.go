@@ -53,7 +53,7 @@ func ArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := readPrefix[P](r, true, nil); done {
+	if ptr, done, err := ReadPrefix[P](r, true, nil); done {
 		return ptr, err
 	}
 	ptrToPtrToArray := reflect.New(c.pointerType)
@@ -78,7 +78,7 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
-	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)

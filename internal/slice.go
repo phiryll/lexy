@@ -26,7 +26,7 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	empty := S{}
-	if value, done, err := readPrefix(r, true, &empty); done {
+	if value, done, err := ReadPrefix(r, true, &empty); done {
 		return value, err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)
@@ -48,7 +48,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 }
 
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
-	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
+	if done, err := WritePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)

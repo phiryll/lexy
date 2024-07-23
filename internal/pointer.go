@@ -24,7 +24,7 @@ func PointerCodec[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 }
 
 func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := readPrefix[P](r, true, nil); done {
+	if ptr, done, err := ReadPrefix[P](r, true, nil); done {
 		return ptr, err
 	}
 	value, err := c.elemCodec.Read(r)
@@ -35,7 +35,7 @@ func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerCodec[P, E]) Write(w io.Writer, value P) error {
-	if done, err := writePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
 		return err
 	}
 	return c.elemCodec.Write(w, *value)

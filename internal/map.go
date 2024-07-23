@@ -30,7 +30,7 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	empty := make(M)
-	if m, done, err := readPrefix(r, true, &empty); done {
+	if m, done, err := ReadPrefix(r, true, &empty); done {
 		return m, err
 	}
 	keyReader := TerminateIfNeeded(c.keyCodec)
@@ -57,7 +57,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 }
 
 func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
-	if done, err := writePrefix(w, isNilMap, isEmptyMap, value); done {
+	if done, err := WritePrefix(w, isNilMap, isEmptyMap, value); done {
 		return err
 	}
 	keyWriter := TerminateIfNeeded(c.keyCodec)
