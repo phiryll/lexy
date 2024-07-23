@@ -5,10 +5,6 @@ import (
 	"io"
 )
 
-func isNilPointer[T any](value *T) bool {
-	return value == nil
-}
-
 // Prefixes to use for encodings that would normally encode nil or an empty value as zero bytes.
 // The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
 // This is normally only an issue for variable length encodings.
@@ -41,6 +37,32 @@ var (
 	pEmpty    = []byte{prefixEmpty}
 	pNonEmpty = []byte{prefixNonEmpty}
 )
+
+func isNilPointer[T any](value *T) bool {
+	return value == nil
+}
+
+func isNilSlice[S ~[]E, E any](value S) bool {
+	return value == nil
+}
+
+func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
+	return value == nil
+}
+
+func isEmptyString[T ~string](s T) bool {
+	return len(s) == 0
+}
+
+func isEmptySlice[S ~[]E, E any](value S) bool {
+	// okay to be true for a nil slice, nil is tested first
+	return len(value) == 0
+}
+
+func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
+	// okay to be true for a nil map, nil is tested first
+	return len(value) == 0
+}
 
 // Reads the prefix and handles nil and empty values.
 // nilable should be true if and only if nil is an allowed value of type T.

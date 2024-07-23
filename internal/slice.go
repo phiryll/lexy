@@ -47,15 +47,6 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	return values, nil
 }
 
-func isNilSlice[S ~[]E, E any](value S) bool {
-	return value == nil
-}
-
-func isEmptySlice[S ~[]E, E any](value S) bool {
-	// okay to be true for a nil slice, nil is tested first
-	return len(value) == 0
-}
-
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
 	if done, err := writePrefix(w, isNilSlice, isEmptySlice, value); done {
 		return err

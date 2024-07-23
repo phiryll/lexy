@@ -28,15 +28,6 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 	return mapCodec[M, K, V]{keyCodec, valueCodec}
 }
 
-func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
-	return value == nil
-}
-
-func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
-	// okay to be true for a nil map, nil is tested first
-	return len(value) == 0
-}
-
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	empty := make(M)
 	if m, done, err := readPrefix(r, true, &empty); done {

@@ -39,10 +39,8 @@ func (c stringCodec[T]) Read(r io.Reader) (T, error) {
 	return T(buf.String()), nil
 }
 
-func isEmptyString(s string) bool { return len(s) == 0 }
-
 func (c stringCodec[T]) Write(w io.Writer, value T) error {
-	if done, err := writePrefix(w, nil, isEmptyString, string(value)); done {
+	if done, err := writePrefix(w, nil, isEmptyString, value); done {
 		return err
 	}
 	_, err := io.WriteString(w, string(value))
