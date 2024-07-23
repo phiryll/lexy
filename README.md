@@ -29,6 +29,9 @@ type Codec[T any] interface {
 }
 ```
 
+All `Codecs` provided by lexy are safe for concurrent use if their delegate `Codecs` (if any) are,
+except for `Codecs` created by `Terminate` and `TerminateIfNeeded`.
+
 Lexy provides `Codecs` for these types that preserve their natural ordering.
 
 * `bool`  

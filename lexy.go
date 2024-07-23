@@ -17,8 +17,8 @@ import (
 // The Read and Write methods should be lossless inverse operations.
 // Exceptions to these berhaviors should be clearly documented.
 //
-// All Codec implementations in lexy are thread-safe,
-// including the Codecs for pointers, slices, and maps if their delegate Codecs are thread-safe.
+// All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are,
+// except for Codecs created by Terminate and TerminateIfNeeded.
 type Codec[T any] interface {
 	// Read will read from r and decode a value of type T.
 	//
