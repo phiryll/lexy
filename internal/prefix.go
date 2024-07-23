@@ -50,18 +50,16 @@ func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value == nil
 }
 
-func isEmptyString[T ~string](s T) bool {
-	return len(s) == 0
+func isEmptyString[T ~string](value T) bool {
+	return len(value) == 0
 }
 
 func isEmptySlice[S ~[]E, E any](value S) bool {
-	// okay to be true for a nil slice, nil is tested first
-	return len(value) == 0
+	return value != nil && len(value) == 0
 }
 
 func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
-	// okay to be true for a nil map, nil is tested first
-	return len(value) == 0
+	return value != nil && len(value) == 0
 }
 
 // Reads the prefix and handles nil and empty values.

@@ -126,3 +126,27 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return internal.Decode(codec, data)
 }
+
+func IsNilPointer[T any](value *T) bool {
+	return value == nil
+}
+
+func IsNilSlice[S ~[]E, E any](value S) bool {
+	return value == nil
+}
+
+func IsNilMap[M ~map[K]V, K comparable, V any](value M) bool {
+	return value == nil
+}
+
+func IsEmptyString[T ~string](value T) bool {
+	return len(value) == 0
+}
+
+func IsEmptySlice[S ~[]E, E any](value S) bool {
+	return value != nil && len(value) == 0
+}
+
+func IsEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
+	return value != nil && len(value) == 0
+}
