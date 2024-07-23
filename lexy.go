@@ -32,14 +32,14 @@ type Codec[T any] interface {
 	// making any unused bytes unavailable for the next Read, preventing that Codec's use within an aggregate Codec.
 	Read(r io.Reader) (T, error)
 
-	// Writer will encode value and write the resulting bytes to w.
+	// Writer will encode value and write the encoded bytes to w.
 	//
 	// Write may have to process data one byte at a time, so using a buffered io.Writer is recommended if appropriate.
 	// If a buffered io.Writer is used within a Codec implementation, it must be flushed before returning from Write.
 	Write(w io.Writer, value T) error
 
 	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
-	// when used within an aggregate Codec (slice, map, or struct).
+	// when used within an aggregate Codec (for example, within a slice, map, or struct).
 	RequiresTerminator() bool
 }
 
