@@ -30,7 +30,7 @@ type Codec[T any] interface {
 ```
 
 All `Codecs` provided by lexy are safe for concurrent use if their delegate `Codecs` (if any) are,
-except for `Codecs` created by `Terminate` and `TerminateIfNeeded`.
+except for the `Codecs` created by `Terminate` and `TerminateIfNeeded`.
 
 Lexy provides `Codecs` for these types that preserve their natural ordering.
 
@@ -84,10 +84,11 @@ or whose natural ordering cannot be preserved while being encoded at full precis
 
 Lexy does not does not provide `Codecs` for these types, but a custom `Codec` is easy to create.
 
-* structs  
+* structs, pointers to structs  
   The inherent limitations of generic types and reflection in go make it impossible
   to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
-  Writing a custom `Codec` is a much simpler and safer alternative.
+  Writing a strongly-typed custom `Codec` is a much simpler and safer alternative,
+  and also prevents silently changing an encoding when the data type it encodes is changed.
 * `uintptr`  
   This type has an implementation-specific size.
 * functions

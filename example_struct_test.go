@@ -32,15 +32,15 @@ type SimpleStruct struct {
 	strings []string
 }
 
-func (a SimpleStruct) Equals(b SimpleStruct) bool {
+func (s SimpleStruct) Equals(other SimpleStruct) bool {
 	// NaN != NaN, even when they're the exact same bits.
-	return a.anInt == b.anInt &&
-		math.Float32bits(a.aFloat) == math.Float32bits(b.aFloat) &&
-		slices.Equal(a.strings, b.strings)
+	return s.anInt == other.anInt &&
+		math.Float32bits(s.aFloat) == math.Float32bits(other.aFloat) &&
+		slices.Equal(s.strings, other.strings)
 }
 
-func (a SimpleStruct) String() string {
-	return fmt.Sprintf("{%d %.2f %#v}", a.anInt, a.aFloat, a.strings)
+func (s SimpleStruct) String() string {
+	return fmt.Sprintf("{%d %.2f %#v}", s.anInt, s.aFloat, s.strings)
 }
 
 // Codecs used in these examples.
