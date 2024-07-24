@@ -111,22 +111,6 @@ func WritePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done
 	return internal.WritePrefix(w, isNil, isEmpty, value)
 }
 
-// Encode returns value encoded using codec as a new []byte.
-//
-// This is a convenience function.
-// Use Codec.Write when encoding multiple values to the same byte stream.
-func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	return internal.Encode(codec, value)
-}
-
-// Decode returns a decoded value from a []byte using codec.
-//
-// This is a convenience function.
-// Use Codec.Read when decoding multiple values from the same byte stream.
-func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	return internal.Decode(codec, data)
-}
-
 func IsNilPointer[T any](value *T) bool {
 	return value == nil
 }
@@ -149,4 +133,20 @@ func IsEmptySlice[S ~[]E, E any](value S) bool {
 
 func IsEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value != nil && len(value) == 0
+}
+
+// Encode returns value encoded using codec as a new []byte.
+//
+// This is a convenience function.
+// Use Codec.Write when encoding multiple values to the same byte stream.
+func Encode[T any](codec Codec[T], value T) ([]byte, error) {
+	return internal.Encode(codec, value)
+}
+
+// Decode returns a decoded value from a []byte using codec.
+//
+// This is a convenience function.
+// Use Codec.Read when decoding multiple values from the same byte stream.
+func Decode[T any](codec Codec[T], data []byte) (T, error) {
+	return internal.Decode(codec, data)
 }
