@@ -119,7 +119,7 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 	return false
 }
 
-func Example_simpleCustomCodec() {
+func Example_simpleStruct() {
 	structs := []SimpleStruct{
 		{1, 5.0, nil},
 		{-72, -37.54, []string{"w", "x", "y", "z"}},
