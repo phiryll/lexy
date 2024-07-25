@@ -79,7 +79,7 @@ func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
 }
 
 func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
-	return internal.SliceCodec[S](elemCodec)
+	return internal.SliceCodec[S](elemCodec, true)
 }
 
 func Bytes[S ~[]byte]() Codec[S] {

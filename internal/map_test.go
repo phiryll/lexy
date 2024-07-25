@@ -14,7 +14,7 @@ import (
 var (
 	sCodec       = stringCodec
 	iCodec       = int32Codec
-	sliceCodec   = internal.SliceCodec[[]string](sCodec)
+	sliceCodec   = internal.SliceCodec[[]string](sCodec, true)
 	pointerCodec = internal.PointerCodec[*string](sCodec, true)
 )
 

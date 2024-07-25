@@ -61,7 +61,7 @@ func TestNegatePtrString(t *testing.T) {
 var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec, true))
 var negStringCodec = internal.NegateCodec(stringCodec)
 var ptrStringCodec = internal.PointerCodec[*string](stringCodec, true)
-var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec)
+var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec, true)
 var negSlicePtrStringCodec = internal.NegateCodec(slicePtrStringCodec)
 
 func TestNegateSlicePtrString(t *testing.T) {

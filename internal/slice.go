@@ -14,14 +14,15 @@ import (
 //
 // Encoded elements are escaped and termninated if elemCodec requires it.
 type sliceCodec[S ~[]E, E any] struct {
-	elemCodec Codec[E]
+	elemCodec   Codec[E]
+	writePrefix prefixWriter[S]
 }
 
-func SliceCodec[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
+func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return sliceCodec[S, E]{elemCodec}
+	return sliceCodec[S, E]{elemCodec, getPrefixWriter[S](isNilSlice, isEmptySlice, nilsFirst)}
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
@@ -48,7 +49,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 }
 
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
-	if done, err := WritePrefixNilsFirst(w, isNilSlice, isEmptySlice, value); done {
+	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)

@@ -40,7 +40,7 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
-	sliceCodec := internal.SliceCodec[[]int32](int32Codec)
+	sliceCodec := internal.SliceCodec[[]int32](int32Codec, true)
 	codec := internal.PointerCodec[*[]int32](sliceCodec, true)
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},

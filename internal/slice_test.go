@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSliceInt32(t *testing.T) {
-	codec := internal.SliceCodec[[]int32](int32Codec)
+	codec := internal.SliceCodec[[]int32](int32Codec, true)
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []int32{}, []byte{pEmpty}},
@@ -24,7 +25,7 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
-	codec := internal.SliceCodec[[]string](stringCodec)
+	codec := internal.SliceCodec[[]string](stringCodec, true)
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []string{}, []byte{pEmpty}},
@@ -42,7 +43,7 @@ func TestSliceString(t *testing.T) {
 
 func TestSlicePtrString(t *testing.T) {
 	pointerCodec := internal.PointerCodec[*string](stringCodec, true)
-	codec := internal.SliceCodec[[]*string](pointerCodec)
+	codec := internal.SliceCodec[[]*string](pointerCodec, true)
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*string{}, []byte{pEmpty}},
@@ -60,8 +61,8 @@ func TestSlicePtrString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
-	sliceCodec := internal.SliceCodec[[]int32](int32Codec)
-	codec := internal.SliceCodec[[][]int32](sliceCodec)
+	sliceCodec := internal.SliceCodec[[]int32](int32Codec, true)
+	codec := internal.SliceCodec[[][]int32](sliceCodec, true)
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]int32{}, []byte{pEmpty}},
@@ -95,8 +96,8 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
-	sliceCodec := internal.SliceCodec[[]string](stringCodec)
-	codec := internal.SliceCodec[[][]string](sliceCodec)
+	sliceCodec := internal.SliceCodec[[]string](stringCodec, true)
+	codec := internal.SliceCodec[[][]string](sliceCodec, true)
 
 	testCodec(t, codec, []testCase[[][]string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -181,7 +182,7 @@ func TestSliceSliceString(t *testing.T) {
 type sInt []int32
 
 func TestSliceUnderlyingType(t *testing.T) {
-	codec := internal.SliceCodec[sInt](int32Codec)
+	codec := internal.SliceCodec[sInt](int32Codec, true)
 	testCodec(t, codec, []testCase[sInt]{
 		{"nil", sInt(nil), []byte{pNilFirst}},
 		{"empty", sInt([]int32{}), []byte{pEmpty}},
@@ -195,4 +196,25 @@ func TestSliceUnderlyingType(t *testing.T) {
 		}},
 	})
 	testCodecFail(t, codec, []int32{})
+}
+
+func TestSliceNilsLast(t *testing.T) {
+	encodeFirst := encoderFor(internal.SliceCodec[[]int32](int32Codec, true))
+	encodeLast := encoderFor(internal.SliceCodec[[]int32](int32Codec, false))
+	assert.IsIncreasing(t, [][]byte{
+		encodeFirst(nil),
+		encodeFirst([]int32{-100, 5}),
+		encodeFirst([]int32{0}),
+		encodeFirst([]int32{0, 0, 0}),
+		encodeFirst([]int32{0, 1}),
+		encodeFirst([]int32{35}),
+	})
+	assert.IsIncreasing(t, [][]byte{
+		encodeLast([]int32{-100, 5}),
+		encodeLast([]int32{0}),
+		encodeLast([]int32{0, 0, 0}),
+		encodeLast([]int32{0, 1}),
+		encodeLast([]int32{35}),
+		encodeLast(nil),
+	})
 }
