@@ -8,9 +8,9 @@ import (
 // Use MakeMapCodec(Codec[K], Codec[V], bool) to create a new mapCodec.
 // A map is encoded as:
 //
-// - if nil, PrefixNil
-// - if empty, PrefixEmpty
-// - if non-empty, PrefixNonEmpty, encoded key, encoded value, encoded key, ...
+// - if nil, prefixNilFirst/Last
+// - if empty, prefixEmpty
+// - if non-empty, prefixNonEmpty, encoded key, encoded value, encoded key, ...
 //
 // Encoded keys and values are escaped and termninated if their respective Codecs require it.
 type mapCodec[M ~map[K]V, K comparable, V any] struct {

@@ -8,8 +8,8 @@ import (
 // Use MakePointerCodec[P](Codec[E]) for P with underlying type *E to create a new pointerCodec.
 // A pointer is encoded as:
 //
-// - if nil, PrefixNil
-// - if non-nil, PrefixNonEmpty followed by its encoded pointee
+// - if nil, prefixNilFirst/Last
+// - if non-nil, prefixNonEmpty followed by its encoded pointee
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
 type pointerCodec[P ~*E, E any] struct {

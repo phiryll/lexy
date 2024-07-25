@@ -14,8 +14,8 @@ var (
 //
 // Values are encoded using this logic:
 //
-//	write PrefixNil if value is nil and return immediately
-//	write PrefixNonEmpty
+//	write prefixNilFirst/Last if value is nil and return immediately
+//	write prefixNonEmpty
 //	b := value.Bytes() // absolute value as a big-endian byte slice
 //	size := len(b)
 //	if value < 0 {
@@ -149,8 +149,8 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //
 // Encode:
 //
-//	write PrefixNil if value is nil and return immediately
-//	write PrefixNonEmpty
+//	write prefixNilFirst/Last if value is nil and return immediately
+//	write prefixNonEmpty
 //	write int8: -3/-2/-1/+1/+2/+3 for
 //		-Inf / (-Inf,0) / -0 / +0 / (0,+Inf) / +Inf
 //	if infinite or zero, we're done
@@ -172,7 +172,7 @@ func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
 }
 
 // The second byte written in the *big.Float encoding after the initial
-// PrefixNonEmpty byte if non-nil.
+// prefixNonEmpty byte if non-nil.
 const (
 	negInf       int8 = -3
 	negFinite    int8 = -2
@@ -336,8 +336,8 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 //
 // Values are encoded using this logic:
 //
-//	write PrefixNil if value is nil and return immediately
-//	write PrefixNonEmpty
+//	write prefixNilFirst/Last if value is nil and return immediately
+//	write prefixNonEmpty
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
