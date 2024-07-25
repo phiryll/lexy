@@ -122,7 +122,9 @@ Lexy provides `Codecs` for these types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
 
 * maps  
-  Maps and their encodings are inherently randomly ordered.
+  `nil` can be less than or greater than all non-`nil` maps.
+  Empty maps are always less than non-empty maps.
+  Non-empty maps are randomly ordered.
 * `complex64`, `complex128`  
   The encoded order is real part first, imaginary part second.
 * `*math.big.Rat`  
