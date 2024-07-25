@@ -44,26 +44,29 @@ Lexy provides `Codecs` for these types that preserve their natural ordering.
 * `int8`, `int16`, `int32` (aka `rune`), `int64`
 * `float32`, `float64`
 * `*math.big.Int`  
-  `nil` is less than all non-`nil` values.
+  `nil` can be less than or greater than all non-`nil` values.
 * `*math.big.Float`  
-  `nil` is less than all non-`nil` values.
+  `nil` can be less than or greater than all non-`nil` values.
 * `string`
 * `time.Time`  
   Instances are ordered by UTC time first, timezone offset (at that instant) second.
 * `time.Duration`
 * pointers  
-  `nil` is less than all non-`nil` values.
+  `nil` can be less than or greater than all non-`nil` values.
 * slices  
+  `nil` can be less than or greater than all non-`nil` values.
   Slices are ordered lexicographically by their elements.
   For example,  
   `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
 * `[]byte`  
+  `nil` can be less than or greater than all non-`nil` values.
   This `Codec` is optimized for byte slices, and is more efficient than a slice `Codec` would be.
   It differs from the `string` `Codec` in that a `[]byte` can be `nil`.
 * arrays, pointers to arrays  
   Arrays are ordered lexicographically by their elements.
   For example,  
   `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`  
+  `nil` can be less than or greater than all non-`nil` values for the pointer-to-array `Codec`.
   Arrays of different sizes are different types in go, and will require different `Codecs`.
   The `Codecs` created by `lexy.ArrayOf` and `lexy.PointerToArrayOf` make heavy use of reflection,
   and should be avoided if possible.
@@ -77,7 +80,7 @@ or whose natural ordering cannot be preserved while being encoded at full precis
 * `complex64`, `complex128`  
   The encoded order is real part first, imaginary part second.
 * `*math.big.Rat`  
-  `nil` is less than all non-`nil` values.
+  `nil` can be less than or greater than all non-`nil` values.
   The encoded order for non-`nil` values is signed numerator first, positive denominator second.
   There is no way to finitely encode rational numbers with a lexicographical order that isn't lossy.
   A lossy approximation can be made by converting to (possibly rounded) `big.Floats` and encoding those.
