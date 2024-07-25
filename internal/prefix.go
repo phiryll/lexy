@@ -41,7 +41,7 @@ var (
 	pNilLast  = []byte{prefixNilLast}
 )
 
-func isNilPointer[T any](value *T) bool {
+func isNilPointer[P ~*E, E any](value P) bool {
 	return value == nil
 }
 

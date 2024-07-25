@@ -115,7 +115,7 @@ func WritePrefixNilLast[T any](w io.Writer, isNil, isEmpty func(T) bool, value T
 	return internal.WritePrefixNilsLast(w, isNil, isEmpty, value)
 }
 
-func IsNilPointer[T any](value *T) bool {
+func IsNilPointer[P ~*E, E any](value P) bool {
 	return value == nil
 }
 
