@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytes(t *testing.T) {
-	codec := internal.BytesCodec[[]byte]()
+	codec := internal.BytesCodec[[]byte](true)
 	testCodec(t, codec, []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []byte{}, []byte{pEmpty}},
@@ -19,7 +20,7 @@ func TestBytes(t *testing.T) {
 
 func TestBytesUnderlyingType(t *testing.T) {
 	type header []byte
-	codec := internal.BytesCodec[header]()
+	codec := internal.BytesCodec[header](true)
 	testCodec(t, codec, []testCase[header]{
 		{"nil", header(nil), []byte{pNilFirst}},
 		{"empty", header{}, []byte{pEmpty}},
@@ -27,4 +28,23 @@ func TestBytesUnderlyingType(t *testing.T) {
 		{"[1, 2, 3]", header{1, 2, 3}, []byte{pNonEmpty, 0x01, 0x02, 0x03}},
 	})
 	testCodecFail(t, codec, header{0})
+}
+
+func TestBytesNilsLast(t *testing.T) {
+	encodeFirst := encoderFor(internal.BytesCodec[[]byte](true))
+	encodeLast := encoderFor(internal.BytesCodec[[]byte](false))
+	assert.IsIncreasing(t, [][]byte{
+		encodeFirst(nil),
+		encodeFirst([]byte{0}),
+		encodeFirst([]byte{0, 0, 0}),
+		encodeFirst([]byte{0, 1}),
+		encodeFirst([]byte{35}),
+	})
+	assert.IsIncreasing(t, [][]byte{
+		encodeLast([]byte{0}),
+		encodeLast([]byte{0, 0, 0}),
+		encodeLast([]byte{0, 1}),
+		encodeLast([]byte{35}),
+		encodeLast(nil),
+	})
 }

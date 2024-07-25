@@ -83,11 +83,11 @@ func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 }
 
 func Bytes[S ~[]byte]() Codec[S] {
-	return internal.BytesCodec[S]()
+	return internal.BytesCodec[S](true)
 }
 
 func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	return internal.MapCodec[M](keyCodec, valueCodec)
+	return internal.MapCodec[M](keyCodec, valueCodec, true)
 }
 
 // Negate returns a new Codec reversing the encoding order produced by codec.

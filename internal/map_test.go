@@ -58,17 +58,17 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[map[string]int32](sCodec, iCodec))
+	testBasicMap(t, internal.MapCodec[map[string]int32](sCodec, iCodec, true))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[mStringInt](sCodec, iCodec))
+	testBasicMap(t, internal.MapCodec[mStringInt](sCodec, iCodec, true))
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := internal.MapCodec[map[string][]string](sCodec, sliceCodec)
+	codec := internal.MapCodec[map[string][]string](sCodec, sliceCodec, true)
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -91,7 +91,7 @@ func TestMapSlice(t *testing.T) {
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the pointees into a new map and compare that.
-	codec := internal.MapCodec[map[*string]*string](pointerCodec, pointerCodec)
+	codec := internal.MapCodec[map[*string]*string](pointerCodec, pointerCodec, true)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},
@@ -119,4 +119,20 @@ func TestMapPointerPointer(t *testing.T) {
 			assert.Equal(t, dePointerMap(tt.value), dePointerMap(got))
 		})
 	}
+}
+
+func TestMapNilsLast(t *testing.T) {
+	// Maps are randomly ordered, so we can only test nil/empty/non-empty.
+	encodeFirst := encoderFor(internal.MapCodec[map[string]int32](sCodec, iCodec, true))
+	encodeLast := encoderFor(internal.MapCodec[map[string]int32](sCodec, iCodec, false))
+	assert.IsIncreasing(t, [][]byte{
+		encodeFirst(nil),
+		encodeFirst(map[string]int32{}),
+		encodeFirst(map[string]int32{"a": 0}),
+	})
+	assert.IsIncreasing(t, [][]byte{
+		encodeLast(map[string]int32{}),
+		encodeLast(map[string]int32{"a": 0}),
+		encodeLast(nil),
+	})
 }
