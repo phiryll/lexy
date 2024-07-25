@@ -6,9 +6,8 @@ import (
 )
 
 var (
-	BigIntCodec   Codec[*big.Int]   = bigIntCodec{}
-	BigFloatCodec Codec[*big.Float] = bigFloatCodec{}
-	BigRatCodec   Codec[*big.Rat]   = bigRatCodec{}
+	// used by bigRatCodec
+	bIntCodec = BigIntCodec(true)
 )
 
 // bigIntCodec is the Codec for *big.Int values.
@@ -31,7 +30,13 @@ var (
 // and the big-endian bytes for the value (bits flipped for negative values) the secondary sort key.
 // The effect is that longer numbers will be ordered closer to +/-infinity.
 // This works because bigInt.Bytes() will never have a leading zero byte.
-type bigIntCodec struct{}
+type bigIntCodec struct {
+	writePrefix prefixWriter[*big.Int]
+}
+
+func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
+	return bigIntCodec{getPrefixWriter[*big.Int](isNilPointer, nil, nilsFirst)}
+}
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	if value, done, err := ReadPrefix[*big.Int](r, true, nil); done {
@@ -69,7 +74,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
+	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
 	neg := false
@@ -158,7 +163,13 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //	write int32 precision
 //		negate precision first if Float is negative
 //	write uint8 rounding mode
-type bigFloatCodec struct{}
+type bigFloatCodec struct {
+	writePrefix prefixWriter[*big.Float]
+}
+
+func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
+	return bigFloatCodec{getPrefixWriter[*big.Float](isNilPointer, nil, nilsFirst)}
+}
 
 // The second byte written in the *big.Float encoding after the initial
 // PrefixNonEmpty byte if non-nil.
@@ -249,7 +260,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 }
 
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
+	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
@@ -329,17 +340,23 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 //	write PrefixNonEmpty
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
-type bigRatCodec struct{}
+type bigRatCodec struct {
+	writePrefix prefixWriter[*big.Rat]
+}
+
+func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
+	return bigRatCodec{getPrefixWriter[*big.Rat](isNilPointer, nil, nilsFirst)}
+}
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if value, done, err := ReadPrefix[*big.Rat](r, true, nil); done {
 		return value, err
 	}
-	num, err := BigIntCodec.Read(r)
+	num, err := bIntCodec.Read(r)
 	if err != nil {
 		return nil, unexpectedIfEOF(err)
 	}
-	denom, err := BigIntCodec.Read(r)
+	denom, err := bIntCodec.Read(r)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -348,13 +365,13 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 }
 
 func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
+	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
-	if err := BigIntCodec.Write(w, value.Num()); err != nil {
+	if err := bIntCodec.Write(w, value.Num()); err != nil {
 		return err
 	}
-	return BigIntCodec.Write(w, value.Denom())
+	return bIntCodec.Write(w, value.Denom())
 }
 
 func (c bigRatCodec) RequiresTerminator() bool {

@@ -60,9 +60,9 @@ func Duration() Codec[time.Duration]                         { return internal.I
 // Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
 
 func Time() Codec[time.Time]      { return internal.TimeCodec }
-func BigInt() Codec[*big.Int]     { return internal.BigIntCodec }
-func BigFloat() Codec[*big.Float] { return internal.BigFloatCodec }
-func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec }
+func BigInt() Codec[*big.Int]     { return internal.BigIntCodec(true) }
+func BigFloat() Codec[*big.Float] { return internal.BigFloatCodec(true) }
+func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec(true) }
 
 // Codecs that delegate to other Codecs.
 
