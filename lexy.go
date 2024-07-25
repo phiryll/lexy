@@ -39,7 +39,7 @@ type Codec[T any] interface {
 	Write(w io.Writer, value T) error
 
 	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
-	// when used within an aggregate Codec (for example, within a slice, map, or struct).
+	// when used within an aggregate Codec (for example, within a slice, map, or struct Codec).
 	RequiresTerminator() bool
 }
 

@@ -24,8 +24,54 @@ type Codec[T any] interface {
 
     // RequiresTerminator returns whether this Codec requires a terminator
     // (and therefore escaping) when used within an aggregate Codec
-    // (for example, within a slice, map, or struct).
+    // (for example, within a slice, map, or struct Codec).
     RequiresTerminator() bool
+}
+```
+
+A typical use might look something like this:
+
+```go
+type Word string
+type Key []Word
+type Value struct {
+  // ...
+}
+
+// keyCodec is safe for concurrent use.
+var keyCodec = lexy.SliceOf[Key](lexy.String[Word]())
+
+// lexy could be used here, but it's overkill if ordered Values aren't needed.
+func EncodeValue(v *Value) ([]byte, error) { /* ... */ }
+func DecodeValue(b []byte) (*Value, error) { /* ... */ }
+
+type KeyValueDB struct {
+    providerDB *provider.DB
+    // ...
+}
+
+func (db *KeyValueDB) Put(key Key, value *Value) error {
+    var buf bytes.Buffer
+    if err := keyCodec.Write(&buf, key); err != nil {
+        return err
+    }
+    valueBytes, err := EncodeValue(value)
+    if err != nil {
+        return err
+    }
+    return db.providerDB.Put(buf.Bytes(), valueBytes)
+}
+
+func (db *KeyValueDB) Get(key Key) (*Value, error) {
+    var buf bytes.Buffer
+    if err := keyCodec.Write(&buf, key); err != nil {
+        return nil, err
+    }
+    valueBytes, err := db.providerDB.Get(buf.Bytes())
+    if err != nil {
+        return nil, err
+    }
+    return DecodeValue(valueBytes)
 }
 ```
 
