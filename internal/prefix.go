@@ -121,6 +121,21 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 	}
 }
 
+// The signature of WritePrefixNilsFirst/Last without the isNil and isEmpty arguments.
+// Used to simplify code using getPrefixWriter below.
+type prefixWriter[T any] func(w io.Writer, value T) (done bool, err error)
+
+func getPrefixWriter[T any](isNil, isEmpty func(T) bool, nilsFirst bool) prefixWriter[T] {
+	if nilsFirst {
+		return func(w io.Writer, value T) (done bool, err error) {
+			return WritePrefixNilsFirst(w, isNil, isEmpty, value)
+		}
+	}
+	return func(w io.Writer, value T) (done bool, err error) {
+		return WritePrefixNilsLast(w, isNil, isEmpty, value)
+	}
+}
+
 // Writes the correct prefix for value, with nils ordered first.
 // isNil or isEmpty should be non-nil if type T allows nil or empty values respectively.
 // isEmpty is used after isNil, so isEmpty can also return true for nil values.
