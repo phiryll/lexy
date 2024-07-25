@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArrayInt32(t *testing.T) {
@@ -73,7 +74,7 @@ func TestArrayArrayInt32(t *testing.T) {
 }
 
 func TestPtrToArrayInt32(t *testing.T) {
-	codec := internal.PointerToArrayCodec[*[5]int32](int32Codec)
+	codec := internal.PointerToArrayCodec[*[5]int32](int32Codec, true)
 	testCodec(t, codec, []testCase[*[5]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", &[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}, []byte{
@@ -87,7 +88,7 @@ func TestPtrToArrayInt32(t *testing.T) {
 	})
 	testCodecFail(t, codec, &[5]int32{1, 2, 3, 4, 5})
 
-	codecEmpty := internal.PointerToArrayCodec[*[0]int32](int32Codec)
+	codecEmpty := internal.PointerToArrayCodec[*[0]int32](int32Codec, true)
 	testCodec(t, codecEmpty, []testCase[*[0]int32]{
 		{"[]", &[0]int32{}, []byte{pNonEmpty}},
 	})
@@ -95,7 +96,7 @@ func TestPtrToArrayInt32(t *testing.T) {
 
 func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
 	type aType *[5]int32
-	codec := internal.PointerToArrayCodec[aType](int32Codec)
+	codec := internal.PointerToArrayCodec[aType](int32Codec, true)
 	testCodec(t, codec, []testCase[aType]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", aType(&[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}), []byte{
@@ -111,7 +112,7 @@ func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
 }
 
 func TestArrayPtrToArrayInt32(t *testing.T) {
-	rowCodec := internal.PointerToArrayCodec[*[5]int32](int32Codec)
+	rowCodec := internal.PointerToArrayCodec[*[5]int32](int32Codec, true)
 	codec := internal.ArrayCodec[[3]*[5]int32](rowCodec)
 	testCodec(t, codec, []testCase[[3]*[5]int32]{
 		{"[[0, 1, -1, min, max], nil, [-2, -2, -2, -2, -2]]",
@@ -147,5 +148,22 @@ func TestArrayPtrToArrayInt32(t *testing.T) {
 		{1, 2, 3, 4, 5},
 		{1, 2, 3, 4, 5},
 		{1, 2, 3, 4, 5},
+	})
+}
+
+func TestPointerToArrayNilsLast(t *testing.T) {
+	encodeFirst := encoderFor(internal.PointerToArrayCodec[*[1]int32](int32Codec, true))
+	encodeLast := encoderFor(internal.PointerToArrayCodec[*[1]int32](int32Codec, false))
+	assert.IsIncreasing(t, [][]byte{
+		encodeFirst(nil),
+		encodeFirst(&[1]int32{-100}),
+		encodeFirst(&[1]int32{0}),
+		encodeFirst(&[1]int32{35}),
+	})
+	assert.IsIncreasing(t, [][]byte{
+		encodeLast(&[1]int32{-100}),
+		encodeLast(&[1]int32{0}),
+		encodeLast(&[1]int32{35}),
+		encodeLast(nil),
 	})
 }
