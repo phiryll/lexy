@@ -59,15 +59,22 @@ func Duration() Codec[time.Duration]                         { return internal.I
 
 // Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
 
-func Time() Codec[time.Time]      { return internal.TimeCodec }
-func BigInt() Codec[*big.Int]     { return internal.BigIntCodec(true) }
-func BigFloat() Codec[*big.Float] { return internal.BigFloatCodec(true) }
-func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec(true) }
+func Time() Codec[time.Time]              { return internal.TimeCodec }
+func BigInt() Codec[*big.Int]             { return internal.BigIntCodec(true) }
+func BigIntNilsLast() Codec[*big.Int]     { return internal.BigIntCodec(false) }
+func BigFloat() Codec[*big.Float]         { return internal.BigFloatCodec(true) }
+func BigFloatNilsLast() Codec[*big.Float] { return internal.BigFloatCodec(false) }
+func BigRat() Codec[*big.Rat]             { return internal.BigRatCodec(true) }
+func BigRatNilsLast() Codec[*big.Rat]     { return internal.BigRatCodec(false) }
 
 // Codecs that delegate to other Codecs.
 
 func PointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	return internal.PointerCodec[P](elemCodec, true)
+}
+
+func PointerToNilsLast[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
+	return internal.PointerCodec[P](elemCodec, false)
 }
 
 func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {
@@ -78,16 +85,32 @@ func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
 	return internal.PointerToArrayCodec[P](elemCodec, true)
 }
 
+func PointerToArrayOfNilsLast[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
+	return internal.PointerToArrayCodec[P](elemCodec, false)
+}
+
 func SliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	return internal.SliceCodec[S](elemCodec, true)
+}
+
+func SliceOfNilsLast[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
+	return internal.SliceCodec[S](elemCodec, false)
 }
 
 func Bytes[S ~[]byte]() Codec[S] {
 	return internal.BytesCodec[S](true)
 }
 
+func BytesNilsLast[S ~[]byte]() Codec[S] {
+	return internal.BytesCodec[S](false)
+}
+
 func MapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	return internal.MapCodec[M](keyCodec, valueCodec, true)
+}
+
+func MapOfNilsLast[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+	return internal.MapCodec[M](keyCodec, valueCodec, false)
 }
 
 // Negate returns a new Codec reversing the encoding order produced by codec.
