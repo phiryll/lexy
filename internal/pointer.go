@@ -13,14 +13,15 @@ import (
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
 type pointerCodec[P ~*E, E any] struct {
-	elemCodec Codec[E]
+	elemCodec   Codec[E]
+	writePrefix prefixWriter[P]
 }
 
-func PointerCodec[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
+func PointerCodec[P ~*E, E any](elemCodec Codec[E], nilsFirst bool) Codec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return pointerCodec[P, E]{elemCodec}
+	return pointerCodec[P, E]{elemCodec, getPrefixWriter[P](isNilPointer, nil, nilsFirst)}
 }
 
 func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
@@ -35,7 +36,7 @@ func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerCodec[P, E]) Write(w io.Writer, value P) error {
-	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
+	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
 	return c.elemCodec.Write(w, *value)

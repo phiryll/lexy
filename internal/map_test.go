@@ -15,7 +15,7 @@ var (
 	sCodec       = stringCodec
 	iCodec       = int32Codec
 	sliceCodec   = internal.SliceCodec[[]string](sCodec)
-	pointerCodec = internal.PointerCodec[*string](sCodec)
+	pointerCodec = internal.PointerCodec[*string](sCodec, true)
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {

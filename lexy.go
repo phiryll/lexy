@@ -67,7 +67,7 @@ func BigRat() Codec[*big.Rat]     { return internal.BigRatCodec }
 // Codecs that delegate to other Codecs.
 
 func PointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.PointerCodec[P](elemCodec)
+	return internal.PointerCodec[P](elemCodec, true)
 }
 
 func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {

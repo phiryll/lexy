@@ -122,7 +122,7 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 }
 
 // The signature of WritePrefixNilsFirst/Last without the isNil and isEmpty arguments.
-// Used to simplify code using getPrefixWriter below.
+// Used to simplify code using getPrefixWriter below, see pointer.go for a usage example.
 type prefixWriter[T any] func(w io.Writer, value T) (done bool, err error)
 
 func getPrefixWriter[T any](isNil, isEmpty func(T) bool, nilsFirst bool) prefixWriter[T] {

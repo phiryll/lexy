@@ -39,7 +39,7 @@ func TestNegateLength(t *testing.T) {
 }
 
 func TestNegatePtrString(t *testing.T) {
-	ptrCodec := internal.PointerCodec[*string](stringCodec)
+	ptrCodec := internal.PointerCodec[*string](stringCodec, true)
 	codec := internal.NegateCodec(ptrCodec)
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
@@ -58,9 +58,9 @@ func TestNegatePtrString(t *testing.T) {
 	})
 }
 
-var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec))
+var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec, true))
 var negStringCodec = internal.NegateCodec(stringCodec)
-var ptrStringCodec = internal.PointerCodec[*string](stringCodec)
+var ptrStringCodec = internal.PointerCodec[*string](stringCodec, true)
 var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec)
 var negSlicePtrStringCodec = internal.NegateCodec(slicePtrStringCodec)
 
