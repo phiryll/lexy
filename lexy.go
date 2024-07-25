@@ -107,11 +107,11 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 	return internal.ReadPrefix(r, nilable, emptyValue)
 }
 
-func WritePrefixNilFirst[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+func WritePrefixNilsFirst[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	return internal.WritePrefixNilsFirst(w, isNil, isEmpty, value)
 }
 
-func WritePrefixNilLast[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+func WritePrefixNilsLast[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	return internal.WritePrefixNilsLast(w, isNil, isEmpty, value)
 }
 

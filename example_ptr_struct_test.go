@@ -76,7 +76,7 @@ func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	// in which case a prefix denoting "nil" or "empty" has already been written.
 	// The third argument is an isEmpty? function, like lexy.IsEmptySlice.
 	// Pointers cannot be empty, so nil is passed here.
-	if done, err := lexy.WritePrefixNilFirst(w, lexy.IsNilPointer, nil, value); done {
+	if done, err := lexy.WritePrefixNilsFirst(w, lexy.IsNilPointer, nil, value); done {
 		return err
 	}
 	if err := lexy.TerminateIfNeeded(stringCodec).Write(w, value.name); err != nil {
