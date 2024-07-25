@@ -34,7 +34,7 @@ func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 }
 
 func (c bytesCodec[S]) Write(w io.Writer, value S) error {
-	if done, err := WritePrefix(w, isNilSlice, isEmptySlice, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
 	_, err := w.Write([]byte(value))

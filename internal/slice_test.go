@@ -9,7 +9,7 @@ import (
 func TestSliceInt32(t *testing.T) {
 	codec := internal.SliceCodec[[]int32](int32Codec)
 	testCodec(t, codec, []testCase[[]int32]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []int32{}, []byte{pEmpty}},
 		{"[0]", []int32{0}, []byte{pNonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"[-1]", []int32{-1}, []byte{pNonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},
@@ -26,7 +26,7 @@ func TestSliceInt32(t *testing.T) {
 func TestSliceString(t *testing.T) {
 	codec := internal.SliceCodec[[]string](stringCodec)
 	testCodec(t, codec, []testCase[[]string]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []string{}, []byte{pEmpty}},
 		{"[\"\"]", []string{""}, []byte{pNonEmpty, pEmpty, term}},
 		{"[a]", []string{"a"}, []byte{pNonEmpty, pNonEmpty, 'a', term}},
@@ -44,14 +44,14 @@ func TestSlicePtrString(t *testing.T) {
 	pointerCodec := internal.PointerCodec[*string](stringCodec)
 	codec := internal.SliceCodec[[]*string](pointerCodec)
 	testCodec(t, codec, []testCase[[]*string]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*string{}, []byte{pEmpty}},
-		{"[nil]", []*string{nil}, []byte{pNonEmpty, pNil, term}},
+		{"[nil]", []*string{nil}, []byte{pNonEmpty, pNilFirst, term}},
 		{"[*a]", []*string{ptr("a")}, []byte{pNonEmpty, pNonEmpty, pNonEmpty, 'a', term}},
 		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, []byte{
 			pNonEmpty,
 			pNonEmpty, pNonEmpty, 'a', term,
-			pNil, term,
+			pNilFirst, term,
 			pNonEmpty, pEmpty, term,
 			pNonEmpty, pNonEmpty, 'x', 'y', 'z', term,
 		}},
@@ -63,14 +63,14 @@ func TestSliceSliceInt32(t *testing.T) {
 	sliceCodec := internal.SliceCodec[[]int32](int32Codec)
 	codec := internal.SliceCodec[[][]int32](sliceCodec)
 	testCodec(t, codec, []testCase[[][]int32]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]int32{}, []byte{pEmpty}},
-		{"[nil]", [][]int32{[]int32(nil)}, []byte{pNonEmpty, pNil, term}},
+		{"[nil]", [][]int32{[]int32(nil)}, []byte{pNonEmpty, pNilFirst, term}},
 		{"[[]]", [][]int32{{}}, []byte{pNonEmpty, pEmpty, term}},
 		{"[nil, {0, 1, -1}, {}, {-2, -3}, nil, nil]", [][]int32{nil, {0, 1, -1}, {}, {-2, -3}, nil, nil}, []byte{
 			pNonEmpty,
 			// nil
-			pNil, term,
+			pNilFirst, term,
 			// {0, 1, -1}, escaped
 			pNonEmpty,
 			0x80, esc, 0x00, esc, 0x00, esc, 0x00,
@@ -86,9 +86,9 @@ func TestSliceSliceInt32(t *testing.T) {
 			0x7F, 0xFF, 0xFF, 0xFD,
 			term,
 			// nil
-			pNil, term,
+			pNilFirst, term,
 			// nil
-			pNil, term,
+			pNilFirst, term,
 		}},
 	})
 	testCodecFail(t, codec, [][]int32{})
@@ -99,9 +99,9 @@ func TestSliceSliceString(t *testing.T) {
 	codec := internal.SliceCodec[[][]string](sliceCodec)
 
 	testCodec(t, codec, []testCase[[][]string]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]string{}, []byte{pEmpty}},
-		{"[nil]", [][]string{[]string(nil)}, []byte{pNonEmpty, pNil, term}},
+		{"[nil]", [][]string{[]string(nil)}, []byte{pNonEmpty, pNilFirst, term}},
 		{"[[]]", [][]string{{}}, []byte{pNonEmpty, pEmpty, term}},
 		{"[[\"\"]]", [][]string{{""}}, []byte{
 			pNonEmpty,         // prefix outer
@@ -112,18 +112,18 @@ func TestSliceSliceString(t *testing.T) {
 
 		// pairwise permutations of nil, [], and [""]
 		{"[nil, []]", [][]string{nil, {}}, []byte{
-			pNonEmpty,  // outer
-			pNil, term, // nil = outer[0]
+			pNonEmpty,       // outer
+			pNilFirst, term, // nil = outer[0]
 			pEmpty, term, // {} = outer[1]
 		}},
 		{"[[], nil]", [][]string{{}, nil}, []byte{
 			pNonEmpty,    // outer
 			pEmpty, term, // {} = outer[0]
-			pNil, term, // nil = outer[1]
+			pNilFirst, term, // nil = outer[1]
 		}},
 		{"[nil, [\"\"]]", [][]string{nil, {""}}, []byte{
-			pNonEmpty,  // outer
-			pNil, term, // nil = outer[0]
+			pNonEmpty,       // outer
+			pNilFirst, term, // nil = outer[0]
 			pNonEmpty,         // prefix {""}
 			pEmpty, esc, term, // "", escaped
 			term, // terminator {""}, within outer
@@ -132,8 +132,8 @@ func TestSliceSliceString(t *testing.T) {
 			pNonEmpty,         // outer
 			pNonEmpty,         // prefix {""}
 			pEmpty, esc, term, // "", escaped
-			term,       // terminator {""}, within outer
-			pNil, term, // nil = outer[1]
+			term,            // terminator {""}, within outer
+			pNilFirst, term, // nil = outer[1]
 		}},
 		{"[[], [\"\"]]", [][]string{{}, {""}}, []byte{
 			pNonEmpty,    // outer
@@ -160,7 +160,7 @@ func TestSliceSliceString(t *testing.T) {
 		}, []byte{
 			pNonEmpty,
 			// nil
-			pNil, term,
+			pNilFirst, term,
 			// {"a", "", "xyz"}, escaped
 			pNonEmpty,
 			pNonEmpty, 'a', esc, term,
@@ -168,7 +168,7 @@ func TestSliceSliceString(t *testing.T) {
 			pNonEmpty, 'x', 'y', 'z', esc, term,
 			term,
 			// nil
-			pNil, term,
+			pNilFirst, term,
 			// {""}, escaped
 			pNonEmpty, pEmpty, esc, term,
 			term,
@@ -183,7 +183,7 @@ type sInt []int32
 func TestSliceUnderlyingType(t *testing.T) {
 	codec := internal.SliceCodec[sInt](int32Codec)
 	testCodec(t, codec, []testCase[sInt]{
-		{"nil", sInt(nil), []byte{pNil}},
+		{"nil", sInt(nil), []byte{pNilFirst}},
 		{"empty", sInt([]int32{}), []byte{pEmpty}},
 		{"[0]", sInt([]int32{0}), []byte{pNonEmpty, 0x80, 0x00, 0x00, 0x00}},
 		{"[-1]", sInt([]int32{-1}), []byte{pNonEmpty, 0x7F, 0xFF, 0xFF, 0xFF}},

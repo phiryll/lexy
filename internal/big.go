@@ -69,7 +69,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
 		return err
 	}
 	neg := false
@@ -249,7 +249,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 }
 
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
 		return err
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
@@ -348,7 +348,7 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 }
 
 func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
 		return err
 	}
 	if err := BigIntCodec.Write(w, value.Num()); err != nil {

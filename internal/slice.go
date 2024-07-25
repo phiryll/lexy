@@ -48,7 +48,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 }
 
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
-	if done, err := WritePrefix(w, isNilSlice, isEmptySlice, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilSlice, isEmptySlice, value); done {
 		return err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)

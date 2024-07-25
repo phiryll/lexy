@@ -22,20 +22,23 @@ import (
 //	[][]string{{""}, {}}   => [0x00]
 //	[][]string{{""}, {""}} => [0x00]
 const (
-	prefixNil      byte = 0x02
+	prefixNilFirst byte = 0x02
 	prefixEmpty    byte = 0x03
 	prefixNonEmpty byte = 0x04
+	prefixNilLast  byte = 0x05
 
-	ExportForTestingPrefixNil      = prefixNil
+	ExportForTestingPrefixNilFirst = prefixNilFirst
 	ExportForTestingPrefixEmpty    = prefixEmpty
 	ExportForTestingPrefixNonEmpty = prefixNonEmpty
+	ExportForTestingPrefixNilLast  = prefixNilLast
 )
 
 // Convenience byte slices.
 var (
-	pNil      = []byte{prefixNil}
+	pNilFirst = []byte{prefixNilFirst}
 	pEmpty    = []byte{prefixEmpty}
 	pNonEmpty = []byte{prefixNonEmpty}
+	pNilLast  = []byte{prefixNilLast}
 )
 
 func isNilPointer[T any](value *T) bool {
@@ -87,7 +90,7 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 		return zero, true, io.ErrUnexpectedEOF
 	}
 	switch prefix[0] {
-	case prefixNil:
+	case prefixNilFirst, prefixNilLast:
 		if !nilable {
 			return zero, true, fmt.Errorf("read nil for non-nilable type %T", zero)
 		}
@@ -118,7 +121,7 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 	}
 }
 
-// Writes the correct prefix for value.
+// Writes the correct prefix for value, with nils ordered first.
 // isNil or isEmpty should be non-nil if type T allows nil or empty values respectively.
 // isEmpty is used after isNil, so isEmpty can also return true for nil values.
 // Returns done = false only if the value itself still needs to be written (neither nil nor empty),
@@ -131,9 +134,25 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 //	string   No    Yes
 //	pointer  Yes   No
 //	slice    Yes   Yes
-func WritePrefix[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+func WritePrefixNilsFirst[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
 	if isNil != nil && isNil(value) {
-		_, err := w.Write(pNil)
+		_, err := w.Write(pNilFirst)
+		return true, err
+	}
+	if isEmpty != nil && isEmpty(value) {
+		_, err := w.Write(pEmpty)
+		return true, err
+	}
+	if _, err := w.Write(pNonEmpty); err != nil {
+		return true, err
+	}
+	return false, nil
+}
+
+// Exactly the same as WritePrefixNilsFirst, except nils are ordered last.
+func WritePrefixNilsLast[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
+	if isNil != nil && isNil(value) {
+		_, err := w.Write(pNilLast)
 		return true, err
 	}
 	if isEmpty != nil && isEmpty(value) {

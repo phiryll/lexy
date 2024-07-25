@@ -57,7 +57,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 }
 
 func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
-	if done, err := WritePrefix(w, isNilMap, isEmptyMap, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilMap, isEmptyMap, value); done {
 		return err
 	}
 	keyWriter := TerminateIfNeeded(c.keyCodec)

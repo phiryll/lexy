@@ -40,7 +40,7 @@ func (c stringCodec[T]) Read(r io.Reader) (T, error) {
 }
 
 func (c stringCodec[T]) Write(w io.Writer, value T) error {
-	if done, err := WritePrefix(w, nil, isEmptyString, value); done {
+	if done, err := WritePrefixNilsFirst(w, nil, isEmptyString, value); done {
 		return err
 	}
 	_, err := io.WriteString(w, string(value))

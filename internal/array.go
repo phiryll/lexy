@@ -78,7 +78,7 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
-	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
 		return err
 	}
 	codec := TerminateIfNeeded(c.elemCodec)

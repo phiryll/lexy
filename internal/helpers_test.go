@@ -60,9 +60,10 @@ type testCase[T any] struct {
 const (
 	term      byte = internal.ExportForTestingTerminator
 	esc       byte = internal.ExportForTestingEscape
-	pNil      byte = internal.ExportForTestingPrefixNil
+	pNilFirst byte = internal.ExportForTestingPrefixNilFirst
 	pEmpty    byte = internal.ExportForTestingPrefixEmpty
 	pNonEmpty byte = internal.ExportForTestingPrefixNonEmpty
+	pNilLast  byte = internal.ExportForTestingPrefixNilLast
 )
 
 // Tests:

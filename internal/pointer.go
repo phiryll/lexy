@@ -35,7 +35,7 @@ func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerCodec[P, E]) Write(w io.Writer, value P) error {
-	if done, err := WritePrefix(w, isNilPointer, nil, value); done {
+	if done, err := WritePrefixNilsFirst(w, isNilPointer, nil, value); done {
 		return err
 	}
 	return c.elemCodec.Write(w, *value)

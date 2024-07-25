@@ -75,7 +75,7 @@ func TestArrayArrayInt32(t *testing.T) {
 func TestPtrToArrayInt32(t *testing.T) {
 	codec := internal.PointerToArrayCodec[*[5]int32](int32Codec)
 	testCodec(t, codec, []testCase[*[5]int32]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", &[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}, []byte{
 			pNonEmpty,
 			0x80, 0x00, 0x00, 0x00,
@@ -97,7 +97,7 @@ func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
 	type aType *[5]int32
 	codec := internal.PointerToArrayCodec[aType](int32Codec)
 	testCodec(t, codec, []testCase[aType]{
-		{"nil", nil, []byte{pNil}},
+		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", aType(&[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}), []byte{
 			pNonEmpty,
 			0x80, 0x00, 0x00, 0x00,
@@ -131,7 +131,7 @@ func TestArrayPtrToArrayInt32(t *testing.T) {
 				0xFF, 0xFF, 0xFF, 0xFF,
 				term,
 				// nil
-				pNil,
+				pNilFirst,
 				term,
 				// {-2, -2, -2, -2, -2},
 				pNonEmpty,
