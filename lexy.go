@@ -1,6 +1,6 @@
-// Package lexy defines an API for lexicographically ordered unsigned byte encodings.
-//
-// TODO: Lots of usage details.
+// Package lexy defines an API for lexicographically ordered binary encodings.
+// Implementations are provided for most builtin go data types,
+// and supporting functions are provided to allow clients to create custom encodings.
 package lexy
 
 import (
@@ -11,11 +11,13 @@ import (
 	"github.com/phiryll/lexy/internal"
 )
 
-// Codec defines methods for lexicographically ordered unsigned byte encodings.
+// A Codec defines a lexicographically ordered binary encoding for values of a data type.
 //
-// Encoded values should have the same order as the values they encode.
+// Encoded values should normally have the same order as the values they encode.
 // The Read and Write methods should be lossless inverse operations.
-// Exceptions to these berhaviors should be clearly documented.
+// Exceptions to either of these behaviors should be clearly documented.
+//
+// No encoded value can be empty, even for a value of nil.
 //
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are,
 // except for Codecs created by Terminate and TerminateIfNeeded.
@@ -24,27 +26,60 @@ type Codec[T any] interface {
 	//
 	// Read will read from r until either it has all the data it needs, or r stops returning data.
 	// r.Read is permitted to return only immediately available data instead of waiting for more.
-	// This may cause an error, or it may silently return incomplete data, depending on this Reader's implementation.
+	// This may cause an error, or it may silently return incomplete data, depending on this Codec's implementation.
+	// Implementations of Read should never knowingly return incomplete data.
 	//
-	// Read may have to process data one byte at a time, so using a buffered io.Reader is recommended if appropriate.
-	// However, never create a buffered io.Reader wrapping the argument io.Reader within a Codec implementation.
-	// A buffered io.Reader will read more than necessary to fill its buffer,
-	// making any unused bytes unavailable for the next Read, preventing that Codec's use within an aggregate Codec.
+	// If the returned error is non-nil, including io.EOF, the returned value should be discarded.
+	// Read will only return io.EOF if r returned io.EOF and no bytes were read.
+	// Read will return io.ErrUnexpectedEOF if r returned io.EOF and a complete value was not successfully read.
+	//
+	// If instances of type T can be nil or empty,
+	// implementations of Read should invoke ReadPrefix as the first step,
+	// and Write should invoke either WritePrefixNilsFirst or WritePrefixNilsLast.
+	// See the PointerToStruct example for an example usage.
+	//
+	// Read may repeatedly read small amounts of data from r,
+	// so using a buffered io.Reader is recommended if appropriate.
+	// Implementations of Read should never wrap r in a buffered io.Reader,
+	// because doing so could consume excess data from r.
 	Read(r io.Reader) (T, error)
 
-	// Writer will encode value and write the encoded bytes to w.
+	// Write will encode value and write the encoded bytes to w.
 	//
-	// Write may have to process data one byte at a time, so using a buffered io.Writer is recommended if appropriate.
-	// If a buffered io.Writer is used within a Codec implementation, it must be flushed before returning from Write.
+	// If Write is successful, it must have written at least one byte to w.
+	// No encoded value can be empty, even for a value of nil.
+	// This ensures that Read can have consistent semantics,
+	// which is necessary for aggregate Codecs to behave properly.
+	//
+	// If instances of type T can be nil or empty,
+	// implementations of Write should invoke WritePrefixNilsFirst or WritePrefixNilsLast as the first step,
+	// and Read should invoke ReadPrefix.
+	// See the PointerToStruct example for an example usage.
+	//
+	// Write may repeatedly write small amounts of data to w,
+	// so using a buffered io.Writer is recommended if appropriate.
+	// Implementions of Write should not wrap w in a buffered io.Writer,
+	// but if they do, the buffered io.Writer must be flushed before returning from Write.
 	Write(w io.Writer, value T) error
 
-	// RequiresTerminator returns whether this Codec requires a terminator (and therefore escaping)
-	// when used within an aggregate Codec (for example, within a slice, map, or struct Codec).
-	// RequiresTerminator should return true if Read does not know when to stop reading,
-	// which is the case for unbounded types like slices and maps.
-	// If true and used within an aggregate Codec, the aggregate Codec should wrap this Codec
-	// with Terminate or TerminateIfNeeded.
-	// The wrapping Codec will then limit Read by only reading up to the terminator.
+	// RequiresTerminator returns whether encoded data written by this Codec requires a terminator,
+	// and therefore also must be escaped, if more data is written following the encoded data.
+	// Stated another way, RequiresTerminator must return true if Read may not know
+	// when to stop reading the data encoded by Write.
+	// This is the case for unbounded types like strings, slices, and maps.
+	//
+	// Users of this Codec must wrap it with Terminate or TerminateIfNeeded if RequiresTerminator may return true
+	// and more data could be written following the encoded data.
+	// For example, lexy's slice Codec implementation must wrap its element Codec with TerminateIfNeeded.
+	// Note that the terminating wrapper Codec is NOT safe for concurrent access, and MUST be created anew when used.
+	// A user does not need to consider wrapping this Codec if either:
+	//	- this Codec is known to not require it, and will never require it (the int16 Codec, e.g.), or
+	//	- the data written by this Codec will always be at the end of the stream when read.
+	//
+	// Lexy's pointer Codec implementation is an unusual use case in that it only requires a terminator
+	// if its element Codec requires one.
+	// This is only because the pointer Codec encodes at most a single element,
+	// and does not itself encode any data following that element.
 	RequiresTerminator() bool
 }
 
@@ -291,16 +326,17 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return internal.TerminateIfNeeded(codec)
 }
 
-// ReadPrefix is used to read the initial nil/empty/non-empty prefix byte by Codecs
-// that encode types that can be nil or empty.
+// ReadPrefix is used to read the initial nil/empty/non-empty prefix byte from r by Codecs
+// that encode types whose instances can be nil or empty.
 //
-// nilable should be true if and only if nil is an allowed value of type T.
-//
+// nilable should be true if and only if nil is an allowed value of instances of type T.
 // emptyValue should point to the empty value of type T if it differs from the zero value of T.
 //
-// Returns done == false only if the value itself still needs to be read (neither nil nor empty),
-// and there was no error reading the prefix. The returned value should be ignored in this case.
-// Returns done == true otherwise, with the returned value being either nil or the empty value.
+// ReadPrefix returns done == false only if the value itself still needs to be read
+// (value is neither nil nor empty), and there was no error reading the prefix.
+// The returned value should be ignored in this case.
+// If ReadPrefix returns done == true and err is nil, the returned value is either nil or the empty value.
+// ReadPrefix will never return an error value of io.EOF.
 //
 // Examples of types with differing nil and empty possibilities:
 //
@@ -317,17 +353,18 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 }
 
 // WritePrefixNilsFirst is used to write the initial nil/empty/non-empty prefix byte by Codecs
-// encoding types which can have nil or empty values, with nils ordered first.
+// encoding types whose instances can be nil or empty, with nils ordered first.
 //
-// isNil, if non-nil, is a function returning whether a specific value of type T is nil.
+// isNil, if non-nil, is a function returning whether a given value of type T is nil.
 // The functions IsNilPointer, IsNilSlice, and IsNilMap are provided for this purpose.
 //
-// isEmpty, if non-nil, is a function returning whether a specific value of type T is empty.
+// isEmpty, if non-nil, is a function returning whether a given value of type T is empty.
 // The functions IsEmptyString, IsEmptySlice, and IsEmptyMap are provided for this purpose.
 //
-// Returns done == false only if the value itself still needs to be written (neither nil nor empty),
-// and there was no error writing the prefix.
-// Returns done == true otherwise (the prefix for nil or empty was written).
+// WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
+// (value is neither nil nor empty), and there was no error writing the prefix.
+// If WritePrefixNilsFirst returns done == true and err is nil,
+// the value was nil or empty and no further data needs to be written for this value.
 //
 // Examples of types with differing nil and empty possibilities:
 //

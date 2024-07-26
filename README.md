@@ -19,12 +19,12 @@ type Codec[T any] interface {
     // Read will read from r and decode a value of type T.
     Read(r io.Reader) (T, error)
 
-    // Writer will encode value and write the encoded bytes to w.
+    // Write will encode value and write the encoded bytes to w.
     Write(w io.Writer, value T) error
 
-    // RequiresTerminator returns whether this Codec requires a terminator
-    // (and therefore escaping) when used within an aggregate Codec
-    // (for example, within a slice, map, or struct Codec).
+    // RequiresTerminator must return true if Read may not know when to
+    // stop reading the data encoded by Write. This is the case for
+    // unbounded types like strings, slices, and maps.
     RequiresTerminator() bool
 }
 ```

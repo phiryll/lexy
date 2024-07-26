@@ -65,11 +65,15 @@ func isEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value != nil && len(value) == 0
 }
 
-// Reads the prefix and handles nil and empty values.
+// ReadPrefix reads the prefix byte from r and handles nil and empty values.
 // nilable should be true if and only if nil is an allowed value of type T.
 // emptyValue should point to the empty value of type T if it differs from the zero value of T.
-// Returns done = false only if the value itself still needs to be read (neither nil nor empty),
-// and there was no error reading the prefix.
+//
+// ReadPrefix returns done == false only if the value itself still needs to be read
+// (value is neither nil nor empty), and there was no error reading the prefix.
+// If ReadPrefix returns done == true and err is nil, the returned value is either nil or the empty value.
+// ReadPrefix will never return an error value of io.EOF.
+//
 // Examples of types with differing nil and empty possibilities:
 //
 //	type     nil?  empty?
@@ -95,7 +99,7 @@ func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done 
 			return zero, true, fmt.Errorf("read nil for non-nilable type %T", zero)
 		}
 		if err == io.EOF {
-			// no EOF if nil is allowed
+			// ignore EOF
 			err = nil
 		}
 		return zero, true, err
@@ -136,11 +140,14 @@ func getPrefixWriter[T any](isNil, isEmpty func(T) bool, nilsFirst bool) prefixW
 	}
 }
 
-// Writes the correct prefix for value, with nils ordered first.
+// WritePrefixNilsFirst writes the correct prefix byte for value to w, with nils ordered first.
 // isNil or isEmpty should be non-nil if type T allows nil or empty values respectively.
-// isEmpty is used after isNil, so isEmpty can also return true for nil values.
-// Returns done = false only if the value itself still needs to be written (neither nil nor empty),
-// and there was no error writing the prefix.
+//
+// WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
+// (value is neither nil nor empty), and there was no error writing the prefix.
+// If WritePrefixNilsFirst returns done == true and err is nil,
+// the value was nil or empty and no further data needs to be written for this value.
+//
 // Examples of types with differing nil and empty possibilities:
 //
 //	type     nil?  empty?
