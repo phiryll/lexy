@@ -99,7 +99,7 @@ func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
 }
 
 func (c pointerToArrayCodec[P, A, E]) RequiresTerminator() bool {
-	return true
+	return false
 }
 
 func (c arrayCodec[A, E]) Read(r io.Reader) (A, error) {
@@ -116,5 +116,5 @@ func (c arrayCodec[A, E]) Write(w io.Writer, value A) error {
 }
 
 func (c arrayCodec[A, E]) RequiresTerminator() bool {
-	return true
+	return false
 }
