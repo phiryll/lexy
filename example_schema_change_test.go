@@ -8,36 +8,8 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// This example shows one way to allow for schema changes.
-// The gist is to encode field names as well as field values.
-// This can be done in other ways, and more or less leniently.
-// This is just an example.
-//
-// Note that different encodings of the same type will generally not be ordered
-// correctly with respect to each other, regardless of the technique used.
-//
-// Only field values should be encoded if any of the following are true:
-// - the schema is expected to never change, or
-// - the encoded data will be replaced wholesale if the schema changes, or
-// - schema versioning is used (see other example).
-//
-// The kinds of schema change addressed by this example are:
-// - field added
-// - field removed
-// - field renamed
-//
-// If a field's type might change, the best option is to use versioning.
-// Otherwise, it would be necessary to encode the field's type before its value,
-// because there's no way to know how to read the value otherwise.
-// Encoding a value's type is discouraged.
-//
-// The sort order of encoded data cannot be changed.
-// However, there is nothing wrong with creating multiple Codecs
-// with different orderings for the same type, nor with storing
-// the same data ordered in different ways in the same data store.
-
 // The previous version of the type, used here to create already existing data.
-// Unless versioning is being used (see other example),
+// Unless versioning is being used (see the schema version example),
 // this would be the same type as schema, just earlier in the code's history.
 // So both would not normally exist at the same time.
 type schemaPrevious struct {
@@ -155,6 +127,33 @@ func (s schemaCodec) RequiresTerminator() bool {
 	return true
 }
 
+// Example (SchemaChange) shows one way to allow for schema changes.
+// The gist is to encode field names as well as field values.
+// This can be done in other ways, and more or less leniently.
+// This is just an example.
+//
+// Note that different encodings of the same type will generally not be ordered
+// correctly with respect to each other, regardless of the technique used.
+//
+// Only field values should be encoded if any of the following are true:
+// - the schema is expected to never change, or
+// - the encoded data will be replaced wholesale if the schema changes, or
+// - schema versioning is used (see the schema version example).
+//
+// The kinds of schema change addressed by this example are:
+// - field added
+// - field removed
+// - field renamed
+//
+// If a field's type might change, the best option is to use versioning.
+// Otherwise, it would be necessary to encode the field's type before its value,
+// because there's no way to know how to read the value otherwise.
+// That said, encoding a value's type is discouraged.
+//
+// The sort order of encoded data cannot be changed.
+// However, there is nothing wrong with creating multiple Codecs
+// with different orderings for the same type, nor with storing
+// the same data ordered in different ways in the same data store.
 func Example_schemaChange() {
 	var buf bytes.Buffer
 	for _, previous := range []schemaPrevious{

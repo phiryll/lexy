@@ -9,10 +9,6 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// This example shows how a range query might be implemented.
-// Because this example is so long, error handling has been removed.
-// DON'T DO THIS!
-
 // BEGIN TOY DB IMPLEMENTATION
 
 type DB struct {
@@ -116,6 +112,9 @@ func (db *UserDB) Range(begin, end UserKey) []UserEntry {
 
 // END USER DB ABSTRACTION
 
+// Example (RangeQuery) shows how a range query might be implemented.
+// Because this example is so long, error handling has been removed.
+// DON'T DO THIS!
 func Example_rangeQuery() {
 	userDB := UserDB{}
 	for _, item := range []struct {

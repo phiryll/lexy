@@ -8,21 +8,6 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// This example shows how to use pointers for efficiency in a custom Codec,
-// to avoid unnecessarily copying large data structures.
-// This is the same technique used by lexy.PointerToArrayOf.
-// Note that types in go other than structs and arrays do not have this problem.
-// Complex numbers, strings, pointers, slices, and maps
-// all have a relatively small footprint when passed by value.
-// The same is true of time.Time and time.Duration instances.
-//
-// Normally, a Codec[BigStruct] would be defined and Container's Codec
-// would use it as lexy.PointerTo[*BigStruct](bigStructCodec).
-// However, calls to a Codec[BigStruct] will pass BigStruct instances by value,
-// even though the wrapping pointer Codec is only copying pointers.
-//
-// The order isn't relevant for this example, so other fields are not shown.
-
 type BigStruct struct {
 	name string
 	// ... big fields, inefficient to copy
@@ -115,6 +100,20 @@ func (c containterCodec) RequiresTerminator() bool {
 	return false
 }
 
+// Example (PointerToStruct) shows how to use pointers for efficiency
+// in a custom Codec, to avoid unnecessarily copying large data structures.
+// This is the same technique used by lexy.PointerToArrayOf.
+// Note that types in go other than structs and arrays do not have this problem.
+// Complex numbers, strings, pointers, slices, and maps
+// all have a relatively small footprint when passed by value.
+// The same is true of time.Time and time.Duration instances.
+//
+// Normally, a Codec[BigStruct] would be defined and Container's Codec
+// would use it as lexy.PointerTo[*BigStruct](bigStructCodec).
+// However, calls to a Codec[BigStruct] will pass BigStruct instances by value,
+// even though the wrapping pointer Codec is only copying pointers.
+//
+// The order isn't relevant for this example, so other fields are not shown.
 func Example_pointerToStruct() {
 	var buf bytes.Buffer
 	for _, value := range []Container{

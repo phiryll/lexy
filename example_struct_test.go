@@ -10,22 +10,6 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// This example will encode SimpleStruct using two differently ordered Codecs.
-// The pattern will be the same for creating any Codec for a user-defined type.
-// Codecs for structs don't usually require enclosing Codecs to use terminators,
-// but some do. There are more complex examples in the go docs.
-//
-// The general rules are:
-// - The order in which encoded data is written defines the Codec's ordering.
-//   Read data in the same order it was written, using the same Codecs.
-//   An exception to this rule is in the struct field example.
-// - use lexy.Terminate/TerminateIfNeeded for values that do/might
-//   require terminating and escaping.
-//   It won't be much of a performance hit to use lexy.TerminateIfNeeded,
-//   since it returns the argument Codec if it doesn't require termination.
-//   These terminating Codecs are not safe for concurrent access,
-//   and must be created at the time they are used.
-
 type SimpleStruct struct {
 	anInt   int16
 	aFloat  float32
@@ -122,6 +106,21 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 	return false
 }
 
+// Example (SimpleStruct) encodes a struct type using two differently ordered Codecs.
+// The pattern will be the same for creating any Codec for a user-defined type.
+// Codecs for structs don't usually require enclosing Codecs to use terminators,
+// but some do. There are more complex examples in the go docs.
+//
+// The general rules are:
+//   - The order in which encoded data is written defines the Codec's ordering.
+//     Read data in the same order it was written, using the same Codecs.
+//     An exception to this rule is in the schema change example.
+//   - use lexy.Terminate/TerminateIfNeeded for values that do/might
+//     require terminating and escaping.
+//     It won't be much of a performance hit to use lexy.TerminateIfNeeded,
+//     since it returns the argument Codec if it doesn't require termination.
+//     These terminating Codecs are not safe for concurrent access,
+//     and must be created at the time they are used.
 func Example_simpleStruct() {
 	structs := []SimpleStruct{
 		{1, 5.0, nil},

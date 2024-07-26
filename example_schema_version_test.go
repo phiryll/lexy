@@ -9,18 +9,6 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// This example shows how versioning could be used to manage schema changes.
-// This can be done in other ways, and more or less leniently.
-// This is just an example, and likely a poorly structured one at that.
-//
-// Note that different encodings of the same type will generally not be ordered
-// correctly with respect to each other, regardless of the technique used.
-//
-// The sort order of encoded data cannot be changed.
-// However, there is nothing wrong with creating multiple Codecs
-// with different orderings for the same type, nor with storing
-// the same data ordered in different ways in the same data store.
-
 type schemaVersion1 struct {
 	name string
 }
@@ -237,6 +225,17 @@ func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], v
 	return lexy.TerminateIfNeeded(codec).Write(w, value)
 }
 
+// Example (SchemaVersion) shows how schema versioning could be implemented.
+// This can be done in other ways, and more or less leniently.
+// This is just an example, and likely a poorly structured one at that.
+//
+// Note that different encodings of the same type will generally not be ordered
+// correctly with respect to each other, regardless of the technique used.
+//
+// The sort order of encoded data cannot be changed.
+// However, there is nothing wrong with creating multiple Codecs
+// with different orderings for the same type, nor with storing
+// the same data ordered in different ways in the same data store.
 func Example_schemaVersion() {
 	// Encode data of a bunch of different versions and
 	// throw all the encodings into the same slice.
