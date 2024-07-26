@@ -76,6 +76,8 @@ func AsInt64[T ~int]() Codec[T] { return internal.AsInt64Codec[T]() }
 
 // Float32 creates a new Codec for a type with an underlying type of float32.
 // All bits of the value are preserved by this encoding; NaN values are not canonicalized.
+// The encodings for NaNs are merely bytes and are therefore comparable, unlike float32 NaNs.
+// There are many different bit patterns for NaN, and their encodings will be distinct.
 // No distinction is made between quiet and signaling NaNs.
 // This Codec does not require a terminator when used within an aggregate Codec.
 // The order of encoded values is:
@@ -92,6 +94,8 @@ func Float32[T ~float32]() Codec[T] { return internal.Float32Codec[T]() }
 
 // Float64 creates a new Codec for a type with an underlying type of float64.
 // All bits of the value are preserved by this encoding; NaN values are not canonicalized.
+// The encodings for NaNs are merely bytes and are therefore comparable, unlike float64 NaNs.
+// There are many different bit patterns for NaN, and their encodings will be distinct.
 // No distinction is made between quiet and signaling NaNs.
 // This Codec does not require a terminator when used within an aggregate Codec.
 // The order of encoded values is:
