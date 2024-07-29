@@ -11,7 +11,7 @@ func TestBytes(t *testing.T) {
 	codec := internal.BytesCodec[[]byte](true)
 	testCodec(t, codec, []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
-		{"empty", []byte{}, []byte{pEmpty}},
+		{"empty", []byte{}, []byte{pNonEmpty}},
 		{"[0]", []byte{0}, []byte{pNonEmpty, 0x00}},
 		{"[1, 2, 3]", []byte{1, 2, 3}, []byte{pNonEmpty, 0x01, 0x02, 0x03}},
 	})
@@ -23,7 +23,7 @@ func TestBytesUnderlyingType(t *testing.T) {
 	codec := internal.BytesCodec[header](true)
 	testCodec(t, codec, []testCase[header]{
 		{"nil", header(nil), []byte{pNilFirst}},
-		{"empty", header{}, []byte{pEmpty}},
+		{"empty", header{}, []byte{pNonEmpty}},
 		{"[0]", header{0}, []byte{pNonEmpty, 0x00}},
 		{"[1, 2, 3]", header{1, 2, 3}, []byte{pNonEmpty, 0x01, 0x02, 0x03}},
 	})
