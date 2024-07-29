@@ -6,21 +6,23 @@ import (
 )
 
 // Prefixes to use for encodings that would normally encode nil or an empty value as zero bytes.
-// The values were chosen so that nil < empty < non-empty, and the prefixes don't need to be escaped.
+// The values were chosen so that nils-first < empty < non-empty < nils-last,
+// and the prefixes don't need to be escaped.
+//
 // This is normally only an issue for variable length encodings.
 //
 // This prevents ambiguous encodings like these
-// (0x00 is the terminator between slice elements, if required):
+// (0x00 is the terminator after slice elements, if required):
 //
 //	""                     => []
 //
+//	[]string(nil)          => []
 //	[]string{}             => []
-//	[]string{""}           => []
 //
-//	[][]string{{}, {}}     => [0x00]
-//	[][]string{{}, {""}}   => [0x00]
-//	[][]string{{""}, {}}   => [0x00]
-//	[][]string{{""}, {""}} => [0x00]
+//	[][]string{{}, {}}     => [0x00, 0x00]
+//	[][]string{{}, {""}}   => [0x00, 0x00]
+//	[][]string{{""}, {}}   => [0x00, 0x00]
+//	[][]string{{""}, {""}} => [0x00, 0x00]
 const (
 	prefixNilFirst byte = 0x02
 	prefixEmpty    byte = 0x03
