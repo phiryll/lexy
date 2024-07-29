@@ -77,8 +77,7 @@ func (db *KeyValueDB) Get(key Key) (*Value, error) {
 }
 ```
 
-All `Codecs` provided by lexy are safe for concurrent use if their delegate `Codecs` (if any) are,
-except for the `Codecs` created by `Terminate` and `TerminateIfNeeded`.
+All `Codecs` provided by lexy are safe for concurrent use if their delegate `Codecs` (if any) are.
 
 Lexy provides `Codecs` for these types that preserve their natural ordering.
 

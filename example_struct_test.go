@@ -119,8 +119,6 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 //     require terminating and escaping.
 //     It won't be much of a performance hit to use lexy.TerminateIfNeeded,
 //     since it returns the argument Codec if it doesn't require termination.
-//     These terminating Codecs are not safe for concurrent access,
-//     and must be created at the time they are used.
 func Example_simpleStruct() {
 	structs := []SimpleStruct{
 		{1, 5.0, nil},

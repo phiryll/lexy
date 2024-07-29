@@ -58,7 +58,6 @@ var (
 )
 
 // Terminate returns a Codec that uses codec, always escaping and terminating.
-// The returned Codec is not thread-safe, and MUST be created anew when used.
 func Terminate[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
@@ -68,7 +67,6 @@ func Terminate[T any](codec Codec[T]) Codec[T] {
 
 // TerminateIfNeeded returns a Codec that uses codec,
 // escaping and terminating if codec.RequiresTerminator() is true.
-// The returned Codec may not be thread-safe, and MUST be created anew when used.
 func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
@@ -81,8 +79,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 }
 
 type terminatorCodec[T any] struct {
-	codec   Codec[T]
-	scratch bytes.Buffer
+	codec Codec[T]
 }
 
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
@@ -99,11 +96,12 @@ func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 }
 
 func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
-	c.scratch.Reset()
-	if err := c.codec.Write(&c.scratch, value); err != nil {
+	// TODO: set capacity for known codecs
+	buf := bytes.NewBuffer([]byte{})
+	if err := c.codec.Write(buf, value); err != nil {
 		return err
 	}
-	if _, err := doEscape(w, c.scratch.Bytes()); err != nil {
+	if _, err := doEscape(w, buf.Bytes()); err != nil {
 		return err
 	}
 	return nil

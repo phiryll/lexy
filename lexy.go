@@ -19,8 +19,7 @@ import (
 //
 // No encoded value can be empty, even for a value of nil.
 //
-// All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are,
-// except for Codecs created by Terminate and TerminateIfNeeded.
+// All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
 	// Read will read from r and decode a value of type T.
 	//
@@ -71,7 +70,6 @@ type Codec[T any] interface {
 	// Users of this Codec must wrap it with Terminate or TerminateIfNeeded if RequiresTerminator may return true
 	// and more data could be written following the encoded data.
 	// For example, lexy's slice Codec implementation must wrap its element Codec with TerminateIfNeeded.
-	// Note that the terminating wrapper Codec is NOT safe for concurrent access, and MUST be created anew when used.
 	// A user does not need to consider wrapping this Codec if either:
 	//	- this Codec is known to not require it, and will never require it (the int16 Codec, e.g.), or
 	//	- the data written by this Codec will always be at the end of the stream when read.
@@ -314,14 +312,12 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 // Codecs and functions for implementing new Codecs.
 
 // Terminate returns a new Codec that escapes and terminates the encodings produced by codec.
-// The returned Codec is NOT safe for concurrent access, and MUST be created anew when used.
 func Terminate[T any](codec Codec[T]) Codec[T] {
 	return internal.Terminate(codec)
 }
 
 // Terminate returns a new Codec that escapes and terminates the encodings produced by codec,
 // if codec.RequiresTerminator() is true. Otherwise it returns codec.
-// The returned Codec is NOT safe for concurrent access, and MUST be created anew when used.
 func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return internal.TerminateIfNeeded(codec)
 }
