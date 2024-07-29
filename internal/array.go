@@ -29,6 +29,7 @@ type pointerToArrayCodec[P ~*A, A any, E any] struct {
 // arrayCodec makes heavy use of reflection, and should be avoided if possible.
 //
 // This codec delegates to a pointerToArrayCodec internally.
+// Because of this, no encoding will ever be empty because pointerToArrayCodec always writes a prefix.
 type arrayCodec[A any, E any] struct {
 	delegate Codec[*A]
 }
@@ -114,5 +115,5 @@ func (c arrayCodec[A, E]) Write(w io.Writer, value A) error {
 }
 
 func (c arrayCodec[A, E]) RequiresTerminator() bool {
-	return false
+	return c.delegate.RequiresTerminator()
 }

@@ -8,6 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// The presence of pNonEmpty in these tests
+// is due to ArrayCodec delegating to PointerToArrayCodec.
+
 func TestArrayInt32(t *testing.T) {
 	codec := internal.ArrayCodec[[5]int32](int32Codec)
 	testCodec(t, codec, []testCase[[5]int32]{
@@ -21,11 +24,25 @@ func TestArrayInt32(t *testing.T) {
 		}},
 	})
 	testCodecFail(t, codec, [5]int32{1, 2, 3, 4, 5})
+}
 
-	codecEmpty := internal.ArrayCodec[[0]int32](int32Codec)
-	testCodec(t, codecEmpty, []testCase[[0]int32]{
-		{"[]", [0]int32{}, []byte{pNonEmpty}},
+func TestArrayString(t *testing.T) {
+	codec := internal.ArrayCodec[[5]string](stringCodec)
+	testCodec(t, codec, []testCase[[5]string]{
+		{"5x empty string", [5]string{"", "", "", "", ""}, []byte{
+			pNonEmpty,
+			term, term, term, term, term,
+		}},
+		{"", [5]string{"abc", "d", "", "ef", ""}, []byte{
+			pNonEmpty,
+			'a', 'b', 'c', term,
+			'd', term,
+			term,
+			'e', 'f', term,
+			term,
+		}},
 	})
+	testCodecFail(t, codec, [5]string{"", "", "", "", ""})
 }
 
 func TestArrayArrayInt32(t *testing.T) {
@@ -84,11 +101,6 @@ func TestPtrToArrayInt32(t *testing.T) {
 		}},
 	})
 	testCodecFail(t, codec, &[5]int32{1, 2, 3, 4, 5})
-
-	codecEmpty := internal.PointerToArrayCodec[*[0]int32](int32Codec, true)
-	testCodec(t, codecEmpty, []testCase[*[0]int32]{
-		{"[]", &[0]int32{}, []byte{pNonEmpty}},
-	})
 }
 
 func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
@@ -159,5 +171,37 @@ func TestPointerToArrayNilsLast(t *testing.T) {
 		encodeLast(&[1]int32{0}),
 		encodeLast(&[1]int32{35}),
 		encodeLast(nil),
+	})
+}
+
+func TestEmptyArray(t *testing.T) {
+	codecEmptyInt32 := internal.ArrayCodec[[0]int32](int32Codec)
+	testCodec(t, codecEmptyInt32, []testCase[[0]int32]{
+		{"[0]int32", [0]int32{}, []byte{pNonEmpty}},
+	})
+
+	codecEmptyPtrInt32 := internal.PointerToArrayCodec[*[0]int32](int32Codec, true)
+	testCodec(t, codecEmptyPtrInt32, []testCase[*[0]int32]{
+		{"*[0]int32", &[0]int32{}, []byte{pNonEmpty}},
+	})
+
+	codecEmptyRows := internal.ArrayCodec[[5][0]int32](codecEmptyInt32)
+	testCodec(t, codecEmptyRows, []testCase[[5][0]int32]{
+		{"[[5][0]int32]", [5][0]int32{}, []byte{
+			pNonEmpty, // outer array, rest are inner arrays
+			pNonEmpty,
+			pNonEmpty,
+			pNonEmpty,
+			pNonEmpty,
+			pNonEmpty,
+		}},
+	})
+
+	codec5Int32 := internal.ArrayCodec[[5]int32](int32Codec)
+	codecEmptyColumns := internal.ArrayCodec[[0][5]int32](codec5Int32)
+	testCodec(t, codecEmptyColumns, []testCase[[0][5]int32]{
+		{"[[0][5]int32]", [0][5]int32{}, []byte{
+			pNonEmpty, // outer array, no elements so no inner arrays
+		}},
 	})
 }
