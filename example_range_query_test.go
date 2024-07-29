@@ -43,7 +43,7 @@ func (db *DB) Range(begin, end []byte) []Entry {
 // BEGIN KEY CODEC
 
 var (
-	wordsCodec = lexy.SliceOf[[]string](lexy.String[string]())
+	wordsCodec = lexy.Terminate(lexy.SliceOf[[]string](lexy.String[string]()))
 	costCodec  = lexy.Int[int32]()
 	keyCodec   = KeyCodec{}
 )
@@ -52,13 +52,13 @@ type KeyCodec struct{}
 
 func (c KeyCodec) Read(r io.Reader) (UserKey, error) {
 	cost, _ := costCodec.Read(r)
-	words, _ := lexy.TerminateIfNeeded(wordsCodec).Read(r)
+	words, _ := wordsCodec.Read(r)
 	return UserKey{words, cost}, nil
 }
 
 func (c KeyCodec) Write(w io.Writer, key UserKey) error {
 	costCodec.Write(w, key.cost)
-	return lexy.TerminateIfNeeded(wordsCodec).Write(w, key.words)
+	return wordsCodec.Write(w, key.words)
 }
 
 func (c KeyCodec) RequiresTerminator() bool {

@@ -26,7 +26,11 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 	if valueCodec == nil {
 		panic("valueCodec must be non-nil")
 	}
-	return mapCodec[M, K, V]{keyCodec, valueCodec, getPrefixWriter[M](isNilMap, isEmptyMap, nilsFirst)}
+	return mapCodec[M, K, V]{
+		TerminateIfNeeded(keyCodec),
+		TerminateIfNeeded(valueCodec),
+		getPrefixWriter[M](isNilMap, isEmptyMap, nilsFirst),
+	}
 }
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
@@ -34,18 +38,16 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	if m, done, err := ReadPrefix(r, true, &empty); done {
 		return m, err
 	}
-	keyReader := TerminateIfNeeded(c.keyCodec)
-	valueReader := TerminateIfNeeded(c.valueCodec)
 	m := make(M)
 	for {
-		key, err := keyReader.Read(r)
+		key, err := c.keyCodec.Read(r)
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return m, err
 		}
-		value, err := valueReader.Read(r)
+		value, err := c.valueCodec.Read(r)
 		if err != nil {
 			return m, err
 		}
@@ -61,13 +63,11 @@ func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
 	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
-	keyWriter := TerminateIfNeeded(c.keyCodec)
-	valueWriter := TerminateIfNeeded(c.valueCodec)
 	for k, v := range value {
-		if err := keyWriter.Write(w, k); err != nil {
+		if err := c.keyCodec.Write(w, k); err != nil {
 			return err
 		}
-		if err := valueWriter.Write(w, v); err != nil {
+		if err := c.valueCodec.Write(w, v); err != nil {
 			return err
 		}
 	}

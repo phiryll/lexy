@@ -33,10 +33,13 @@ type schemaVersion4 struct {
 }
 
 var (
-	SchemaVersion1Codec = schemaVersion1Codec{}
-	SchemaVersion2Codec = schemaVersion2Codec{}
-	SchemaVersion3Codec = schemaVersion3Codec{}
-	SchemaVersion4Codec = schemaVersion4Codec{}
+	// Even though these schemas don't require it,
+	// it's good practice to wrap with lexy.TerminateIfNeeded
+	// if the Codec might change in the future.
+	SchemaVersion1Codec = lexy.TerminateIfNeeded[schemaVersion1](schemaVersion1Codec{})
+	SchemaVersion2Codec = lexy.TerminateIfNeeded[schemaVersion2](schemaVersion2Codec{})
+	SchemaVersion3Codec = lexy.TerminateIfNeeded[schemaVersion3](schemaVersion3Codec{})
+	SchemaVersion4Codec = lexy.TerminateIfNeeded[schemaVersion4](schemaVersion4Codec{})
 	VersionedCodec      = versionedCodec{}
 )
 
@@ -50,25 +53,25 @@ func (c versionedCodec) Read(r io.Reader) (schemaVersion4, error) {
 	}
 	switch version {
 	case 1:
-		v1, err := lexy.TerminateIfNeeded(SchemaVersion1Codec).Read(r)
+		v1, err := SchemaVersion1Codec.Read(r)
 		if err != nil {
 			return zero, err
 		}
 		return schemaVersion4{v1.name, "", ""}, nil
 	case 2:
-		v2, err := lexy.TerminateIfNeeded(SchemaVersion2Codec).Read(r)
+		v2, err := SchemaVersion2Codec.Read(r)
 		if err != nil {
 			return zero, err
 		}
 		return schemaVersion4{v2.name, "", v2.lastName}, nil
 	case 3:
-		v3, err := lexy.TerminateIfNeeded(SchemaVersion3Codec).Read(r)
+		v3, err := SchemaVersion3Codec.Read(r)
 		if err != nil {
 			return zero, err
 		}
 		return schemaVersion4{v3.name, "", v3.lastName}, nil
 	case 4:
-		return lexy.TerminateIfNeeded(SchemaVersion4Codec).Read(r)
+		return SchemaVersion4Codec.Read(r)
 	default:
 		panic(fmt.Sprintf("unknown schema version: %d", version))
 	}
@@ -78,7 +81,7 @@ func (c versionedCodec) Write(w io.Writer, value schemaVersion4) error {
 	if err := lexy.Uint[uint32]().Write(w, 4); err != nil {
 		return err
 	}
-	return lexy.TerminateIfNeeded(SchemaVersion4Codec).Write(w, value)
+	return SchemaVersion4Codec.Write(w, value)
 }
 
 func (c versionedCodec) RequiresTerminator() bool {
@@ -86,7 +89,7 @@ func (c versionedCodec) RequiresTerminator() bool {
 }
 
 var (
-	NameCodec  = lexy.String[string]()
+	NameCodec  = lexy.Terminate(lexy.String[string]())
 	CountCodec = lexy.Uint[uint16]()
 )
 
@@ -96,8 +99,7 @@ type schemaVersion1Codec struct{}
 
 func (p schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
 	var zero schemaVersion1
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	name, err := terminatedNameCodec.Read(r)
+	name, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -105,8 +107,7 @@ func (p schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
 }
 
 func (p schemaVersion1Codec) Write(w io.Writer, value schemaVersion1) error {
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	return terminatedNameCodec.Write(w, value.name)
+	return NameCodec.Write(w, value.name)
 }
 
 func (p schemaVersion1Codec) RequiresTerminator() bool {
@@ -119,12 +120,11 @@ type schemaVersion2Codec struct{}
 
 func (p schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
 	var zero schemaVersion2
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	lastName, err := terminatedNameCodec.Read(r)
+	lastName, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	name, err := terminatedNameCodec.Read(r)
+	name, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -132,11 +132,10 @@ func (p schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
 }
 
 func (p schemaVersion2Codec) Write(w io.Writer, value schemaVersion2) error {
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	if err := terminatedNameCodec.Write(w, value.lastName); err != nil {
+	if err := NameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
-	return terminatedNameCodec.Write(w, value.name)
+	return NameCodec.Write(w, value.name)
 }
 
 func (p schemaVersion2Codec) RequiresTerminator() bool {
@@ -149,16 +148,15 @@ type schemaVersion3Codec struct{}
 
 func (p schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
 	var zero schemaVersion3
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
 	count, err := CountCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	lastName, err := terminatedNameCodec.Read(r)
+	lastName, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	name, err := terminatedNameCodec.Read(r)
+	name, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -166,14 +164,13 @@ func (p schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
 }
 
 func (p schemaVersion3Codec) Write(w io.Writer, value schemaVersion3) error {
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
 	if err := CountCodec.Write(w, value.count); err != nil {
 		return err
 	}
-	if err := terminatedNameCodec.Write(w, value.lastName); err != nil {
+	if err := NameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
-	return terminatedNameCodec.Write(w, value.name)
+	return NameCodec.Write(w, value.name)
 }
 
 func (p schemaVersion3Codec) RequiresTerminator() bool {
@@ -186,16 +183,15 @@ type schemaVersion4Codec struct{}
 
 func (s schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
 	var zero schemaVersion4
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	lastName, err := terminatedNameCodec.Read(r)
+	lastName, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	firstName, err := terminatedNameCodec.Read(r)
+	firstName, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	middleName, err := terminatedNameCodec.Read(r)
+	middleName, err := NameCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -203,14 +199,13 @@ func (s schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
 }
 
 func (s schemaVersion4Codec) Write(w io.Writer, value schemaVersion4) error {
-	terminatedNameCodec := lexy.TerminateIfNeeded(NameCodec)
-	if err := terminatedNameCodec.Write(w, value.lastName); err != nil {
+	if err := NameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
-	if err := terminatedNameCodec.Write(w, value.firstName); err != nil {
+	if err := NameCodec.Write(w, value.firstName); err != nil {
 		return err
 	}
-	return terminatedNameCodec.Write(w, value.middleName)
+	return NameCodec.Write(w, value.middleName)
 }
 
 func (p schemaVersion4Codec) RequiresTerminator() bool {
@@ -222,7 +217,7 @@ func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], v
 	if err := lexy.Uint[uint32]().Write(w, version); err != nil {
 		return err
 	}
-	return lexy.TerminateIfNeeded(codec).Write(w, value)
+	return codec.Write(w, value)
 }
 
 // Example (SchemaVersion) shows how schema versioning could be implemented.

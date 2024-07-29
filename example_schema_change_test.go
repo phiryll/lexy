@@ -27,7 +27,7 @@ type schema struct {
 }
 
 var (
-	nameCodec     = lexy.String[string]()
+	nameCodec     = lexy.Terminate(lexy.String[string]())
 	countCodec    = lexy.Uint[uint16]()
 	PreviousCodec = previousCodec{}
 	SchemaCodec   = schemaCodec{}
@@ -40,7 +40,7 @@ func (p previousCodec) Read(r io.Reader) (schemaPrevious, error) {
 }
 
 func (p previousCodec) Write(w io.Writer, value schemaPrevious) error {
-	terminatedNameCodec := lexy.TerminateIfNeeded(nameCodec)
+	terminatedNameCodec := nameCodec
 	if err := terminatedNameCodec.Write(w, "count"); err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ type schemaCodec struct{}
 
 func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	var zero, value schema
-	terminatedNameCodec := lexy.TerminateIfNeeded(nameCodec)
+	terminatedNameCodec := nameCodec
 	for {
 		field, err := terminatedNameCodec.Read(r)
 		if err != nil && err != io.EOF {

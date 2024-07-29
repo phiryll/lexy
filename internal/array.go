@@ -49,7 +49,7 @@ func PointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E], nilsFirst bool
 	return pointerToArrayCodec[P, A, E]{
 		pointerType,
 		arrayType,
-		elemCodec,
+		TerminateIfNeeded(elemCodec),
 		getPrefixWriter[P](isNilPointer, nil, nilsFirst),
 	}
 }
@@ -65,10 +65,9 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 	ptrToPtrToArray := reflect.New(c.pointerType)
 	ptrToPtrToArray.Elem().Set(reflect.New(c.arrayType))
 	array := ptrToPtrToArray.Elem().Elem()
-	codec := TerminateIfNeeded(c.elemCodec)
 	size := c.arrayType.Len()
 	for i := range size {
-		value, err := codec.Read(r)
+		value, err := c.elemCodec.Read(r)
 		if err == io.EOF {
 			if i != size-1 {
 				return nil, io.ErrUnexpectedEOF
@@ -87,11 +86,10 @@ func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
 	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
-	codec := TerminateIfNeeded(c.elemCodec)
 	arrayValue := reflect.ValueOf(value).Elem()
 	for i := range c.arrayType.Len() {
 		elem := arrayValue.Index(i).Interface()
-		if err := codec.Write(w, elem.(E)); err != nil {
+		if err := c.elemCodec.Write(w, elem.(E)); err != nil {
 			return err
 		}
 	}

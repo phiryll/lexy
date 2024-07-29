@@ -42,15 +42,20 @@ func NegateCodec[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
 	}
+	// Negate must escape and terminate its delegate whether it requries it or not,
+	// but shouldn't wrap if the delegate is already a terminatorCodec.
+	if _, ok := codec.(terminatorCodec[T]); !ok {
+		codec = Terminate(codec)
+	}
 	return negateCodec[T]{codec}
 }
 
 func (c negateCodec[T]) Read(r io.Reader) (T, error) {
-	return Terminate(c.codec).Read(negateReader{r})
+	return c.codec.Read(negateReader{r})
 }
 
 func (c negateCodec[T]) Write(w io.Writer, value T) error {
-	return Terminate(c.codec).Write(negateWriter{w}, value)
+	return c.codec.Write(negateWriter{w}, value)
 }
 
 func (c negateCodec[T]) RequiresTerminator() bool {

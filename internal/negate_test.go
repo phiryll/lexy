@@ -59,7 +59,7 @@ func TestNegatePtrString(t *testing.T) {
 }
 
 var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec, true))
-var negStringCodec = internal.NegateCodec(stringCodec)
+var negStringCodec = internal.TerminateIfNeeded(internal.NegateCodec(stringCodec))
 var ptrStringCodec = internal.PointerCodec[*string](stringCodec, true)
 var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec, true)
 var negSlicePtrStringCodec = internal.NegateCodec(slicePtrStringCodec)
@@ -107,7 +107,7 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	if err != nil {
 		return zero, err
 	}
-	s, err := internal.TerminateIfNeeded(negStringCodec).Read(r)
+	s, err := negStringCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -122,7 +122,7 @@ func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
 	if err := uint8Codec.Write(w, value.uint8); err != nil {
 		return err
 	}
-	if err := internal.TerminateIfNeeded(negStringCodec).Write(w, value.string); err != nil {
+	if err := negStringCodec.Write(w, value.string); err != nil {
 		return err
 	}
 	return negPIntCodec.Write(w, value.pInt16)

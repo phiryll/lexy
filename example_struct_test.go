@@ -32,7 +32,7 @@ func (s SimpleStruct) String() string {
 var (
 	anIntCodec      = lexy.Int[int16]()
 	aFloatCodec     = lexy.Float32[float32]()
-	stringsCodec    = lexy.SliceOf[[]string](lexy.String[string]())
+	stringsCodec    = lexy.Terminate(lexy.SliceOf[[]string](lexy.String[string]()))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
 	fnsiCodec       = floatNegStringsIntCodec{}
@@ -52,7 +52,7 @@ func (c intFloatStringsCodec) Read(r io.Reader) (SimpleStruct, error) {
 	if err != nil {
 		return zero, err
 	}
-	strings, err := lexy.TerminateIfNeeded(stringsCodec).Read(r)
+	strings, err := stringsCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -66,7 +66,7 @@ func (c intFloatStringsCodec) Write(w io.Writer, value SimpleStruct) error {
 	if err := aFloatCodec.Write(w, value.aFloat); err != nil {
 		return err
 	}
-	return lexy.TerminateIfNeeded(stringsCodec).Write(w, value.strings)
+	return stringsCodec.Write(w, value.strings)
 }
 
 func (c intFloatStringsCodec) RequiresTerminator() bool {
@@ -81,7 +81,7 @@ func (c floatNegStringsIntCodec) Read(r io.Reader) (SimpleStruct, error) {
 	if err != nil {
 		return zero, err
 	}
-	strings, err := lexy.TerminateIfNeeded(negStringsCodec).Read(r)
+	strings, err := negStringsCodec.Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -96,7 +96,7 @@ func (c floatNegStringsIntCodec) Write(w io.Writer, value SimpleStruct) error {
 	if err := aFloatCodec.Write(w, value.aFloat); err != nil {
 		return err
 	}
-	if err := lexy.TerminateIfNeeded(negStringsCodec).Write(w, value.strings); err != nil {
+	if err := negStringsCodec.Write(w, value.strings); err != nil {
 		return err
 	}
 	return anIntCodec.Write(w, value.anInt)

@@ -22,7 +22,10 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return sliceCodec[S, E]{elemCodec, getPrefixWriter[S](isNilSlice, isEmptySlice, nilsFirst)}
+	return sliceCodec[S, E]{
+		TerminateIfNeeded(elemCodec),
+		getPrefixWriter[S](isNilSlice, isEmptySlice, nilsFirst),
+	}
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
@@ -30,10 +33,9 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	if value, done, err := ReadPrefix(r, true, &empty); done {
 		return value, err
 	}
-	codec := TerminateIfNeeded(c.elemCodec)
 	var values S
 	for {
-		value, err := codec.Read(r)
+		value, err := c.elemCodec.Read(r)
 		if err == io.EOF {
 			break
 		}
@@ -52,9 +54,8 @@ func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
 	if done, err := c.writePrefix(w, value); done {
 		return err
 	}
-	codec := TerminateIfNeeded(c.elemCodec)
 	for _, elem := range value {
-		if err := codec.Write(w, elem); err != nil {
+		if err := c.elemCodec.Write(w, elem); err != nil {
 			return err
 		}
 	}
