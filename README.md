@@ -59,6 +59,7 @@ func (db *KeyValueDB) Put(key Key, value *Value) error {
     if err != nil {
         return err
     }
+    // buf.Bytes() can be nil if no bytes were written by keyCodec.
     return db.providerDB.Put(buf.Bytes(), valueBytes)
 }
 
@@ -67,6 +68,7 @@ func (db *KeyValueDB) Get(key Key) (*Value, error) {
     if err := keyCodec.Write(&buf, key); err != nil {
         return nil, err
     }
+    // buf.Bytes() can be nil if no bytes were written by keyCodec.
     valueBytes, err := db.providerDB.Get(buf.Bytes())
     if err != nil {
         return nil, err
