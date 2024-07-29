@@ -18,7 +18,7 @@ type Codec[T any] interface {
 // This is a convenience function.
 // Use Codec.Write when encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0, 64))
 	if err := codec.Write(buf, value); err != nil {
 		return nil, err
 	}
