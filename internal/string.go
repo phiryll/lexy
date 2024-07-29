@@ -11,8 +11,8 @@ func StringCodec[T ~string]() Codec[T] {
 
 // stringCodec is the Codec for strings.
 //
-// A string is encoded as its bytes following prefixEmpty or prefixNonEmpty.
-// Read will fully consume its argument io.Reader if the string is non-empty.
+// A string is encoded as its bytes.
+// Read will fully consume its argument io.Reader.
 // If a string is part of a larger aggregate and not fixed-length,
 // its encoding should be escaped and terminated by the enclosing Codec.
 //
@@ -24,25 +24,16 @@ func StringCodec[T ~string]() Codec[T] {
 type stringCodec[T ~string] struct{}
 
 func (c stringCodec[T]) Read(r io.Reader) (T, error) {
-	if value, done, err := ReadPrefix[string](r, false, nil); done {
-		return T(value), err
-	}
 	var buf strings.Builder
 	// io.Copy will not return io.EOF
-	n, err := io.Copy(&buf, r)
+	_, err := io.Copy(&buf, r)
 	if err != nil {
 		return T(""), err
-	}
-	if n == 0 {
-		return T(""), io.ErrUnexpectedEOF
 	}
 	return T(buf.String()), nil
 }
 
 func (c stringCodec[T]) Write(w io.Writer, value T) error {
-	if done, err := WritePrefixNilsFirst(w, nil, isEmptyString, value); done {
-		return err
-	}
 	_, err := io.WriteString(w, string(value))
 	return err
 }

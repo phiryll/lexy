@@ -17,8 +17,6 @@ import (
 // The Read and Write methods should be lossless inverse operations.
 // Exceptions to either of these behaviors should be clearly documented.
 //
-// No encoded value can be empty, even for a value of nil.
-//
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
 	// Read will read from r and decode a value of type T.
@@ -46,7 +44,6 @@ type Codec[T any] interface {
 	// Write will encode value and write the encoded bytes to w.
 	//
 	// If Write is successful, it must have written at least one byte to w.
-	// No encoded value can be empty, even for a value of nil.
 	// This ensures that Read can have consistent semantics,
 	// which is necessary for aggregate Codecs to behave properly.
 	//

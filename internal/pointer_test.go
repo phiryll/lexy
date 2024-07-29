@@ -21,8 +21,8 @@ func TestPointerString(t *testing.T) {
 	codec := internal.PointerCodec[*string](stringCodec, true)
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
-		{"*empty", ptr(""), []byte{pNonEmpty, pEmpty}},
-		{"*abc", ptr("abc"), []byte{pNonEmpty, pNonEmpty, 'a', 'b', 'c'}},
+		{"*empty", ptr(""), []byte{pNonEmpty}},
+		{"*abc", ptr("abc"), []byte{pNonEmpty, 'a', 'b', 'c'}},
 	})
 	testCodecFail(t, codec, ptr("abc"))
 }
@@ -33,8 +33,8 @@ func TestPointerPointerString(t *testing.T) {
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr((*string)(nil)), []byte{pNonEmpty, pNilFirst}},
-		{"**empty", ptr(ptr("")), []byte{pNonEmpty, pNonEmpty, pEmpty}},
-		{"**abc", ptr(ptr("abc")), []byte{pNonEmpty, pNonEmpty, pNonEmpty, 'a', 'b', 'c'}},
+		{"**empty", ptr(ptr("")), []byte{pNonEmpty, pNonEmpty}},
+		{"**abc", ptr(ptr("abc")), []byte{pNonEmpty, pNonEmpty, 'a', 'b', 'c'}},
 	})
 	testCodecFail(t, codec, ptr(ptr("abc")))
 }

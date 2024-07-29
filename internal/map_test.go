@@ -12,10 +12,8 @@ import (
 
 // just making map codec declarations terser
 var (
-	sCodec       = stringCodec
-	iCodec       = int32Codec
-	sliceCodec   = internal.SliceCodec[[]string](sCodec, true)
-	pointerCodec = internal.PointerCodec[*string](sCodec, true)
+	sliceCodec   = internal.SliceCodec[[]string](stringCodec, true)
+	pointerCodec = internal.PointerCodec[*string](stringCodec, true)
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
@@ -25,7 +23,7 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 		{"empty", M{}, []byte{pEmpty}},
 		{"{a:0}", M{"a": 0}, []byte{
 			pNonEmpty,
-			pNonEmpty, 'a', term,
+			'a', term,
 			0x80, 0x00, 0x00, 0x00,
 		}},
 	})
@@ -58,17 +56,17 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[map[string]int32](sCodec, iCodec, true))
+	testBasicMap(t, internal.MapCodec[map[string]int32](stringCodec, int32Codec, true))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[mStringInt](sCodec, iCodec, true))
+	testBasicMap(t, internal.MapCodec[mStringInt](stringCodec, int32Codec, true))
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := internal.MapCodec[map[string][]string](sCodec, sliceCodec, true)
+	codec := internal.MapCodec[map[string][]string](stringCodec, sliceCodec, true)
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -123,8 +121,8 @@ func TestMapPointerPointer(t *testing.T) {
 
 func TestMapNilsLast(t *testing.T) {
 	// Maps are randomly ordered, so we can only test nil/empty/non-empty.
-	encodeFirst := encoderFor(internal.MapCodec[map[string]int32](sCodec, iCodec, true))
-	encodeLast := encoderFor(internal.MapCodec[map[string]int32](sCodec, iCodec, false))
+	encodeFirst := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, true))
+	encodeLast := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, false))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(map[string]int32{}),

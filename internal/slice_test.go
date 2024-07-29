@@ -29,13 +29,13 @@ func TestSliceString(t *testing.T) {
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []string{}, []byte{pEmpty}},
-		{"[\"\"]", []string{""}, []byte{pNonEmpty, pEmpty, term}},
-		{"[a]", []string{"a"}, []byte{pNonEmpty, pNonEmpty, 'a', term}},
+		{"[\"\"]", []string{""}, []byte{pNonEmpty, term}},
+		{"[a]", []string{"a"}, []byte{pNonEmpty, 'a', term}},
 		{"[a, \"\", xyz]", []string{"a", "", "xyz"}, []byte{
 			pNonEmpty,
-			pNonEmpty, 'a', term,
-			pEmpty, term,
-			pNonEmpty, 'x', 'y', 'z', term,
+			'a', term,
+			term,
+			'x', 'y', 'z', term,
 		}},
 	})
 	testCodecFail(t, codec, []string{})
@@ -48,13 +48,13 @@ func TestSlicePtrString(t *testing.T) {
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*string{}, []byte{pEmpty}},
 		{"[nil]", []*string{nil}, []byte{pNonEmpty, pNilFirst, term}},
-		{"[*a]", []*string{ptr("a")}, []byte{pNonEmpty, pNonEmpty, pNonEmpty, 'a', term}},
+		{"[*a]", []*string{ptr("a")}, []byte{pNonEmpty, pNonEmpty, 'a', term}},
 		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, []byte{
 			pNonEmpty,
-			pNonEmpty, pNonEmpty, 'a', term,
+			pNonEmpty, 'a', term,
 			pNilFirst, term,
-			pNonEmpty, pEmpty, term,
-			pNonEmpty, pNonEmpty, 'x', 'y', 'z', term,
+			pNonEmpty, term,
+			pNonEmpty, 'x', 'y', 'z', term,
 		}},
 	})
 	testCodecFail(t, codec, []*string{})
@@ -105,9 +105,9 @@ func TestSliceSliceString(t *testing.T) {
 		{"[nil]", [][]string{[]string(nil)}, []byte{pNonEmpty, pNilFirst, term}},
 		{"[[]]", [][]string{{}}, []byte{pNonEmpty, pEmpty, term}},
 		{"[[\"\"]]", [][]string{{""}}, []byte{
-			pNonEmpty,         // prefix outer
-			pNonEmpty,         // prefix {""}
-			pEmpty, esc, term, // "", escaped
+			pNonEmpty, // prefix outer
+			pNonEmpty, // prefix {""}
+			esc, term, // "", escaped
 			term, // terminator {""}, within outer
 		}},
 
@@ -125,28 +125,28 @@ func TestSliceSliceString(t *testing.T) {
 		{"[nil, [\"\"]]", [][]string{nil, {""}}, []byte{
 			pNonEmpty,       // outer
 			pNilFirst, term, // nil = outer[0]
-			pNonEmpty,         // prefix {""}
-			pEmpty, esc, term, // "", escaped
+			pNonEmpty, // prefix {""}
+			esc, term, // "", escaped
 			term, // terminator {""}, within outer
 		}},
 		{"[[\"\"], nil]", [][]string{{""}, nil}, []byte{
-			pNonEmpty,         // outer
-			pNonEmpty,         // prefix {""}
-			pEmpty, esc, term, // "", escaped
+			pNonEmpty, // outer
+			pNonEmpty, // prefix {""}
+			esc, term, // "", escaped
 			term,            // terminator {""}, within outer
 			pNilFirst, term, // nil = outer[1]
 		}},
 		{"[[], [\"\"]]", [][]string{{}, {""}}, []byte{
 			pNonEmpty,    // outer
 			pEmpty, term, // {} = outer[0]
-			pNonEmpty,         // prefix {""}
-			pEmpty, esc, term, // "", escaped
+			pNonEmpty, // prefix {""}
+			esc, term, // "", escaped
 			term, // terminator {""}, within outer
 		}},
 		{"[[\"\"], []]", [][]string{{""}, {}}, []byte{
-			pNonEmpty,         // outer
-			pNonEmpty,         // prefix {""}
-			pEmpty, esc, term, // "", escaped
+			pNonEmpty, // outer
+			pNonEmpty, // prefix {""}
+			esc, term, // "", escaped
 			term,         // terminator {""}, within outer
 			pEmpty, term, // {} = outer[1]
 		}},
@@ -164,14 +164,14 @@ func TestSliceSliceString(t *testing.T) {
 			pNilFirst, term,
 			// {"a", "", "xyz"}, escaped
 			pNonEmpty,
-			pNonEmpty, 'a', esc, term,
-			pEmpty, esc, term,
-			pNonEmpty, 'x', 'y', 'z', esc, term,
+			'a', esc, term,
+			esc, term,
+			'x', 'y', 'z', esc, term,
 			term,
 			// nil
 			pNilFirst, term,
 			// {""}, escaped
-			pNonEmpty, pEmpty, esc, term,
+			pNonEmpty, esc, term,
 			term,
 			// {}
 			pEmpty, term,
