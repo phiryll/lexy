@@ -56,10 +56,10 @@ func TestComplex64(t *testing.T) {
 	// test round trip
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.value)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(b.Bytes()))
+			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
 			require.NoError(t, err)
 			// works for NaN as well
 			assert.Equal(t, math.Float32bits(real(tt.value)), math.Float32bits(real(got)))
@@ -74,10 +74,10 @@ func TestComplex64(t *testing.T) {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
 		}
 		t.Run(name, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.value)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
-			current := b.Bytes()
+			current := buf.Bytes()
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}
@@ -128,10 +128,10 @@ func TestComplex128(t *testing.T) {
 
 	// test round trip
 	for _, tt := range testCases {
-		var b bytes.Buffer
-		err := codec.Write(&b, tt.value)
+		buf := bytes.NewBuffer([]byte{})
+		err := codec.Write(buf, tt.value)
 		require.NoError(t, err)
-		got, err := codec.Read(bytes.NewReader(b.Bytes()))
+		got, err := codec.Read(bytes.NewReader(buf.Bytes()))
 		require.NoError(t, err)
 		// works for NaN as well
 		assert.Equal(t, math.Float64bits(real(tt.value)), math.Float64bits(real(got)))
@@ -145,10 +145,10 @@ func TestComplex128(t *testing.T) {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
 		}
 		t.Run(name, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.value)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
-			current := b.Bytes()
+			current := buf.Bytes()
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}

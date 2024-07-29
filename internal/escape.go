@@ -168,7 +168,7 @@ func doEscape(w io.Writer, p []byte) (int, error) {
 func doUnescape(r io.Reader) ([]byte, error) {
 	// Reading from r one byte at a time, because we can't unread.
 	in := []byte{0}
-	var out bytes.Buffer
+	out := bytes.NewBuffer([]byte{})
 
 	escaped := false // if the previous byte read is an escape
 	for {

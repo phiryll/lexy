@@ -82,10 +82,10 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("write", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				var b bytes.Buffer
-				err := codec.Write(&b, tt.value)
+				buf := bytes.NewBuffer([]byte{}) // don't let buf.Bytes() return nil
+				err := codec.Write(buf, tt.value)
 				require.NoError(t, err)
-				assert.Equal(t, tt.data, b.Bytes())
+				assert.Equal(t, tt.data, buf.Bytes())
 			})
 		}
 	})
@@ -97,10 +97,10 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.value)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(b.Bytes()))
+			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
 			require.NoError(t, err)
 			assert.Equal(t, reflect.TypeOf(tt.value), reflect.TypeOf(got))
 			assert.Equal(t, tt.value, got)

@@ -111,10 +111,10 @@ func TestMapPointerPointer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.value)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(b.Bytes()))
+			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
 			require.NoError(t, err)
 			assert.Equal(t, dePointerMap(tt.value), dePointerMap(got))
 		})

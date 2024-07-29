@@ -40,8 +40,8 @@ func TestEscape(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			count, err := internal.ExportForTestingDoEscape(&buf, tt.data)
+			buf := bytes.NewBuffer([]byte{})
+			count, err := internal.ExportForTestingDoEscape(buf, tt.data)
 			require.NoError(t, err)
 			assert.Equal(t, len(tt.data), count, "bytes read from input")
 			assert.Equal(t, tt.escaped, buf.Bytes(), "escaped bytes")
@@ -120,7 +120,7 @@ func TestUnescape(t *testing.T) {
 			true},
 		{"empty",
 			[]byte{},
-			[]byte(nil), // buf.Bytes() returns nil if not written to
+			[]byte{},
 			true},
 		{"terminator",
 			[]byte{1, 0},
@@ -181,5 +181,5 @@ func TestUnescapeMultiple(t *testing.T) {
 	}
 	got, err := internal.ExportForTestingDoUnescape(r)
 	assert.ErrorIs(t, err, io.EOF)
-	assert.Equal(t, []byte(nil), got, "exhausted")
+	assert.Equal(t, []byte{}, got, "exhausted")
 }

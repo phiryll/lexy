@@ -45,11 +45,11 @@ func TestTime(t *testing.T) {
 			when := tt.Time
 			_, expectedOffset := when.Zone()
 
-			var b bytes.Buffer
-			err := codec.Write(&b, when)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, when)
 			require.NoError(t, err)
 
-			got, err := codec.Read(bytes.NewReader(b.Bytes()))
+			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
 			require.NoError(t, err)
 			_, actualOffset := got.Zone()
 
@@ -117,10 +117,10 @@ func TestTimeOrder(t *testing.T) {
 		{"pos Berlin 7", posUTC7.In(locBerlin)},
 	} {
 		t.Run(tt.string, func(t *testing.T) {
-			var b bytes.Buffer
-			err := codec.Write(&b, tt.Time)
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.Time)
 			require.NoError(t, err)
-			current := b.Bytes()
+			current := buf.Bytes()
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}

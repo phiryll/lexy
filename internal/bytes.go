@@ -23,9 +23,9 @@ func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 	if value, done, err := ReadPrefix(r, true, &empty); done {
 		return value, err
 	}
-	var buf bytes.Buffer
+	buf := bytes.NewBuffer([]byte{})
 	// io.Copy will not return io.EOF
-	n, err := io.Copy(&buf, r)
+	n, err := io.Copy(buf, r)
 	if err != nil {
 		return nil, err
 	}
