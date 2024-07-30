@@ -5,7 +5,38 @@ import (
 	"io"
 )
 
-// Functions for terminating and escaping.
+// terminatorCodec escapes and terminates data written by codec,
+// and performs the inverse operation when reading.
+//
+// Read only reads up to the first unescaped terminator byte,
+// which will have been previously written by Write.
+// This is the entire point of this Codec, to bound a Read that otherwise would not be bound.
+type terminatorCodec[T any] struct {
+	codec Codec[T]
+}
+
+// Terminate returns a Codec that uses codec, always escaping and terminating.
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	return terminatorCodec[T]{codec: codec}
+}
+
+// TerminateIfNeeded returns a Codec that uses codec,
+// escaping and terminating if codec.RequiresTerminator() is true.
+func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	// This also covers the case if codec is a terminator.
+	if !codec.RequiresTerminator() {
+		return codec
+	}
+	return terminatorCodec[T]{codec: codec}
+}
+
+// Codec for terminating and escaping.
 // The lexicographical binary ordering of encoded aggregates is preserved.
 // For example, ["ab", "cde"] is less than ["aba", "de"], because "ab" is less than "aba".
 // The terminator can't itself be used to escape a terminator because it leads to ambiguities,
@@ -56,31 +87,6 @@ var (
 	ExportForTestingDoEscape   = doEscape
 	ExportForTestingDoUnescape = doUnescape
 )
-
-// Terminate returns a Codec that uses codec, always escaping and terminating.
-func Terminate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	return terminatorCodec[T]{codec: codec}
-}
-
-// TerminateIfNeeded returns a Codec that uses codec,
-// escaping and terminating if codec.RequiresTerminator() is true.
-func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// This also covers the case if codec is a terminator.
-	if !codec.RequiresTerminator() {
-		return codec
-	}
-	return terminatorCodec[T]{codec: codec}
-}
-
-type terminatorCodec[T any] struct {
-	codec Codec[T]
-}
 
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	var value T
