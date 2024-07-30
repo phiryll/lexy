@@ -5,7 +5,6 @@ import (
 )
 
 // mapCodec is the unordered Codec for maps.
-// Use MakeMapCodec(Codec[K], Codec[V], bool) to create a new mapCodec.
 // A map is encoded as:
 //
 // - if nil, prefixNilFirst/Last

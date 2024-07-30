@@ -5,7 +5,6 @@ import (
 )
 
 // pointerCodec is the Codec for pointers, using elemCodec to encode and decode its pointee.
-// Use MakePointerCodec[P](Codec[E]) for P with underlying type *E to create a new pointerCodec.
 // A pointer is encoded as:
 //
 // - if nil, prefixNilFirst/Last

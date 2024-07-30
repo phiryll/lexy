@@ -5,7 +5,6 @@ import (
 )
 
 // sliceCodec is the Codec for slices, using elemCodec to encode and decode its elements.
-// Use MakeSliceCodec(Codec[E]) to create a new sliceCodec.
 // A slice is encoded as:
 //
 // - if nil, prefixNilFirst/Last

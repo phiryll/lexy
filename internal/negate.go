@@ -6,7 +6,6 @@ import (
 )
 
 // negateCodec negates codec, reversing the ordering of its encoding.
-// Use MakeNegateCodec(Codec[T]) to create a new negateCodec.
 //
 // Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
 // For example, consider these encodings:

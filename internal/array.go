@@ -7,7 +7,6 @@ import (
 )
 
 // pointerToArrayCodec is the Codec for pointers to arrays, using elemCodec to encode and decode its elements.
-// Use MakePointerToArrayCodec[P ~*A, A any](Codec[E]) to create a new arrayCodec (A is the array type).
 // Arrays of different sizes are different types in go, and will require different codecs.
 // An array is encoded as its encoded elements.
 // Encoded elements are escaped and termninated if elemCodec requires it.
@@ -21,7 +20,6 @@ type pointerToArrayCodec[P ~*A, A any, E any] struct {
 }
 
 // arrayCodec is the Codec for arrays, using elemCodec to encode and decode its elements.
-// Use MakeArrayCodec[A any](Codec[E]) to create a new arrayCodec (A is the array type).
 // Arrays of different sizes are different types in go, and will require different codecs.
 // An array is encoded as its encoded elements.
 // Encoded elements are escaped and termninated if elemCodec requires it.

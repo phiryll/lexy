@@ -6,7 +6,6 @@ import (
 )
 
 // bytesCodec is the Codec for byte slices.
-// Use MakeBytesCodec[S ~[]byte]() to create a new bytesCodec.
 //
 // []byte is slightly different than string because it can be nil.
 // This is more efficient than sliceCodec would be.
