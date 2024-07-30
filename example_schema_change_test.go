@@ -40,23 +40,22 @@ func (p previousCodec) Read(r io.Reader) (schemaPrevious, error) {
 }
 
 func (p previousCodec) Write(w io.Writer, value schemaPrevious) error {
-	terminatedNameCodec := nameCodec
-	if err := terminatedNameCodec.Write(w, "count"); err != nil {
+	if err := nameCodec.Write(w, "count"); err != nil {
 		return err
 	}
 	if err := countCodec.Write(w, value.count); err != nil {
 		return err
 	}
-	if err := terminatedNameCodec.Write(w, "lastName"); err != nil {
+	if err := nameCodec.Write(w, "lastName"); err != nil {
 		return err
 	}
-	if err := terminatedNameCodec.Write(w, value.lastName); err != nil {
+	if err := nameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
-	if err := terminatedNameCodec.Write(w, "name"); err != nil {
+	if err := nameCodec.Write(w, "name"); err != nil {
 		return err
 	}
-	return terminatedNameCodec.Write(w, value.name)
+	return nameCodec.Write(w, value.name)
 }
 
 // Codecs that don't know when to stop reading must be terminated.
@@ -71,36 +70,44 @@ type schemaCodec struct{}
 
 func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	var zero, value schema
-	terminatedNameCodec := nameCodec
 	for {
-		field, err := terminatedNameCodec.Read(r)
-		if err != nil && err != io.EOF {
-			return zero, err
-		}
+		field, err := nameCodec.Read(r)
 		if err == io.EOF {
 			if len(field) > 0 {
 				return zero, io.ErrUnexpectedEOF
 			}
 			return value, nil
 		}
+		if err != nil {
+			return zero, err
+		}
 		switch field {
 		case "name", "firstName":
 			// Field was renamed.
-			firstName, err := terminatedNameCodec.Read(r)
+			firstName, err := nameCodec.Read(r)
 			if err != nil {
+				if err == io.EOF {
+					err = io.ErrUnexpectedEOF
+				}
 				return zero, err
 			}
 			value.firstName = firstName
 		case "middleName":
 			// Field was added.
-			middleName, err := terminatedNameCodec.Read(r)
+			middleName, err := nameCodec.Read(r)
 			if err != nil {
+				if err == io.EOF {
+					err = io.ErrUnexpectedEOF
+				}
 				return zero, err
 			}
 			value.middleName = middleName
 		case "lastName":
-			lastName, err := terminatedNameCodec.Read(r)
+			lastName, err := nameCodec.Read(r)
 			if err != nil {
+				if err == io.EOF {
+					err = io.ErrUnexpectedEOF
+				}
 				return zero, err
 			}
 			value.lastName = lastName
@@ -108,6 +115,9 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 			// Field was removed, but we still need to read the value.
 			_, err := countCodec.Read(r)
 			if err != nil {
+				if err == io.EOF {
+					err = io.ErrUnexpectedEOF
+				}
 				return zero, err
 			}
 		default:

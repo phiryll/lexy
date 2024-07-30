@@ -50,10 +50,16 @@ func (c intFloatStringsCodec) Read(r io.Reader) (SimpleStruct, error) {
 	}
 	aFloat, err := aFloatCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	strings, err := stringsCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	return SimpleStruct{anInt, aFloat, strings}, nil
@@ -83,10 +89,16 @@ func (c floatNegStringsIntCodec) Read(r io.Reader) (SimpleStruct, error) {
 	}
 	strings, err := negStringsCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	anInt, err := anIntCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	return SimpleStruct{anInt, aFloat, strings}, nil
