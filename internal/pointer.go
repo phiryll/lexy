@@ -25,8 +25,8 @@ func PointerCodec[P ~*E, E any](elemCodec Codec[E], nilsFirst bool) Codec[P] {
 }
 
 func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := ReadPrefix[P](r, true); done {
-		return ptr, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	value, err := c.elemCodec.Read(r)
 	if err != nil {

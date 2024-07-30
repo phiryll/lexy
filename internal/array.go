@@ -60,8 +60,8 @@ func ArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := ReadPrefix[P](r, true); done {
-		return ptr, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	ptrToPtrToArray := reflect.New(c.pointerType)
 	ptrToPtrToArray.Elem().Set(reflect.New(c.arrayType))

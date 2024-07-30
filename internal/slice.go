@@ -28,8 +28,8 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
-	if value, done, err := ReadPrefix[S](r, true); done {
-		return value, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	values := S{}
 	for {

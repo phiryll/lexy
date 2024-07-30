@@ -322,17 +322,18 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
 //
-// nilable should be true if and only if nil is an allowed value of instances of type T.
+// If ReadPrefix returns isNil == true, then the caller is done reading this value
+// regardless of the returned error value.
+// Either there was an error, or there was no error and the nil prefix was read.
+// ReadPrefix returns isNil == false only if the value is non-nil and still needs to be read,
+// and there was no error reading the prefix.
 //
-// ReadPrefix returns done == false only if the value itself still needs to be read
-// (value is not nil), and there was no error reading the prefix.
-// The returned value should be ignored in this case.
-// If ReadPrefix returns done == true and err is nil, the returned value is nil.
+// ReadPrefix will return an error value of io.ErrUnexpectedEOF if no bytes were read.
 // ReadPrefix will never return an error value of io.EOF.
 //
 // See the PointerToStruct example for an example usage.
-func ReadPrefix[T any](r io.Reader, nilable bool) (value T, done bool, err error) {
-	return internal.ReadPrefix[T](r, nilable)
+func ReadPrefix(r io.Reader) (isNil bool, err error) {
+	return internal.ReadPrefix(r)
 }
 
 // WritePrefixNilsFirst is used to write the initial nil/non-nil prefix byte by Codecs

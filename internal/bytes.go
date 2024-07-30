@@ -19,8 +19,8 @@ func BytesCodec[S ~[]byte](nilsFirst bool) Codec[S] {
 }
 
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
-	if value, done, err := ReadPrefix[S](r, true); done {
-		return value, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	buf := bytes.NewBuffer(make([]byte, 0, 64))
 	// io.Copy will not return io.EOF

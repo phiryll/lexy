@@ -39,8 +39,8 @@ func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
 }
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if value, done, err := ReadPrefix[*big.Int](r, true); done {
-		return value, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	neg := false
 	size, err := int64Codec.Read(r)
@@ -199,8 +199,8 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if value, done, err := ReadPrefix[*big.Float](r, true); done {
-		return value, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	kind, err := int8Codec.Read(r)
 	if err != nil {
@@ -349,8 +349,8 @@ func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
 }
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if value, done, err := ReadPrefix[*big.Rat](r, true); done {
-		return value, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	num, err := bIntCodec.Read(r)
 	if err != nil {

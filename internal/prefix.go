@@ -52,44 +52,36 @@ func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value == nil
 }
 
-// ReadPrefix reads the prefix byte from r and handles nil values.
-// nilable should be true if and only if nil is an allowed value of type T.
+// ReadPrefix reads the nil/non-nil prefix byte from r and returns which it read.
 //
-// ReadPrefix returns done == false only if the value itself still needs to be read
-// (value is not nil), and there was no error reading the prefix.
-// If ReadPrefix returns done == true and err is nil, the returned value is nil.
+// If ReadPrefix returns isNil == true, then the caller is done reading this value
+// regardless of the returned error value.
+// Either there was an error, or there was no error and the nil prefix was read.
+// ReadPrefix returns isNil == false only if the value is non-nil and still needs to be read,
+// and there was no error reading the prefix.
+//
+// ReadPrefix will return an error value of io.ErrUnexpectedEOF if no bytes were read.
 // ReadPrefix will never return an error value of io.EOF.
-func ReadPrefix[T any](r io.Reader, nilable bool) (value T, done bool, err error) {
-	// nil for types that can be nil (slices, maps, pointers)
-	// non-nil zero value otherwise (string, bool, int8, ...)
-	var zero T
-
-	if !nilable {
-		return zero, true, fmt.Errorf("read nil for non-nilable type %T", zero)
-	}
-
+func ReadPrefix(r io.Reader) (isNil bool, err error) {
 	prefix := []byte{0}
 	n, err := r.Read(prefix)
 	if n == 0 {
-		return zero, true, io.ErrUnexpectedEOF
+		return true, io.ErrUnexpectedEOF
+	}
+	if err != nil {
+		if err != io.EOF {
+			return true, err
+		}
+		// ignore io.EOF
+		err = nil
 	}
 	switch prefix[0] {
 	case prefixNilFirst, prefixNilLast:
-		if err == io.EOF {
-			// ignore EOF
-			err = nil
-		}
-		return zero, true, err
+		return true, nil
 	case prefixNonNil:
-		if err == io.EOF {
-			return zero, true, io.ErrUnexpectedEOF
-		}
-		return zero, false, err
+		return false, nil
 	default:
-		if err == nil || err == io.EOF {
-			err = fmt.Errorf("unexpected prefix %X", prefix[0])
-		}
-		return zero, true, err
+		return true, fmt.Errorf("unexpected prefix %X", prefix[0])
 	}
 }
 

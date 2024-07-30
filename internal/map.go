@@ -33,8 +33,8 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 }
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
-	if m, done, err := ReadPrefix[M](r, true); done {
-		return m, err
+	if isNil, err := ReadPrefix(r); isNil {
+		return nil, err
 	}
 	m := make(M)
 	for {

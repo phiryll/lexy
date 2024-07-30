@@ -40,10 +40,8 @@ var (
 type ptrToBigStructCodec struct{}
 
 func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
-	// done is true if there was an error, or if value is nil, in which case ptr is nil.
-	// The second argument is whether the value can be nil.
-	if ptr, done, err := lexy.ReadPrefix[*BigStruct](r, true); done {
-		return ptr, err
+	if isNil, err := lexy.ReadPrefix(r); isNil {
+		return nil, err
 	}
 	name, err := stringCodec.Read(r)
 	if err != nil {
