@@ -29,13 +29,12 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 	return mapCodec[M, K, V]{
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
-		getPrefixWriter[M](isNilMap, isEmptyMap, nilsFirst),
+		getPrefixWriter[M](isNilMap, nil, nilsFirst),
 	}
 }
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
-	empty := make(M)
-	if m, done, err := ReadPrefix(r, true, &empty); done {
+	if m, done, err := ReadPrefix[M](r, true, nil); done {
 		return m, err
 	}
 	m := make(M)
@@ -52,9 +51,6 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 			return m, err
 		}
 		m[key] = value
-	}
-	if len(m) == 0 {
-		return nil, io.ErrUnexpectedEOF
 	}
 	return m, nil
 }
