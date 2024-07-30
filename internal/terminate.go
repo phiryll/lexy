@@ -89,14 +89,18 @@ var (
 )
 
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
-	var value T
+	var zero T
 	b, readErr := doUnescape(r)
-	if readErr != nil && (readErr != io.EOF || len(b) == 0) {
-		return value, readErr
+	if readErr == io.EOF && len(b) == 0 {
+		return zero, io.EOF
+	}
+	if readErr != nil {
+		// The trailing terminator was not reached, we do not have complete data.
+		return zero, unexpectedIfEOF(readErr)
 	}
 	value, codecErr := c.codec.Read(bytes.NewBuffer(b))
-	if codecErr != nil && codecErr != io.EOF {
-		return value, codecErr
+	if codecErr != nil {
+		return zero, unexpectedIfEOF(codecErr)
 	}
 	return value, nil
 }
@@ -161,13 +165,16 @@ func doEscape(w io.Writer, p []byte) (int, error) {
 	return n, nil
 }
 
-// doUnescape reads from r until the first unescaped terminator or io.EOF,
-// returning the unescaped data without the trailing terminator, if any.
+// doUnescape reads and unescapes data from from r until the first unescaped terminator,
+// or until no bytes are read from r and and error occurs.
+// doUnescape does not return the trailing terminator.
+// If the returned error is non-nil, the unescaped terminator was not reached.
+// However, the data is valid for what was read from r,
+// with the possible exception of missing a trailing escape.
 //
-// doUnescape inherits its error behavior from r.
-// In particular, it may return a non-nil error from the same call when encountered,
-// or return the error (and no data) from a subsequent call.
-// If err is non-nil, the data is valid for what was read from r.
+// doUnescape will continue reading from r if no bytes are read and no error occurs.
+// doUnescape will continue reading from r if a byte was read and an error occurs,
+// and will ignore the error assuming it will reoccur on the next read.
 func doUnescape(r io.Reader) ([]byte, error) {
 	// Reading from r one byte at a time, because we can't unread.
 	in := []byte{0}
@@ -183,6 +190,9 @@ func doUnescape(r io.Reader) ([]byte, error) {
 			// no data read and err == nil is allowed
 			continue
 		}
+		// If we got a byte and and error, ignore the error.
+		// Presumably we'll get it again on the next read, if any.
+
 		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {

@@ -109,10 +109,16 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	}
 	s, err := negStringCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	pInt, err := negPIntCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return zero, err
 	}
 	return negateTest{u8, pInt, s}, nil
