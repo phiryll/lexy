@@ -5,9 +5,9 @@ import (
 	"io"
 )
 
-// Prefixes to use for encodings that would normally encode nil value as zero bytes.
+// Prefixes to use for encodings that would normally encode nil values as zero bytes.
 // The values were chosen so that nils-first < non-nil < nils-last,
-// and the prefixes don't need to be escaped.
+// and neither the prefixes nor their complements need to be escaped.
 //
 // This is normally only an issue for variable length encodings.
 //
@@ -24,9 +24,10 @@ import (
 //	[][]string{{""}, {}}   => [0x00, 0x00]
 //	[][]string{{""}, {""}} => [0x00, 0x00]
 const (
+	// Room for more between non-nil and nils-last if needed.
 	prefixNilFirst byte = 0x02
-	prefixNonNil   byte = 0x04
-	prefixNilLast  byte = 0x05
+	prefixNonNil   byte = 0x03
+	prefixNilLast  byte = 0xFD
 
 	ExportForTestingPrefixNilFirst = prefixNilFirst
 	ExportForTestingPrefixNonNil   = prefixNonNil
