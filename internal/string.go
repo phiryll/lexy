@@ -12,7 +12,7 @@ func StringCodec[T ~string]() Codec[T] {
 // stringCodec is the Codec for strings.
 //
 // A string is encoded as its bytes.
-// Read will fully consume its argument io.Reader.
+// Read will fully consume its argument io.Reader, and will not return io.EOF.
 // If a string is part of a larger aggregate and not fixed-length,
 // its encoding should be escaped and terminated by the enclosing Codec.
 //

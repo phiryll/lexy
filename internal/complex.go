@@ -15,11 +15,11 @@ type complex64Codec struct{}
 func (c complex64Codec) Read(r io.Reader) (complex64, error) {
 	real, err := basicFloat32Codec.Read(r)
 	if err != nil {
-		return 0, unexpectedIfEOF(err)
+		return 0, err
 	}
 	imag, err := basicFloat32Codec.Read(r)
-	if err != nil && err != io.EOF {
-		return 0, err
+	if err != nil {
+		return 0, unexpectedIfEOF(err)
 	}
 	return complex(real, imag), nil
 }
@@ -43,11 +43,11 @@ type complex128Codec struct{}
 func (c complex128Codec) Read(r io.Reader) (complex128, error) {
 	real, err := basicFloat64Codec.Read(r)
 	if err != nil {
-		return 0, unexpectedIfEOF(err)
+		return 0, err
 	}
 	imag, err := basicFloat64Codec.Read(r)
 	if err != nil && err != io.EOF {
-		return 0, err
+		return 0, unexpectedIfEOF(err)
 	}
 	return complex(real, imag), nil
 }

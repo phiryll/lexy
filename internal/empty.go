@@ -8,7 +8,7 @@ func EmptyCodec[T any]() Codec[T] {
 
 // emptyCodec is a Codec that writes and reads no data.
 // Read returns the zero value of T.
-// Read and Write cannot fail.
+// Read and Write will never return an error, including io.EOF.
 //
 // This is useful for empty structs, which are often used as map values.
 type emptyCodec[T any] struct{}

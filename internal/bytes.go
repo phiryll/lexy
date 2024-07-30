@@ -7,6 +7,7 @@ import (
 
 // bytesCodec is the Codec for byte slices.
 //
+// Read will fully consume its argument io.Reader if the value is not nil.
 // []byte is slightly different than string because it can be nil.
 // This is more efficient than sliceCodec would be.
 type bytesCodec[S ~[]byte] struct {

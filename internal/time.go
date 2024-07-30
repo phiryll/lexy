@@ -43,15 +43,15 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	var zero time.Time
 	seconds, err := int64Codec.Read(r)
 	if err != nil {
-		return zero, unexpectedIfEOF(err)
+		return zero, err
 	}
 	nanos, err := uint32Codec.Read(r)
 	if err != nil {
 		return zero, unexpectedIfEOF(err)
 	}
 	offset, err := int32Codec.Read(r)
-	if err != nil && err != io.EOF {
-		return zero, err
+	if err != nil {
+		return zero, unexpectedIfEOF(err)
 	}
 	loc := time.FixedZone(formatCache.Get(offset), int(offset))
 	return time.Unix(seconds, int64(nanos)).In(loc), nil

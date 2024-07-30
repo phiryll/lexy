@@ -100,9 +100,9 @@ func (c pointerToArrayCodec[P, A, E]) RequiresTerminator() bool {
 }
 
 func (c arrayCodec[A, E]) Read(r io.Reader) (A, error) {
-	var zero A
 	ptrToValue, err := c.delegate.Read(r)
 	if err != nil {
+		var zero A
 		return zero, err
 	}
 	return *ptrToValue, nil

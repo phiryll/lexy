@@ -45,6 +45,9 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	}
 	name, err := stringCodec.Read(r)
 	if err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return nil, err
 	}
 	// Read other fields.
@@ -72,9 +75,9 @@ func (c ptrToBigStructCodec) RequiresTerminator() bool {
 type containterCodec struct{}
 
 func (c containterCodec) Read(r io.Reader) (Container, error) {
-	var zero Container
 	big, err := PtrToBigStructCodec.Read(r)
 	if err != nil {
+		var zero Container
 		return zero, err
 	}
 	// Read other fields.

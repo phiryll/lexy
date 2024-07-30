@@ -45,7 +45,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	neg := false
 	size, err := int64Codec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	if size < 0 {
 		neg = true
@@ -56,14 +56,13 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	}
 	b := make([]byte, size)
 	n, err := r.Read(b)
-	if err != nil && err != io.EOF {
-		return nil, err
-	}
 	if err == io.EOF {
 		if int64(n) < size {
 			return nil, io.ErrUnexpectedEOF
 		}
-		err = nil
+		// fall through if EOF and all bytes were read
+	} else if err != nil {
+		return nil, err
 	}
 	var value big.Int
 	value.SetBytes(b)
@@ -204,7 +203,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	}
 	kind, err := int8Codec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	signbit := kind < 0
 	if kind == negInf || kind == posInf {
@@ -225,19 +224,19 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 
 	exp, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	mantBytes, err := doUnescape(mantReader)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	prec, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	mode, err := modeCodec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 
 	if signbit {
@@ -357,8 +356,8 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 		return nil, unexpectedIfEOF(err)
 	}
 	denom, err := bIntCodec.Read(r)
-	if err != nil && err != io.EOF {
-		return nil, err
+	if err != nil {
+		return nil, unexpectedIfEOF(err)
 	}
 	var value big.Rat
 	return value.SetFrac(num, denom), nil

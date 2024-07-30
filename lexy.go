@@ -80,7 +80,7 @@ type Codec[T any] interface {
 
 // Empty creates a new Codec that reads and writes no data.
 // Read returns the zero value of T.
-// Read and Write cannot fail.
+// Read and Write will never return an error, including io.EOF.
 // This is useful for empty structs, which are often used as map values.
 // This Codec requires a terminator when used within an aggregate Codec.
 func Empty[T any]() Codec[T] { return internal.EmptyCodec[T]() }

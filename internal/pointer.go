@@ -29,7 +29,7 @@ func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 	}
 	value, err := c.elemCodec.Read(r)
 	if err != nil {
-		return nil, err
+		return nil, unexpectedIfEOF(err)
 	}
 	return &value, nil
 }

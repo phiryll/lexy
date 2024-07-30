@@ -46,7 +46,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 		}
 		value, err := c.valueCodec.Read(r)
 		if err != nil {
-			return m, err
+			return m, unexpectedIfEOF(err)
 		}
 		m[key] = value
 	}
