@@ -339,7 +339,7 @@ func ReadPrefix(r io.Reader) (isNil bool, err error) {
 // WritePrefixNilsFirst is used to write the initial nil/non-nil prefix byte by Codecs
 // encoding types whose instances can be nil, with nils ordered first.
 //
-// isNil, if non-nil, is a function returning whether a given value of type T is nil.
+// isNil is a function returning whether a given value of type T is nil.
 // The functions IsNilPointer, IsNilSlice, and IsNilMap are provided for this purpose.
 //
 // WritePrefixNilsFirst returns done == false only if the value itself still needs to be written

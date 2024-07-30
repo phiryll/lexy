@@ -101,14 +101,13 @@ func getPrefixWriter[T any](isNil func(T) bool, nilsFirst bool) prefixWriter[T] 
 }
 
 // WritePrefixNilsFirst writes the correct prefix byte for value to w, with nils ordered first.
-// isNil should be non-nil if type T allows nil values.
 //
 // WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
 // (value is not nil), and there was no error writing the prefix.
 // If WritePrefixNilsFirst returns done == true and err is nil,
 // the value was nil and no further data needs to be written for this value.
 func WritePrefixNilsFirst[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	if isNil != nil && isNil(value) {
+	if isNil(value) {
 		_, err := w.Write(pNilFirst)
 		return true, err
 	}
@@ -120,7 +119,7 @@ func WritePrefixNilsFirst[T any](w io.Writer, isNil func(T) bool, value T) (done
 
 // Exactly the same as WritePrefixNilsFirst, except nils are ordered last.
 func WritePrefixNilsLast[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	if isNil != nil && isNil(value) {
+	if isNil(value) {
 		_, err := w.Write(pNilLast)
 		return true, err
 	}
