@@ -40,12 +40,9 @@ var (
 type ptrToBigStructCodec struct{}
 
 func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
-	// done is true if there was an error, or if value is nil or empty,
-	// in which case ptr is nil or pointing to an empty value for BigStruct.
+	// done is true if there was an error, or if value is nil, in which case ptr is nil.
 	// The second argument is whether the value can be nil.
-	// The third argument is a pointer to an empty value for the type,
-	// if it differs from the zero value for the type (slices and maps, e.g.).
-	if ptr, done, err := lexy.ReadPrefix[*BigStruct](r, true, nil); done {
+	if ptr, done, err := lexy.ReadPrefix[*BigStruct](r, true); done {
 		return ptr, err
 	}
 	name, err := stringCodec.Read(r)
@@ -57,11 +54,9 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 }
 
 func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
-	// done is true if there was an error, or if value is nil or empty,
-	// in which case a prefix denoting "nil" or "empty" has already been written.
-	// The third argument is an isEmpty? function, like lexy.IsEmptySlice.
-	// Pointers cannot be empty, so nil is passed here.
-	if done, err := lexy.WritePrefixNilsFirst(w, lexy.IsNilPointer, nil, value); done {
+	// done is true if there was an error, or if value is nil,
+	// in which case a prefix denoting "nil" has already been written.
+	if done, err := lexy.WritePrefixNilsFirst(w, lexy.IsNilPointer, value); done {
 		return err
 	}
 	if err := stringCodec.Write(w, value.name); err != nil {

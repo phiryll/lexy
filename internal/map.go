@@ -9,8 +9,7 @@ import (
 // A map is encoded as:
 //
 // - if nil, prefixNilFirst/Last
-// - if empty, prefixEmpty
-// - if non-empty, prefixNonEmpty, encoded key, encoded value, encoded key, ...
+// - if non-nil, prefixNonNil, encoded key, encoded value, encoded key, ...
 //
 // Encoded keys and values are escaped and termninated if their respective Codecs require it.
 type mapCodec[M ~map[K]V, K comparable, V any] struct {
@@ -29,12 +28,12 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 	return mapCodec[M, K, V]{
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
-		getPrefixWriter[M](isNilMap, nil, nilsFirst),
+		getPrefixWriter[M](isNilMap, nilsFirst),
 	}
 }
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
-	if m, done, err := ReadPrefix[M](r, true, nil); done {
+	if m, done, err := ReadPrefix[M](r, true); done {
 		return m, err
 	}
 	m := make(M)

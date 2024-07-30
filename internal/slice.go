@@ -9,8 +9,7 @@ import (
 // A slice is encoded as:
 //
 // - if nil, prefixNilFirst/Last
-// - if empty, prefixEmpty
-// - if non-empty, prefixNonEmpty followed by its encoded elements
+// - if non-nil, prefixNonNil followed by its encoded elements
 //
 // Encoded elements are escaped and termninated if elemCodec requires it.
 type sliceCodec[S ~[]E, E any] struct {
@@ -24,12 +23,12 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 	}
 	return sliceCodec[S, E]{
 		TerminateIfNeeded(elemCodec),
-		getPrefixWriter[S](isNilSlice, nil, nilsFirst),
+		getPrefixWriter[S](isNilSlice, nilsFirst),
 	}
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
-	if value, done, err := ReadPrefix[S](r, true, nil); done {
+	if value, done, err := ReadPrefix[S](r, true); done {
 		return value, err
 	}
 	values := S{}

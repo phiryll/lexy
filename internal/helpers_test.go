@@ -61,8 +61,7 @@ const (
 	term      byte = internal.ExportForTestingTerminator
 	esc       byte = internal.ExportForTestingEscape
 	pNilFirst byte = internal.ExportForTestingPrefixNilFirst
-	pEmpty    byte = internal.ExportForTestingPrefixEmpty
-	pNonEmpty byte = internal.ExportForTestingPrefixNonEmpty
+	pNonNil   byte = internal.ExportForTestingPrefixNonNil
 	pNilLast  byte = internal.ExportForTestingPrefixNilLast
 )
 

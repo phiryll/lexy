@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// The presence of pNonEmpty in these tests
+// The presence of pNonNil in these tests
 // is due to ArrayCodec delegating to PointerToArrayCodec.
 
 func TestArrayInt32(t *testing.T) {
 	codec := internal.ArrayCodec[[5]int32](int32Codec)
 	testCodec(t, codec, []testCase[[5]int32]{
 		{"[0, 1, -1, min, max]", [5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}, []byte{
-			pNonEmpty,
+			pNonNil,
 			0x80, 0x00, 0x00, 0x00,
 			0x80, 0x00, 0x00, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
@@ -30,11 +30,11 @@ func TestArrayString(t *testing.T) {
 	codec := internal.ArrayCodec[[5]string](stringCodec)
 	testCodec(t, codec, []testCase[[5]string]{
 		{"5x empty string", [5]string{"", "", "", "", ""}, []byte{
-			pNonEmpty,
+			pNonNil,
 			term, term, term, term, term,
 		}},
 		{"", [5]string{"abc", "d", "", "ef", ""}, []byte{
-			pNonEmpty,
+			pNonNil,
 			'a', 'b', 'c', term,
 			'd', term,
 			term,
@@ -56,23 +56,23 @@ func TestArrayArrayInt32(t *testing.T) {
 				{-2, -2, -2, -2, -2},
 			},
 			[]byte{
-				pNonEmpty,
+				pNonNil,
 				// {0, 1, -1, math.MinInt32, math.MaxInt32}
-				pNonEmpty,
+				pNonNil,
 				0x80, 0x00, 0x00, 0x00,
 				0x80, 0x00, 0x00, 0x01,
 				0x7F, 0xFF, 0xFF, 0xFF,
 				0x00, 0x00, 0x00, 0x00,
 				0xFF, 0xFF, 0xFF, 0xFF,
 				// {2, 2, 2, 2, 2},
-				pNonEmpty,
+				pNonNil,
 				0x80, 0x00, 0x00, 0x02,
 				0x80, 0x00, 0x00, 0x02,
 				0x80, 0x00, 0x00, 0x02,
 				0x80, 0x00, 0x00, 0x02,
 				0x80, 0x00, 0x00, 0x02,
 				// {-2, -2, -2, -2, -2},
-				pNonEmpty,
+				pNonNil,
 				0x7F, 0xFF, 0xFF, 0xFE,
 				0x7F, 0xFF, 0xFF, 0xFE,
 				0x7F, 0xFF, 0xFF, 0xFE,
@@ -92,7 +92,7 @@ func TestPtrToArrayInt32(t *testing.T) {
 	testCodec(t, codec, []testCase[*[5]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", &[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}, []byte{
-			pNonEmpty,
+			pNonNil,
 			0x80, 0x00, 0x00, 0x00,
 			0x80, 0x00, 0x00, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
@@ -109,7 +109,7 @@ func TestPtrToArrayInt32UnderlyingType(t *testing.T) {
 	testCodec(t, codec, []testCase[aType]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[0, 1, -1, min, max]", aType(&[5]int32{0, 1, -1, math.MinInt32, math.MaxInt32}), []byte{
-			pNonEmpty,
+			pNonNil,
 			0x80, 0x00, 0x00, 0x00,
 			0x80, 0x00, 0x00, 0x01,
 			0x7F, 0xFF, 0xFF, 0xFF,
@@ -131,9 +131,9 @@ func TestArrayPtrToArrayInt32(t *testing.T) {
 				{-2, -2, -2, -2, -2},
 			},
 			[]byte{
-				pNonEmpty,
+				pNonNil,
 				// &{0, 1, -1, math.MinInt32, math.MaxInt32}
-				pNonEmpty,
+				pNonNil,
 				0x80, 0x00, 0x00, 0x00,
 				0x80, 0x00, 0x00, 0x01,
 				0x7F, 0xFF, 0xFF, 0xFF,
@@ -142,7 +142,7 @@ func TestArrayPtrToArrayInt32(t *testing.T) {
 				// nil
 				pNilFirst,
 				// &{-2, -2, -2, -2, -2},
-				pNonEmpty,
+				pNonNil,
 				0x7F, 0xFF, 0xFF, 0xFE,
 				0x7F, 0xFF, 0xFF, 0xFE,
 				0x7F, 0xFF, 0xFF, 0xFE,
@@ -177,23 +177,23 @@ func TestPointerToArrayNilsLast(t *testing.T) {
 func TestEmptyArray(t *testing.T) {
 	codecEmptyInt32 := internal.ArrayCodec[[0]int32](int32Codec)
 	testCodec(t, codecEmptyInt32, []testCase[[0]int32]{
-		{"[0]int32", [0]int32{}, []byte{pNonEmpty}},
+		{"[0]int32", [0]int32{}, []byte{pNonNil}},
 	})
 
 	codecEmptyPtrInt32 := internal.PointerToArrayCodec[*[0]int32](int32Codec, true)
 	testCodec(t, codecEmptyPtrInt32, []testCase[*[0]int32]{
-		{"*[0]int32", &[0]int32{}, []byte{pNonEmpty}},
+		{"*[0]int32", &[0]int32{}, []byte{pNonNil}},
 	})
 
 	codecEmptyRows := internal.ArrayCodec[[5][0]int32](codecEmptyInt32)
 	testCodec(t, codecEmptyRows, []testCase[[5][0]int32]{
 		{"[[5][0]int32]", [5][0]int32{}, []byte{
-			pNonEmpty, // outer array, rest are inner arrays
-			pNonEmpty,
-			pNonEmpty,
-			pNonEmpty,
-			pNonEmpty,
-			pNonEmpty,
+			pNonNil, // outer array, rest are inner arrays
+			pNonNil,
+			pNonNil,
+			pNonNil,
+			pNonNil,
+			pNonNil,
 		}},
 	})
 
@@ -201,7 +201,7 @@ func TestEmptyArray(t *testing.T) {
 	codecEmptyColumns := internal.ArrayCodec[[0][5]int32](codec5Int32)
 	testCodec(t, codecEmptyColumns, []testCase[[0][5]int32]{
 		{"[[0][5]int32]", [0][5]int32{}, []byte{
-			pNonEmpty, // outer array, no elements so no inner arrays
+			pNonNil, // outer array, no elements so no inner arrays
 		}},
 	})
 }

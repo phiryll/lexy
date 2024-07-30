@@ -20,9 +20,9 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
 		{"nil", nil, []byte{pNilFirst}},
-		{"empty", M{}, []byte{pNonEmpty}},
+		{"empty", M{}, []byte{pNonNil}},
 		{"{a:0}", M{"a": 0}, []byte{
-			pNonEmpty,
+			pNonNil,
 			'a', term,
 			0x80, 0x00, 0x00, 0x00,
 		}},
@@ -120,7 +120,7 @@ func TestMapPointerPointer(t *testing.T) {
 }
 
 func TestMapNilsLast(t *testing.T) {
-	// Maps are randomly ordered, so we can only test nil/empty/non-empty.
+	// Maps are randomly ordered, so we can only test nil/non-nil.
 	encodeFirst := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, true))
 	encodeLast := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, false))
 	assert.IsIncreasing(t, [][]byte{

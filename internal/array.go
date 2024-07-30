@@ -51,7 +51,7 @@ func PointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E], nilsFirst bool
 		pointerType,
 		arrayType,
 		TerminateIfNeeded(elemCodec),
-		getPrefixWriter[P](isNilPointer, nil, nilsFirst),
+		getPrefixWriter[P](isNilPointer, nilsFirst),
 	}
 }
 
@@ -60,7 +60,7 @@ func ArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := ReadPrefix[P](r, true, nil); done {
+	if ptr, done, err := ReadPrefix[P](r, true); done {
 		return ptr, err
 	}
 	ptrToPtrToArray := reflect.New(c.pointerType)

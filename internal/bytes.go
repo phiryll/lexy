@@ -15,11 +15,11 @@ type bytesCodec[S ~[]byte] struct {
 }
 
 func BytesCodec[S ~[]byte](nilsFirst bool) Codec[S] {
-	return bytesCodec[S]{getPrefixWriter[S](isNilSlice, nil, nilsFirst)}
+	return bytesCodec[S]{getPrefixWriter[S](isNilSlice, nilsFirst)}
 }
 
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
-	if value, done, err := ReadPrefix[S](r, true, nil); done {
+	if value, done, err := ReadPrefix[S](r, true); done {
 		return value, err
 	}
 	buf := bytes.NewBuffer(make([]byte, 0, 64))

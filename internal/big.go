@@ -15,7 +15,7 @@ var (
 // Values are encoded using this logic:
 //
 //	write prefixNilFirst/Last if value is nil and return immediately
-//	write prefixNonEmpty
+//	write prefixNonNil
 //	b := value.Bytes() // absolute value as a big-endian byte slice
 //	size := len(b)
 //	if value < 0 {
@@ -35,11 +35,11 @@ type bigIntCodec struct {
 }
 
 func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
-	return bigIntCodec{getPrefixWriter[*big.Int](isNilPointer, nil, nilsFirst)}
+	return bigIntCodec{getPrefixWriter[*big.Int](isNilPointer, nilsFirst)}
 }
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if value, done, err := ReadPrefix[*big.Int](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Int](r, true); done {
 		return value, err
 	}
 	neg := false
@@ -150,7 +150,7 @@ func (c bigIntCodec) RequiresTerminator() bool {
 // Encode:
 //
 //	write prefixNilFirst/Last if value is nil and return immediately
-//	write prefixNonEmpty
+//	write prefixNonNil
 //	write int8: -3/-2/-1/+1/+2/+3 for
 //		-Inf / (-Inf,0) / -0 / +0 / (0,+Inf) / +Inf
 //	if infinite or zero, we're done
@@ -168,11 +168,11 @@ type bigFloatCodec struct {
 }
 
 func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
-	return bigFloatCodec{getPrefixWriter[*big.Float](isNilPointer, nil, nilsFirst)}
+	return bigFloatCodec{getPrefixWriter[*big.Float](isNilPointer, nilsFirst)}
 }
 
 // The second byte written in the *big.Float encoding after the initial
-// prefixNonEmpty byte if non-nil.
+// prefixNonNil byte if non-nil.
 const (
 	negInf       int8 = -3
 	negFinite    int8 = -2
@@ -199,7 +199,7 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if value, done, err := ReadPrefix[*big.Float](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Float](r, true); done {
 		return value, err
 	}
 	kind, err := int8Codec.Read(r)
@@ -337,7 +337,7 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 // Values are encoded using this logic:
 //
 //	write prefixNilFirst/Last if value is nil and return immediately
-//	write prefixNonEmpty
+//	write prefixNonNil
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
@@ -345,11 +345,11 @@ type bigRatCodec struct {
 }
 
 func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
-	return bigRatCodec{getPrefixWriter[*big.Rat](isNilPointer, nil, nilsFirst)}
+	return bigRatCodec{getPrefixWriter[*big.Rat](isNilPointer, nilsFirst)}
 }
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if value, done, err := ReadPrefix[*big.Rat](r, true, nil); done {
+	if value, done, err := ReadPrefix[*big.Rat](r, true); done {
 		return value, err
 	}
 	num, err := bIntCodec.Read(r)

@@ -9,7 +9,7 @@ import (
 // A pointer is encoded as:
 //
 // - if nil, prefixNilFirst/Last
-// - if non-nil, prefixNonEmpty followed by its encoded pointee
+// - if non-nil, prefixNonNil followed by its encoded pointee
 //
 // The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
 type pointerCodec[P ~*E, E any] struct {
@@ -21,11 +21,11 @@ func PointerCodec[P ~*E, E any](elemCodec Codec[E], nilsFirst bool) Codec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
-	return pointerCodec[P, E]{elemCodec, getPrefixWriter[P](isNilPointer, nil, nilsFirst)}
+	return pointerCodec[P, E]{elemCodec, getPrefixWriter[P](isNilPointer, nilsFirst)}
 }
 
 func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
-	if ptr, done, err := ReadPrefix[P](r, true, nil); done {
+	if ptr, done, err := ReadPrefix[P](r, true); done {
 		return ptr, err
 	}
 	value, err := c.elemCodec.Read(r)

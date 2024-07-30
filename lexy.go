@@ -30,7 +30,7 @@ type Codec[T any] interface {
 	// Read will only return io.EOF if r returned io.EOF and no bytes were read.
 	// Read will return io.ErrUnexpectedEOF if r returned io.EOF and a complete value was not successfully read.
 	//
-	// If instances of type T can be nil or empty,
+	// If instances of type T can be nil,
 	// implementations of Read should invoke ReadPrefix as the first step,
 	// and Write should invoke either WritePrefixNilsFirst or WritePrefixNilsLast.
 	// See the PointerToStruct example for an example usage.
@@ -47,7 +47,7 @@ type Codec[T any] interface {
 	// This ensures that Read can have consistent semantics,
 	// which is necessary for aggregate Codecs to behave properly.
 	//
-	// If instances of type T can be nil or empty,
+	// If instances of type T can be nil,
 	// implementations of Write should invoke WritePrefixNilsFirst or WritePrefixNilsLast as the first step,
 	// and Read should invoke ReadPrefix.
 	// See the PointerToStruct example for an example usage.
@@ -319,65 +319,43 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return internal.TerminateIfNeeded(codec)
 }
 
-// ReadPrefix is used to read the initial nil/empty/non-empty prefix byte from r by Codecs
-// that encode types whose instances can be nil or empty.
+// ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
+// that encode types whose instances can be nil.
 //
 // nilable should be true if and only if nil is an allowed value of instances of type T.
-// emptyValue should point to the empty value of type T if it differs from the zero value of T.
 //
 // ReadPrefix returns done == false only if the value itself still needs to be read
-// (value is neither nil nor empty), and there was no error reading the prefix.
+// (value is not nil), and there was no error reading the prefix.
 // The returned value should be ignored in this case.
-// If ReadPrefix returns done == true and err is nil, the returned value is either nil or the empty value.
+// If ReadPrefix returns done == true and err is nil, the returned value is nil.
 // ReadPrefix will never return an error value of io.EOF.
 //
-// Examples of types with differing nil and empty possibilities:
-//
-//	type     nil?  empty?
-//	----------------------
-//	int8     No    No
-//	string   No    Yes
-//	pointer  Yes   No
-//	slice    Yes   Yes
-//
 // See the PointerToStruct example for an example usage.
-func ReadPrefix[T any](r io.Reader, nilable bool, emptyValue *T) (value T, done bool, err error) {
-	return internal.ReadPrefix(r, nilable, emptyValue)
+func ReadPrefix[T any](r io.Reader, nilable bool) (value T, done bool, err error) {
+	return internal.ReadPrefix[T](r, nilable)
 }
 
-// WritePrefixNilsFirst is used to write the initial nil/empty/non-empty prefix byte by Codecs
-// encoding types whose instances can be nil or empty, with nils ordered first.
+// WritePrefixNilsFirst is used to write the initial nil/non-nil prefix byte by Codecs
+// encoding types whose instances can be nil, with nils ordered first.
 //
 // isNil, if non-nil, is a function returning whether a given value of type T is nil.
 // The functions IsNilPointer, IsNilSlice, and IsNilMap are provided for this purpose.
 //
-// isEmpty, if non-nil, is a function returning whether a given value of type T is empty.
-// The functions IsEmptyString, IsEmptySlice, and IsEmptyMap are provided for this purpose.
-//
 // WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
-// (value is neither nil nor empty), and there was no error writing the prefix.
+// (value is not nil), and there was no error writing the prefix.
 // If WritePrefixNilsFirst returns done == true and err is nil,
-// the value was nil or empty and no further data needs to be written for this value.
-//
-// Examples of types with differing nil and empty possibilities:
-//
-//	type     nil?  empty?
-//	----------------------
-//	int8     No    No
-//	string   No    Yes
-//	pointer  Yes   No
-//	slice    Yes   Yes
+// the value was nil and no further data needs to be written for this value.
 //
 // See the PointerToStruct example for an example usage.
-func WritePrefixNilsFirst[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
-	return internal.WritePrefixNilsFirst(w, isNil, isEmpty, value)
+func WritePrefixNilsFirst[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
+	return internal.WritePrefixNilsFirst(w, isNil, value)
 }
 
-// WritePrefixNilsLast is used to write the initial nil/empty/non-empty prefix byte by Codecs
-// encoding types which can have nil or empty values, with nils ordered last.
+// WritePrefixNilsLast is used to write the initial nil/non-nil prefix byte by Codecs
+// encoding types which can have nil values, with nils ordered last.
 // Otherwise it behaves exactly like WritePrefixNilsFirst.
-func WritePrefixNilsLast[T any](w io.Writer, isNil, isEmpty func(T) bool, value T) (done bool, err error) {
-	return internal.WritePrefixNilsLast(w, isNil, isEmpty, value)
+func WritePrefixNilsLast[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
+	return internal.WritePrefixNilsLast(w, isNil, value)
 }
 
 // IsNilPointer is a helper function passed as the isNil argument in WritePrefixNilsFirst/Last.
@@ -393,21 +371,6 @@ func IsNilSlice[S ~[]E, E any](value S) bool {
 // IsNilMap is a helper function passed as the isNil argument in WritePrefixNilsFirst/Last.
 func IsNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 	return value == nil
-}
-
-// IsEmptyString is a helper function passed as the isEmpty argument in WritePrefixNilsFirst/Last.
-func IsEmptyString[T ~string](value T) bool {
-	return len(value) == 0
-}
-
-// IsEmptySlice is a helper function passed as the isEmpty argument in WritePrefixNilsFirst/Last.
-func IsEmptySlice[S ~[]E, E any](value S) bool {
-	return value != nil && len(value) == 0
-}
-
-// IsEmptyMap is a helper function passed as the isEmpty argument in WritePrefixNilsFirst/Last.
-func IsEmptyMap[M ~map[K]V, K comparable, V any](value M) bool {
-	return value != nil && len(value) == 0
 }
 
 // Convenience functions.
