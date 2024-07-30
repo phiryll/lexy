@@ -57,7 +57,7 @@ func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 // If ReadPrefix returns isNil == true, then the caller is done reading this value
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was read.
-// ReadPrefix returns isNil == false only if the value is non-nil and still needs to be read,
+// ReadPrefix returns isNil == false only if the non-nil value still needs to be read,
 // and there was no error reading the prefix.
 //
 // ReadPrefix will return an error value of io.ErrUnexpectedEOF if no bytes were read.

@@ -211,18 +211,14 @@ func BigRatNilsLast() Codec[*big.Rat] { return internal.BigRatCodec(false) }
 // This Codec is more efficient than Codecs produced by SliceOf[[]byte],
 // and will allow nil unlike String[string].
 // This Codec requires a terminator when used within an aggregate Codec.
-func Bytes[S ~[]byte]() Codec[S] {
-	return internal.BytesCodec[S](true)
-}
+func Bytes[S ~[]byte]() Codec[S] { return internal.BytesCodec[S](true) }
 
 // BytesNilsLast creates a new Codec for []byte types, with nil slices ordered last.
 // The encoded order is lexicographical.
 // This Codec is more efficient than Codecs produced by SliceOfNilsLast[[]byte],
 // and will allow nil unlike String[string].
 // This Codec requires a terminator when used within an aggregate Codec.
-func BytesNilsLast[S ~[]byte]() Codec[S] {
-	return internal.BytesCodec[S](false)
-}
+func BytesNilsLast[S ~[]byte]() Codec[S] { return internal.BytesCodec[S](false) }
 
 // Codecs that delegate to other Codecs.
 
@@ -325,7 +321,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // If ReadPrefix returns isNil == true, then the caller is done reading this value
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was read.
-// ReadPrefix returns isNil == false only if the value is non-nil and still needs to be read,
+// ReadPrefix returns isNil == false only if the non-nil value still needs to be read,
 // and there was no error reading the prefix.
 //
 // ReadPrefix will return an error value of io.ErrUnexpectedEOF if no bytes were read.
