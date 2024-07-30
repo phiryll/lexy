@@ -61,20 +61,25 @@ func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
 // ReadPrefix returns isNil == false only if the non-nil value still needs to be read,
 // and there was no error reading the prefix.
 //
-// ReadPrefix will return an error value of io.ErrUnexpectedEOF if no bytes were read.
-// ReadPrefix will never return an error value of io.EOF.
+// ReadPrefix will return io.EOF only if no bytes were read and r.Read returned io.EOF.
+// ReadPrefix will not return an error if a prefix was successfully read and r.Read returned io.EOF,
+// because the read of the prefix was successful.
+// Any subsequent read from r by the caller will properly return 0 bytes read and io.EOF.
 func ReadPrefix(r io.Reader) (isNil bool, err error) {
 	prefix := []byte{0}
 	n, err := r.Read(prefix)
 	if n == 0 {
-		return true, io.ErrUnexpectedEOF
-	}
-	if err != nil {
-		if err != io.EOF {
-			return true, err
+		// We must propagate io.EOF in this case.
+		if err == nil {
+			err = fmt.Errorf("unexpected read of 0 bytes with no error")
 		}
-		// ignore io.EOF
+		return true, err
+	}
+	// If we successfully read a byte and get io.EOF, ignore the EOF.
+	if err == io.EOF {
 		err = nil
+	} else if err != nil {
+		return true, err
 	}
 	switch prefix[0] {
 	case prefixNilFirst, prefixNilLast:

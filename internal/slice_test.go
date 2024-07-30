@@ -41,6 +41,31 @@ func TestSliceString(t *testing.T) {
 	testCodecFail(t, codec, []string{})
 }
 
+// Unlike []*string, *uint8 does not require a terminator.
+// This tests for the special case of a slice of non-terminated, prefixed elements.
+func TestSlicePtrUint8(t *testing.T) {
+	p := ptr[uint8]
+	pointerCodec := internal.PointerCodec[*uint8](uint8Codec, true)
+	codec := internal.SliceCodec[[]*uint8](pointerCodec, true)
+	testCodec(t, codec, []testCase[[]*uint8]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"empty", []*uint8{}, []byte{pNonNil}},
+		{"[nil]", []*uint8{nil}, []byte{pNonNil, pNilFirst}},
+		{"[*12]", []*uint8{p(12)}, []byte{pNonNil, pNonNil, 12}},
+		{"[nil, *7, *3, nil, nil, *9, nil]", []*uint8{nil, p(7), p(3), nil, nil, p(9), nil}, []byte{
+			pNonNil,
+			pNilFirst,
+			pNonNil, 7,
+			pNonNil, 3,
+			pNilFirst,
+			pNilFirst,
+			pNonNil, 9,
+			pNilFirst,
+		}},
+	})
+	testCodecFail(t, codec, nil)
+}
+
 func TestSlicePtrString(t *testing.T) {
 	pointerCodec := internal.PointerCodec[*string](stringCodec, true)
 	codec := internal.SliceCodec[[]*string](pointerCodec, true)
