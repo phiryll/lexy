@@ -19,7 +19,7 @@ import (
 //
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
-	// Read will read from r and decode a value of type T.
+	// Read reads from r and decodes a value of type T.
 	//
 	// Read will read from r until either it has all the data it needs, or r stops returning data.
 	// r.Read is permitted to return only immediately available data instead of waiting for more.
@@ -41,11 +41,7 @@ type Codec[T any] interface {
 	// because doing so could consume excess data from r.
 	Read(r io.Reader) (T, error)
 
-	// Write will encode value and write the encoded bytes to w.
-	//
-	// If Write is successful, it must have written at least one byte to w.
-	// This ensures that Read can have consistent semantics,
-	// which is necessary for aggregate Codecs to behave properly.
+	// Write encodes value and writes the encoded bytes to w.
 	//
 	// If instances of type T can be nil,
 	// implementations of Write should invoke WritePrefixNilsFirst or WritePrefixNilsLast as the first step,
@@ -61,8 +57,10 @@ type Codec[T any] interface {
 	// RequiresTerminator returns whether encoded data written by this Codec requires a terminator,
 	// and therefore also must be escaped, if more data is written following the encoded data.
 	// Stated another way, RequiresTerminator must return true if Read may not know
-	// when to stop reading the data encoded by Write.
-	// This is the case for unbounded types like strings, slices, and maps.
+	// when to stop reading the data encoded by Write,
+	// or if Write could encode zero bytes for some value.
+	// This is the case for unbounded types like strings, slices, and maps,
+	// as well as empty struct types.
 	//
 	// Users of this Codec must wrap it with Terminate or TerminateIfNeeded if RequiresTerminator may return true
 	// and more data could be written following the encoded data.
@@ -79,6 +77,13 @@ type Codec[T any] interface {
 }
 
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
+
+// Empty creates a new Codec that reads and writes no data.
+// Read returns the zero value of T.
+// Read and Write cannot fail.
+// This is useful for empty structs, which are often used as map values.
+// This Codec requires a terminator when used within an aggregate Codec.
+func Empty[T any]() Codec[T] { return internal.EmptyCodec[T]() }
 
 // Bool creates a new Codec for a type with an underlying type of bool.
 // This Codec does not require a terminator when used within an aggregate Codec.

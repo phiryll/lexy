@@ -16,15 +16,17 @@ The primary interface in lexy is `Codec`, with this definition (details in go do
 
 ```go
 type Codec[T any] interface {
-    // Read will read from r and decode a value of type T.
+    // Read reads from r and decodes a value of type T.
     Read(r io.Reader) (T, error)
 
-    // Write will encode value and write the encoded bytes to w.
+    // Write encodes value and writes the encoded bytes to w.
     Write(w io.Writer, value T) error
 
-    // RequiresTerminator must return true if Read may not know when to
-    // stop reading the data encoded by Write. This is the case for
-    // unbounded types like strings, slices, and maps.
+    // RequiresTerminator must return true if Read may not know
+    // when to stop reading the data encoded by Write,
+    // or if Write could encode zero bytes for some value.
+    // This is the case for unbounded types like strings, slices,
+    // and maps, as well as empty struct types.
     RequiresTerminator() bool
 }
 ```
@@ -133,6 +135,9 @@ or whose natural ordering cannot be preserved while being encoded at full precis
   The encoded order for non-`nil` values is signed numerator first, positive denominator second.
   There is no way to finitely encode rational numbers with a lexicographical order that isn't lossy.
   A lossy approximation can be made by converting to (possibly rounded) `big.Floats` and encoding those.
+
+Lexy provides a `Codec` for types with no value except the zero value,
+useful as value types for maps used as sets.
 
 Lexy does not does not provide `Codecs` for these types, but a custom `Codec` is easy to create.
 

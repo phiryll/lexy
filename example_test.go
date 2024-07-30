@@ -11,6 +11,33 @@ import (
 	"github.com/phiryll/lexy"
 )
 
+func ExampleEmpty() {
+	type present struct{}
+	type set map[uint8]present
+	codec := lexy.MapOf[set](lexy.Uint[uint8](), lexy.Empty[present]())
+	var buf bytes.Buffer
+	value := set{
+		23: present{},
+		42: present{},
+		59: present{},
+		12: present{},
+	}
+	if err := codec.Write(&buf, value); err != nil {
+		panic(err)
+	}
+	decoded, err := codec.Read(&buf)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T\n", decoded)
+	fmt.Printf("%T\n", decoded[0])
+	fmt.Println(maps.Equal(value, decoded))
+	// Output:
+	// lexy_test.set
+	// lexy_test.present
+	// true
+}
+
 func ExampleBool() {
 	codec := lexy.Bool[bool]()
 	var buf bytes.Buffer
