@@ -24,16 +24,15 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 	}
 	return sliceCodec[S, E]{
 		TerminateIfNeeded(elemCodec),
-		getPrefixWriter[S](isNilSlice, isEmptySlice, nilsFirst),
+		getPrefixWriter[S](isNilSlice, nil, nilsFirst),
 	}
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
-	empty := S{}
-	if value, done, err := ReadPrefix(r, true, &empty); done {
+	if value, done, err := ReadPrefix[S](r, true, nil); done {
 		return value, err
 	}
-	var values S
+	values := S{}
 	for {
 		value, err := c.elemCodec.Read(r)
 		if err == io.EOF {
@@ -43,9 +42,6 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 			return values, err
 		}
 		values = append(values, value)
-	}
-	if len(values) == 0 {
-		return nil, io.ErrUnexpectedEOF
 	}
 	return values, nil
 }

@@ -45,7 +45,7 @@ func TestPointerSliceInt32(t *testing.T) {
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr([]int32(nil)), []byte{pNonEmpty, pNilFirst}},
-		{"*[]", &[]int32{}, []byte{pNonEmpty, pEmpty}},
+		{"*[]", &[]int32{}, []byte{pNonEmpty, pNonEmpty}},
 		{"*[0, 1, -1]", &[]int32{0, 1, -1}, []byte{
 			pNonEmpty,
 			pNonEmpty,
