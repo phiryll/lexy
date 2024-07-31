@@ -31,9 +31,8 @@ type Codec[T any] interface {
 	// Read will return io.ErrUnexpectedEOF if r returned io.EOF and a complete value was not successfully read.
 	//
 	// If instances of type T can be nil,
-	// implementations of Read should invoke ReadPrefix as the first step,
-	// and Write should invoke WritePrefix.
-	// See the PointerToStruct example for an example usage.
+	// implementations of Read should invoke [ReadPrefix] as the first step,
+	// and Write should invoke [WritePrefix].
 	//
 	// Read may repeatedly read small amounts of data from r,
 	// so using a buffered io.Reader is recommended if appropriate.
@@ -44,9 +43,8 @@ type Codec[T any] interface {
 	// Write encodes value and writes the encoded bytes to w.
 	//
 	// If instances of type T can be nil,
-	// implementations of Write should invoke WritePrefix as the first step,
-	// and Read should invoke ReadPrefix.
-	// See the PointerToStruct example for an example usage.
+	// implementations of Write should invoke [WritePrefix] as the first step,
+	// and Read should invoke [ReadPrefix].
 	//
 	// Write may repeatedly write small amounts of data to w,
 	// so using a buffered io.Writer is recommended if appropriate.
@@ -322,6 +320,16 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
+// Invoking ReadPrefix should the first action taken by [Codec.Read] for these Codecs,
+// since it allows an early return if the value read is nil.
+// This is a typical usage:
+//
+//	func (c someCodecType) Read(r io.Reader) (T, error) {
+//	    if done, err := lexy.ReadPrefix(r); done {
+//	        return nil, err
+//	    }
+//	    // read, decode, and return a non-nil value
+//	}
 //
 // ReadPrefix returns done == false only if the non-nil value still needs to be read,
 // and there was no error reading the prefix.
@@ -334,13 +342,21 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // ReadPrefix will not return an error if a prefix was successfully read and r.Read returned io.EOF,
 // because the read of the prefix was successful.
 // Any subsequent read from r by the caller will properly return 0 bytes read and io.EOF.
-//
-// See the PointerToStruct example for an example usage.
 func ReadPrefix(r io.Reader) (done bool, err error) {
 	return internal.ReadPrefix(r)
 }
 
 // WritePrefix writes a nil/non-nil prefix byte to w based on the values of isNil and nilsFirst.
+// Invoking WritePrefix should the first action taken by [Codec.Write] for these Codecs,
+// since it allows an early return if the value written is nil.
+// This is a typical usage:
+//
+//	func (c someCodecType) Write(w io.Writer, value T) error {
+//	    if done, err := lexy.WritePrefix(w, value == nil, true); done {
+//	        return err
+//	    }
+//	    // encode and write non-nil value
+//	}
 //
 // WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
 // in which case the caller still needs to write the non-nil value to w.
@@ -348,8 +364,6 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 // If WritePrefix returns done == true, then the caller is done writing the current value to w
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was successfully written.
-//
-// See the PointerToStruct example for an example usage.
 func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 	return internal.WritePrefix(w, isNil, nilsFirst)
 }
