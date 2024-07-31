@@ -38,7 +38,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 
 // Codec for terminating and escaping.
 // The lexicographical binary ordering of encoded aggregates is preserved.
-// For example, ["ab", "cde"] is less than ["aba", "de"], because "ab" is less than "aba".
+// For example, {"ab", "cde"} is less than {"aba", "de"}, because "ab" is less than "aba".
 // The terminator can't itself be used to escape a terminator because it leads to ambiguities,
 // so there needs to be a distinct escape character.
 
@@ -48,12 +48,12 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // The encodings for maps and structs will be analogous.
 //
 //	input slice  -> encoded string
-//	A: ["a", "bc"]  -> a,bc
-//	B: ["a", ",bc"] -> a,\,bc
-//	C: ["a", "\bc"] -> a,\\bc
-//	D: ["ab", "c"]  -> ab,c
-//	E: ["a,", "bc"] -> a\,,bc
-//	F: ["a\", "bc"] -> a\\,bc
+//	A: {"a", "bc"}  -> a,bc
+//	B: {"a", ",bc"} -> a,\,bc
+//	C: {"a", "\bc"} -> a,\\bc
+//	D: {"ab", "c"}  -> ab,c
+//	E: {"a,", "bc"} -> a\,,bc
+//	F: {"a\", "bc"} -> a\\,bc
 //
 // B and E are an example of why the terminator can't be its own escape,
 // the encoded strings would both be "a,,,b".

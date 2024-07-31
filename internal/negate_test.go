@@ -97,7 +97,7 @@ type negateTest struct {
 	string string
 }
 
-// order is [uint8, neg(string), neg(pInt16)]
+// order is: uint8, neg(string), neg(pInt16)
 // putting the negated varying length field in the middle is intentional
 type negateTestCodec struct{}
 
@@ -151,7 +151,7 @@ func TestNegateComplex(t *testing.T) {
 	})
 
 	assert.IsIncreasing(t, [][]byte{
-		// sort order is [first, neg(third), neg(second)]
+		// sort order is: first, neg(third), neg(second)
 		encode(negateTest{5, ptr(100), "def"}),
 		encode(negateTest{5, ptr(0), "def"}),
 		encode(negateTest{5, ptr(-1), "def"}),

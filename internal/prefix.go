@@ -5,24 +5,9 @@ import (
 	"io"
 )
 
-// Prefixes to use for encodings that would normally encode nil values as zero bytes.
+// Prefixes to use for encodings for types whose instances can be nil.
 // The values were chosen so that nils-first < non-nil < nils-last,
 // and neither the prefixes nor their complements need to be escaped.
-//
-// This is normally only an issue for variable length encodings.
-//
-// This prevents ambiguous encodings like these
-// (0x00 is the terminator after slice elements, if required):
-//
-//	""                     => []
-//
-//	[]string(nil)          => []
-//	[]string{}             => []
-//
-//	[][]string{{}, {}}     => [0x00, 0x00]
-//	[][]string{{}, {""}}   => [0x00, 0x00]
-//	[][]string{{""}, {}}   => [0x00, 0x00]
-//	[][]string{{""}, {""}} => [0x00, 0x00]
 const (
 	// Room for more between non-nil and nils-last if needed.
 	prefixNilFirst byte = 0x02

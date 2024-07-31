@@ -136,7 +136,7 @@ func TestSliceSliceString(t *testing.T) {
 			term, // terminator {""}, within outer
 		}},
 
-		// pairwise permutations of nil, [], and [""]
+		// pairwise permutations of nil, {}, and {""}
 		{"[nil, []]", [][]string{nil, {}}, []byte{
 			pNonNil,         // outer
 			pNilFirst, term, // nil = outer[0]
