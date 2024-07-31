@@ -13,11 +13,11 @@ var (
 type complex64Codec struct{}
 
 func (c complex64Codec) Read(r io.Reader) (complex64, error) {
-	real, err := basicFloat32Codec.Read(r)
+	real, err := aFloat32Codec.Read(r)
 	if err != nil {
 		return 0, err
 	}
-	imag, err := basicFloat32Codec.Read(r)
+	imag, err := aFloat32Codec.Read(r)
 	if err != nil {
 		return 0, unexpectedIfEOF(err)
 	}
@@ -25,10 +25,10 @@ func (c complex64Codec) Read(r io.Reader) (complex64, error) {
 }
 
 func (c complex64Codec) Write(w io.Writer, value complex64) error {
-	if err := basicFloat32Codec.Write(w, real(value)); err != nil {
+	if err := aFloat32Codec.Write(w, real(value)); err != nil {
 		return err
 	}
-	return basicFloat32Codec.Write(w, imag(value))
+	return aFloat32Codec.Write(w, imag(value))
 }
 
 func (c complex64Codec) RequiresTerminator() bool {
@@ -41,11 +41,11 @@ func (c complex64Codec) RequiresTerminator() bool {
 type complex128Codec struct{}
 
 func (c complex128Codec) Read(r io.Reader) (complex128, error) {
-	real, err := basicFloat64Codec.Read(r)
+	real, err := aFloat64Codec.Read(r)
 	if err != nil {
 		return 0, err
 	}
-	imag, err := basicFloat64Codec.Read(r)
+	imag, err := aFloat64Codec.Read(r)
 	if err != nil && err != io.EOF {
 		return 0, unexpectedIfEOF(err)
 	}
@@ -53,10 +53,10 @@ func (c complex128Codec) Read(r io.Reader) (complex128, error) {
 }
 
 func (c complex128Codec) Write(w io.Writer, value complex128) error {
-	if err := basicFloat64Codec.Write(w, real(value)); err != nil {
+	if err := aFloat64Codec.Write(w, real(value)); err != nil {
 		return err
 	}
-	return basicFloat64Codec.Write(w, imag(value))
+	return aFloat64Codec.Write(w, imag(value))
 }
 
 func (c complex128Codec) RequiresTerminator() bool {

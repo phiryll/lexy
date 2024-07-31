@@ -14,12 +14,6 @@ func Float64Codec[T ~float64]() Codec[T] {
 	return float64Codec[T]{}
 }
 
-// Builtin types only, and only if needed by other lexy Codecs.
-var (
-	basicFloat32Codec = Float32Codec[float32]()
-	basicFloat64Codec = Float64Codec[float64]()
-)
-
 const (
 	highBit32 uint32 = 0x80_00_00_00
 	allBits32 uint32 = 0xFF_FF_FF_FF
