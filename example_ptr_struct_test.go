@@ -40,7 +40,7 @@ var (
 type ptrToBigStructCodec struct{}
 
 func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
-	if isNil, err := lexy.ReadPrefix(r); isNil {
+	if done, err := lexy.ReadPrefix(r); done {
 		return nil, err
 	}
 	name, err := stringCodec.Read(r)
@@ -57,7 +57,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	// done is true if there was an error, or if value is nil,
 	// in which case a prefix denoting "nil" has already been written.
-	if done, err := lexy.WritePrefixNilsFirst(w, lexy.IsNilPointer, value); done {
+	if done, err := lexy.WritePrefix(w, value == nil, true); done {
 		return err
 	}
 	if err := stringCodec.Write(w, value.name); err != nil {

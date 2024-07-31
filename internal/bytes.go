@@ -11,15 +11,15 @@ import (
 // []byte is slightly different than string because it can be nil.
 // This is more efficient than sliceCodec would be.
 type bytesCodec[S ~[]byte] struct {
-	writePrefix prefixWriter[S]
+	nilsFirst bool
 }
 
 func BytesCodec[S ~[]byte](nilsFirst bool) Codec[S] {
-	return bytesCodec[S]{getPrefixWriter[S](isNilSlice, nilsFirst)}
+	return bytesCodec[S]{nilsFirst}
 }
 
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	buf := bytes.NewBuffer(make([]byte, 0, 64))
@@ -32,7 +32,7 @@ func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 }
 
 func (c bytesCodec[S]) Write(w io.Writer, value S) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	_, err := w.Write([]byte(value))

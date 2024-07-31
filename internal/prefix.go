@@ -41,31 +41,20 @@ var (
 	pNilLast  = []byte{prefixNilLast}
 )
 
-func isNilPointer[P ~*E, E any](value P) bool {
-	return value == nil
-}
-
-func isNilSlice[S ~[]E, E any](value S) bool {
-	return value == nil
-}
-
-func isNilMap[M ~map[K]V, K comparable, V any](value M) bool {
-	return value == nil
-}
-
 // ReadPrefix reads the nil/non-nil prefix byte from r and returns which it read.
 //
-// If ReadPrefix returns isNil == true, then the caller is done reading this value
+// ReadPrefix returns done == false only if the non-nil value still needs to be read,
+// and there was no error reading the prefix.
+//
+// If ReadPrefix returns done == true, then the caller is done reading this value
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was read.
-// ReadPrefix returns isNil == false only if the non-nil value still needs to be read,
-// and there was no error reading the prefix.
 //
 // ReadPrefix will return io.EOF only if no bytes were read and r.Read returned io.EOF.
 // ReadPrefix will not return an error if a prefix was successfully read and r.Read returned io.EOF,
 // because the read of the prefix was successful.
 // Any subsequent read from r by the caller will properly return 0 bytes read and io.EOF.
-func ReadPrefix(r io.Reader) (isNil bool, err error) {
+func ReadPrefix(r io.Reader) (done bool, err error) {
 	prefix := []byte{0}
 	n, err := r.Read(prefix)
 	if n == 0 {
@@ -91,46 +80,26 @@ func ReadPrefix(r io.Reader) (isNil bool, err error) {
 	}
 }
 
-// The signature of WritePrefixNilsFirst/Last without the isNil argument.
-// Used to simplify code using getPrefixWriter below, see pointer.go for a usage example.
-type prefixWriter[T any] func(w io.Writer, value T) (done bool, err error)
-
-func getPrefixWriter[T any](isNil func(T) bool, nilsFirst bool) prefixWriter[T] {
-	if nilsFirst {
-		return func(w io.Writer, value T) (done bool, err error) {
-			return WritePrefixNilsFirst(w, isNil, value)
-		}
-	}
-	return func(w io.Writer, value T) (done bool, err error) {
-		return WritePrefixNilsLast(w, isNil, value)
-	}
-}
-
-// WritePrefixNilsFirst writes the correct prefix byte for value to w, with nils ordered first.
+// WritePrefix writes a nil/non-nil prefix byte to w based on the values of isNil and nilsFirst.
 //
-// WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
-// (value is not nil), and there was no error writing the prefix.
-// If WritePrefixNilsFirst returns done == true and err is nil,
-// the value was nil and no further data needs to be written for this value.
-func WritePrefixNilsFirst[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	if isNil(value) {
-		_, err := w.Write(pNilFirst)
+// WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
+// in which case the caller still needs to write the non-nil value to w.
+//
+// If WritePrefix returns done == true, then the caller is done writing the current value to w
+// regardless of the returned error value.
+// Either there was an error, or there was no error and the nil prefix was successfully written.
+func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
+	var prefix []byte
+	switch {
+	case !isNil:
+		prefix = pNonNil
+	case nilsFirst:
+		prefix = pNilFirst
+	default:
+		prefix = pNilLast
+	}
+	if _, err := w.Write(prefix); err != nil {
 		return true, err
 	}
-	if _, err := w.Write(pNonNil); err != nil {
-		return true, err
-	}
-	return false, nil
-}
-
-// Exactly the same as WritePrefixNilsFirst, except nils are ordered last.
-func WritePrefixNilsLast[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	if isNil(value) {
-		_, err := w.Write(pNilLast)
-		return true, err
-	}
-	if _, err := w.Write(pNonNil); err != nil {
-		return true, err
-	}
-	return false, nil
+	return isNil, nil
 }

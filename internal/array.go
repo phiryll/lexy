@@ -16,7 +16,7 @@ type pointerToArrayCodec[P ~*A, A any, E any] struct {
 	pointerType reflect.Type
 	arrayType   reflect.Type
 	elemCodec   Codec[E]
-	writePrefix prefixWriter[P]
+	nilsFirst   bool
 }
 
 // arrayCodec is the Codec for arrays, using elemCodec to encode and decode its elements.
@@ -49,7 +49,7 @@ func PointerToArrayCodec[P ~*A, A any, E any](elemCodec Codec[E], nilsFirst bool
 		pointerType,
 		arrayType,
 		TerminateIfNeeded(elemCodec),
-		getPrefixWriter[P](isNilPointer, nilsFirst),
+		nilsFirst,
 	}
 }
 
@@ -58,7 +58,7 @@ func ArrayCodec[A any, E any](elemCodec Codec[E]) Codec[A] {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	ptrToPtrToArray := reflect.New(c.pointerType)
@@ -82,7 +82,7 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c pointerToArrayCodec[P, A, E]) Write(w io.Writer, value P) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	arrayValue := reflect.ValueOf(value).Elem()

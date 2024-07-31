@@ -31,15 +31,15 @@ var (
 // The effect is that longer numbers will be ordered closer to +/-infinity.
 // This works because bigInt.Bytes() will never have a leading zero byte.
 type bigIntCodec struct {
-	writePrefix prefixWriter[*big.Int]
+	nilsFirst bool
 }
 
 func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
-	return bigIntCodec{getPrefixWriter[*big.Int](isNilPointer, nilsFirst)}
+	return bigIntCodec{nilsFirst}
 }
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	neg := false
@@ -73,7 +73,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	neg := false
@@ -163,11 +163,11 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //		negate precision first if Float is negative
 //	write uint8 rounding mode
 type bigFloatCodec struct {
-	writePrefix prefixWriter[*big.Float]
+	nilsFirst bool
 }
 
 func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
-	return bigFloatCodec{getPrefixWriter[*big.Float](isNilPointer, nilsFirst)}
+	return bigFloatCodec{nilsFirst}
 }
 
 // The second byte written in the *big.Float encoding after the initial
@@ -198,7 +198,7 @@ func computeShift(exp int32, prec int32) int {
 }
 
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	kind, err := int8Codec.Read(r)
@@ -259,7 +259,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 }
 
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
@@ -340,15 +340,15 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
-	writePrefix prefixWriter[*big.Rat]
+	nilsFirst bool
 }
 
 func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
-	return bigRatCodec{getPrefixWriter[*big.Rat](isNilPointer, nilsFirst)}
+	return bigRatCodec{nilsFirst}
 }
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	num, err := bIntCodec.Read(r)
@@ -364,7 +364,7 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 }
 
 func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	if err := bIntCodec.Write(w, value.Num()); err != nil {

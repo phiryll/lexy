@@ -12,8 +12,8 @@ import (
 //
 // Encoded elements are escaped and termninated if elemCodec requires it.
 type sliceCodec[S ~[]E, E any] struct {
-	elemCodec   Codec[E]
-	writePrefix prefixWriter[S]
+	elemCodec Codec[E]
+	nilsFirst bool
 }
 
 func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
@@ -22,12 +22,12 @@ func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
 	}
 	return sliceCodec[S, E]{
 		TerminateIfNeeded(elemCodec),
-		getPrefixWriter[S](isNilSlice, nilsFirst),
+		nilsFirst,
 	}
 }
 
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	values := S{}
@@ -45,7 +45,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 }
 
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	for _, elem := range value {

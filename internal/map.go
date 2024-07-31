@@ -12,9 +12,9 @@ import (
 //
 // Encoded keys and values are escaped and termninated if their respective Codecs require it.
 type mapCodec[M ~map[K]V, K comparable, V any] struct {
-	keyCodec    Codec[K]
-	valueCodec  Codec[V]
-	writePrefix prefixWriter[M]
+	keyCodec   Codec[K]
+	valueCodec Codec[V]
+	nilsFirst  bool
 }
 
 func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V], nilsFirst bool) Codec[M] {
@@ -27,12 +27,12 @@ func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Cod
 	return mapCodec[M, K, V]{
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
-		getPrefixWriter[M](isNilMap, nilsFirst),
+		nilsFirst,
 	}
 }
 
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
-	if isNil, err := ReadPrefix(r); isNil {
+	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	m := make(M)
@@ -54,7 +54,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 }
 
 func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
-	if done, err := c.writePrefix(w, value); done {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
 	for k, v := range value {

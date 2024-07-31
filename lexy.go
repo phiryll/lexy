@@ -32,7 +32,7 @@ type Codec[T any] interface {
 	//
 	// If instances of type T can be nil,
 	// implementations of Read should invoke ReadPrefix as the first step,
-	// and Write should invoke either WritePrefixNilsFirst or WritePrefixNilsLast.
+	// and Write should invoke WritePrefix.
 	// See the PointerToStruct example for an example usage.
 	//
 	// Read may repeatedly read small amounts of data from r,
@@ -44,7 +44,7 @@ type Codec[T any] interface {
 	// Write encodes value and writes the encoded bytes to w.
 	//
 	// If instances of type T can be nil,
-	// implementations of Write should invoke WritePrefixNilsFirst or WritePrefixNilsLast as the first step,
+	// implementations of Write should invoke WritePrefix as the first step,
 	// and Read should invoke ReadPrefix.
 	// See the PointerToStruct example for an example usage.
 	//
@@ -307,7 +307,7 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 	return internal.NegateCodec(codec)
 }
 
-// Codecs and functions for implementing new Codecs.
+// Codecs and functions to help in implementing new Codecs.
 
 // Terminate returns a new Codec that escapes and terminates the encodings produced by codec.
 func Terminate[T any](codec Codec[T]) Codec[T] {
@@ -323,11 +323,12 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
 //
-// If ReadPrefix returns isNil == true, then the caller is done reading this value
+// ReadPrefix returns done == false only if the non-nil value still needs to be read,
+// and there was no error reading the prefix.
+//
+// If ReadPrefix returns done == true, then the caller is done reading this value
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was read.
-// ReadPrefix returns isNil == false only if the non-nil value still needs to be read,
-// and there was no error reading the prefix.
 //
 // ReadPrefix will return io.EOF only if no bytes were read and r.Read returned io.EOF.
 // ReadPrefix will not return an error if a prefix was successfully read and r.Read returned io.EOF,
@@ -335,46 +336,22 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 // Any subsequent read from r by the caller will properly return 0 bytes read and io.EOF.
 //
 // See the PointerToStruct example for an example usage.
-func ReadPrefix(r io.Reader) (isNil bool, err error) {
+func ReadPrefix(r io.Reader) (done bool, err error) {
 	return internal.ReadPrefix(r)
 }
 
-// WritePrefixNilsFirst is used to write the initial nil/non-nil prefix byte by Codecs
-// encoding types whose instances can be nil, with nils ordered first.
+// WritePrefix writes a nil/non-nil prefix byte to w based on the values of isNil and nilsFirst.
 //
-// isNil is a function returning whether a given value of type T is nil.
-// The functions IsNilPointer, IsNilSlice, and IsNilMap are provided for this purpose.
+// WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
+// in which case the caller still needs to write the non-nil value to w.
 //
-// WritePrefixNilsFirst returns done == false only if the value itself still needs to be written
-// (value is not nil), and there was no error writing the prefix.
-// If WritePrefixNilsFirst returns done == true and err is nil,
-// the value was nil and no further data needs to be written for this value.
+// If WritePrefix returns done == true, then the caller is done writing the current value to w
+// regardless of the returned error value.
+// Either there was an error, or there was no error and the nil prefix was successfully written.
 //
 // See the PointerToStruct example for an example usage.
-func WritePrefixNilsFirst[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	return internal.WritePrefixNilsFirst(w, isNil, value)
-}
-
-// WritePrefixNilsLast is used to write the initial nil/non-nil prefix byte by Codecs
-// encoding types which can have nil values, with nils ordered last.
-// Otherwise it behaves exactly like WritePrefixNilsFirst.
-func WritePrefixNilsLast[T any](w io.Writer, isNil func(T) bool, value T) (done bool, err error) {
-	return internal.WritePrefixNilsLast(w, isNil, value)
-}
-
-// IsNilPointer is a helper function passed as the isNil argument in WritePrefixNilsFirst/Last.
-func IsNilPointer[P ~*E, E any](value P) bool {
-	return value == nil
-}
-
-// IsNilSlice is a helper function passed as the isNil argument in WritePrefixNilsFirst/Last.
-func IsNilSlice[S ~[]E, E any](value S) bool {
-	return value == nil
-}
-
-// IsNilMap is a helper function passed as the isNil argument in WritePrefixNilsFirst/Last.
-func IsNilMap[M ~map[K]V, K comparable, V any](value M) bool {
-	return value == nil
+func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
+	return internal.WritePrefix(w, isNil, nilsFirst)
 }
 
 // Convenience functions.
