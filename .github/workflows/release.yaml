@@ -1,0 +1,14 @@
+name: published release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Publish to pkg.go.dev
+        run: GOPROXY=proxy.golang.org go list -m github.com/phiryll/lexy@${{ github.ref_name }}
