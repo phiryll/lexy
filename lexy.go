@@ -98,12 +98,10 @@ func AsUint64[T ~uint]() Codec[T] { return internal.AsUint64Codec[T]() }
 
 // Int creates a new Codec for a type with an underlying type of int8, int16, int32, or int64.
 // This Codec does not require a terminator when used within an aggregate Codec.
-// This Codec does not require a terminator when used within an aggregate Codec.
 func Int[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] { return internal.IntCodec[T]() }
 
 // AsInt64 creates a new Codec for a type with an underlying type of int.
 // Values are converted to/from int64 and encoded with Int[int64]().
-// This Codec does not require a terminator when used within an aggregate Codec.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func AsInt64[T ~int]() Codec[T] { return internal.AsInt64Codec[T]() }
 
