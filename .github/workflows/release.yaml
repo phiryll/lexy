@@ -1,12 +1,8 @@
-name: Actions for non-draft releases
+name: published release
 
 on:
-  push:
-  # release:
-  #  types: [published]
-  # push:
-  #  tags:
-  #    - "v[0-9]+.[0-9]+.[0-9]+"
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -15,8 +11,4 @@ jobs:
       contents: read
     steps:
       - name: Publish to pkg.go.dev
-        run: |
-          echo "ref_name ${{ github.ref_name }}"
-          echo "ref ${{ github.ref }}"
-        # run: GOPROXY=proxy.golang.org go list -m github.com/phiryll/lexy@${{  }}
-        # run: curl "https://proxy.golang.org/github.com/phiryll/lexy/@v/${{  }}.info"
+        run: GOPROXY=proxy.golang.org go list -m github.com/phiryll/lexy@${{ github.ref_name }}
