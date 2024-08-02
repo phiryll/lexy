@@ -1,5 +1,9 @@
 # lexy
 
+[![Build Status](https://github.com/phiryll/lexy/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/phiryll/lexy/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/phiryll/lexy)](https://goreportcard.com/report/github.com/phiryll/lexy)
+[![Go Reference](https://pkg.go.dev/badge/github.com/phiryll/lexy)](https://pkg.go.dev/github.com/phiryll/lexy)
+
 Lexicographical Byte Order Encodings
 
 Lexy is a library for encoding strongly-typed values (using generics) into a binary form whose
