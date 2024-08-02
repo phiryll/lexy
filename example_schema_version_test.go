@@ -265,7 +265,7 @@ func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], v
 func Example_schemaVersion() {
 	// Encode data of a bunch of different versions and
 	// throw all the encodings into the same slice.
-	// Then make sure we can succesfully decode them all.
+	// Then make sure we can successfully decode them all.
 	var encoded [][]byte
 	var buf bytes.Buffer
 
