@@ -20,11 +20,11 @@ type Entry struct {
 	Value int // value type is unimportant for this example
 }
 
-func cmp(a, b Entry) int { return bytes.Compare(a.Key, b.Key) }
+func cmpEntries(a, b Entry) int { return bytes.Compare(a.Key, b.Key) }
 
 func (db *DB) Put(key []byte, value int) {
 	entry := Entry{key, value}
-	if i, found := slices.BinarySearchFunc(db.entries, entry, cmp); found {
+	if i, found := slices.BinarySearchFunc(db.entries, entry, cmpEntries); found {
 		db.entries[i] = entry
 	} else {
 		db.entries = slices.Insert(db.entries, i, entry)
@@ -33,8 +33,8 @@ func (db *DB) Put(key []byte, value int) {
 
 // Returns Entries, in order, such that (begin <= entry.Key < end)
 func (db *DB) Range(begin, end []byte) []Entry {
-	a, _ := slices.BinarySearchFunc(db.entries, Entry{begin, 0}, cmp)
-	b, _ := slices.BinarySearchFunc(db.entries, Entry{end, 0}, cmp)
+	a, _ := slices.BinarySearchFunc(db.entries, Entry{begin, 0}, cmpEntries)
+	b, _ := slices.BinarySearchFunc(db.entries, Entry{end, 0}, cmpEntries)
 	return db.entries[a:b]
 }
 
