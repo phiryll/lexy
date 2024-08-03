@@ -98,7 +98,7 @@ func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 		// The trailing terminator was not reached, we do not have complete data.
 		return zero, unexpectedIfEOF(readErr)
 	}
-	value, codecErr := c.codec.Read(bytes.NewBuffer(b))
+	value, codecErr := c.codec.Read(bytes.NewReader(b))
 	if codecErr != nil {
 		return zero, unexpectedIfEOF(codecErr)
 	}
