@@ -113,29 +113,15 @@ type converter[T, U any] interface {
 	cmp(a, b T) int
 }
 
-type float32Converter struct{}
-
-func (c float32Converter) to(f float32) uint32   { return math.Float32bits(f) }
-func (c float32Converter) from(u uint32) float32 { return math.Float32frombits(u) }
-func (c float32Converter) cmp(a, b float32) int {
-	// I'm not entirely sure this will work for NaNs.
-	return float64Converter{}.cmp(float64(a), float64(b))
-}
-
-type float64Converter struct{}
-
-func (c float64Converter) to(f float64) uint64   { return math.Float64bits(f) }
-func (c float64Converter) from(u uint64) float64 { return math.Float64frombits(u) }
-
-// Ordering semantics of the float Codecs.
-func (c float64Converter) cmp(a, b float64) int {
-	aBits := math.Float64bits(a)
-	bBits := math.Float64bits(b)
+// Implements ordering semantics of the float Codecs, mostly without encoding them.
+func cmpFloats[T float32 | float64, U uint32 | uint64](toBits func(T) U, a, b T) int {
+	aBits := toBits(a)
+	bBits := toBits(b)
 	if aBits == bBits {
 		return 0
 	}
-	aSign := math.Signbit(a) // true if negative or -0.0
-	if aSign != math.Signbit(b) {
+	aSign := math.Signbit(float64(a)) // true if negative or -0.0
+	if aSign != math.Signbit(float64(b)) {
 		if aSign {
 			return -1
 		}
@@ -143,7 +129,7 @@ func (c float64Converter) cmp(a, b float64) int {
 	}
 	// at this point, a != b and they have the same sign, only special case is NaN
 	switch {
-	case math.IsNaN(a) && math.IsNaN(b):
+	case math.IsNaN(float64(a)) && math.IsNaN(float64(b)):
 		if aSign {
 			// Codec flips all bits, compare in reverse order
 			return cmp.Compare(bBits, aBits)
@@ -151,12 +137,12 @@ func (c float64Converter) cmp(a, b float64) int {
 			// Codec flips the high bit, compare as signed ints
 			return cmp.Compare(int64(aBits), int64(bBits))
 		}
-	case math.IsNaN(a):
+	case math.IsNaN(float64(a)):
 		if aSign {
 			return -1
 		}
 		return 1
-	case math.IsNaN(b):
+	case math.IsNaN(float64(b)):
 		if aSign {
 			return 1
 		}
@@ -167,6 +153,22 @@ func (c float64Converter) cmp(a, b float64) int {
 		}
 		return 1
 	}
+}
+
+type float32Converter struct{}
+
+func (c float32Converter) to(f float32) uint32   { return math.Float32bits(f) }
+func (c float32Converter) from(u uint32) float32 { return math.Float32frombits(u) }
+func (c float32Converter) cmp(a, b float32) int {
+	return cmpFloats(math.Float32bits, a, b)
+}
+
+type float64Converter struct{}
+
+func (c float64Converter) to(f float64) uint64   { return math.Float64bits(f) }
+func (c float64Converter) from(u uint64) float64 { return math.Float64frombits(u) }
+func (c float64Converter) cmp(a, b float64) int {
+	return cmpFloats(math.Float64bits, a, b)
 }
 
 func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U) {
