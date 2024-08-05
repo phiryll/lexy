@@ -327,7 +327,7 @@ func Example_schemaVersion() {
 	slices.SortFunc(encoded, bytes.Compare)
 
 	for _, b := range encoded {
-		value, err := VersionedCodec.Read(bytes.NewBuffer(b))
+		value, err := VersionedCodec.Read(bytes.NewReader(b))
 		if err != nil {
 			panic(err)
 		}

@@ -42,8 +42,7 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 // This is a convenience function.
 // Use Codec.Read when decoding multiple values from the same byte stream.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	// bytes.NewBuffer takes ownership of its argument, so we need to clone it first.
-	return codec.Read(bytes.NewBuffer(bytes.Clone(data)))
+	return codec.Read(bytes.NewReader(data))
 }
 
 func unexpectedIfEOF(err error) error {
