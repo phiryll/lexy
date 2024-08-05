@@ -261,6 +261,26 @@ func FuzzNegBytes(f *testing.F) {
 	f.Fuzz(valueTesterFor(lexy.Negate(lexy.Bytes[[]byte]())))
 }
 
+func FuzzTerminateUint64(f *testing.F) {
+	addValues(f, seedsUint64...)
+	f.Fuzz(valueTesterFor(lexy.Terminate(lexy.Uint[uint64]())))
+}
+
+func FuzzTerminateInt16(f *testing.F) {
+	addValues(f, seedsInt16...)
+	f.Fuzz(valueTesterFor(lexy.Terminate(lexy.Int[int16]())))
+}
+
+func FuzzTerminateFloat32(f *testing.F) {
+	addValues(f, seedsFloat32...)
+	f.Fuzz(valueTesterForConv(lexy.Terminate(lexy.Float32[float32]()), float32Converter{}))
+}
+
+func FuzzTerminateBytes(f *testing.F) {
+	addValues(f, seedsBytes...)
+	f.Fuzz(valueTesterFor(lexy.Terminate(lexy.Bytes[[]byte]())))
+}
+
 // These fuzzers test that the encoding order is consistent with the value order.
 
 func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
@@ -395,4 +415,24 @@ func FuzzCmpNegFloat32(f *testing.F) {
 func FuzzCmpNegBytes(f *testing.F) {
 	addUnorderedPairs(f, seedsBytes...)
 	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Bytes[[]byte]()), negCmp(cmpBytes)))
+}
+
+func FuzzCmpTerminateUint16(f *testing.F) {
+	addUnorderedPairs(f, seedsUint16...)
+	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Uint[uint16]()), cmp.Compare[uint16]))
+}
+
+func FuzzCmpTerminateInt64(f *testing.F) {
+	addUnorderedPairs(f, seedsInt64...)
+	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Int[int64]()), cmp.Compare[int64]))
+}
+
+func FuzzCmpTerminateFloat64(f *testing.F) {
+	addUnorderedPairs(f, seedsFloat64...)
+	f.Fuzz(pairTesterForConv(lexy.Terminate(lexy.Float64[float64]()), float64Converter{}))
+}
+
+func FuzzCmpTerminateBytes(f *testing.F) {
+	addUnorderedPairs(f, seedsBytes...)
+	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Bytes[[]byte]()), cmpBytes))
 }
