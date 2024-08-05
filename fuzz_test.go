@@ -241,6 +241,26 @@ func FuzzBytes(f *testing.F) {
 	f.Fuzz(valueTesterFor(lexy.Bytes[[]byte]()))
 }
 
+func FuzzNegUint32(f *testing.F) {
+	addValues(f, seedsUint32...)
+	f.Fuzz(valueTesterFor(lexy.Negate(lexy.Uint[uint32]())))
+}
+
+func FuzzNegInt8(f *testing.F) {
+	addValues(f, seedsInt8...)
+	f.Fuzz(valueTesterFor(lexy.Negate(lexy.Int[int8]())))
+}
+
+func FuzzNegFloat64(f *testing.F) {
+	addValues(f, seedsFloat64...)
+	f.Fuzz(valueTesterForConv(lexy.Negate(lexy.Float64[float64]()), float64Converter{}))
+}
+
+func FuzzNegBytes(f *testing.F) {
+	addValues(f, seedsBytes...)
+	f.Fuzz(valueTesterFor(lexy.Negate(lexy.Bytes[[]byte]())))
+}
+
 // These fuzzers test that the encoding order is consistent with the value order.
 
 func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
@@ -333,4 +353,46 @@ func FuzzCmpString(f *testing.F) {
 func FuzzCmpBytes(f *testing.F) {
 	addUnorderedPairs(f, seedsBytes...)
 	f.Fuzz(pairTesterFor(lexy.Bytes[[]byte](), cmpBytes))
+}
+
+func negCmp[T any](cmp func(T, T) int) func(T, T) int {
+	return func(a, b T) int {
+		return cmp(b, a)
+	}
+}
+
+func negativeFloat32(f float32) float32 {
+	f64 := float64(f)
+	if math.Signbit(f64) {
+		return float32(math.Copysign(f64, 1.0))
+	}
+	return float32(math.Copysign(f64, -1.0))
+}
+
+type negFloat32 struct{}
+
+func (c negFloat32) to(f float32) uint32   { return float32Converter{}.to(negativeFloat32(f)) }
+func (c negFloat32) from(u uint32) float32 { return negativeFloat32(float32Converter{}.from(u)) }
+func (c negFloat32) cmp(a, b float32) int {
+	return float32Converter{}.cmp(b, a)
+}
+
+func FuzzCmpNegUint8(f *testing.F) {
+	addUnorderedPairs(f, seedsUint8...)
+	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Uint[uint8]()), negCmp(cmp.Compare[uint8])))
+}
+
+func FuzzCmpNegInt32(f *testing.F) {
+	addUnorderedPairs(f, seedsInt32...)
+	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Int[int32]()), negCmp(cmp.Compare[int32])))
+}
+
+func FuzzCmpNegFloat32(f *testing.F) {
+	addUnorderedPairs(f, seedsFloat32...)
+	f.Fuzz(pairTesterForConv(lexy.Negate(lexy.Float32[float32]()), negFloat32{}))
+}
+
+func FuzzCmpNegBytes(f *testing.F) {
+	addUnorderedPairs(f, seedsBytes...)
+	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Bytes[[]byte]()), negCmp(cmpBytes)))
 }
