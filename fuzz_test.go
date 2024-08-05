@@ -52,6 +52,28 @@ var (
 		math.Float64bits(math.Copysign(0.0, -1.0)),
 		math.Float64bits(-123.456e+23),
 	}
+
+	seedsString = []string{
+		"",
+		"q",
+		"\xFE",
+		"\x00",
+		"\x01",
+		"\xFF",
+		"a b c",
+		"a b d",
+		"a/\xFF34\x009``[*\x01#)2f\xFEmn",
+	}
+
+	seedsBytes = [][]byte{
+		nil,
+		{},
+		{0},
+		{1},
+		{254},
+		{255},
+		{254, 0, 34, 72, 0, 1, 0, 255, 0, 17},
+	}
 )
 
 // Functions to add seed values to the fuzzer.
@@ -209,6 +231,16 @@ func FuzzFloat64(f *testing.F) {
 	f.Fuzz(valueTesterForConv(lexy.Float64[float64](), float64Converter{}))
 }
 
+func FuzzString(f *testing.F) {
+	addValues(f, seedsString...)
+	f.Fuzz(valueTesterFor(lexy.String[string]()))
+}
+
+func FuzzBytes(f *testing.F) {
+	addValues(f, seedsBytes...)
+	f.Fuzz(valueTesterFor(lexy.Bytes[[]byte]()))
+}
+
 // These fuzzers test that the encoding order is consistent with the value order.
 
 func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
@@ -226,6 +258,20 @@ func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func
 	f := pairTesterFor(codec, conv.cmp)
 	return func(t *testing.T, a, b U) {
 		f(t, conv.from(a), conv.from(b))
+	}
+}
+
+// because bytes.Compare(nil, {}) == 0
+func cmpBytes(a, b []byte) int {
+	switch {
+	case a == nil && b == nil:
+		return 0
+	case a == nil:
+		return -1
+	case b == nil:
+		return 1
+	default:
+		return bytes.Compare(a, b)
 	}
 }
 
@@ -277,4 +323,14 @@ func FuzzCmpFloat32(f *testing.F) {
 func FuzzCmpFloat64(f *testing.F) {
 	addUnorderedPairs(f, seedsFloat64...)
 	f.Fuzz(pairTesterForConv(lexy.Float64[float64](), float64Converter{}))
+}
+
+func FuzzCmpString(f *testing.F) {
+	addUnorderedPairs(f, seedsString...)
+	f.Fuzz(pairTesterFor(lexy.String[string](), cmp.Compare[string]))
+}
+
+func FuzzCmpBytes(f *testing.F) {
+	addUnorderedPairs(f, seedsBytes...)
+	f.Fuzz(pairTesterFor(lexy.Bytes[[]byte](), cmpBytes))
 }
