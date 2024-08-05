@@ -21,6 +21,37 @@ var (
 	seedsInt16  = []int16{0, 1, -1, math.MinInt16, math.MaxInt16}
 	seedsInt32  = []int32{0, 1, -1, math.MinInt32, math.MaxInt32}
 	seedsInt64  = []int64{0, 1, -1, math.MinInt64, math.MaxInt64}
+
+	// Fuzzing bit patterns instead of floats
+	// because go's float fuzzer only generates one pattern for NaN.
+	seedsFloat32 = []uint32{
+		math.Float32bits(math.MaxFloat32),
+		math.Float32bits(math.SmallestNonzeroFloat32),
+		math.Float32bits(float32(math.Inf(1))),
+		math.Float32bits(float32(math.NaN())),
+		math.Float32bits(0.0),
+		math.Float32bits(123.456e+23),
+		math.Float32bits(-math.MaxFloat32),
+		math.Float32bits(-math.SmallestNonzeroFloat32),
+		math.Float32bits(float32(math.Inf(-1))),
+		math.Float32bits(-float32(math.NaN())),
+		math.Float32bits(float32(math.Copysign(0.0, -1.0))),
+		math.Float32bits(-123.456e+23),
+	}
+	seedsFloat64 = []uint64{
+		math.Float64bits(math.MaxFloat64),
+		math.Float64bits(math.SmallestNonzeroFloat64),
+		math.Float64bits(math.Inf(1)),
+		math.Float64bits(math.NaN()),
+		math.Float64bits(0.0),
+		math.Float64bits(123.456e+23),
+		math.Float64bits(-math.MaxFloat64),
+		math.Float64bits(-math.SmallestNonzeroFloat64),
+		math.Float64bits(math.Inf(-1)),
+		math.Float64bits(-math.NaN()),
+		math.Float64bits(math.Copysign(0.0, -1.0)),
+		math.Float64bits(-123.456e+23),
+	}
 )
 
 // These fuzzers test the encode-decode round trip.
@@ -31,7 +62,7 @@ func addValues[T any](f *testing.F, values ...T) {
 	}
 }
 
-func valueTesterFor[T any](codec lexy.Codec[T]) func(t *testing.T, value T) {
+func valueTesterFor[T any](codec lexy.Codec[T]) func(*testing.T, T) {
 	return func(t *testing.T, value T) {
 		b, err := lexy.Encode(codec, value)
 		require.NoError(t, err)
@@ -39,6 +70,81 @@ func valueTesterFor[T any](codec lexy.Codec[T]) func(t *testing.T, value T) {
 		require.NoError(t, err)
 		assert.IsType(t, value, got)
 		assert.Equal(t, value, got)
+	}
+}
+
+// translates representations, used for bits<->float
+type converter[T, U any] interface {
+	to(t T) U
+	from(u U) T
+	cmp(a, b T) int
+}
+
+type float32Converter struct{}
+
+func (c float32Converter) to(f float32) uint32   { return math.Float32bits(f) }
+func (c float32Converter) from(u uint32) float32 { return math.Float32frombits(u) }
+func (c float32Converter) cmp(a, b float32) int {
+	// I'm not entirely sure this will work for NaNs.
+	return float64Converter{}.cmp(float64(a), float64(b))
+}
+
+type float64Converter struct{}
+
+func (c float64Converter) to(f float64) uint64   { return math.Float64bits(f) }
+func (c float64Converter) from(u uint64) float64 { return math.Float64frombits(u) }
+
+// Ordering semantics of the float Codecs.
+func (c float64Converter) cmp(a, b float64) int {
+	aBits := math.Float64bits(a)
+	bBits := math.Float64bits(b)
+	if aBits == bBits {
+		return 0
+	}
+	aSign := math.Signbit(a) // true if negative or -0.0
+	if aSign != math.Signbit(b) {
+		if aSign {
+			return -1
+		}
+		return 1
+	}
+	// at this point, a != b and they have the same sign, only special case is NaN
+	switch {
+	case math.IsNaN(a) && math.IsNaN(b):
+		if aSign {
+			// Codec flips all bits, compare in reverse order
+			return cmp.Compare(bBits, aBits)
+		} else {
+			// Codec flips the high bit, compare as signed ints
+			return cmp.Compare(int64(aBits), int64(bBits))
+		}
+	case math.IsNaN(a):
+		if aSign {
+			return -1
+		}
+		return 1
+	case math.IsNaN(b):
+		if aSign {
+			return 1
+		}
+		return -1
+	default:
+		if a < b {
+			return -1
+		}
+		return 1
+	}
+}
+
+func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U) {
+	return func(t *testing.T, repr U) {
+		value := conv.from(repr)
+		b, err := lexy.Encode(codec, value)
+		require.NoError(t, err)
+		got, err := lexy.Decode(codec, b)
+		require.NoError(t, err)
+		assert.IsType(t, value, got)
+		assert.Equal(t, conv.to(value), conv.to(got), "values not equal: %#v, %#v", value, got)
 	}
 }
 
@@ -82,6 +188,16 @@ func FuzzInt64(f *testing.F) {
 	f.Fuzz(valueTesterFor(lexy.Int[int64]()))
 }
 
+func FuzzFloat32(f *testing.F) {
+	addValues(f, seedsFloat32...)
+	f.Fuzz(valueTesterForConv(lexy.Float32[float32](), float32Converter{}))
+}
+
+func FuzzFloat64(f *testing.F) {
+	addValues(f, seedsFloat64...)
+	f.Fuzz(valueTesterForConv(lexy.Float64[float64](), float64Converter{}))
+}
+
 // These fuzzers test that the encoding order is consistent with the value order.
 
 func addPairs[T any](f *testing.F, values ...T) {
@@ -92,13 +208,21 @@ func addPairs[T any](f *testing.F, values ...T) {
 	}
 }
 
-func pairTesterFor[T any](codec lexy.Codec[T], cmp func(a, b T) int) func(t *testing.T, a, b T) {
+func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
 	return func(t *testing.T, a, b T) {
 		aEncoded, err := lexy.Encode(codec, a)
 		require.NoError(t, err)
 		bEncoded, err := lexy.Encode(codec, b)
 		require.NoError(t, err)
-		assert.Equal(t, cmp(a, b), bytes.Compare(aEncoded, bEncoded))
+		assert.Equal(t, cmp(a, b), bytes.Compare(aEncoded, bEncoded),
+			"values not comparing correctly: %#v(%x), %#v(%x)", a, aEncoded, b, bEncoded)
+	}
+}
+
+func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U, U) {
+	f := pairTesterFor(codec, conv.cmp)
+	return func(t *testing.T, a, b U) {
+		f(t, conv.from(a), conv.from(b))
 	}
 }
 
@@ -140,4 +264,14 @@ func FuzzCmpInt32(f *testing.F) {
 func FuzzCmpInt64(f *testing.F) {
 	addPairs(f, seedsInt64...)
 	f.Fuzz(pairTesterFor(lexy.Int[int64](), cmp.Compare[int64]))
+}
+
+func FuzzCmpFloat32(f *testing.F) {
+	addPairs(f, seedsFloat32...)
+	f.Fuzz(pairTesterForConv(lexy.Float32[float32](), float32Converter{}))
+}
+
+func FuzzCmpFloat64(f *testing.F) {
+	addPairs(f, seedsFloat64...)
+	f.Fuzz(pairTesterForConv(lexy.Float64[float64](), float64Converter{}))
 }
