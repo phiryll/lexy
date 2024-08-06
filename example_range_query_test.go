@@ -22,20 +22,21 @@ type Entry struct {
 
 func cmpEntries(a, b Entry) int { return bytes.Compare(a.Key, b.Key) }
 
-func (db *DB) Put(key []byte, value int) {
+func (db *DB) Put(key []byte, value int) error {
 	entry := Entry{key, value}
 	if i, found := slices.BinarySearchFunc(db.entries, entry, cmpEntries); found {
 		db.entries[i] = entry
 	} else {
 		db.entries = slices.Insert(db.entries, i, entry)
 	}
+	return nil
 }
 
 // Returns Entries, in order, such that (begin <= entry.Key < end)
-func (db *DB) Range(begin, end []byte) []Entry {
+func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 	a, _ := slices.BinarySearchFunc(db.entries, Entry{begin, 0}, cmpEntries)
 	b, _ := slices.BinarySearchFunc(db.entries, Entry{end, 0}, cmpEntries)
-	return db.entries[a:b]
+	return db.entries[a:b], nil
 }
 
 // END TOY DB IMPLEMENTATION
@@ -51,13 +52,22 @@ var (
 type KeyCodec struct{}
 
 func (c KeyCodec) Read(r io.Reader) (UserKey, error) {
-	cost, _ := costCodec.Read(r)
-	words, _ := wordsCodec.Read(r)
+	var zero UserKey
+	cost, err := costCodec.Read(r)
+	if err != nil {
+		return zero, err
+	}
+	words, err := wordsCodec.Read(r)
+	if err != nil {
+		return zero, lexy.UnexpectedIfEOF(err)
+	}
 	return UserKey{words, cost}, nil
 }
 
 func (c KeyCodec) Write(w io.Writer, key UserKey) error {
-	costCodec.Write(w, key.cost)
+	if err := costCodec.Write(w, key.cost); err != nil {
+		return err
+	}
 	return wordsCodec.Write(w, key.words)
 }
 
@@ -87,34 +97,44 @@ type UserEntry struct {
 	Value int
 }
 
-func (db *UserDB) Put(key UserKey, value int) {
+func (db *UserDB) Put(key UserKey, value int) error {
 	var buf bytes.Buffer
-	keyCodec.Write(&buf, key)
-	db.realDB.Put(buf.Bytes(), value)
+	if err := keyCodec.Write(&buf, key); err != nil {
+		return err
+	}
+	return db.realDB.Put(buf.Bytes(), value)
 }
 
 // Returns Entries, in order, such that (begin <= entry.Key < end)
-func (db *UserDB) Range(begin, end UserKey) []UserEntry {
+func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 	var buf bytes.Buffer
-	keyCodec.Write(&buf, begin)
+	if err := keyCodec.Write(&buf, begin); err != nil {
+		return nil, err
+	}
 	beginBytes := bytes.Clone(buf.Bytes())
 	buf.Reset()
-	keyCodec.Write(&buf, end)
+	if err := keyCodec.Write(&buf, end); err != nil {
+		return nil, err
+	}
 	endBytes := bytes.Clone(buf.Bytes())
-	dbEntries := db.realDB.Range(beginBytes, endBytes)
+	dbEntries, err := db.realDB.Range(beginBytes, endBytes)
+	if err != nil {
+		return nil, err
+	}
 	userEntries := make([]UserEntry, len(dbEntries))
 	for i, dbEntry := range dbEntries {
-		userKey, _ := keyCodec.Read(bytes.NewReader(dbEntry.Key))
+		userKey, err := keyCodec.Read(bytes.NewReader(dbEntry.Key))
+		if err != nil {
+			return nil, err
+		}
 		userEntries[i] = UserEntry{userKey, dbEntry.Value}
 	}
-	return userEntries
+	return userEntries, nil
 }
 
 // END USER DB ABSTRACTION
 
 // Example (RangeQuery) shows how a range query might be implemented.
-// Because this example is so long, error handling has been removed.
-// DON'T DO THIS!
 func Example_rangeQuery() {
 	userDB := UserDB{}
 	for _, item := range []struct {
@@ -135,12 +155,19 @@ func Example_rangeQuery() {
 		{2, []string{"in", "sort", "order"}, 0},
 		{2, []string{"integer", "sort"}, 0},
 	} {
-		userDB.Put(UserKey{item.words, item.cost}, item.value)
+		err := userDB.Put(UserKey{item.words, item.cost}, item.value)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	printRange := func(low, high UserKey) {
 		fmt.Printf("Range: %s -> %s\n", low.String(), high.String())
-		for _, userEntry := range userDB.Range(low, high) {
+		entries, err := userDB.Range(low, high)
+		if err != nil {
+			panic(err)
+		}
+		for _, userEntry := range entries {
 			fmt.Println(userEntry.Key.String())
 		}
 	}
