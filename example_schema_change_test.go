@@ -73,9 +73,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	for {
 		field, err := nameCodec.Read(r)
 		if err == io.EOF {
-			if len(field) > 0 {
-				return zero, io.ErrUnexpectedEOF
-			}
+			// Must have already read the last field.
 			return value, nil
 		}
 		if err != nil {
@@ -86,39 +84,27 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 			// Field was renamed.
 			firstName, err := nameCodec.Read(r)
 			if err != nil {
-				if err == io.EOF {
-					err = io.ErrUnexpectedEOF
-				}
-				return zero, err
+				return zero, lexy.UnexpectedIfEOF(err)
 			}
 			value.firstName = firstName
 		case "middleName":
 			// Field was added.
 			middleName, err := nameCodec.Read(r)
 			if err != nil {
-				if err == io.EOF {
-					err = io.ErrUnexpectedEOF
-				}
-				return zero, err
+				return zero, lexy.UnexpectedIfEOF(err)
 			}
 			value.middleName = middleName
 		case "lastName":
 			lastName, err := nameCodec.Read(r)
 			if err != nil {
-				if err == io.EOF {
-					err = io.ErrUnexpectedEOF
-				}
-				return zero, err
+				return zero, lexy.UnexpectedIfEOF(err)
 			}
 			value.lastName = lastName
 		case "count":
 			// Field was removed, but we still need to read the value.
 			_, err := countCodec.Read(r)
 			if err != nil {
-				if err == io.EOF {
-					err = io.ErrUnexpectedEOF
-				}
-				return zero, err
+				return zero, lexy.UnexpectedIfEOF(err)
 			}
 		default:
 			// We must stop, we don't know how to proceed.

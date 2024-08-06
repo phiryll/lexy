@@ -305,6 +305,16 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 
 // Codecs and functions to help in implementing new Codecs.
 
+// UnexpectedIfEOF returns io.ErrUnexpectedEOF if err is io.EOF, and returns err otherwise.
+//
+// This helps make Codec.Read implementations a little easier to read.
+func UnexpectedIfEOF(err error) error {
+	if err == io.EOF {
+		return io.ErrUnexpectedEOF
+	}
+	return err
+}
+
 // Terminate returns a new Codec that escapes and terminates the encodings produced by codec.
 func Terminate[T any](codec Codec[T]) Codec[T] {
 	return internal.Terminate(codec)
