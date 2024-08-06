@@ -182,17 +182,10 @@ func doUnescape(r io.Reader) ([]byte, error) {
 
 	escaped := false // if the previous byte read is an escape
 	for {
-		n, err := r.Read(in)
-		if n == 0 {
-			if err != nil {
-				return out.Bytes(), err
-			}
-			// no data read and err == nil is allowed
-			continue
+		_, err := io.ReadFull(r, in)
+		if err != nil {
+			return out.Bytes(), err
 		}
-		// If we got a byte and and error, ignore the error.
-		// Presumably we'll get it again on the next read, if any.
-
 		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {

@@ -34,14 +34,13 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	for {
 		value, err := c.elemCodec.Read(r)
 		if err == io.EOF {
-			break
+			return values, nil
 		}
 		if err != nil {
 			return values, err
 		}
 		values = append(values, value)
 	}
-	return values, nil
 }
 
 func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {

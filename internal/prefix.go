@@ -41,18 +41,8 @@ var (
 // Any subsequent read from r by the caller will properly return 0 bytes read and io.EOF.
 func ReadPrefix(r io.Reader) (done bool, err error) {
 	prefix := []byte{0}
-	n, err := r.Read(prefix)
-	if n == 0 {
-		// We must propagate io.EOF in this case.
-		if err == nil {
-			err = fmt.Errorf("unexpected read of 0 bytes with no error")
-		}
-		return true, err
-	}
-	// If we successfully read a byte and get io.EOF, ignore the EOF.
-	if err == io.EOF {
-		err = nil
-	} else if err != nil {
+	_, err = io.ReadFull(r, prefix)
+	if err != nil {
 		return true, err
 	}
 	switch prefix[0] {

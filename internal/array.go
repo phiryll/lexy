@@ -67,14 +67,8 @@ func (c pointerToArrayCodec[P, A, E]) Read(r io.Reader) (P, error) {
 	size := c.arrayType.Len()
 	for i := range size {
 		value, err := c.elemCodec.Read(r)
-		if err == io.EOF {
-			if i != size-1 {
-				return nil, io.ErrUnexpectedEOF
-			}
-			break
-		}
 		if err != nil {
-			return nil, err
+			return nil, unexpectedIfEOF(err)
 		}
 		array.Index(i).Set(reflect.ValueOf(value))
 	}
