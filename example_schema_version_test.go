@@ -55,37 +55,25 @@ func (c versionedCodec) Read(r io.Reader) (schemaVersion4, error) {
 	case 1:
 		v1, err := SchemaVersion1Codec.Read(r)
 		if err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return zero, err
+			return zero, lexy.UnexpectedIfEOF(err)
 		}
 		return schemaVersion4{v1.name, "", ""}, nil
 	case 2:
 		v2, err := SchemaVersion2Codec.Read(r)
 		if err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return zero, err
+			return zero, lexy.UnexpectedIfEOF(err)
 		}
 		return schemaVersion4{v2.name, "", v2.lastName}, nil
 	case 3:
 		v3, err := SchemaVersion3Codec.Read(r)
 		if err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return zero, err
+			return zero, lexy.UnexpectedIfEOF(err)
 		}
 		return schemaVersion4{v3.name, "", v3.lastName}, nil
 	case 4:
 		v4, err := SchemaVersion4Codec.Read(r)
 		if err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return zero, err
+			return zero, lexy.UnexpectedIfEOF(err)
 		}
 		return v4, nil
 	default:
@@ -142,10 +130,7 @@ func (p schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
 	}
 	name, err := NameCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return schemaVersion2{name, lastName}, nil
 }
@@ -173,17 +158,11 @@ func (p schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
 	}
 	lastName, err := NameCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	name, err := NameCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return schemaVersion3{name, lastName, count}, nil
 }
@@ -214,17 +193,11 @@ func (s schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
 	}
 	firstName, err := NameCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	middleName, err := NameCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return schemaVersion4{firstName, middleName, lastName}, nil
 }

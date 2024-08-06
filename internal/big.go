@@ -55,14 +55,9 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		r = negateReader{r}
 	}
 	b := make([]byte, size)
-	n, err := r.Read(b)
-	if err == io.EOF {
-		if int64(n) < size {
-			return nil, io.ErrUnexpectedEOF
-		}
-		// fall through if EOF and all bytes were read
-	} else if err != nil {
-		return nil, err
+	_, err = io.ReadFull(r, b)
+	if err != nil {
+		return nil, unexpectedIfEOF(err)
 	}
 	var value big.Int
 	value.SetBytes(b)

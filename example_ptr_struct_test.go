@@ -45,10 +45,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	}
 	name, err := stringCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return nil, err
+		return nil, lexy.UnexpectedIfEOF(err)
 	}
 	// Read other fields.
 	return &BigStruct{name /*, other fields ...*/}, nil

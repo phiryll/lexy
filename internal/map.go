@@ -39,7 +39,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	for {
 		key, err := c.keyCodec.Read(r)
 		if err == io.EOF {
-			break
+			return m, nil
 		}
 		if err != nil {
 			return m, err
@@ -50,7 +50,6 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 		}
 		m[key] = value
 	}
-	return m, nil
 }
 
 func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {

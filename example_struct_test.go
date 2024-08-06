@@ -50,17 +50,11 @@ func (c intFloatStringsCodec) Read(r io.Reader) (SimpleStruct, error) {
 	}
 	aFloat, err := aFloatCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	strings, err := stringsCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return SimpleStruct{anInt, aFloat, strings}, nil
 }
@@ -89,17 +83,11 @@ func (c floatNegStringsIntCodec) Read(r io.Reader) (SimpleStruct, error) {
 	}
 	strings, err := negStringsCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	anInt, err := anIntCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return SimpleStruct{anInt, aFloat, strings}, nil
 }
@@ -127,10 +115,16 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 //   - The order in which encoded data is written defines the Codec's ordering.
 //     Read data in the same order it was written, using the same Codecs.
 //     An exception to this rule is in the schema change example.
-//   - use lexy.Terminate/TerminateIfNeeded for values that do/might
+//   - Use lexy.Terminate/TerminateIfNeeded for values that do/might
 //     require terminating and escaping.
 //     It won't be much of a performance hit to use lexy.TerminateIfNeeded,
 //     since it returns the argument Codec if it doesn't require termination.
+//   - If no bytes are read and EOF is reached when reading,
+//     return the zero value and io.EOF from Codec.Read.
+//     If EOF is clearly reached before a complete value has been read,
+//     return io.ErrUnexpectedEOF.
+//     If EOF is reached and what has been read could be a complete value,
+//     return the value and no error.
 func Example_simpleStruct() {
 	structs := []SimpleStruct{
 		{1, 5.0, nil},
