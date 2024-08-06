@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/phiryll/lexy"
@@ -111,7 +112,7 @@ func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCa
 // - Codec.Write() fails when writing nonEmpty to a failing io.Writer
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("fail read", func(t *testing.T) {
-		_, err := codec.Read(failReader{})
+		_, err := codec.Read(iotest.ErrReader(fmt.Errorf("failed to read")))
 		assert.Error(t, err)
 	})
 	t.Run("fail write", func(t *testing.T) {
@@ -120,7 +121,6 @@ func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	})
 }
 
-type failReader struct{}
 type failWriter struct{}
 
 type boundedWriter struct {
@@ -129,14 +129,9 @@ type boundedWriter struct {
 }
 
 var (
-	_ io.Reader = failReader{}
 	_ io.Writer = failWriter{}
 	_ io.Writer = &boundedWriter{}
 )
-
-func (f failReader) Read(p []byte) (int, error) {
-	return 0, fmt.Errorf("failed to read")
-}
 
 func (w failWriter) Write(p []byte) (int, error) {
 	return 0, fmt.Errorf("failed to write")
