@@ -2,7 +2,6 @@ package lexy_test
 
 import (
 	"bytes"
-	"cmp"
 	"math"
 	"testing"
 
@@ -76,6 +75,18 @@ var (
 	}
 )
 
+// Helper function somewhat duplicating compare (go 1.21, so trying to avoid)
+func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
+	switch {
+	case x < y:
+		return -1
+	case x == y:
+		return 0
+	default:
+		return 1
+	}
+}
+
 // Functions to add seed values to the fuzzer.
 
 func addValues[T any](f *testing.F, values ...T) {
@@ -132,10 +143,10 @@ func cmpFloats[T float32 | float64, U uint32 | uint64](toBits func(T) U, a, b T)
 	case math.IsNaN(float64(a)) && math.IsNaN(float64(b)):
 		if aSign {
 			// Codec flips all bits, compare in reverse order
-			return cmp.Compare(bBits, aBits)
+			return compare(bBits, aBits)
 		} else {
 			// Codec flips the high bit, compare as signed ints
-			return cmp.Compare(int64(aBits), int64(bBits))
+			return compare(int64(aBits), int64(bBits))
 		}
 	case math.IsNaN(float64(a)):
 		if aSign {
@@ -319,42 +330,42 @@ func cmpBytes(a, b []byte) int {
 
 func FuzzCmpUint8(f *testing.F) {
 	addUnorderedPairs(f, seedsUint8...)
-	f.Fuzz(pairTesterFor(lexy.Uint8[uint8](), cmp.Compare[uint8]))
+	f.Fuzz(pairTesterFor(lexy.Uint8[uint8](), compare[uint8]))
 }
 
 func FuzzCmpUint16(f *testing.F) {
 	addUnorderedPairs(f, seedsUint16...)
-	f.Fuzz(pairTesterFor(lexy.Uint16[uint16](), cmp.Compare[uint16]))
+	f.Fuzz(pairTesterFor(lexy.Uint16[uint16](), compare[uint16]))
 }
 
 func FuzzCmpUint32(f *testing.F) {
 	addUnorderedPairs(f, seedsUint32...)
-	f.Fuzz(pairTesterFor(lexy.Uint32[uint32](), cmp.Compare[uint32]))
+	f.Fuzz(pairTesterFor(lexy.Uint32[uint32](), compare[uint32]))
 }
 
 func FuzzCmpUint64(f *testing.F) {
 	addUnorderedPairs(f, seedsUint64...)
-	f.Fuzz(pairTesterFor(lexy.Uint64[uint64](), cmp.Compare[uint64]))
+	f.Fuzz(pairTesterFor(lexy.Uint64[uint64](), compare[uint64]))
 }
 
 func FuzzCmpInt8(f *testing.F) {
 	addUnorderedPairs(f, seedsInt8...)
-	f.Fuzz(pairTesterFor(lexy.Int8[int8](), cmp.Compare[int8]))
+	f.Fuzz(pairTesterFor(lexy.Int8[int8](), compare[int8]))
 }
 
 func FuzzCmpInt16(f *testing.F) {
 	addUnorderedPairs(f, seedsInt16...)
-	f.Fuzz(pairTesterFor(lexy.Int16[int16](), cmp.Compare[int16]))
+	f.Fuzz(pairTesterFor(lexy.Int16[int16](), compare[int16]))
 }
 
 func FuzzCmpInt32(f *testing.F) {
 	addUnorderedPairs(f, seedsInt32...)
-	f.Fuzz(pairTesterFor(lexy.Int32[int32](), cmp.Compare[int32]))
+	f.Fuzz(pairTesterFor(lexy.Int32[int32](), compare[int32]))
 }
 
 func FuzzCmpInt64(f *testing.F) {
 	addUnorderedPairs(f, seedsInt64...)
-	f.Fuzz(pairTesterFor(lexy.Int64[int64](), cmp.Compare[int64]))
+	f.Fuzz(pairTesterFor(lexy.Int64[int64](), compare[int64]))
 }
 
 func FuzzCmpFloat32(f *testing.F) {
@@ -369,7 +380,7 @@ func FuzzCmpFloat64(f *testing.F) {
 
 func FuzzCmpString(f *testing.F) {
 	addUnorderedPairs(f, seedsString...)
-	f.Fuzz(pairTesterFor(lexy.String[string](), cmp.Compare[string]))
+	f.Fuzz(pairTesterFor(lexy.String[string](), compare[string]))
 }
 
 func FuzzCmpBytes(f *testing.F) {
@@ -401,12 +412,12 @@ func (c negFloat32) cmp(a, b float32) int {
 
 func FuzzCmpNegUint8(f *testing.F) {
 	addUnorderedPairs(f, seedsUint8...)
-	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Uint8[uint8]()), negCmp(cmp.Compare[uint8])))
+	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Uint8[uint8]()), negCmp(compare[uint8])))
 }
 
 func FuzzCmpNegInt32(f *testing.F) {
 	addUnorderedPairs(f, seedsInt32...)
-	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Int32[int32]()), negCmp(cmp.Compare[int32])))
+	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Int32[int32]()), negCmp(compare[int32])))
 }
 
 func FuzzCmpNegFloat32(f *testing.F) {
@@ -421,12 +432,12 @@ func FuzzCmpNegBytes(f *testing.F) {
 
 func FuzzCmpTerminateUint16(f *testing.F) {
 	addUnorderedPairs(f, seedsUint16...)
-	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Uint16[uint16]()), cmp.Compare[uint16]))
+	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Uint16[uint16]()), compare[uint16]))
 }
 
 func FuzzCmpTerminateInt64(f *testing.F) {
 	addUnorderedPairs(f, seedsInt64...)
-	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Int64[int64]()), cmp.Compare[int64]))
+	f.Fuzz(pairTesterFor(lexy.Terminate(lexy.Int64[int64]()), compare[int64]))
 }
 
 func FuzzCmpTerminateFloat64(f *testing.F) {
