@@ -75,7 +75,7 @@ var (
 	}
 )
 
-// Helper function somewhat duplicating compare (go 1.21, so trying to avoid)
+// Helper function somewhat duplicating cmp.Compare (go 1.21, so trying to avoid)
 func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
 	switch {
 	case x < y:
@@ -85,6 +85,45 @@ func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 |
 	default:
 		return 1
 	}
+}
+
+// translates representations, used for bits<->float
+type converter[T, U any] interface {
+	To(t T) U
+	From(u U) T
+	Cmp(a, b T) int
+}
+
+var (
+	f32Conv   converter[float32, uint32] = float32Converter{}
+	f64Conv   converter[float64, uint64] = float64Converter{}
+	neg32Conv converter[float32, uint32] = negFloat32Converter{}
+)
+
+type float32Converter struct{}
+
+func (c float32Converter) To(f float32) uint32   { return math.Float32bits(f) }
+func (c float32Converter) From(u uint32) float32 { return math.Float32frombits(u) }
+func (c float32Converter) Cmp(a, b float32) int {
+	return cmpFloats(math.Float32bits, a, b)
+}
+
+type float64Converter struct{}
+
+func (c float64Converter) To(f float64) uint64   { return math.Float64bits(f) }
+func (c float64Converter) From(u uint64) float64 { return math.Float64frombits(u) }
+func (c float64Converter) Cmp(a, b float64) int {
+	return cmpFloats(math.Float64bits, a, b)
+}
+
+type negFloat32Converter struct{}
+
+func (c negFloat32Converter) To(f float32) uint32 { return f32Conv.To(negativeFloat32(f)) }
+func (c negFloat32Converter) From(u uint32) float32 {
+	return negativeFloat32(f32Conv.From(u))
+}
+func (c negFloat32Converter) Cmp(a, b float32) int {
+	return f32Conv.Cmp(b, a)
 }
 
 // Functions to add seed values to the fuzzer.
@@ -115,13 +154,6 @@ func valueTesterFor[T any](codec lexy.Codec[T]) func(*testing.T, T) {
 		assert.IsType(t, value, got)
 		assert.Equal(t, value, got)
 	}
-}
-
-// translates representations, used for bits<->float
-type converter[T, U any] interface {
-	to(t T) U
-	from(u U) T
-	cmp(a, b T) int
 }
 
 // Implements ordering semantics of the float Codecs, mostly without encoding them.
@@ -166,31 +198,15 @@ func cmpFloats[T float32 | float64, U uint32 | uint64](toBits func(T) U, a, b T)
 	}
 }
 
-type float32Converter struct{}
-
-func (c float32Converter) to(f float32) uint32   { return math.Float32bits(f) }
-func (c float32Converter) from(u uint32) float32 { return math.Float32frombits(u) }
-func (c float32Converter) cmp(a, b float32) int {
-	return cmpFloats(math.Float32bits, a, b)
-}
-
-type float64Converter struct{}
-
-func (c float64Converter) to(f float64) uint64   { return math.Float64bits(f) }
-func (c float64Converter) from(u uint64) float64 { return math.Float64frombits(u) }
-func (c float64Converter) cmp(a, b float64) int {
-	return cmpFloats(math.Float64bits, a, b)
-}
-
 func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U) {
 	return func(t *testing.T, repr U) {
-		value := conv.from(repr)
+		value := conv.From(repr)
 		b, err := lexy.Encode(codec, value)
 		require.NoError(t, err)
 		got, err := lexy.Decode(codec, b)
 		require.NoError(t, err)
 		assert.IsType(t, value, got)
-		assert.Equal(t, conv.to(value), conv.to(got), "values not equal: %#v, %#v", value, got)
+		assert.Equal(t, conv.To(value), conv.To(got), "values not equal: %#v, %#v", value, got)
 	}
 }
 
@@ -236,12 +252,12 @@ func FuzzInt64(f *testing.F) {
 
 func FuzzFloat32(f *testing.F) {
 	addValues(f, seedsFloat32...)
-	f.Fuzz(valueTesterForConv(lexy.Float32[float32](), float32Converter{}))
+	f.Fuzz(valueTesterForConv(lexy.Float32[float32](), f32Conv))
 }
 
 func FuzzFloat64(f *testing.F) {
 	addValues(f, seedsFloat64...)
-	f.Fuzz(valueTesterForConv(lexy.Float64[float64](), float64Converter{}))
+	f.Fuzz(valueTesterForConv(lexy.Float64[float64](), f64Conv))
 }
 
 func FuzzString(f *testing.F) {
@@ -266,7 +282,7 @@ func FuzzNegInt8(f *testing.F) {
 
 func FuzzNegFloat64(f *testing.F) {
 	addValues(f, seedsFloat64...)
-	f.Fuzz(valueTesterForConv(lexy.Negate(lexy.Float64[float64]()), float64Converter{}))
+	f.Fuzz(valueTesterForConv(lexy.Negate(lexy.Float64[float64]()), f64Conv))
 }
 
 func FuzzNegBytes(f *testing.F) {
@@ -286,7 +302,7 @@ func FuzzTerminateInt16(f *testing.F) {
 
 func FuzzTerminateFloat32(f *testing.F) {
 	addValues(f, seedsFloat32...)
-	f.Fuzz(valueTesterForConv(lexy.Terminate(lexy.Float32[float32]()), float32Converter{}))
+	f.Fuzz(valueTesterForConv(lexy.Terminate(lexy.Float32[float32]()), f32Conv))
 }
 
 func FuzzTerminateBytes(f *testing.F) {
@@ -308,9 +324,9 @@ func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing
 }
 
 func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U, U) {
-	f := pairTesterFor(codec, conv.cmp)
+	f := pairTesterFor(codec, conv.Cmp)
 	return func(t *testing.T, a, b U) {
-		f(t, conv.from(a), conv.from(b))
+		f(t, conv.From(a), conv.From(b))
 	}
 }
 
@@ -370,12 +386,12 @@ func FuzzCmpInt64(f *testing.F) {
 
 func FuzzCmpFloat32(f *testing.F) {
 	addUnorderedPairs(f, seedsFloat32...)
-	f.Fuzz(pairTesterForConv(lexy.Float32[float32](), float32Converter{}))
+	f.Fuzz(pairTesterForConv(lexy.Float32[float32](), f32Conv))
 }
 
 func FuzzCmpFloat64(f *testing.F) {
 	addUnorderedPairs(f, seedsFloat64...)
-	f.Fuzz(pairTesterForConv(lexy.Float64[float64](), float64Converter{}))
+	f.Fuzz(pairTesterForConv(lexy.Float64[float64](), f64Conv))
 }
 
 func FuzzCmpString(f *testing.F) {
@@ -402,14 +418,6 @@ func negativeFloat32(f float32) float32 {
 	return float32(math.Copysign(f64, -1.0))
 }
 
-type negFloat32 struct{}
-
-func (c negFloat32) to(f float32) uint32   { return float32Converter{}.to(negativeFloat32(f)) }
-func (c negFloat32) from(u uint32) float32 { return negativeFloat32(float32Converter{}.from(u)) }
-func (c negFloat32) cmp(a, b float32) int {
-	return float32Converter{}.cmp(b, a)
-}
-
 func FuzzCmpNegUint8(f *testing.F) {
 	addUnorderedPairs(f, seedsUint8...)
 	f.Fuzz(pairTesterFor(lexy.Negate(lexy.Uint8[uint8]()), negCmp(compare[uint8])))
@@ -422,7 +430,7 @@ func FuzzCmpNegInt32(f *testing.F) {
 
 func FuzzCmpNegFloat32(f *testing.F) {
 	addUnorderedPairs(f, seedsFloat32...)
-	f.Fuzz(pairTesterForConv(lexy.Negate(lexy.Float32[float32]()), negFloat32{}))
+	f.Fuzz(pairTesterForConv(lexy.Negate(lexy.Float32[float32]()), neg32Conv))
 }
 
 func FuzzCmpNegBytes(f *testing.F) {
@@ -442,7 +450,7 @@ func FuzzCmpTerminateInt64(f *testing.F) {
 
 func FuzzCmpTerminateFloat64(f *testing.F) {
 	addUnorderedPairs(f, seedsFloat64...)
-	f.Fuzz(pairTesterForConv(lexy.Terminate(lexy.Float64[float64]()), float64Converter{}))
+	f.Fuzz(pairTesterForConv(lexy.Terminate(lexy.Float64[float64]()), f64Conv))
 }
 
 func FuzzCmpTerminateBytes(f *testing.F) {
