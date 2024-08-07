@@ -108,8 +108,8 @@ func ExampleUint32_underlyingType() {
 	// Value 123 of type lexy_test.size
 }
 
-func ExampleInt() {
-	codec := lexy.Int[int32]()
+func ExampleInt32() {
+	codec := lexy.Int32[int32]()
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -136,8 +136,8 @@ func ExampleInt() {
 	// -1
 }
 
-func ExampleAsInt64() {
-	codec := lexy.AsInt64[int]()
+func ExampleInt() {
+	codec := lexy.Int[int]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, -4567890); err != nil {
 		panic(err)
@@ -388,7 +388,7 @@ func ExampleMapOf() {
 	type word string
 	type count int
 	type wordCounts map[word]count
-	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.AsInt64[count]())
+	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.Int[count]())
 	var buf bytes.Buffer
 	value := wordCounts{
 		"Now":  23,
@@ -414,7 +414,7 @@ func ExampleMapOf() {
 
 func ExampleNegate() {
 	// Exactly the same as the lexy.Int() example, except negated.
-	codec := lexy.Negate(lexy.Int[int32]())
+	codec := lexy.Negate(lexy.Int32[int32]())
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -442,7 +442,7 @@ func ExampleNegate() {
 }
 
 func ExampleEncode() {
-	codec := lexy.Int[int32]()
+	codec := lexy.Int32[int32]()
 	var buf bytes.Buffer
 	for _, value := range []int32{
 		math.MinInt32,
@@ -470,7 +470,7 @@ func ExampleEncode() {
 }
 
 func ExampleDecode() {
-	codec := lexy.Int[int32]()
+	codec := lexy.Int32[int32]()
 	for _, value := range []int32{
 		math.MinInt32,
 		-1,

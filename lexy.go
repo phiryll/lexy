@@ -108,14 +108,26 @@ func Uint32[T ~uint32]() Codec[T] { return internal.Uint32Codec[T]() }
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Uint64[T ~uint64]() Codec[T] { return internal.Uint64Codec[T]() }
 
-// Int creates a new Codec for a type with an underlying type of int8, int16, int32, or int64.
+// Int creates a new Codec for a type with an underlying type of int.
+// Values are converted to/from int64 and encoded with Int64[int64]().
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] { return internal.IntCodec[T]() }
+func Int[T ~int]() Codec[T] { return internal.IntCodec[T]() }
 
-// AsInt64 creates a new Codec for a type with an underlying type of int.
-// Values are converted to/from int64 and encoded with Int[int64]().
+// Int8 creates a new Codec for a type with an underlying type of int8.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func AsInt64[T ~int]() Codec[T] { return internal.AsInt64Codec[T]() }
+func Int8[T ~int8]() Codec[T] { return internal.Int8Codec[T]() }
+
+// Int16 creates a new Codec for a type with an underlying type of int16.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int16[T ~int16]() Codec[T] { return internal.Int16Codec[T]() }
+
+// Int32 creates a new Codec for a type with an underlying type of int32.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int32[T ~int32]() Codec[T] { return internal.Int32Codec[T]() }
+
+// Int64 creates a new Codec for a type with an underlying type of int64.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int64[T ~int64]() Codec[T] { return internal.Int64Codec[T]() }
 
 // Float32 creates a new Codec for a type with an underlying type of float32.
 // All bits of the value are preserved by this encoding; NaN values are not canonicalized.
@@ -171,7 +183,7 @@ func String[T ~string]() Codec[T] { return internal.StringCodec[T]() }
 
 // Duration creates a new Codec for the time.Duration type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Duration() Codec[time.Duration] { return internal.IntCodec[time.Duration]() }
+func Duration() Codec[time.Duration] { return internal.Int64Codec[time.Duration]() }
 
 // Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
 

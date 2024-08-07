@@ -3,7 +3,7 @@ package internal
 import (
 	"encoding/binary"
 	"io"
-	"reflect"
+	"math"
 )
 
 func BoolCodec[T ~bool]() Codec[T] {
@@ -30,22 +30,23 @@ func UintCodec[T ~uint]() Codec[T] {
 	return asUint64Codec[T]{}
 }
 
-func IntCodec[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] {
-	var signBit T
-	switch reflect.TypeFor[T]().Kind() {
-	case reflect.Int8:
-		signBit = T(1) << 7
-	case reflect.Int16:
-		signBit = T(1) << 15
-	case reflect.Int32:
-		signBit = T(1) << 31
-	case reflect.Int64:
-		signBit = T(1) << 63
-	}
-	return intCodec[T]{signBit: signBit}
+func Int8Codec[T ~int8]() Codec[T] {
+	return intCodec[T]{signBit: math.MinInt8}
 }
 
-func AsInt64Codec[T ~int]() Codec[T] {
+func Int16Codec[T ~int16]() Codec[T] {
+	return intCodec[T]{signBit: math.MinInt16}
+}
+
+func Int32Codec[T ~int32]() Codec[T] {
+	return intCodec[T]{signBit: math.MinInt32}
+}
+
+func Int64Codec[T ~int64]() Codec[T] {
+	return intCodec[T]{signBit: math.MinInt64}
+}
+
+func IntCodec[T ~int]() Codec[T] {
 	return asInt64Codec[T]{}
 }
 

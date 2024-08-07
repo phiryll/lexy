@@ -157,7 +157,7 @@ A custom `Codec` that handles multiple types could be created,
 but it would require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Types defined with a different underlying type will work correctly if the `Codec` is defined appropriately.
-For example, values of type `type MyInt int16` can be used with a `Codec` created by `lexy.Int[MyInt]()`.
+For example, values of type `type MyInt int16` can be used with a `Codec` created by `lexy.Int16[MyInt]()`.
 
 Encoded values of different data types will not have a consistent ordering with respect to each other.
 For example, the encoded value of `int32(1)` is greater than the encoded value of `uint32(2)`.
