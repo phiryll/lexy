@@ -59,11 +59,6 @@ var (
 	escEsc  = []byte{escape, escape}
 )
 
-var (
-	ExportForTestingDoEscape   = doEscape
-	ExportForTestingDoUnescape = doUnescape
-)
-
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	var zero T
 	b, readErr := doUnescape(r)

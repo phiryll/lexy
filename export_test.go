@@ -12,3 +12,8 @@ const (
 	TestingTerminator = terminator
 	TestingEscape     = escape
 )
+
+var (
+	TestingDoEscape   = doEscape
+	TestingDoUnescape = doUnescape
+)
