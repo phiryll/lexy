@@ -126,12 +126,12 @@ func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 	if err := keyCodec.Write(&buf, begin); err != nil {
 		return nil, err
 	}
-	beginBytes := bytes.Clone(buf.Bytes())
+	beginBytes := append([]byte{}, buf.Bytes()...)
 	buf.Reset()
 	if err := keyCodec.Write(&buf, end); err != nil {
 		return nil, err
 	}
-	endBytes := bytes.Clone(buf.Bytes())
+	endBytes := append([]byte{}, buf.Bytes()...)
 	dbEntries, err := db.realDB.Range(beginBytes, endBytes)
 	if err != nil {
 		return nil, err

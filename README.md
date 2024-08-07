@@ -6,9 +6,10 @@
 
 Lexicographical Byte Order Encodings
 
-Lexy is a library for encoding strongly-typed values (using generics) into a binary form whose
-lexicographical unsigned byte ordering is consistent with the type's natural ordering.
-Custom encodings can be created with a different ordering than the type's natural ordering.
+Lexy is a library for order-preserving lexicographical binary encodings.
+It supports many common Go types as well as user-defined types,
+and allows for encodings ordered differently than a type's natural ordering.
+Lexy uses generics and requires go 1.18 to use. It has been tested through go 1.22.
 Lexy has no non-test dependencies.
 
 It may be more efficient to use another encoding if lexicographical unsigned byte ordering is not needed.
@@ -57,25 +58,23 @@ type KeyValueDB struct {
 }
 
 func (db *KeyValueDB) Put(key Key, value *Value) error {
-    var buf bytes.Buffer
-    if err := keyCodec.Write(&buf, key); err != nil {
+    keyBytes, err := lexy.Encode(keyCodec, key)
+    if err != nil {
         return err
     }
     valueBytes, err := EncodeValue(value)
     if err != nil {
         return err
     }
-    // buf.Bytes() can be nil if no bytes were written by keyCodec.
-    return db.providerDB.Put(buf.Bytes(), valueBytes)
+    return db.providerDB.Put(keyBytes, valueBytes)
 }
 
 func (db *KeyValueDB) Get(key Key) (*Value, error) {
-    var buf bytes.Buffer
-    if err := keyCodec.Write(&buf, key); err != nil {
+    keyBytes, err := lexy.Encode(keyCodec, key)
+    if err != nil {
         return nil, err
     }
-    // buf.Bytes() can be nil if no bytes were written by keyCodec.
-    valueBytes, err := db.providerDB.Get(buf.Bytes())
+    valueBytes, err := db.providerDB.Get(keyBytes)
     if err != nil {
         return nil, err
     }

@@ -167,7 +167,7 @@ func Example_simpleStruct() {
 		if err := ifsCodec.Write(&buf, value); err != nil {
 			panic(err)
 		}
-		ifsEncoded = append(ifsEncoded, bytes.Clone(buf.Bytes()))
+		ifsEncoded = append(ifsEncoded, append([]byte{}, buf.Bytes()...))
 		decoded, err := ifsCodec.Read(&buf)
 		if err != nil {
 			panic(err)
@@ -182,7 +182,7 @@ func Example_simpleStruct() {
 		if err := fnsiCodec.Write(&buf, value); err != nil {
 			panic(err)
 		}
-		fnsiEncoded = append(fnsiEncoded, bytes.Clone(buf.Bytes()))
+		fnsiEncoded = append(fnsiEncoded, append([]byte{}, buf.Bytes()...))
 		decoded, err := fnsiCodec.Read(&buf)
 		if err != nil {
 			panic(err)

@@ -252,7 +252,7 @@ func Example_schemaVersion() {
 		if err := writeWithVersion(&buf, 1, SchemaVersion1Codec, v1); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 
 	// order: lastName, name
@@ -265,7 +265,7 @@ func Example_schemaVersion() {
 		if err := writeWithVersion(&buf, 2, SchemaVersion2Codec, v2); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 
 	// order: count, lastName, name
@@ -278,7 +278,7 @@ func Example_schemaVersion() {
 		if err := writeWithVersion(&buf, 3, SchemaVersion3Codec, v3); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 
 	// order: lastName, firstName, middleName
@@ -291,7 +291,7 @@ func Example_schemaVersion() {
 		if err := VersionedCodec.Write(&buf, v4); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 
 	// When the encodings are sorted, they will be in the order:
