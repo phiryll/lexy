@@ -75,6 +75,17 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
+// Codecs used by other Codecs.
+var (
+	uint32Codec   Codec[uint32]  = uintCodec[uint32]{}
+	uint64Codec   Codec[uint64]  = uintCodec[uint64]{}
+	int8Codec     Codec[int8]    = intCodec[int8]{signBit: math.MinInt8}
+	int32Codec    Codec[int32]   = intCodec[int32]{signBit: math.MinInt32}
+	int64Codec    Codec[int64]   = intCodec[int64]{signBit: math.MinInt64}
+	aFloat32Codec Codec[float32] = float32Codec[float32]{}
+	aFloat64Codec Codec[float64] = float64Codec[float64]{}
+)
+
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
 
 // Empty creates a new Codec that reads and writes no data.
@@ -370,6 +381,23 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	}
 	return terminatorCodec[T]{codec: codec}
 }
+
+// Prefixes to use for encodings for types whose instances can be nil.
+// The values were chosen so that nils-first < non-nil < nils-last,
+// and neither the prefixes nor their complements need to be escaped.
+const (
+	// Room for more between non-nil and nils-last if needed.
+	prefixNilFirst byte = 0x02
+	prefixNonNil   byte = 0x03
+	prefixNilLast  byte = 0xFD
+)
+
+// Convenience byte slices.
+var (
+	pNilFirst = []byte{prefixNilFirst}
+	pNonNil   = []byte{prefixNonNil}
+	pNilLast  = []byte{prefixNilLast}
+)
 
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
