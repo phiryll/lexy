@@ -1,10 +1,10 @@
-package internal_test
+package lexy_test
 
 import (
 	"math/big"
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ func concat(prefix byte, slices ...[]byte) []byte {
 }
 
 func TestBigInt(t *testing.T) {
-	codec := internal.BigIntCodec(true)
+	codec := lexy.BigIntCodec(true)
 	encodeSize := encoderFor(int64Codec)
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -62,7 +62,7 @@ func TestBigInt(t *testing.T) {
 }
 
 func TestBigIntOrdering(t *testing.T) {
-	encode := encoderFor(internal.BigIntCodec(true))
+	encode := encoderFor(lexy.BigIntCodec(true))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(newBigInt("-12345")),
@@ -84,8 +84,8 @@ func TestBigIntOrdering(t *testing.T) {
 }
 
 func TestBigIntNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(internal.BigIntCodec(true))
-	encodeLast := encoderFor(internal.BigIntCodec(false))
+	encodeFirst := encoderFor(lexy.BigIntCodec(true))
+	encodeLast := encoderFor(lexy.BigIntCodec(false))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(newBigInt("-12345")),
@@ -137,7 +137,7 @@ func TestBigFloat(t *testing.T) {
 		"12345678901234567890123456789012345678901234567890", 10)
 	complexTiny.SetPrec(complexTiny.MinPrec())
 
-	codec := internal.BigFloatCodec(true)
+	codec := lexy.BigFloatCodec(true)
 	testCodecRoundTrip(t, codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
@@ -176,7 +176,7 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
-	encode := encoderFor(internal.BigFloatCodec(true))
+	encode := encoderFor(lexy.BigFloatCodec(true))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(&negInf),
@@ -257,7 +257,7 @@ func newBigRat(num, denom string) *big.Rat {
 func TestBigRat(t *testing.T) {
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
-	codec := internal.BigRatCodec(true)
+	codec := lexy.BigRatCodec(true)
 	testCodecRoundTrip(t, codec, []testCase[*big.Rat]{
 		{"-1/3", newBigRat("-1", "3"), nil},
 		{"0/123", newBigRat("0", "123"), nil},

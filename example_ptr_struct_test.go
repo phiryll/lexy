@@ -33,7 +33,7 @@ func (c Container) Equals(other Container) bool {
 var (
 	PtrToBigStructCodec = ptrToBigStructCodec{}
 	ContainerCodec      = containterCodec{}
-	stringCodec         = lexy.Terminate(lexy.String[string]())
+	termStringCodec     = lexy.Terminate(lexy.String[string]())
 )
 
 // A Codec[*BigStruct]
@@ -43,7 +43,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	if done, err := lexy.ReadPrefix(r); done {
 		return nil, err
 	}
-	name, err := stringCodec.Read(r)
+	name, err := termStringCodec.Read(r)
 	if err != nil {
 		return nil, lexy.UnexpectedIfEOF(err)
 	}
@@ -57,7 +57,7 @@ func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	if done, err := lexy.WritePrefix(w, value == nil, true); done {
 		return err
 	}
-	if err := stringCodec.Write(w, value.name); err != nil {
+	if err := termStringCodec.Write(w, value.name); err != nil {
 		return err
 	}
 	// Write other fields.

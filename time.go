@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"fmt"
@@ -47,11 +47,11 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	}
 	nanos, err := uint32Codec.Read(r)
 	if err != nil {
-		return zero, unexpectedIfEOF(err)
+		return zero, UnexpectedIfEOF(err)
 	}
 	offset, err := int32Codec.Read(r)
 	if err != nil {
-		return zero, unexpectedIfEOF(err)
+		return zero, UnexpectedIfEOF(err)
 	}
 	loc := time.FixedZone(formatCache.Get(offset), int(offset))
 	return time.Unix(seconds, int64(nanos)).In(loc), nil

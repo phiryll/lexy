@@ -1,11 +1,11 @@
-package internal_test
+package lexy_test
 
 import (
 	"bytes"
 	"io"
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +41,7 @@ func TestEscape(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := bytes.NewBuffer([]byte{})
-			count, err := internal.ExportForTestingDoEscape(buf, tt.data)
+			count, err := lexy.ExportForTestingDoEscape(buf, tt.data)
 			require.NoError(t, err)
 			assert.Equal(t, len(tt.data), count, "bytes read from input")
 			assert.Equal(t, tt.escaped, buf.Bytes(), "escaped bytes")
@@ -91,7 +91,7 @@ func TestEscapeFail(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := boundedWriter{limit: 6}
-			count, err := internal.ExportForTestingDoEscape(&w, tt.data)
+			count, err := lexy.ExportForTestingDoEscape(&w, tt.data)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -155,7 +155,7 @@ func TestUnescape(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := bytes.NewReader(tt.data)
-			got, err := internal.ExportForTestingDoUnescape(r)
+			got, err := lexy.ExportForTestingDoUnescape(r)
 			if tt.atEof {
 				assert.ErrorIs(t, err, io.EOF)
 			} else {
@@ -175,11 +175,11 @@ func TestUnescapeMultiple(t *testing.T) {
 		{7, 8, 9},
 		{10, 11, 12},
 	} {
-		got, err := internal.ExportForTestingDoUnescape(r)
+		got, err := lexy.ExportForTestingDoUnescape(r)
 		require.NoError(t, err)
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
-	got, err := internal.ExportForTestingDoUnescape(r)
+	got, err := lexy.ExportForTestingDoUnescape(r)
 	assert.ErrorIs(t, err, io.EOF)
 	assert.Equal(t, []byte{}, got, "exhausted")
 }

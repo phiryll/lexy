@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"bytes"

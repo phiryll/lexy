@@ -1,14 +1,14 @@
-package internal_test
+package lexy_test
 
 import (
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPointerInt32(t *testing.T) {
-	codec := internal.PointerCodec[*int32](int32Codec, true)
+	codec := lexy.PointerCodec[*int32](int32Codec, true)
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
@@ -18,7 +18,7 @@ func TestPointerInt32(t *testing.T) {
 }
 
 func TestPointerString(t *testing.T) {
-	codec := internal.PointerCodec[*string](stringCodec, true)
+	codec := lexy.PointerCodec[*string](aStringCodec, true)
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(""), []byte{pNonNil}},
@@ -28,8 +28,8 @@ func TestPointerString(t *testing.T) {
 }
 
 func TestPointerPointerString(t *testing.T) {
-	pointerCodec := internal.PointerCodec[*string](stringCodec, true)
-	codec := internal.PointerCodec[**string](pointerCodec, true)
+	pointerCodec := lexy.PointerCodec[*string](aStringCodec, true)
+	codec := lexy.PointerCodec[**string](pointerCodec, true)
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr((*string)(nil)), []byte{pNonNil, pNilFirst}},
@@ -40,8 +40,8 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
-	sliceCodec := internal.SliceCodec[[]int32](int32Codec, true)
-	codec := internal.PointerCodec[*[]int32](sliceCodec, true)
+	sliceCodec := lexy.SliceCodec[[]int32](int32Codec, true)
+	codec := lexy.PointerCodec[*[]int32](sliceCodec, true)
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr([]int32(nil)), []byte{pNonNil, pNilFirst}},
@@ -58,8 +58,8 @@ func TestPointerSliceInt32(t *testing.T) {
 }
 
 func TestPointerNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(internal.PointerCodec[*string](stringCodec, true))
-	encodeLast := encoderFor(internal.PointerCodec[*string](stringCodec, false))
+	encodeFirst := encoderFor(lexy.PointerCodec[*string](aStringCodec, true))
+	encodeLast := encoderFor(lexy.PointerCodec[*string](aStringCodec, false))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(ptr("")),
@@ -77,7 +77,7 @@ func TestPointerNilsLast(t *testing.T) {
 type pInt *int32
 
 func TestPointerUnderlyingType(t *testing.T) {
-	codec := internal.PointerCodec[pInt](int32Codec, true)
+	codec := lexy.PointerCodec[pInt](int32Codec, true)
 	testCodec(t, codec, []testCase[pInt]{
 		{"nil", pInt(nil), []byte{pNilFirst}},
 		{"*0", pInt(ptr(int32(0))), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},

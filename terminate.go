@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"bytes"
@@ -13,27 +13,6 @@ import (
 // This is the entire point of this Codec, to bound a Read that otherwise would not be bound.
 type terminatorCodec[T any] struct {
 	codec Codec[T]
-}
-
-// Terminate returns a Codec that uses codec, always escaping and terminating.
-func Terminate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	return terminatorCodec[T]{codec: codec}
-}
-
-// TerminateIfNeeded returns a Codec that uses codec,
-// escaping and terminating if codec.RequiresTerminator() is true.
-func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// This also covers the case if codec is a terminator.
-	if !codec.RequiresTerminator() {
-		return codec
-	}
-	return terminatorCodec[T]{codec: codec}
 }
 
 // Codec for terminating and escaping.
@@ -96,11 +75,11 @@ func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	}
 	if readErr != nil {
 		// The trailing terminator was not reached, we do not have complete data.
-		return zero, unexpectedIfEOF(readErr)
+		return zero, UnexpectedIfEOF(readErr)
 	}
 	value, codecErr := c.codec.Read(bytes.NewReader(b))
 	if codecErr != nil {
-		return zero, unexpectedIfEOF(codecErr)
+		return zero, UnexpectedIfEOF(codecErr)
 	}
 	return value, nil
 }

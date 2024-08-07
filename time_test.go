@@ -1,17 +1,17 @@
-package internal_test
+package lexy_test
 
 import (
 	"bytes"
 	"testing"
 	"time"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTime(t *testing.T) {
-	codec := internal.TimeCodec
+	codec := lexy.TimeCodec
 
 	// West of UTC, negative timezone offset
 	locNYC, err := time.LoadLocation("America/New_York")
@@ -63,7 +63,7 @@ func TestTime(t *testing.T) {
 }
 
 func TestTimeOrder(t *testing.T) {
-	codec := internal.TimeCodec
+	codec := lexy.TimeCodec
 
 	// in order from west to east, expected sort order,
 	// UTC is between NYC and Berlin.

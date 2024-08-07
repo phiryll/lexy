@@ -1,4 +1,4 @@
-package internal_test
+package lexy_test
 
 import (
 	"math"

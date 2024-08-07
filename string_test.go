@@ -1,11 +1,11 @@
-package internal_test
+package lexy_test
 
 import (
 	"testing"
 )
 
 func TestString(t *testing.T) {
-	codec := stringCodec
+	codec := aStringCodec
 	testCodec(t, codec, []testCase[string]{
 		{"empty", "", []byte{}},
 		{"a", "a", []byte{'a'}},

@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import "io"
 
@@ -19,7 +19,7 @@ func (c complex64Codec) Read(r io.Reader) (complex64, error) {
 	}
 	imag, err := aFloat32Codec.Read(r)
 	if err != nil {
-		return 0, unexpectedIfEOF(err)
+		return 0, UnexpectedIfEOF(err)
 	}
 	return complex(real, imag), nil
 }
@@ -47,7 +47,7 @@ func (c complex128Codec) Read(r io.Reader) (complex128, error) {
 	}
 	imag, err := aFloat64Codec.Read(r)
 	if err != nil && err != io.EOF {
-		return 0, unexpectedIfEOF(err)
+		return 0, UnexpectedIfEOF(err)
 	}
 	return complex(real, imag), nil
 }

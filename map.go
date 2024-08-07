@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -46,7 +46,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 		}
 		value, err := c.valueCodec.Read(r)
 		if err != nil {
-			return m, unexpectedIfEOF(err)
+			return m, UnexpectedIfEOF(err)
 		}
 		m[key] = value
 	}

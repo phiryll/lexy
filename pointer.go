@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -29,7 +29,7 @@ func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 	}
 	value, err := c.elemCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	return &value, nil
 }

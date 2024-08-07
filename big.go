@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -45,7 +45,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	neg := false
 	size, err := int64Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	if size < 0 {
 		neg = true
@@ -57,7 +57,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	b := make([]byte, size)
 	_, err = io.ReadFull(r, b)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Int
 	value.SetBytes(b)
@@ -198,7 +198,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	}
 	kind, err := int8Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	signbit := kind < 0
 	if kind == negInf || kind == posInf {
@@ -219,19 +219,19 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 
 	exp, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	mantBytes, err := doUnescape(mantReader)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	prec, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	mode, err := modeCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 
 	if signbit {
@@ -348,11 +348,11 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	}
 	num, err := bIntCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	denom, err := bIntCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Rat
 	return value.SetFrac(num, denom), nil
