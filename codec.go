@@ -11,6 +11,6 @@ var (
 	int8Codec     Codec[int8]    = intCodec[int8]{signBit: math.MinInt8}
 	int32Codec    Codec[int32]   = intCodec[int32]{signBit: math.MinInt32}
 	int64Codec    Codec[int64]   = intCodec[int64]{signBit: math.MinInt64}
-	aFloat32Codec Codec[float32] = Float32Codec[float32]()
-	aFloat64Codec Codec[float64] = Float64Codec[float64]()
+	aFloat32Codec Codec[float32] = float32Codec[float32]{}
+	aFloat64Codec Codec[float64] = float64Codec[float64]{}
 )

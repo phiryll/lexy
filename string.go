@@ -5,10 +5,6 @@ import (
 	"strings"
 )
 
-func StringCodec[T ~string]() Codec[T] {
-	return stringCodec[T]{}
-}
-
 // stringCodec is the Codec for strings.
 //
 // A string is encoded as its bytes.

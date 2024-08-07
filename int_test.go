@@ -103,7 +103,7 @@ func TestDuration(t *testing.T) {
 type aBool bool
 
 func TestBoolUnderlyingType(t *testing.T) {
-	codec := lexy.BoolCodec[aBool]()
+	codec := lexy.Bool[aBool]()
 	testCodec(t, codec, []testCase[aBool]{
 		{"false", aBool(false), []byte{0}},
 		{"true", aBool(true), []byte{1}},

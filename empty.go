@@ -2,10 +2,6 @@ package lexy
 
 import "io"
 
-func EmptyCodec[T any]() Codec[T] {
-	return emptyCodec[T]{}
-}
-
 // emptyCodec is a Codec that writes and reads no data.
 // Read returns the zero value of T.
 // Read and Write will never return an error, including io.EOF.

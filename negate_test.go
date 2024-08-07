@@ -10,7 +10,7 @@ import (
 )
 
 func TestNegateInt32(t *testing.T) {
-	codec := lexy.NegateCodec(int32Codec)
+	codec := lexy.Negate(int32Codec)
 	testCodecRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
 		{"-1", -1, nil},
@@ -34,13 +34,13 @@ func TestNegateInt32(t *testing.T) {
 // The simple implementation is to simply invert all the bits, but it doesn't work.
 // This tests for that regression, see the comments on negateCodec for details.
 func TestNegateLength(t *testing.T) {
-	encode := encoderFor(lexy.NegateCodec(aStringCodec))
+	encode := encoderFor(lexy.Negate(aStringCodec))
 	assert.Less(t, encode("ab"), encode("a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
-	ptrCodec := lexy.PointerCodec[*string](aStringCodec, true)
-	codec := lexy.NegateCodec(ptrCodec)
+	ptrCodec := lexy.PointerTo[*string](aStringCodec)
+	codec := lexy.Negate(ptrCodec)
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
 		{"*empty", ptr(""), nil},
@@ -58,11 +58,11 @@ func TestNegatePtrString(t *testing.T) {
 	})
 }
 
-var negPIntCodec = lexy.NegateCodec(lexy.PointerCodec[*int16](int16Codec, true))
-var negaStringCodec = lexy.TerminateIfNeeded(lexy.NegateCodec(aStringCodec))
-var ptraStringCodec = lexy.PointerCodec[*string](aStringCodec, true)
-var slicePtraStringCodec = lexy.SliceCodec[[]*string](ptraStringCodec, true)
-var negSlicePtraStringCodec = lexy.NegateCodec(slicePtraStringCodec)
+var negPIntCodec = lexy.Negate(lexy.PointerTo[*int16](int16Codec))
+var negaStringCodec = lexy.TerminateIfNeeded(lexy.Negate(aStringCodec))
+var ptraStringCodec = lexy.PointerTo[*string](aStringCodec)
+var slicePtraStringCodec = lexy.SliceOf[[]*string](ptraStringCodec)
+var negSlicePtraStringCodec = lexy.Negate(slicePtraStringCodec)
 
 func TestNegateSlicePtrString(t *testing.T) {
 	codec := negSlicePtraStringCodec

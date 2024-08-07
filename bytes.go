@@ -14,10 +14,6 @@ type bytesCodec[S ~[]byte] struct {
 	nilsFirst bool
 }
 
-func BytesCodec[S ~[]byte](nilsFirst bool) Codec[S] {
-	return bytesCodec[S]{nilsFirst}
-}
-
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err

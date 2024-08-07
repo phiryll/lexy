@@ -16,16 +16,6 @@ type sliceCodec[S ~[]E, E any] struct {
 	nilsFirst bool
 }
 
-func SliceCodec[S ~[]E, E any](elemCodec Codec[E], nilsFirst bool) Codec[S] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return sliceCodec[S, E]{
-		TerminateIfNeeded(elemCodec),
-		nilsFirst,
-	}
-}
-
 func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err

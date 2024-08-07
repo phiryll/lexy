@@ -8,7 +8,7 @@ import (
 )
 
 func TestSliceInt32(t *testing.T) {
-	codec := lexy.SliceCodec[[]int32](int32Codec, true)
+	codec := lexy.SliceOf[[]int32](int32Codec)
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []int32{}, []byte{pNonNil}},
@@ -25,7 +25,7 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
-	codec := lexy.SliceCodec[[]string](aStringCodec, true)
+	codec := lexy.SliceOf[[]string](aStringCodec)
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []string{}, []byte{pNonNil}},
@@ -45,8 +45,8 @@ func TestSliceString(t *testing.T) {
 // This tests for the special case of a slice of non-terminated, prefixed elements.
 func TestSlicePtrUint8(t *testing.T) {
 	p := ptr[uint8]
-	pointerCodec := lexy.PointerCodec[*uint8](uint8Codec, true)
-	codec := lexy.SliceCodec[[]*uint8](pointerCodec, true)
+	pointerCodec := lexy.PointerTo[*uint8](uint8Codec)
+	codec := lexy.SliceOf[[]*uint8](pointerCodec)
 	testCodec(t, codec, []testCase[[]*uint8]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*uint8{}, []byte{pNonNil}},
@@ -67,8 +67,8 @@ func TestSlicePtrUint8(t *testing.T) {
 }
 
 func TestSlicePtrString(t *testing.T) {
-	pointerCodec := lexy.PointerCodec[*string](aStringCodec, true)
-	codec := lexy.SliceCodec[[]*string](pointerCodec, true)
+	pointerCodec := lexy.PointerTo[*string](aStringCodec)
+	codec := lexy.SliceOf[[]*string](pointerCodec)
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*string{}, []byte{pNonNil}},
@@ -86,8 +86,8 @@ func TestSlicePtrString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
-	sliceCodec := lexy.SliceCodec[[]int32](int32Codec, true)
-	codec := lexy.SliceCodec[[][]int32](sliceCodec, true)
+	sliceCodec := lexy.SliceOf[[]int32](int32Codec)
+	codec := lexy.SliceOf[[][]int32](sliceCodec)
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]int32{}, []byte{pNonNil}},
@@ -121,8 +121,8 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
-	sliceCodec := lexy.SliceCodec[[]string](aStringCodec, true)
-	codec := lexy.SliceCodec[[][]string](sliceCodec, true)
+	sliceCodec := lexy.SliceOf[[]string](aStringCodec)
+	codec := lexy.SliceOf[[][]string](sliceCodec)
 
 	testCodec(t, codec, []testCase[[][]string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -207,7 +207,7 @@ func TestSliceSliceString(t *testing.T) {
 type sInt []int32
 
 func TestSliceUnderlyingType(t *testing.T) {
-	codec := lexy.SliceCodec[sInt](int32Codec, true)
+	codec := lexy.SliceOf[sInt](int32Codec)
 	testCodec(t, codec, []testCase[sInt]{
 		{"nil", sInt(nil), []byte{pNilFirst}},
 		{"empty", sInt([]int32{}), []byte{pNonNil}},
@@ -224,8 +224,8 @@ func TestSliceUnderlyingType(t *testing.T) {
 }
 
 func TestSliceNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(lexy.SliceCodec[[]int32](int32Codec, true))
-	encodeLast := encoderFor(lexy.SliceCodec[[]int32](int32Codec, false))
+	encodeFirst := encoderFor(lexy.SliceOf[[]int32](int32Codec))
+	encodeLast := encoderFor(lexy.SliceOfNilsLast[[]int32](int32Codec))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst([]int32{-100, 5}),

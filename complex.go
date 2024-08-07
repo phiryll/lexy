@@ -2,11 +2,6 @@ package lexy
 
 import "io"
 
-var (
-	Complex64Codec  Codec[complex64]  = complex64Codec{}
-	Complex128Codec Codec[complex128] = complex128Codec{}
-)
-
 // complex64Codec is the Codec for complex64.
 //
 // The encoded order is real part first, imaginary part second.

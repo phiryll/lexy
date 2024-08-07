@@ -7,7 +7,7 @@ import (
 
 var (
 	// used by bigRatCodec
-	bIntCodec = BigIntCodec(true)
+	bIntCodec = BigInt()
 )
 
 // bigIntCodec is the Codec for *big.Int values.
@@ -32,10 +32,6 @@ var (
 // This works because bigInt.Bytes() will never have a leading zero byte.
 type bigIntCodec struct {
 	nilsFirst bool
-}
-
-func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
-	return bigIntCodec{nilsFirst}
 }
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
@@ -159,10 +155,6 @@ func (c bigIntCodec) RequiresTerminator() bool {
 //	write uint8 rounding mode
 type bigFloatCodec struct {
 	nilsFirst bool
-}
-
-func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
-	return bigFloatCodec{nilsFirst}
 }
 
 // The second byte written in the *big.Float encoding after the initial
@@ -336,10 +328,6 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
 	nilsFirst bool
-}
-
-func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
-	return bigRatCodec{nilsFirst}
 }
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {

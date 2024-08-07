@@ -36,18 +36,6 @@ type negateCodec[T any] struct {
 	codec Codec[T]
 }
 
-func NegateCodec[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// Negate must escape and terminate its delegate whether it requires it or not,
-	// but shouldn't wrap if the delegate is already a terminatorCodec.
-	if _, ok := codec.(terminatorCodec[T]); !ok {
-		codec = Terminate(codec)
-	}
-	return negateCodec[T]{codec}
-}
-
 func (c negateCodec[T]) Read(r io.Reader) (T, error) {
 	return c.codec.Read(negateReader{r})
 }
