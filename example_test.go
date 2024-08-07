@@ -123,7 +123,7 @@ func ExampleInt32() {
 		if err := codec.Write(&buf, value); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 	// Verify the encodings are increasing.
 	for i, b := range encoded[1:] {
@@ -210,12 +210,12 @@ func ExampleComplex128() {
 	if err := codec.Write(&buf, v1); err != nil {
 		panic(err)
 	}
-	encodedV1 := bytes.Clone(buf.Bytes())
+	encodedV1 := append([]byte{}, buf.Bytes()...)
 	buf.Reset()
 	if err := codec.Write(&buf, v2); err != nil {
 		panic(err)
 	}
-	encodedV2 := bytes.Clone(buf.Bytes())
+	encodedV2 := append([]byte{}, buf.Bytes()...)
 	fmt.Println(bytes.Compare(encodedV1, encodedV2))
 	// Output:
 	// -1
@@ -428,7 +428,7 @@ func ExampleNegate() {
 		if err := codec.Write(&buf, value); err != nil {
 			panic(err)
 		}
-		encoded = append(encoded, bytes.Clone(buf.Bytes()))
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
 	}
 	// Verify the encodings are decreasing.
 	for i, b := range encoded[1:] {
