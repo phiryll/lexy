@@ -85,25 +85,49 @@ func Empty[T any]() Codec[T] { return internal.EmptyCodec[T]() }
 
 // Bool creates a new Codec for a type with an underlying type of bool.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Bool[T ~bool]() Codec[T] { return internal.UintCodec[T]() }
+func Bool[T ~bool]() Codec[T] { return internal.BoolCodec[T]() }
 
-// Uint creates a new Codec for a type with an underlying type of uint8, uint16, uint32, or uint64.
+// Uint creates a new Codec for a type with an underlying type of uint.
+// Values are converted to/from uint64 and encoded with Uint64[uint64]().
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
+func Uint[T ~uint]() Codec[T] { return internal.UintCodec[T]() }
 
-// AsUint64 creates a new Codec for a type with an underlying type of uint.
-// Values are converted to/from uint64 and encoded with Uint[uint64]().
+// Uint8 creates a new Codec for a type with an underlying type of uint8.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func AsUint64[T ~uint]() Codec[T] { return internal.AsUint64Codec[T]() }
+func Uint8[T ~uint8]() Codec[T] { return internal.Uint8Codec[T]() }
 
-// Int creates a new Codec for a type with an underlying type of int8, int16, int32, or int64.
+// Uint16 creates a new Codec for a type with an underlying type of uint16.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int[T ~int8 | ~int16 | ~int32 | ~int64]() Codec[T] { return internal.IntCodec[T]() }
+func Uint16[T ~uint16]() Codec[T] { return internal.Uint16Codec[T]() }
 
-// AsInt64 creates a new Codec for a type with an underlying type of int.
-// Values are converted to/from int64 and encoded with Int[int64]().
+// Uint32 creates a new Codec for a type with an underlying type of uint32.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func AsInt64[T ~int]() Codec[T] { return internal.AsInt64Codec[T]() }
+func Uint32[T ~uint32]() Codec[T] { return internal.Uint32Codec[T]() }
+
+// Uint64 creates a new Codec for a type with an underlying type of uint64.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Uint64[T ~uint64]() Codec[T] { return internal.Uint64Codec[T]() }
+
+// Int creates a new Codec for a type with an underlying type of int.
+// Values are converted to/from int64 and encoded with Int64[int64]().
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int[T ~int]() Codec[T] { return internal.IntCodec[T]() }
+
+// Int8 creates a new Codec for a type with an underlying type of int8.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int8[T ~int8]() Codec[T] { return internal.Int8Codec[T]() }
+
+// Int16 creates a new Codec for a type with an underlying type of int16.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int16[T ~int16]() Codec[T] { return internal.Int16Codec[T]() }
+
+// Int32 creates a new Codec for a type with an underlying type of int32.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int32[T ~int32]() Codec[T] { return internal.Int32Codec[T]() }
+
+// Int64 creates a new Codec for a type with an underlying type of int64.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Int64[T ~int64]() Codec[T] { return internal.Int64Codec[T]() }
 
 // Float32 creates a new Codec for a type with an underlying type of float32.
 // All bits of the value are preserved by this encoding; NaN values are not canonicalized.
@@ -159,7 +183,7 @@ func String[T ~string]() Codec[T] { return internal.StringCodec[T]() }
 
 // Duration creates a new Codec for the time.Duration type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Duration() Codec[time.Duration] { return internal.IntCodec[time.Duration]() }
+func Duration() Codec[time.Duration] { return internal.Int64Codec[time.Duration]() }
 
 // Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
 
@@ -237,36 +261,6 @@ func PointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 // This Codec may require a terminator when used within an aggregate Codec.
 func PointerToNilsLast[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	return internal.PointerCodec[P](elemCodec, false)
-}
-
-// ArrayOf creates a new Codec for the array type A with element type E.
-// The encoded order is lexicographical using the encoded order of elemCodec for the elements.
-// Arrays of different sizes are different types in go, and will require different Codecs.
-// This Codec does not require a terminator when used within an aggregate Codec.
-//
-// ArrayOf will panic if A is not an array type with element type E.
-//
-// This Codec makes heavy use of reflection, and should be avoided if possible.
-func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {
-	return internal.ArrayCodec[A](elemCodec)
-}
-
-// PointerToArrayOf creates a new Codec for pointers to the array type A with element type E,
-// with nils ordered first.
-// This Codec can be more efficient than Codecs produced by ArrayOf, depending on the size of the array.
-// This Codec does not require a terminator when used within an aggregate Codec.
-// Other than encoding a pointer value, this Codec behaves exactly like ArrayOf for non-nil values.
-func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.PointerToArrayCodec[P](elemCodec, true)
-}
-
-// PointerToArrayOfNilsLast creates a new Codec for pointers to the array type A with element type E,
-// with nils ordered last.
-// This Codec can be more efficient than Codecs produced by ArrayOf, depending on the size of the array.
-// This Codec does not require a terminator when used within an aggregate Codec.
-// Other than encoding a pointer value, this Codec behaves exactly like ArrayOf for non-nil values.
-func PointerToArrayOfNilsLast[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.PointerToArrayCodec[P](elemCodec, false)
 }
 
 // SliceOf creates a new Codec for the slice type S with element type E, with nil slices ordered first.

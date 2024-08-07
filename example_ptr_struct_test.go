@@ -95,7 +95,6 @@ func (c containterCodec) RequiresTerminator() bool {
 
 // Example (PointerToStruct) shows how to use pointers for efficiency
 // in a custom Codec, to avoid unnecessarily copying large data structures.
-// This is the same technique used by lexy.PointerToArrayOf.
 // Note that types in go other than structs and arrays do not have this problem.
 // Complex numbers, strings, pointers, slices, and maps
 // all have a relatively small footprint when passed by value.

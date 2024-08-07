@@ -20,16 +20,14 @@ type (
 )
 
 var (
-	empty           = emptyStruct{}
-	emptyCodec      = internal.EmptyCodec[emptyStruct]()
-	ptrEmpty        = internal.PointerCodec[*emptyStruct](emptyCodec, true)
-	arrayEmpty      = internal.ArrayCodec[[3]emptyStruct](emptyCodec)
-	ptrToArrayEmpty = internal.PointerToArrayCodec[*[3]emptyStruct](emptyCodec, true)
-	sliceEmpty      = internal.SliceCodec[[]emptyStruct](emptyCodec, true)
-	mapKeyEmpty     = internal.MapCodec[mKey](emptyCodec, uint8Codec, true)
-	mapValueEmpty   = internal.MapCodec[mValue](uint8Codec, emptyCodec, true)
-	negateEmpty     = internal.NegateCodec(emptyCodec)
-	terminateEmpty  = internal.Terminate(emptyCodec)
+	empty          = emptyStruct{}
+	emptyCodec     = internal.EmptyCodec[emptyStruct]()
+	ptrEmpty       = internal.PointerCodec[*emptyStruct](emptyCodec, true)
+	sliceEmpty     = internal.SliceCodec[[]emptyStruct](emptyCodec, true)
+	mapKeyEmpty    = internal.MapCodec[mKey](emptyCodec, uint8Codec, true)
+	mapValueEmpty  = internal.MapCodec[mValue](uint8Codec, emptyCodec, true)
+	negateEmpty    = internal.NegateCodec(emptyCodec)
+	terminateEmpty = internal.Terminate(emptyCodec)
 )
 
 func TestPointerEmpty(t *testing.T) {
@@ -38,25 +36,6 @@ func TestPointerEmpty(t *testing.T) {
 		{"*empty", ptr(empty), []byte{pNonNil}},
 	})
 	testCodecFail(t, ptrEmpty, nil)
-}
-
-func TestArrayEmpty(t *testing.T) {
-	testCodec(t, arrayEmpty, []testCase[[3]emptyStruct]{
-		{"[3x empty]", [3]emptyStruct{empty, empty, empty}, []byte{
-			pNonNil, term, term, term,
-		}},
-	})
-	testCodecFail(t, arrayEmpty, [3]emptyStruct{empty, empty, empty})
-}
-
-func TestPtrToArrayEmpty(t *testing.T) {
-	testCodec(t, ptrToArrayEmpty, []testCase[*[3]emptyStruct]{
-		{"nil", nil, []byte{pNilFirst}},
-		{"*[3x empty]", &[3]emptyStruct{empty, empty, empty}, []byte{
-			pNonNil, term, term, term,
-		}},
-	})
-	testCodecFail(t, ptrToArrayEmpty, nil)
 }
 
 func TestSliceEmpty(t *testing.T) {

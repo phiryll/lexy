@@ -14,7 +14,7 @@ import (
 func ExampleEmpty() {
 	type present struct{}
 	type set map[uint8]present
-	codec := lexy.MapOf[set](lexy.Uint[uint8](), lexy.Empty[present]())
+	codec := lexy.MapOf[set](lexy.Uint8[uint8](), lexy.Empty[present]())
 	var buf bytes.Buffer
 	value := set{
 		23: present{},
@@ -61,8 +61,8 @@ func ExampleBool() {
 	// true, false
 }
 
-func ExampleUint() {
-	codec := lexy.Uint[uint64]()
+func ExampleUint64() {
+	codec := lexy.Uint64[uint64]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 123); err != nil {
 		panic(err)
@@ -76,8 +76,8 @@ func ExampleUint() {
 	// 123
 }
 
-func ExampleAsUint64() {
-	codec := lexy.AsUint64[uint]()
+func ExampleUint() {
+	codec := lexy.Uint[uint]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 4567890); err != nil {
 		panic(err)
@@ -91,9 +91,9 @@ func ExampleAsUint64() {
 	// 4567890
 }
 
-func ExampleUint_underlyingType() {
+func ExampleUint32_underlyingType() {
 	type size uint32
-	codec := lexy.Uint[size]()
+	codec := lexy.Uint32[size]()
 	var buf bytes.Buffer
 	// Go will type a constant appropriately.
 	if err := codec.Write(&buf, 123); err != nil {
@@ -108,8 +108,8 @@ func ExampleUint_underlyingType() {
 	// Value 123 of type lexy_test.size
 }
 
-func ExampleInt() {
-	codec := lexy.Int[int32]()
+func ExampleInt32() {
+	codec := lexy.Int32[int32]()
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -136,8 +136,8 @@ func ExampleInt() {
 	// -1
 }
 
-func ExampleAsInt64() {
-	codec := lexy.AsInt64[int]()
+func ExampleInt() {
+	codec := lexy.Int[int]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, -4567890); err != nil {
 		panic(err)
@@ -351,42 +351,6 @@ func ExamplePointerTo() {
 	// false
 }
 
-func ExampleArrayOf() {
-	codec := lexy.ArrayOf[[3]uint8](lexy.Uint[uint8]())
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, [3]uint8{12, 0, 23}); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(decoded)
-	// Output:
-	// [12 0 23]
-}
-
-func ExamplePointerToArrayOf() {
-	type quaternion *[4]float64
-	codec := lexy.PointerToArrayOf[quaternion](lexy.Float64[float64]())
-	var buf bytes.Buffer
-	value := quaternion(&[4]float64{5.7, 1.2, 3.5, 2.9})
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(decoded)
-	fmt.Println(value == decoded)
-	fmt.Println(*value == *decoded)
-	// Output:
-	// &[5.7 1.2 3.5 2.9]
-	// false
-	// true
-}
-
 func ExampleSliceOf() {
 	type words []string
 	codec := lexy.SliceOf[words](lexy.String[string]())
@@ -424,7 +388,7 @@ func ExampleMapOf() {
 	type word string
 	type count int
 	type wordCounts map[word]count
-	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.AsInt64[count]())
+	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.Int[count]())
 	var buf bytes.Buffer
 	value := wordCounts{
 		"Now":  23,
@@ -450,7 +414,7 @@ func ExampleMapOf() {
 
 func ExampleNegate() {
 	// Exactly the same as the lexy.Int() example, except negated.
-	codec := lexy.Negate(lexy.Int[int32]())
+	codec := lexy.Negate(lexy.Int32[int32]())
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -478,7 +442,7 @@ func ExampleNegate() {
 }
 
 func ExampleEncode() {
-	codec := lexy.Int[int32]()
+	codec := lexy.Int32[int32]()
 	var buf bytes.Buffer
 	for _, value := range []int32{
 		math.MinInt32,
@@ -506,7 +470,7 @@ func ExampleEncode() {
 }
 
 func ExampleDecode() {
-	codec := lexy.Int[int32]()
+	codec := lexy.Int32[int32]()
 	for _, value := range []int32{
 		math.MinInt32,
 		-1,
