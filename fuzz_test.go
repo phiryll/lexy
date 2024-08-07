@@ -75,7 +75,7 @@ var (
 	}
 )
 
-// Helper function somewhat duplicating compare (go 1.21, so trying to avoid)
+// Helper function somewhat duplicating cmp.Compare (go 1.21, so trying to avoid)
 func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
 	switch {
 	case x < y:
@@ -85,6 +85,37 @@ func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 |
 	default:
 		return 1
 	}
+}
+
+// translates representations, used for bits<->float
+type converter[T, U any] interface {
+	To(t T) U
+	From(u U) T
+	Cmp(a, b T) int
+}
+
+type float32Converter struct{}
+
+func (c float32Converter) To(f float32) uint32   { return math.Float32bits(f) }
+func (c float32Converter) From(u uint32) float32 { return math.Float32frombits(u) }
+func (c float32Converter) Cmp(a, b float32) int {
+	return cmpFloats(math.Float32bits, a, b)
+}
+
+type float64Converter struct{}
+
+func (c float64Converter) To(f float64) uint64   { return math.Float64bits(f) }
+func (c float64Converter) From(u uint64) float64 { return math.Float64frombits(u) }
+func (c float64Converter) Cmp(a, b float64) int {
+	return cmpFloats(math.Float64bits, a, b)
+}
+
+type negFloat32 struct{}
+
+func (c negFloat32) To(f float32) uint32   { return float32Converter{}.To(negativeFloat32(f)) }
+func (c negFloat32) From(u uint32) float32 { return negativeFloat32(float32Converter{}.From(u)) }
+func (c negFloat32) Cmp(a, b float32) int {
+	return float32Converter{}.Cmp(b, a)
 }
 
 // Functions to add seed values to the fuzzer.
@@ -115,13 +146,6 @@ func valueTesterFor[T any](codec lexy.Codec[T]) func(*testing.T, T) {
 		assert.IsType(t, value, got)
 		assert.Equal(t, value, got)
 	}
-}
-
-// translates representations, used for bits<->float
-type converter[T, U any] interface {
-	to(t T) U
-	from(u U) T
-	cmp(a, b T) int
 }
 
 // Implements ordering semantics of the float Codecs, mostly without encoding them.
@@ -166,31 +190,15 @@ func cmpFloats[T float32 | float64, U uint32 | uint64](toBits func(T) U, a, b T)
 	}
 }
 
-type float32Converter struct{}
-
-func (c float32Converter) to(f float32) uint32   { return math.Float32bits(f) }
-func (c float32Converter) from(u uint32) float32 { return math.Float32frombits(u) }
-func (c float32Converter) cmp(a, b float32) int {
-	return cmpFloats(math.Float32bits, a, b)
-}
-
-type float64Converter struct{}
-
-func (c float64Converter) to(f float64) uint64   { return math.Float64bits(f) }
-func (c float64Converter) from(u uint64) float64 { return math.Float64frombits(u) }
-func (c float64Converter) cmp(a, b float64) int {
-	return cmpFloats(math.Float64bits, a, b)
-}
-
 func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U) {
 	return func(t *testing.T, repr U) {
-		value := conv.from(repr)
+		value := conv.From(repr)
 		b, err := lexy.Encode(codec, value)
 		require.NoError(t, err)
 		got, err := lexy.Decode(codec, b)
 		require.NoError(t, err)
 		assert.IsType(t, value, got)
-		assert.Equal(t, conv.to(value), conv.to(got), "values not equal: %#v, %#v", value, got)
+		assert.Equal(t, conv.To(value), conv.To(got), "values not equal: %#v, %#v", value, got)
 	}
 }
 
@@ -308,9 +316,9 @@ func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing
 }
 
 func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U, U) {
-	f := pairTesterFor(codec, conv.cmp)
+	f := pairTesterFor(codec, conv.Cmp)
 	return func(t *testing.T, a, b U) {
-		f(t, conv.from(a), conv.from(b))
+		f(t, conv.From(a), conv.From(b))
 	}
 }
 
@@ -400,14 +408,6 @@ func negativeFloat32(f float32) float32 {
 		return float32(math.Copysign(f64, 1.0))
 	}
 	return float32(math.Copysign(f64, -1.0))
-}
-
-type negFloat32 struct{}
-
-func (c negFloat32) to(f float32) uint32   { return float32Converter{}.to(negativeFloat32(f)) }
-func (c negFloat32) from(u uint32) float32 { return negativeFloat32(float32Converter{}.from(u)) }
-func (c negFloat32) cmp(a, b float32) int {
-	return float32Converter{}.cmp(b, a)
 }
 
 func FuzzCmpNegUint8(f *testing.F) {
