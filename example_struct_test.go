@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"slices"
+	"sort"
 
 	"github.com/phiryll/lexy"
 )
@@ -16,11 +16,23 @@ type SimpleStruct struct {
 	strings []string
 }
 
+func stringsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func (s SimpleStruct) Equals(other SimpleStruct) bool {
 	// NaN != NaN, even when they're the exact same bits.
 	return s.anInt == other.anInt &&
 		math.Float32bits(s.aFloat) == math.Float32bits(other.aFloat) &&
-		slices.Equal(s.strings, other.strings)
+		stringsEqual(s.strings, other.strings)
 }
 
 func (s SimpleStruct) String() string {
@@ -106,6 +118,16 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 	return false
 }
 
+type sortableWrapper struct {
+	b [][]byte
+}
+
+var _ sort.Interface = sortableWrapper{}
+
+func (s sortableWrapper) Len() int               { return len(s.b) }
+func (s sortableWrapper) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
+func (s sortableWrapper) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
+
 // Example (SimpleStruct) encodes a struct type using two differently ordered Codecs.
 // The pattern will be the same for creating any Codec for a user-defined type.
 // Codecs for structs don't usually require enclosing Codecs to use terminators,
@@ -168,7 +190,7 @@ func Example_simpleStruct() {
 		fmt.Println(value.Equals(decoded))
 	}
 
-	slices.SortFunc(ifsEncoded, bytes.Compare)
+	sort.Sort(sortableWrapper{ifsEncoded})
 	fmt.Println("Int-Float-Strings sorted:")
 	for _, encoded := range ifsEncoded {
 		decoded, err := ifsCodec.Read(bytes.NewReader(encoded))
@@ -178,7 +200,7 @@ func Example_simpleStruct() {
 		fmt.Println(decoded.String())
 	}
 
-	slices.SortFunc(fnsiEncoded, bytes.Compare)
+	sort.Sort(sortableWrapper{fnsiEncoded})
 	fmt.Println("Float-NegStrings-Int sorted:")
 	for _, encoded := range fnsiEncoded {
 		decoded, err := fnsiCodec.Read(bytes.NewReader(encoded))

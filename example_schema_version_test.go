@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"slices"
+	"sort"
 
 	"github.com/phiryll/lexy"
 )
@@ -297,7 +297,8 @@ func Example_schemaVersion() {
 	// When the encodings are sorted, they will be in the order:
 	// - primary: version
 	// - secondary: the encoded order for that version
-	slices.SortFunc(encoded, bytes.Compare)
+	// sortableWrapper is defined in the SimpleStruct example.
+	sort.Sort(sortableWrapper{encoded})
 
 	for _, b := range encoded {
 		value, err := VersionedCodec.Read(bytes.NewReader(b))

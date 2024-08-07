@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"slices"
+	"sort"
 
 	"github.com/phiryll/lexy"
 )
@@ -20,22 +20,37 @@ type Entry struct {
 	Value int // value type is unimportant for this example
 }
 
-func cmpEntries(a, b Entry) int { return bytes.Compare(a.Key, b.Key) }
+func (db *DB) insert(i int, entry Entry) {
+	entries := append(db.entries, Entry{})
+	copy(entries[i+1:], entries[i:])
+	entries[i] = entry
+	db.entries = entries
+}
+
+func (db *DB) search(entry Entry) (int, bool) {
+	index := sort.Search(len(db.entries), func(i int) bool {
+		return bytes.Compare(entry.Key, db.entries[i].Key) <= 0
+	})
+	if index < len(db.entries) && bytes.Equal(entry.Key, db.entries[index].Key) {
+		return index, true
+	}
+	return index, false
+}
 
 func (db *DB) Put(key []byte, value int) error {
 	entry := Entry{key, value}
-	if i, found := slices.BinarySearchFunc(db.entries, entry, cmpEntries); found {
+	if i, found := db.search(entry); found {
 		db.entries[i] = entry
 	} else {
-		db.entries = slices.Insert(db.entries, i, entry)
+		db.insert(i, entry)
 	}
 	return nil
 }
 
 // Returns Entries, in order, such that (begin <= entry.Key < end)
 func (db *DB) Range(begin, end []byte) ([]Entry, error) {
-	a, _ := slices.BinarySearchFunc(db.entries, Entry{begin, 0}, cmpEntries)
-	b, _ := slices.BinarySearchFunc(db.entries, Entry{end, 0}, cmpEntries)
+	a, _ := db.search(Entry{begin, 0})
+	b, _ := db.search(Entry{end, 0})
 	return db.entries[a:b], nil
 }
 

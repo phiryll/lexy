@@ -2,7 +2,6 @@ package internal
 
 import (
 	"io"
-	"slices"
 )
 
 // negateCodec negates codec, reversing the ordering of its encoding.
@@ -95,7 +94,7 @@ type negateWriter struct {
 }
 
 func (w negateWriter) Write(p []byte) (int, error) {
-	b := slices.Clone(p)
+	b := append(p[:0:0], p...)
 	negate(b)
 	return w.Writer.Write(b)
 }

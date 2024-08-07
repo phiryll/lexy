@@ -3,9 +3,9 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"maps"
 	"math"
 	"math/big"
+	"reflect"
 	"time"
 
 	"github.com/phiryll/lexy"
@@ -31,7 +31,7 @@ func ExampleEmpty() {
 	}
 	fmt.Printf("%T\n", decoded)
 	fmt.Printf("%T\n", decoded[0])
-	fmt.Println(maps.Equal(value, decoded))
+	fmt.Println(reflect.DeepEqual(value, decoded))
 	// Output:
 	// lexy_test.set
 	// lexy_test.present
@@ -405,7 +405,7 @@ func ExampleMapOf() {
 	}
 	fmt.Printf("%T\n", decoded)
 	fmt.Printf("%T\n", decoded["not-found"])
-	fmt.Println(maps.Equal(value, decoded))
+	fmt.Println(reflect.DeepEqual(value, decoded))
 	// Output:
 	// lexy_test.wordCounts
 	// lexy_test.count
