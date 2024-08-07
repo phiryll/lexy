@@ -19,11 +19,11 @@ import (
 
 // Codecs used by tests
 var (
-	boolCodec  = internal.UintCodec[bool]()
-	uintCodec  = internal.AsUint64Codec[uint]()
-	uint8Codec = internal.UintCodec[uint8]()
+	boolCodec  = internal.BoolCodec[bool]()
+	uintCodec  = internal.UintCodec[uint]()
+	uint8Codec = internal.Uint8Codec[uint8]()
 	// uint16Codec   = internal.UintCodec[uint16]()
-	uint32Codec = internal.UintCodec[uint32]()
+	uint32Codec = internal.Uint32Codec[uint32]()
 	// uint64Codec   = internal.UintCodec[uint64]()
 	intCodec      = internal.AsInt64Codec[int]()
 	int8Codec     = internal.IntCodec[int8]()

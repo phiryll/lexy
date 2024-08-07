@@ -85,16 +85,28 @@ func Empty[T any]() Codec[T] { return internal.EmptyCodec[T]() }
 
 // Bool creates a new Codec for a type with an underlying type of bool.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Bool[T ~bool]() Codec[T] { return internal.UintCodec[T]() }
+func Bool[T ~bool]() Codec[T] { return internal.BoolCodec[T]() }
 
-// Uint creates a new Codec for a type with an underlying type of uint8, uint16, uint32, or uint64.
+// Uint creates a new Codec for a type with an underlying type of uint.
+// Values are converted to/from uint64 and encoded with Uint64[uint64]().
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint[T ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] { return internal.UintCodec[T]() }
+func Uint[T ~uint]() Codec[T] { return internal.UintCodec[T]() }
 
-// AsUint64 creates a new Codec for a type with an underlying type of uint.
-// Values are converted to/from uint64 and encoded with Uint[uint64]().
+// Uint8 creates a new Codec for a type with an underlying type of uint8.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func AsUint64[T ~uint]() Codec[T] { return internal.AsUint64Codec[T]() }
+func Uint8[T ~uint8]() Codec[T] { return internal.Uint8Codec[T]() }
+
+// Uint16 creates a new Codec for a type with an underlying type of uint16.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Uint16[T ~uint16]() Codec[T] { return internal.Uint16Codec[T]() }
+
+// Uint32 creates a new Codec for a type with an underlying type of uint32.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Uint32[T ~uint32]() Codec[T] { return internal.Uint32Codec[T]() }
+
+// Uint64 creates a new Codec for a type with an underlying type of uint64.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Uint64[T ~uint64]() Codec[T] { return internal.Uint64Codec[T]() }
 
 // Int creates a new Codec for a type with an underlying type of int8, int16, int32, or int64.
 // This Codec does not require a terminator when used within an aggregate Codec.

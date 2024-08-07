@@ -6,11 +6,27 @@ import (
 	"reflect"
 )
 
-func UintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64]() Codec[T] {
+func BoolCodec[T ~bool]() Codec[T] {
 	return uintCodec[T]{}
 }
 
-func AsUint64Codec[T ~uint]() Codec[T] {
+func Uint8Codec[T ~uint8]() Codec[T] {
+	return uintCodec[T]{}
+}
+
+func Uint16Codec[T ~uint16]() Codec[T] {
+	return uintCodec[T]{}
+}
+
+func Uint32Codec[T ~uint32]() Codec[T] {
+	return uintCodec[T]{}
+}
+
+func Uint64Codec[T ~uint64]() Codec[T] {
+	return uintCodec[T]{}
+}
+
+func UintCodec[T ~uint]() Codec[T] {
 	return asUint64Codec[T]{}
 }
 

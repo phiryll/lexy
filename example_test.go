@@ -14,7 +14,7 @@ import (
 func ExampleEmpty() {
 	type present struct{}
 	type set map[uint8]present
-	codec := lexy.MapOf[set](lexy.Uint[uint8](), lexy.Empty[present]())
+	codec := lexy.MapOf[set](lexy.Uint8[uint8](), lexy.Empty[present]())
 	var buf bytes.Buffer
 	value := set{
 		23: present{},
@@ -61,8 +61,8 @@ func ExampleBool() {
 	// true, false
 }
 
-func ExampleUint() {
-	codec := lexy.Uint[uint64]()
+func ExampleUint64() {
+	codec := lexy.Uint64[uint64]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 123); err != nil {
 		panic(err)
@@ -76,8 +76,8 @@ func ExampleUint() {
 	// 123
 }
 
-func ExampleAsUint64() {
-	codec := lexy.AsUint64[uint]()
+func ExampleUint() {
+	codec := lexy.Uint[uint]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 4567890); err != nil {
 		panic(err)
@@ -91,9 +91,9 @@ func ExampleAsUint64() {
 	// 4567890
 }
 
-func ExampleUint_underlyingType() {
+func ExampleUint32_underlyingType() {
 	type size uint32
-	codec := lexy.Uint[size]()
+	codec := lexy.Uint32[size]()
 	var buf bytes.Buffer
 	// Go will type a constant appropriately.
 	if err := codec.Write(&buf, 123); err != nil {
