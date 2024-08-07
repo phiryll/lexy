@@ -101,6 +101,8 @@ type negateTest struct {
 // putting the negated varying length field in the middle is intentional
 type negateTestCodec struct{}
 
+var negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
+
 func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
 	u8, err := uint8Codec.Read(r)
@@ -139,13 +141,12 @@ func (n negateTestCodec) RequiresTerminator() bool {
 }
 
 func TestNegateComplex(t *testing.T) {
-	codec := negateTestCodec{}
-	encode := encoderFor(codec)
+	encode := encoderFor(negTestCodec)
 	ptr := func(x int) *int16 {
 		i16 := int16(x)
 		return &i16
 	}
-	testCodecRoundTrip(t, codec, []testCase[negateTest]{
+	testCodecRoundTrip(t, negTestCodec, []testCase[negateTest]{
 		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, nil},
 		{"{5, nil, \"\"}", negateTest{5, nil, ""}, nil},
 	})
