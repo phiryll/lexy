@@ -22,12 +22,19 @@ type Entry struct {
 
 func cmpEntries(a, b Entry) int { return bytes.Compare(a.Key, b.Key) }
 
+func (db *DB) insert(i int, entry Entry) {
+	entries := append(db.entries, Entry{})
+	copy(entries[i+1:], entries[i:])
+	entries[i] = entry
+	db.entries = entries
+}
+
 func (db *DB) Put(key []byte, value int) error {
 	entry := Entry{key, value}
 	if i, found := slices.BinarySearchFunc(db.entries, entry, cmpEntries); found {
 		db.entries[i] = entry
 	} else {
-		db.entries = slices.Insert(db.entries, i, entry)
+		db.insert(i, entry)
 	}
 	return nil
 }
