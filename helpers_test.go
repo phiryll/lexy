@@ -1,4 +1,4 @@
-package internal_test
+package lexy_test
 
 // This file contains things that help in writing Codec tests,
 // it doesn't have any tests itself.
@@ -12,37 +12,36 @@ import (
 	"time"
 
 	"github.com/phiryll/lexy"
-	"github.com/phiryll/lexy/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Codecs used by tests
 var (
-	boolCodec  = internal.BoolCodec[bool]()
-	uintCodec  = internal.UintCodec[uint]()
-	uint8Codec = internal.Uint8Codec[uint8]()
-	// uint16Codec   = internal.UintCodec[uint16]()
-	uint32Codec = internal.Uint32Codec[uint32]()
-	// uint64Codec   = internal.UintCodec[uint64]()
-	intCodec      = internal.IntCodec[int]()
-	int8Codec     = internal.Int8Codec[int8]()
-	int16Codec    = internal.Int16Codec[int16]()
-	int32Codec    = internal.Int32Codec[int32]()
-	int64Codec    = internal.Int64Codec[int64]()
-	float32Codec  = internal.Float32Codec[float32]()
-	float64Codec  = internal.Float64Codec[float64]()
-	stringCodec   = internal.StringCodec[string]()
-	durationCodec = internal.Int64Codec[time.Duration]()
+	boolCodec  = lexy.Bool[bool]()
+	uintCodec  = lexy.Uint[uint]()
+	uint8Codec = lexy.Uint8[uint8]()
+	// uint16Codec   = lexy.UintCodec[uint16]()
+	uint32Codec = lexy.Uint32[uint32]()
+	// uint64Codec   = lexy.UintCodec[uint64]()
+	intCodec      = lexy.Int[int]()
+	int8Codec     = lexy.Int8[int8]()
+	int16Codec    = lexy.Int16[int16]()
+	int32Codec    = lexy.Int32[int32]()
+	int64Codec    = lexy.Int64[int64]()
+	float32Codec  = lexy.Float32[float32]()
+	float64Codec  = lexy.Float64[float64]()
+	durationCodec = lexy.Int64[time.Duration]()
+	aStringCodec  = lexy.String[string]()
 )
 
 func ptr[T any](value T) *T {
 	return &value
 }
 
-func encoderFor[T any](codec internal.Codec[T]) func(value T) []byte {
+func encoderFor[T any](codec lexy.Codec[T]) func(value T) []byte {
 	return func(value T) []byte {
-		data, err := internal.Encode(codec, value)
+		data, err := lexy.Encode(codec, value)
 		if err != nil {
 			panic(err)
 		}
@@ -58,11 +57,11 @@ type testCase[T any] struct {
 
 // Just to make the test cases terser.
 const (
-	term      byte = internal.ExportForTestingTerminator
-	esc       byte = internal.ExportForTestingEscape
-	pNilFirst byte = internal.ExportForTestingPrefixNilFirst
-	pNonNil   byte = internal.ExportForTestingPrefixNonNil
-	pNilLast  byte = internal.ExportForTestingPrefixNilLast
+	term      byte = lexy.TestingTerminator
+	esc       byte = lexy.TestingEscape
+	pNilFirst byte = lexy.TestingPrefixNilFirst
+	pNonNil   byte = lexy.TestingPrefixNonNil
+	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
 // Tests:

@@ -1,14 +1,14 @@
-package internal_test
+package lexy_test
 
 import (
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBytes(t *testing.T) {
-	codec := internal.BytesCodec[[]byte](true)
+	codec := lexy.Bytes[[]byte]()
 	testCodec(t, codec, []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []byte{}, []byte{pNonNil}},
@@ -20,7 +20,7 @@ func TestBytes(t *testing.T) {
 
 func TestBytesUnderlyingType(t *testing.T) {
 	type header []byte
-	codec := internal.BytesCodec[header](true)
+	codec := lexy.Bytes[header]()
 	testCodec(t, codec, []testCase[header]{
 		{"nil", header(nil), []byte{pNilFirst}},
 		{"empty", header{}, []byte{pNonNil}},
@@ -31,8 +31,8 @@ func TestBytesUnderlyingType(t *testing.T) {
 }
 
 func TestBytesNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(internal.BytesCodec[[]byte](true))
-	encodeLast := encoderFor(internal.BytesCodec[[]byte](false))
+	encodeFirst := encoderFor(lexy.Bytes[[]byte]())
+	encodeLast := encoderFor(lexy.BytesNilsLast[[]byte]())
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst([]byte{0}),

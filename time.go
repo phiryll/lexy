@@ -1,13 +1,9 @@
-package internal
+package lexy
 
 import (
 	"fmt"
 	"io"
 	"time"
-)
-
-var (
-	TimeCodec Codec[time.Time] = timeCodec{}
 )
 
 // timeCodec is the Codec for time.Time instances.
@@ -26,7 +22,7 @@ var (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-var formatCache = MakeCache(formatOffset)
+var formatCache = makeCache(formatOffset)
 
 func formatOffset(seconds int32) string {
 	sign := '+'
@@ -47,11 +43,11 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	}
 	nanos, err := uint32Codec.Read(r)
 	if err != nil {
-		return zero, unexpectedIfEOF(err)
+		return zero, UnexpectedIfEOF(err)
 	}
 	offset, err := int32Codec.Read(r)
 	if err != nil {
-		return zero, unexpectedIfEOF(err)
+		return zero, UnexpectedIfEOF(err)
 	}
 	loc := time.FixedZone(formatCache.Get(offset), int(offset))
 	return time.Unix(seconds, int64(nanos)).In(loc), nil

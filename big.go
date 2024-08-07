@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -7,7 +7,7 @@ import (
 
 var (
 	// used by bigRatCodec
-	bIntCodec = BigIntCodec(true)
+	bIntCodec = BigInt()
 )
 
 // bigIntCodec is the Codec for *big.Int values.
@@ -34,10 +34,6 @@ type bigIntCodec struct {
 	nilsFirst bool
 }
 
-func BigIntCodec(nilsFirst bool) Codec[*big.Int] {
-	return bigIntCodec{nilsFirst}
-}
-
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -45,7 +41,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	neg := false
 	size, err := int64Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	if size < 0 {
 		neg = true
@@ -57,7 +53,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	b := make([]byte, size)
 	_, err = io.ReadFull(r, b)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Int
 	value.SetBytes(b)
@@ -161,10 +157,6 @@ type bigFloatCodec struct {
 	nilsFirst bool
 }
 
-func BigFloatCodec(nilsFirst bool) Codec[*big.Float] {
-	return bigFloatCodec{nilsFirst}
-}
-
 // The second byte written in the *big.Float encoding after the initial
 // prefixNonNil byte if non-nil.
 const (
@@ -198,7 +190,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	}
 	kind, err := int8Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	signbit := kind < 0
 	if kind == negInf || kind == posInf {
@@ -219,19 +211,19 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 
 	exp, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	mantBytes, err := doUnescape(mantReader)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	prec, err := int32Codec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	mode, err := modeCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 
 	if signbit {
@@ -338,21 +330,17 @@ type bigRatCodec struct {
 	nilsFirst bool
 }
 
-func BigRatCodec(nilsFirst bool) Codec[*big.Rat] {
-	return bigRatCodec{nilsFirst}
-}
-
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	num, err := bIntCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	denom, err := bIntCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Rat
 	return value.SetFrac(num, denom), nil

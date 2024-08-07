@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -16,20 +16,13 @@ type pointerCodec[P ~*E, E any] struct {
 	nilsFirst bool
 }
 
-func PointerCodec[P ~*E, E any](elemCodec Codec[E], nilsFirst bool) Codec[P] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return pointerCodec[P, E]{elemCodec, nilsFirst}
-}
-
 func (c pointerCodec[P, E]) Read(r io.Reader) (P, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
 	value, err := c.elemCodec.Read(r)
 	if err != nil {
-		return nil, unexpectedIfEOF(err)
+		return nil, UnexpectedIfEOF(err)
 	}
 	return &value, nil
 }

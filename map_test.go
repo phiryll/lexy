@@ -1,22 +1,22 @@
-package internal_test
+package lexy_test
 
 import (
 	"bytes"
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // just making map codec declarations terser
 var (
-	sliceCodec   = internal.SliceCodec[[]string](stringCodec, true)
-	pointerCodec = internal.PointerCodec[*string](stringCodec, true)
+	sliceCodec   = lexy.SliceOf[[]string](aStringCodec)
+	pointerCodec = lexy.PointerTo[*string](aStringCodec)
 )
 
-func testBasicMap[M ~map[string]int32](t *testing.T, codec internal.Codec[M]) {
+func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -56,17 +56,17 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[map[string]int32](stringCodec, int32Codec, true))
+	testBasicMap(t, lexy.MapOf[map[string]int32](aStringCodec, int32Codec))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, internal.MapCodec[mStringInt](stringCodec, int32Codec, true))
+	testBasicMap(t, lexy.MapOf[mStringInt](aStringCodec, int32Codec))
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := internal.MapCodec[map[string][]string](stringCodec, sliceCodec, true)
+	codec := lexy.MapOf[map[string][]string](aStringCodec, sliceCodec)
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -89,7 +89,7 @@ func TestMapSlice(t *testing.T) {
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the pointees into a new map and compare that.
-	codec := internal.MapCodec[map[*string]*string](pointerCodec, pointerCodec, true)
+	codec := lexy.MapOf[map[*string]*string](pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},
@@ -121,8 +121,8 @@ func TestMapPointerPointer(t *testing.T) {
 
 func TestMapNilsLast(t *testing.T) {
 	// Maps are randomly ordered, so we can only test nil/non-nil.
-	encodeFirst := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, true))
-	encodeLast := encoderFor(internal.MapCodec[map[string]int32](stringCodec, int32Codec, false))
+	encodeFirst := encoderFor(lexy.MapOf[map[string]int32](aStringCodec, int32Codec))
+	encodeLast := encoderFor(lexy.MapOfNilsLast[map[string]int32](aStringCodec, int32Codec))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(map[string]int32{}),

@@ -1,11 +1,11 @@
-package internal_test
+package lexy_test
 
 import (
 	"math"
 	"testing"
 	"time"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 )
 
 // Testing bool, uint/int, uint/int8, and uint/int32 should be sufficient.
@@ -103,7 +103,7 @@ func TestDuration(t *testing.T) {
 type aBool bool
 
 func TestBoolUnderlyingType(t *testing.T) {
-	codec := internal.BoolCodec[aBool]()
+	codec := lexy.Bool[aBool]()
 	testCodec(t, codec, []testCase[aBool]{
 		{"false", aBool(false), []byte{0}},
 		{"true", aBool(true), []byte{1}},

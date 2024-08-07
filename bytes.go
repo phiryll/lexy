@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"bytes"
@@ -12,10 +12,6 @@ import (
 // This is more efficient than sliceCodec would be.
 type bytesCodec[S ~[]byte] struct {
 	nilsFirst bool
-}
-
-func BytesCodec[S ~[]byte](nilsFirst bool) Codec[S] {
-	return bytesCodec[S]{nilsFirst}
 }
 
 func (c bytesCodec[S]) Read(r io.Reader) (S, error) {

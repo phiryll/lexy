@@ -1,4 +1,4 @@
-package internal_test
+package lexy_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +37,7 @@ var float32s = []struct {
 }
 
 func TestComplex64(t *testing.T) {
-	codec := internal.Complex64Codec
+	codec := lexy.Complex64()
 	// Ensure we don't get complex128 without having to cast the arguments.
 	comp := func(r, i float32) complex64 { return complex(r, i) }
 
@@ -110,7 +110,7 @@ var float64s = []struct {
 }
 
 func TestComplex128(t *testing.T) {
-	codec := internal.Complex128Codec
+	codec := lexy.Complex128()
 	// Ensure we don't get complex128 without having to cast the arguments.
 	comp := func(r, i float64) complex128 { return complex(r, i) }
 

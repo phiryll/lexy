@@ -1,54 +1,9 @@
-package internal
+package lexy
 
 import (
 	"encoding/binary"
 	"io"
-	"math"
 )
-
-func BoolCodec[T ~bool]() Codec[T] {
-	return uintCodec[T]{}
-}
-
-func Uint8Codec[T ~uint8]() Codec[T] {
-	return uintCodec[T]{}
-}
-
-func Uint16Codec[T ~uint16]() Codec[T] {
-	return uintCodec[T]{}
-}
-
-func Uint32Codec[T ~uint32]() Codec[T] {
-	return uintCodec[T]{}
-}
-
-func Uint64Codec[T ~uint64]() Codec[T] {
-	return uintCodec[T]{}
-}
-
-func UintCodec[T ~uint]() Codec[T] {
-	return asUint64Codec[T]{}
-}
-
-func Int8Codec[T ~int8]() Codec[T] {
-	return intCodec[T]{signBit: math.MinInt8}
-}
-
-func Int16Codec[T ~int16]() Codec[T] {
-	return intCodec[T]{signBit: math.MinInt16}
-}
-
-func Int32Codec[T ~int32]() Codec[T] {
-	return intCodec[T]{signBit: math.MinInt32}
-}
-
-func Int64Codec[T ~int64]() Codec[T] {
-	return intCodec[T]{signBit: math.MinInt64}
-}
-
-func IntCodec[T ~int]() Codec[T] {
-	return asInt64Codec[T]{}
-}
 
 // uintCodec is the Codec for bool and fixed-length unsigned integral types.
 //

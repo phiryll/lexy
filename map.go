@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -17,20 +17,6 @@ type mapCodec[M ~map[K]V, K comparable, V any] struct {
 	nilsFirst  bool
 }
 
-func MapCodec[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V], nilsFirst bool) Codec[M] {
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
-	return mapCodec[M, K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
-		nilsFirst,
-	}
-}
-
 func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -46,7 +32,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 		}
 		value, err := c.valueCodec.Read(r)
 		if err != nil {
-			return m, unexpectedIfEOF(err)
+			return m, UnexpectedIfEOF(err)
 		}
 		m[key] = value
 	}

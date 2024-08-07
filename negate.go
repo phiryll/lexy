@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import (
 	"io"
@@ -34,18 +34,6 @@ import (
 //	^esc+term(B) = {0xFE, 0xFF, 0xFD, 0xFC, 0xFE, 0xFF, 0xFF}
 type negateCodec[T any] struct {
 	codec Codec[T]
-}
-
-func NegateCodec[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// Negate must escape and terminate its delegate whether it requires it or not,
-	// but shouldn't wrap if the delegate is already a terminatorCodec.
-	if _, ok := codec.(terminatorCodec[T]); !ok {
-		codec = Terminate(codec)
-	}
-	return negateCodec[T]{codec}
 }
 
 func (c negateCodec[T]) Read(r io.Reader) (T, error) {

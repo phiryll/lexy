@@ -1,16 +1,16 @@
-package internal_test
+package lexy_test
 
 import (
 	"io"
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNegateInt32(t *testing.T) {
-	codec := internal.NegateCodec(int32Codec)
+	codec := lexy.Negate(int32Codec)
 	testCodecRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
 		{"-1", -1, nil},
@@ -34,13 +34,13 @@ func TestNegateInt32(t *testing.T) {
 // The simple implementation is to simply invert all the bits, but it doesn't work.
 // This tests for that regression, see the comments on negateCodec for details.
 func TestNegateLength(t *testing.T) {
-	encode := encoderFor(internal.NegateCodec(stringCodec))
+	encode := encoderFor(lexy.Negate(aStringCodec))
 	assert.Less(t, encode("ab"), encode("a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
-	ptrCodec := internal.PointerCodec[*string](stringCodec, true)
-	codec := internal.NegateCodec(ptrCodec)
+	ptrCodec := lexy.PointerTo[*string](aStringCodec)
+	codec := lexy.Negate(ptrCodec)
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
 		{"*empty", ptr(""), nil},
@@ -58,14 +58,14 @@ func TestNegatePtrString(t *testing.T) {
 	})
 }
 
-var negPIntCodec = internal.NegateCodec(internal.PointerCodec[*int16](int16Codec, true))
-var negStringCodec = internal.TerminateIfNeeded(internal.NegateCodec(stringCodec))
-var ptrStringCodec = internal.PointerCodec[*string](stringCodec, true)
-var slicePtrStringCodec = internal.SliceCodec[[]*string](ptrStringCodec, true)
-var negSlicePtrStringCodec = internal.NegateCodec(slicePtrStringCodec)
+var negPIntCodec = lexy.Negate(lexy.PointerTo[*int16](int16Codec))
+var negaStringCodec = lexy.TerminateIfNeeded(lexy.Negate(aStringCodec))
+var ptraStringCodec = lexy.PointerTo[*string](aStringCodec)
+var slicePtraStringCodec = lexy.SliceOf[[]*string](ptraStringCodec)
+var negSlicePtraStringCodec = lexy.Negate(slicePtraStringCodec)
 
 func TestNegateSlicePtrString(t *testing.T) {
-	codec := negSlicePtrStringCodec
+	codec := negSlicePtraStringCodec
 
 	testCodecRoundTrip(t, codec, []testCase[[]*string]{
 		{"nil", nil, nil},
@@ -107,7 +107,7 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	if err != nil {
 		return zero, err
 	}
-	s, err := negStringCodec.Read(r)
+	s, err := negaStringCodec.Read(r)
 	if err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
@@ -128,7 +128,7 @@ func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
 	if err := uint8Codec.Write(w, value.uint8); err != nil {
 		return err
 	}
-	if err := negStringCodec.Write(w, value.string); err != nil {
+	if err := negaStringCodec.Write(w, value.string); err != nil {
 		return err
 	}
 	return negPIntCodec.Write(w, value.pInt16)

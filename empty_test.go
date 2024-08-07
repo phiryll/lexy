@@ -1,9 +1,9 @@
-package internal_test
+package lexy_test
 
 import (
 	"testing"
 
-	"github.com/phiryll/lexy/internal"
+	"github.com/phiryll/lexy"
 )
 
 // There's not much point in testing emptyCodec itself,
@@ -21,13 +21,13 @@ type (
 
 var (
 	empty          = emptyStruct{}
-	emptyCodec     = internal.EmptyCodec[emptyStruct]()
-	ptrEmpty       = internal.PointerCodec[*emptyStruct](emptyCodec, true)
-	sliceEmpty     = internal.SliceCodec[[]emptyStruct](emptyCodec, true)
-	mapKeyEmpty    = internal.MapCodec[mKey](emptyCodec, uint8Codec, true)
-	mapValueEmpty  = internal.MapCodec[mValue](uint8Codec, emptyCodec, true)
-	negateEmpty    = internal.NegateCodec(emptyCodec)
-	terminateEmpty = internal.Terminate(emptyCodec)
+	emptyCodec     = lexy.Empty[emptyStruct]()
+	ptrEmpty       = lexy.PointerTo[*emptyStruct](emptyCodec)
+	sliceEmpty     = lexy.SliceOf[[]emptyStruct](emptyCodec)
+	mapKeyEmpty    = lexy.MapOf[mKey](emptyCodec, uint8Codec)
+	mapValueEmpty  = lexy.MapOf[mValue](uint8Codec, emptyCodec)
+	negateEmpty    = lexy.Negate(emptyCodec)
+	terminateEmpty = lexy.Terminate(emptyCodec)
 )
 
 func TestPointerEmpty(t *testing.T) {

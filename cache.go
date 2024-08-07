@@ -1,4 +1,4 @@
-package internal
+package lexy
 
 import "sync"
 
@@ -14,7 +14,7 @@ type cache[K comparable, V any] struct {
 	compute func(K) V
 }
 
-func MakeCache[K comparable, V any](compute func(K) V) cache[K, V] {
+func makeCache[K comparable, V any](compute func(K) V) cache[K, V] {
 	if compute == nil {
 		panic("compute function cannot be nil")
 	}

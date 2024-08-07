@@ -1,18 +1,10 @@
-package internal
+package lexy
 
 import (
 	"encoding/binary"
 	"io"
 	"math"
 )
-
-func Float32Codec[T ~float32]() Codec[T] {
-	return float32Codec[T]{}
-}
-
-func Float64Codec[T ~float64]() Codec[T] {
-	return float64Codec[T]{}
-}
 
 const (
 	highBit32 uint32 = 0x80_00_00_00

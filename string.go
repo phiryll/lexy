@@ -1,13 +1,9 @@
-package internal
+package lexy
 
 import (
 	"io"
 	"strings"
 )
-
-func StringCodec[T ~string]() Codec[T] {
-	return stringCodec[T]{}
-}
 
 // stringCodec is the Codec for strings.
 //
