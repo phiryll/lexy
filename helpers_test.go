@@ -57,11 +57,11 @@ type testCase[T any] struct {
 
 // Just to make the test cases terser.
 const (
-	term      byte = lexy.ExportForTestingTerminator
-	esc       byte = lexy.ExportForTestingEscape
-	pNilFirst byte = lexy.ExportForTestingPrefixNilFirst
-	pNonNil   byte = lexy.ExportForTestingPrefixNonNil
-	pNilLast  byte = lexy.ExportForTestingPrefixNilLast
+	term      byte = lexy.TestingTerminator
+	esc       byte = lexy.TestingEscape
+	pNilFirst byte = lexy.TestingPrefixNilFirst
+	pNonNil   byte = lexy.TestingPrefixNonNil
+	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
 // Tests:

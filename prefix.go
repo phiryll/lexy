@@ -8,10 +8,6 @@ const (
 	prefixNilFirst byte = 0x02
 	prefixNonNil   byte = 0x03
 	prefixNilLast  byte = 0xFD
-
-	ExportForTestingPrefixNilFirst = prefixNilFirst
-	ExportForTestingPrefixNonNil   = prefixNonNil
-	ExportForTestingPrefixNilLast  = prefixNilLast
 )
 
 // Convenience byte slices.

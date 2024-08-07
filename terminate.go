@@ -50,9 +50,6 @@ const (
 	// This includes those values appearing in the encodings of nested aggregates,
 	// because those are still just data at the level of the enclosing aggregate.
 	escape byte = 0x01
-
-	ExportForTestingTerminator = terminator
-	ExportForTestingEscape     = escape
 )
 
 // Convenience byte slices for writers.
