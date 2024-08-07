@@ -115,15 +115,6 @@ Lexy provides `Codecs` for these types that preserve their natural ordering.
   `nil` can be less than or greater than all non-`nil` values.
   This `Codec` is optimized for byte slices, and is more efficient than a slice `Codec` would be.
   It differs from the `string` `Codec` in that a `[]byte` can be `nil`.
-* arrays, pointers to arrays  
-  Arrays are ordered lexicographically by their elements.
-  For example,  
-  `{0, 1, 0} < {0, 1, 100} < {0, 2, 0} < {1, 0, 0}`  
-  `nil` can be less than or greater than all non-`nil` values for the pointer-to-array `Codec`.
-  Arrays of different sizes are different types in go, and will require different `Codecs`.
-  The `Codecs` created by `lexy.ArrayOf` and `lexy.PointerToArrayOf` make heavy use of reflection,
-  and should be avoided if possible.
-  See the provided examples for how to create custom `Codecs`.
 
 Lexy provides `Codecs` for these types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
@@ -144,12 +135,17 @@ Lexy provides a `Codec` for types with no value except the zero value,
 useful as value types for maps used as sets.
 
 Lexy does not does not provide `Codecs` for these types, but a custom `Codec` is easy to create.
+See the provided examples for how to create custom `Codecs`.
 
 * structs, pointers to structs  
   The inherent limitations of generic types and reflection in go make it impossible
   to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
   Writing a strongly-typed custom `Codec` is a much simpler and safer alternative,
   and also prevents silently changing an encoding when the data type it encodes is changed.
+* arrays, pointers to arrays  
+  While it is possible to create a general `Codec` for array types,
+  the generics are very messy and it requires using reflection extensively.
+  As is the case for structs, writing a strongly-typed custom `Codec` is a better option.
 * `uintptr`  
   This type has an implementation-specific size.
 * functions

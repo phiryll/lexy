@@ -239,36 +239,6 @@ func PointerToNilsLast[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	return internal.PointerCodec[P](elemCodec, false)
 }
 
-// ArrayOf creates a new Codec for the array type A with element type E.
-// The encoded order is lexicographical using the encoded order of elemCodec for the elements.
-// Arrays of different sizes are different types in go, and will require different Codecs.
-// This Codec does not require a terminator when used within an aggregate Codec.
-//
-// ArrayOf will panic if A is not an array type with element type E.
-//
-// This Codec makes heavy use of reflection, and should be avoided if possible.
-func ArrayOf[A any, E any](elemCodec Codec[E]) Codec[A] {
-	return internal.ArrayCodec[A](elemCodec)
-}
-
-// PointerToArrayOf creates a new Codec for pointers to the array type A with element type E,
-// with nils ordered first.
-// This Codec can be more efficient than Codecs produced by ArrayOf, depending on the size of the array.
-// This Codec does not require a terminator when used within an aggregate Codec.
-// Other than encoding a pointer value, this Codec behaves exactly like ArrayOf for non-nil values.
-func PointerToArrayOf[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.PointerToArrayCodec[P](elemCodec, true)
-}
-
-// PointerToArrayOfNilsLast creates a new Codec for pointers to the array type A with element type E,
-// with nils ordered last.
-// This Codec can be more efficient than Codecs produced by ArrayOf, depending on the size of the array.
-// This Codec does not require a terminator when used within an aggregate Codec.
-// Other than encoding a pointer value, this Codec behaves exactly like ArrayOf for non-nil values.
-func PointerToArrayOfNilsLast[P ~*A, A any, E any](elemCodec Codec[E]) Codec[P] {
-	return internal.PointerToArrayCodec[P](elemCodec, false)
-}
-
 // SliceOf creates a new Codec for the slice type S with element type E, with nil slices ordered first.
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.

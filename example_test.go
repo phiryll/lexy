@@ -351,42 +351,6 @@ func ExamplePointerTo() {
 	// false
 }
 
-func ExampleArrayOf() {
-	codec := lexy.ArrayOf[[3]uint8](lexy.Uint[uint8]())
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, [3]uint8{12, 0, 23}); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(decoded)
-	// Output:
-	// [12 0 23]
-}
-
-func ExamplePointerToArrayOf() {
-	type quaternion *[4]float64
-	codec := lexy.PointerToArrayOf[quaternion](lexy.Float64[float64]())
-	var buf bytes.Buffer
-	value := quaternion(&[4]float64{5.7, 1.2, 3.5, 2.9})
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(decoded)
-	fmt.Println(value == decoded)
-	fmt.Println(*value == *decoded)
-	// Output:
-	// &[5.7 1.2 3.5 2.9]
-	// false
-	// true
-}
-
 func ExampleSliceOf() {
 	type words []string
 	codec := lexy.SliceOf[words](lexy.String[string]())
