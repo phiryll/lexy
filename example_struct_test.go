@@ -16,11 +16,23 @@ type SimpleStruct struct {
 	strings []string
 }
 
+func stringsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func (s SimpleStruct) Equals(other SimpleStruct) bool {
 	// NaN != NaN, even when they're the exact same bits.
 	return s.anInt == other.anInt &&
 		math.Float32bits(s.aFloat) == math.Float32bits(other.aFloat) &&
-		slices.Equal(s.strings, other.strings)
+		stringsEqual(s.strings, other.strings)
 }
 
 func (s SimpleStruct) String() string {
