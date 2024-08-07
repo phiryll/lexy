@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-var (
-	TimeCodec Codec[time.Time] = timeCodec{}
-)
-
 // timeCodec is the Codec for time.Time instances.
 //
 // Unlike most Codecs, timeCodec is lossy. It encodes the timezone's offset, but not its name.

@@ -196,7 +196,7 @@ func Duration() Codec[time.Duration] { return Int64[time.Duration]() }
 // It will therefore lose information about Daylight Saving Time.
 // Timezone names and DST behavior are defined outside of go's control (as they must be),
 // and Time.Zone() can return names that will fail with Location.LoadLocation(name).
-func Time() Codec[time.Time] { return TimeCodec }
+func Time() Codec[time.Time] { return timeCodec{} }
 
 // BigInt creates a new Codec for the *big.Int type, with nils ordered first.
 // This Codec may require a terminator when used within an aggregate Codec.

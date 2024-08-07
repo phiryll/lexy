@@ -11,7 +11,7 @@ import (
 )
 
 func TestTime(t *testing.T) {
-	codec := lexy.TimeCodec
+	codec := lexy.Time()
 
 	// West of UTC, negative timezone offset
 	locNYC, err := time.LoadLocation("America/New_York")
@@ -63,7 +63,7 @@ func TestTime(t *testing.T) {
 }
 
 func TestTimeOrder(t *testing.T) {
-	codec := lexy.TimeCodec
+	codec := lexy.Time()
 
 	// in order from west to east, expected sort order,
 	// UTC is between NYC and Berlin.
