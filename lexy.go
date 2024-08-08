@@ -127,19 +127,19 @@ func Int[T ~int]() Codec[T] { return asInt64Codec[T]{} }
 
 // Int8 creates a new Codec for a type with an underlying type of int8.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int8[T ~int8]() Codec[T] { return intCodec[T]{signBit: math.MinInt8} }
+func Int8[T ~int8]() Codec[T] { return intCodec[T]{math.MinInt8} }
 
 // Int16 creates a new Codec for a type with an underlying type of int16.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int16[T ~int16]() Codec[T] { return intCodec[T]{signBit: math.MinInt16} }
+func Int16[T ~int16]() Codec[T] { return intCodec[T]{math.MinInt16} }
 
 // Int32 creates a new Codec for a type with an underlying type of int32.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int32[T ~int32]() Codec[T] { return intCodec[T]{signBit: math.MinInt32} }
+func Int32[T ~int32]() Codec[T] { return intCodec[T]{math.MinInt32} }
 
 // Int64 creates a new Codec for a type with an underlying type of int64.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int64[T ~int64]() Codec[T] { return intCodec[T]{signBit: math.MinInt64} }
+func Int64[T ~int64]() Codec[T] { return intCodec[T]{math.MinInt64} }
 
 // Float32 creates a new Codec for a type with an underlying type of float32.
 // All bits of the value are preserved by this encoding; NaN values are not canonicalized.
@@ -366,7 +366,7 @@ func Terminate[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
 	}
-	return terminatorCodec[T]{codec: codec}
+	return terminatorCodec[T]{codec}
 }
 
 // Terminate returns a new Codec that escapes and terminates the encodings produced by codec,
@@ -379,7 +379,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	if !codec.RequiresTerminator() {
 		return codec
 	}
-	return terminatorCodec[T]{codec: codec}
+	return terminatorCodec[T]{codec}
 }
 
 // Prefixes to use for encodings for types whose instances can be nil.
