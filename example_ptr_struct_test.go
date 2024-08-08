@@ -101,7 +101,7 @@ func (c containterCodec) RequiresTerminator() bool {
 // The same is true of time.Time and time.Duration instances.
 //
 // Normally, a Codec[BigStruct] would be defined and Container's Codec
-// would use it as lexy.PointerTo[*BigStruct](bigStructCodec).
+// would use it as lexy.PointerTo(bigStructCodec).
 // However, calls to a Codec[BigStruct] will pass BigStruct instances by value,
 // even though the wrapping pointer Codec is only copying pointers.
 //

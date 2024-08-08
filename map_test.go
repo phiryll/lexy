@@ -12,8 +12,8 @@ import (
 
 // just making map codec declarations terser
 var (
-	sliceCodec   = lexy.MakeSliceOf[[]string](aStringCodec)
-	pointerCodec = lexy.MakePointerTo[*string](aStringCodec)
+	sliceCodec   = lexy.SliceOf(aStringCodec)
+	pointerCodec = lexy.PointerTo(aStringCodec)
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
@@ -56,7 +56,7 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, lexy.MakeMapOf[map[string]int32](aStringCodec, int32Codec))
+	testBasicMap(t, lexy.MapOf(aStringCodec, int32Codec))
 }
 
 type mStringInt map[string]int32
@@ -66,7 +66,7 @@ func TestMapUnderlyingType(t *testing.T) {
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := lexy.MakeMapOf[map[string][]string](aStringCodec, sliceCodec)
+	codec := lexy.MapOf(aStringCodec, sliceCodec)
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -89,7 +89,7 @@ func TestMapSlice(t *testing.T) {
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the pointees into a new map and compare that.
-	codec := lexy.MakeMapOf[map[*string]*string](pointerCodec, pointerCodec)
+	codec := lexy.MapOf(pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},
@@ -121,8 +121,8 @@ func TestMapPointerPointer(t *testing.T) {
 
 func TestMapNilsLast(t *testing.T) {
 	// Maps are randomly ordered, so we can only test nil/non-nil.
-	encodeFirst := encoderFor(lexy.MakeMapOf[map[string]int32](aStringCodec, int32Codec))
-	encodeLast := encoderFor(lexy.MakeMapOfNilsLast[map[string]int32](aStringCodec, int32Codec))
+	encodeFirst := encoderFor(lexy.MapOf(aStringCodec, int32Codec))
+	encodeLast := encoderFor(lexy.MapOfNilsLast(aStringCodec, int32Codec))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(map[string]int32{}),

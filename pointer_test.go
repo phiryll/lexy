@@ -8,7 +8,7 @@ import (
 )
 
 func TestPointerInt32(t *testing.T) {
-	codec := lexy.MakePointerTo[*int32](int32Codec)
+	codec := lexy.PointerTo(int32Codec)
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
@@ -18,7 +18,7 @@ func TestPointerInt32(t *testing.T) {
 }
 
 func TestPointerString(t *testing.T) {
-	codec := lexy.MakePointerTo[*string](aStringCodec)
+	codec := lexy.PointerTo(aStringCodec)
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(""), []byte{pNonNil}},
@@ -28,8 +28,7 @@ func TestPointerString(t *testing.T) {
 }
 
 func TestPointerPointerString(t *testing.T) {
-	pointerCodec := lexy.MakePointerTo[*string](aStringCodec)
-	codec := lexy.MakePointerTo[**string](pointerCodec)
+	codec := lexy.PointerTo(lexy.PointerTo(aStringCodec))
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr((*string)(nil)), []byte{pNonNil, pNilFirst}},
@@ -40,8 +39,7 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
-	sliceCodec := lexy.MakeSliceOf[[]int32](int32Codec)
-	codec := lexy.MakePointerTo[*[]int32](sliceCodec)
+	codec := lexy.PointerTo(lexy.SliceOf(int32Codec))
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr([]int32(nil)), []byte{pNonNil, pNilFirst}},
@@ -58,8 +56,8 @@ func TestPointerSliceInt32(t *testing.T) {
 }
 
 func TestPointerNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(lexy.MakePointerTo[*string](aStringCodec))
-	encodeLast := encoderFor(lexy.MakePointerToNilsLast[*string](aStringCodec))
+	encodeFirst := encoderFor(lexy.PointerTo(aStringCodec))
+	encodeLast := encoderFor(lexy.PointerToNilsLast(aStringCodec))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(ptr("")),

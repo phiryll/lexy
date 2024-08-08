@@ -334,7 +334,7 @@ func ExampleBigRat() {
 }
 
 func ExamplePointerTo() {
-	codec := lexy.MakePointerTo[*string](lexy.String())
+	codec := lexy.PointerTo(lexy.String())
 	value := "abc"
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, &value); err != nil {

@@ -44,7 +44,7 @@ func (s SimpleStruct) String() string {
 var (
 	anIntCodec      = lexy.Int16()
 	aFloatCodec     = lexy.Float32()
-	stringsCodec    = lexy.Terminate(lexy.MakeSliceOf[[]string](lexy.String()))
+	stringsCodec    = lexy.Terminate(lexy.SliceOf(lexy.String()))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
 	fnsiCodec       = floatNegStringsIntCodec{}

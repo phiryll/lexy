@@ -22,8 +22,8 @@ type (
 var (
 	empty          = emptyStruct{}
 	emptyCodec     = lexy.Empty[emptyStruct]()
-	ptrEmpty       = lexy.MakePointerTo[*emptyStruct](emptyCodec)
-	sliceEmpty     = lexy.MakeSliceOf[[]emptyStruct](emptyCodec)
+	ptrEmpty       = lexy.PointerTo(emptyCodec)
+	sliceEmpty     = lexy.SliceOf(emptyCodec)
 	mapKeyEmpty    = lexy.MakeMapOf[mKey](emptyCodec, uint8Codec)
 	mapValueEmpty  = lexy.MakeMapOf[mValue](uint8Codec, emptyCodec)
 	negateEmpty    = lexy.Negate(emptyCodec)
