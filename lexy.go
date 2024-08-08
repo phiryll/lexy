@@ -106,7 +106,105 @@ var (
 	stdTermBytesCodec    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytesCodec}
 )
 
-// Codecs that do not delegate to other Codecs, for types with builtin underlying types.
+// Factory functions that don't require specifying type parameters to use,
+// because the compiler can infer them from the arguments, if any.
+
+// Complex64 returns a Codec for the complex64 type.
+// The encoded order is real part first, imaginary part second,
+// with those parts ordered as documented for Float32.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Complex64() Codec[complex64] { return stdComplex64Codec }
+
+// Complex128 returns a Codec for the complex128 type.
+// The encoded order is real part first, imaginary part second,
+// with those parts ordered as documented for Float64.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Complex128() Codec[complex128] { return stdComplex128Codec }
+
+// Duration returns a Codec for the time.Duration type.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Duration() Codec[time.Duration] { return stdDurationCodec }
+
+// Time returns a Codec for the time.Time type.
+// The encoded order is UTC time first, timezone offset second.
+// This Codec does not require a terminator when used within an aggregate Codec.
+//
+// This Codec is lossy. It encodes the timezone's offset, but not its name.
+// It will therefore lose information about Daylight Saving Time.
+// Timezone names and DST behavior are defined outside of go's control (as they must be),
+// and Time.Zone() can return names that will fail with Location.LoadLocation(name).
+func Time() Codec[time.Time] { return stdTimeCodec }
+
+// BigInt returns a Codec for the *big.Int type, with nils ordered first.
+// This Codec may require a terminator when used within an aggregate Codec.
+func BigInt() Codec[*big.Int] { return stdBigIntCodec }
+
+// BigIntNilsLast returns a Codec for the *big.Int type, with nils ordered last.
+// This Codec may require a terminator when used within an aggregate Codec.
+func BigIntNilsLast() Codec[*big.Int] { return bigIntCodec{false} }
+
+// BigFloat returns a Codec for the *big.Float type, with nils ordered first.
+// The encoded order is the numeric value first, precision second, and rounding mode third.
+// This Codec may require a terminator when used within an aggregate Codec.
+//
+// This Codec is lossy. It does not encode the Accuracy.
+func BigFloat() Codec[*big.Float] { return stdBigFloatCodec }
+
+// BigFloatNilsLast returns a Codec for the *big.Float type, with nils ordered last.
+// The encoded order is the numeric value first, precision second, and rounding mode third.
+// This Codec may require a terminator when used within an aggregate Codec.
+//
+// This Codec is lossy. It does not encode the Accuracy.
+func BigFloatNilsLast() Codec[*big.Float] { return bigFloatCodec{false} }
+
+// BigRat returns a Codec for the *big.Rat type, with nils ordered first.
+// The encoded order is signed numerator first, positive denominator second.
+// Note that big.Rat will normalize its value to lowest terms.
+// This Codec may require a terminator when used within an aggregate Codec.
+func BigRat() Codec[*big.Rat] { return stdBigRatCodec }
+
+// BigRatNilsLast returns a Codec for the *big.Rat type, with nils ordered last.
+// The encoded order is signed numerator first, positive denominator second.
+// Note that big.Rat will normalize its value to lowest terms.
+// This Codec may require a terminator when used within an aggregate Codec.
+func BigRatNilsLast() Codec[*big.Rat] { return bigRatCodec{false} }
+
+// Negate returns a new Codec reversing the encoded order produced by codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Negate[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	// Negate must escape and terminate its delegate whether it requires it or not,
+	// but shouldn't wrap if the delegate is already a terminatorCodec.
+	if _, ok := codec.(terminatorCodec[T]); !ok {
+		codec = Terminate(codec)
+	}
+	return negateCodec[T]{codec}
+}
+
+// Terminate returns a new Codec that escapes and terminates the encodings produced by codec.
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	return terminatorCodec[T]{codec}
+}
+
+// TerminateIfNeeded returns a new Codec that escapes and terminates the encodings produced by codec,
+// if codec.RequiresTerminator() is true. Otherwise it returns codec.
+func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
+	if codec == nil {
+		panic("codec must be non-nil")
+	}
+	// This also covers the case if codec is a terminator.
+	if !codec.RequiresTerminator() {
+		return codec
+	}
+	return terminatorCodec[T]{codec}
+}
+
+// Factory functions that do require specifying type paramaters to use.
 
 // Empty creates a new Codec that reads and writes no data.
 // Read returns the zero value of T.
@@ -197,71 +295,9 @@ func Float32[T ~float32]() Codec[T] { return float32Codec[T]{} }
 //	+NaN
 func Float64[T ~float64]() Codec[T] { return float64Codec[T]{} }
 
-// Complex64 returns the Codec for the complex64 type.
-// The encoded order is real part first, imaginary part second,
-// with those parts ordered as documented for Float32.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func Complex64() Codec[complex64] { return complex64Codec{} }
-
-// Complex128 returns the Codec for the complex128 type.
-// The encoded order is real part first, imaginary part second,
-// with those parts ordered as documented for Float64.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func Complex128() Codec[complex128] { return complex128Codec{} }
-
 // String creates a new Codec for a type with an underlying type of string.
 // This Codec requires a terminator when used within an aggregate Codec.
 func String[T ~string]() Codec[T] { return stringCodec[T]{} }
-
-// Duration creates a new Codec for the time.Duration type.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func Duration() Codec[time.Duration] { return Int64[time.Duration]() }
-
-// Codecs that do not delegate to other Codecs, for types without builtin underlying types (all structs).
-
-// Time creates a new Codec for the time.Time type.
-// The encoded order is UTC time first, timezone offset second.
-// This Codec does not require a terminator when used within an aggregate Codec.
-//
-// This Codec is lossy. It encodes the timezone's offset, but not its name.
-// It will therefore lose information about Daylight Saving Time.
-// Timezone names and DST behavior are defined outside of go's control (as they must be),
-// and Time.Zone() can return names that will fail with Location.LoadLocation(name).
-func Time() Codec[time.Time] { return timeCodec{} }
-
-// BigInt creates a new Codec for the *big.Int type, with nils ordered first.
-// This Codec may require a terminator when used within an aggregate Codec.
-func BigInt() Codec[*big.Int] { return bigIntCodec{true} }
-
-// BigIntNilsLast creates a new Codec for the *big.Int type, with nils ordered last.
-// This Codec may require a terminator when used within an aggregate Codec.
-func BigIntNilsLast() Codec[*big.Int] { return bigIntCodec{false} }
-
-// BigFloat creates a new Codec for the *big.Float type, with nils ordered first.
-// The encoded order is the numeric value first, precision second, and rounding mode third.
-// This Codec may require a terminator when used within an aggregate Codec.
-//
-// This Codec is lossy. It does not encode the Accuracy.
-func BigFloat() Codec[*big.Float] { return bigFloatCodec{true} }
-
-// BigFloatNilsLast creates a new Codec for the *big.Float type, with nils ordered last.
-// The encoded order is the numeric value first, precision second, and rounding mode third.
-// This Codec may require a terminator when used within an aggregate Codec.
-//
-// This Codec is lossy. It does not encode the Accuracy.
-func BigFloatNilsLast() Codec[*big.Float] { return bigFloatCodec{false} }
-
-// BigRat creates a new Codec for the *big.Rat type, with nils ordered first.
-// The encoded order is signed numerator first, positive denominator second.
-// Note that big.Rat will normalize its value to lowest terms.
-// This Codec may require a terminator when used within an aggregate Codec.
-func BigRat() Codec[*big.Rat] { return bigRatCodec{true} }
-
-// BigRatNilsLast creates a new Codec for the *big.Rat type, with nils ordered last.
-// The encoded order is signed numerator first, positive denominator second.
-// Note that big.Rat will normalize its value to lowest terms.
-// This Codec may require a terminator when used within an aggregate Codec.
-func BigRatNilsLast() Codec[*big.Rat] { return bigRatCodec{false} }
 
 // Bytes creates a new Codec for []byte types, with nil slices ordered first.
 // The encoded order is lexicographical.
@@ -355,21 +391,7 @@ func MapOfNilsLast[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCode
 	}
 }
 
-// Negate returns a new Codec reversing the encoded order produced by codec.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func Negate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// Negate must escape and terminate its delegate whether it requires it or not,
-	// but shouldn't wrap if the delegate is already a terminatorCodec.
-	if _, ok := codec.(terminatorCodec[T]); !ok {
-		codec = Terminate(codec)
-	}
-	return negateCodec[T]{codec}
-}
-
-// Codecs and functions to help in implementing new Codecs.
+// Functions to help in implementing new Codecs.
 
 // UnexpectedIfEOF returns io.ErrUnexpectedEOF if err is io.EOF, and returns err otherwise.
 //
@@ -379,27 +401,6 @@ func UnexpectedIfEOF(err error) error {
 		return io.ErrUnexpectedEOF
 	}
 	return err
-}
-
-// Terminate returns a new Codec that escapes and terminates the encodings produced by codec.
-func Terminate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	return terminatorCodec[T]{codec}
-}
-
-// Terminate returns a new Codec that escapes and terminates the encodings produced by codec,
-// if codec.RequiresTerminator() is true. Otherwise it returns codec.
-func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
-	// This also covers the case if codec is a terminator.
-	if !codec.RequiresTerminator() {
-		return codec
-	}
-	return terminatorCodec[T]{codec}
 }
 
 // Prefixes to use for encodings for types whose instances can be nil.
