@@ -33,7 +33,7 @@ func (c Container) Equals(other Container) bool {
 var (
 	PtrToBigStructCodec = ptrToBigStructCodec{}
 	ContainerCodec      = containterCodec{}
-	termStringCodec     = lexy.Terminate(lexy.String[string]())
+	termStringCodec     = lexy.Terminate(lexy.MakeString[string]())
 )
 
 // A Codec[*BigStruct]

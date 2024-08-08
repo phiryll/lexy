@@ -47,7 +47,7 @@ type versionedCodec struct{}
 
 func (c versionedCodec) Read(r io.Reader) (schemaVersion4, error) {
 	var zero schemaVersion4
-	version, err := lexy.Uint32[uint32]().Read(r)
+	version, err := lexy.MakeUint32[uint32]().Read(r)
 	if err != nil {
 		return zero, err
 	}
@@ -82,7 +82,7 @@ func (c versionedCodec) Read(r io.Reader) (schemaVersion4, error) {
 }
 
 func (c versionedCodec) Write(w io.Writer, value schemaVersion4) error {
-	if err := lexy.Uint32[uint32]().Write(w, 4); err != nil {
+	if err := lexy.MakeUint32[uint32]().Write(w, 4); err != nil {
 		return err
 	}
 	return SchemaVersion4Codec.Write(w, value)
@@ -93,8 +93,8 @@ func (c versionedCodec) RequiresTerminator() bool {
 }
 
 var (
-	NameCodec  = lexy.Terminate(lexy.String[string]())
-	CountCodec = lexy.Uint16[uint16]()
+	NameCodec  = lexy.Terminate(lexy.MakeString[string]())
+	CountCodec = lexy.MakeUint16[uint16]()
 )
 
 // Version 1
@@ -218,7 +218,7 @@ func (p schemaVersion4Codec) RequiresTerminator() bool {
 
 // A helper function for this test, to write older versions.
 func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], value T) error {
-	if err := lexy.Uint32[uint32]().Write(w, version); err != nil {
+	if err := lexy.MakeUint32[uint32]().Write(w, version); err != nil {
 		return err
 	}
 	return codec.Write(w, value)

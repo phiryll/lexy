@@ -42,9 +42,9 @@ func (s SimpleStruct) String() string {
 // Codecs used in these examples.
 // All of these are safe for concurrent access.
 var (
-	anIntCodec      = lexy.Int16[int16]()
-	aFloatCodec     = lexy.Float32[float32]()
-	stringsCodec    = lexy.Terminate(lexy.SliceOf[[]string](lexy.String[string]()))
+	anIntCodec      = lexy.MakeInt16[int16]()
+	aFloatCodec     = lexy.MakeFloat32[float32]()
+	stringsCodec    = lexy.Terminate(lexy.MakeSliceOf[[]string](lexy.MakeString[string]()))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
 	fnsiCodec       = floatNegStringsIntCodec{}

@@ -14,7 +14,7 @@ import (
 func ExampleEmpty() {
 	type present struct{}
 	type set map[uint8]present
-	codec := lexy.MapOf[set](lexy.Uint8[uint8](), lexy.Empty[present]())
+	codec := lexy.MakeMapOf[set](lexy.MakeUint8[uint8](), lexy.Empty[present]())
 	var buf bytes.Buffer
 	value := set{
 		23: present{},
@@ -39,7 +39,7 @@ func ExampleEmpty() {
 }
 
 func ExampleBool() {
-	codec := lexy.Bool[bool]()
+	codec := lexy.MakeBool[bool]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, true); err != nil {
 		panic(err)
@@ -62,7 +62,7 @@ func ExampleBool() {
 }
 
 func ExampleUint64() {
-	codec := lexy.Uint64[uint64]()
+	codec := lexy.MakeUint64[uint64]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 123); err != nil {
 		panic(err)
@@ -77,7 +77,7 @@ func ExampleUint64() {
 }
 
 func ExampleUint() {
-	codec := lexy.Uint[uint]()
+	codec := lexy.MakeUint[uint]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, 4567890); err != nil {
 		panic(err)
@@ -93,7 +93,7 @@ func ExampleUint() {
 
 func ExampleUint32_underlyingType() {
 	type size uint32
-	codec := lexy.Uint32[size]()
+	codec := lexy.MakeUint32[size]()
 	var buf bytes.Buffer
 	// Go will type a constant appropriately.
 	if err := codec.Write(&buf, 123); err != nil {
@@ -109,7 +109,7 @@ func ExampleUint32_underlyingType() {
 }
 
 func ExampleInt32() {
-	codec := lexy.Int32[int32]()
+	codec := lexy.MakeInt32[int32]()
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -137,7 +137,7 @@ func ExampleInt32() {
 }
 
 func ExampleInt() {
-	codec := lexy.Int[int]()
+	codec := lexy.MakeInt[int]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, -4567890); err != nil {
 		panic(err)
@@ -152,7 +152,7 @@ func ExampleInt() {
 }
 
 func ExampleFloat32() {
-	codec := lexy.Float32[float32]()
+	codec := lexy.MakeFloat32[float32]()
 	value := float32(1.45e-17)
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, value); err != nil {
@@ -168,7 +168,7 @@ func ExampleFloat32() {
 }
 
 func ExampleFloat64() {
-	codec := lexy.Float64[float64]()
+	codec := lexy.MakeFloat64[float64]()
 	value := math.Copysign(math.NaN(), -1.0)
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, value); err != nil {
@@ -222,7 +222,7 @@ func ExampleComplex128() {
 }
 
 func ExampleString() {
-	codec := lexy.String[string]()
+	codec := lexy.MakeString[string]()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, ""); err != nil {
 		panic(err)
@@ -334,7 +334,7 @@ func ExampleBigRat() {
 }
 
 func ExamplePointerTo() {
-	codec := lexy.PointerTo[*string](lexy.String[string]())
+	codec := lexy.MakePointerTo[*string](lexy.MakeString[string]())
 	value := "abc"
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, &value); err != nil {
@@ -353,7 +353,7 @@ func ExamplePointerTo() {
 
 func ExampleSliceOf() {
 	type words []string
-	codec := lexy.SliceOf[words](lexy.String[string]())
+	codec := lexy.MakeSliceOf[words](lexy.MakeString[string]())
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, words{"The", "time", "is", "now"}); err != nil {
 		panic(err)
@@ -370,7 +370,7 @@ func ExampleSliceOf() {
 }
 
 func ExampleBytes() {
-	codec := lexy.Bytes[[]byte]()
+	codec := lexy.Bytes()
 	var buf bytes.Buffer
 	if err := codec.Write(&buf, []byte{1, 2, 3, 11, 17}); err != nil {
 		panic(err)
@@ -388,7 +388,7 @@ func ExampleMapOf() {
 	type word string
 	type count int
 	type wordCounts map[word]count
-	codec := lexy.MapOf[wordCounts](lexy.String[word](), lexy.Int[count]())
+	codec := lexy.MakeMapOf[wordCounts](lexy.MakeString[word](), lexy.MakeInt[count]())
 	var buf bytes.Buffer
 	value := wordCounts{
 		"Now":  23,
@@ -414,7 +414,7 @@ func ExampleMapOf() {
 
 func ExampleNegate() {
 	// Exactly the same as the lexy.Int() example, except negated.
-	codec := lexy.Negate(lexy.Int32[int32]())
+	codec := lexy.Negate(lexy.MakeInt32[int32]())
 	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
@@ -442,7 +442,7 @@ func ExampleNegate() {
 }
 
 func ExampleEncode() {
-	codec := lexy.Int32[int32]()
+	codec := lexy.MakeInt32[int32]()
 	var buf bytes.Buffer
 	for _, value := range []int32{
 		math.MinInt32,
@@ -470,7 +470,7 @@ func ExampleEncode() {
 }
 
 func ExampleDecode() {
-	codec := lexy.Int32[int32]()
+	codec := lexy.MakeInt32[int32]()
 	for _, value := range []int32{
 		math.MinInt32,
 		-1,

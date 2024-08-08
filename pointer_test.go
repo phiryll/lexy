@@ -8,7 +8,7 @@ import (
 )
 
 func TestPointerInt32(t *testing.T) {
-	codec := lexy.PointerTo[*int32](int32Codec)
+	codec := lexy.MakePointerTo[*int32](int32Codec)
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
@@ -18,7 +18,7 @@ func TestPointerInt32(t *testing.T) {
 }
 
 func TestPointerString(t *testing.T) {
-	codec := lexy.PointerTo[*string](aStringCodec)
+	codec := lexy.MakePointerTo[*string](aStringCodec)
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(""), []byte{pNonNil}},
@@ -28,8 +28,8 @@ func TestPointerString(t *testing.T) {
 }
 
 func TestPointerPointerString(t *testing.T) {
-	pointerCodec := lexy.PointerTo[*string](aStringCodec)
-	codec := lexy.PointerTo[**string](pointerCodec)
+	pointerCodec := lexy.MakePointerTo[*string](aStringCodec)
+	codec := lexy.MakePointerTo[**string](pointerCodec)
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr((*string)(nil)), []byte{pNonNil, pNilFirst}},
@@ -40,8 +40,8 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
-	sliceCodec := lexy.SliceOf[[]int32](int32Codec)
-	codec := lexy.PointerTo[*[]int32](sliceCodec)
+	sliceCodec := lexy.MakeSliceOf[[]int32](int32Codec)
+	codec := lexy.MakePointerTo[*[]int32](sliceCodec)
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr([]int32(nil)), []byte{pNonNil, pNilFirst}},
@@ -58,8 +58,8 @@ func TestPointerSliceInt32(t *testing.T) {
 }
 
 func TestPointerNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(lexy.PointerTo[*string](aStringCodec))
-	encodeLast := encoderFor(lexy.PointerToNilsLast[*string](aStringCodec))
+	encodeFirst := encoderFor(lexy.MakePointerTo[*string](aStringCodec))
+	encodeLast := encoderFor(lexy.MakePointerToNilsLast[*string](aStringCodec))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(ptr("")),
@@ -77,7 +77,7 @@ func TestPointerNilsLast(t *testing.T) {
 type pInt *int32
 
 func TestPointerUnderlyingType(t *testing.T) {
-	codec := lexy.PointerTo[pInt](int32Codec)
+	codec := lexy.MakePointerTo[pInt](int32Codec)
 	testCodec(t, codec, []testCase[pInt]{
 		{"nil", pInt(nil), []byte{pNilFirst}},
 		{"*0", pInt(ptr(int32(0))), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
