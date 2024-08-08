@@ -24,7 +24,7 @@ func concat(prefix byte, slices ...[]byte) []byte {
 
 func TestBigInt(t *testing.T) {
 	encodeSize := encoderFor(lexy.Int64())
-	testCodec(t, lexy.BigInt(), []testCase[*big.Int]{
+	testCodec(t, toCodec(lexy.BigInt()), []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"-257", big.NewInt(-257), concat(pNonNil, encodeSize(-2),
 			[]byte{0xFE, 0xFE})},
@@ -54,14 +54,14 @@ func TestBigInt(t *testing.T) {
 			[]byte{0x01, 0x01})},
 	})
 
-	testCodecRoundTrip(t, lexy.BigInt(), []testCase[*big.Int]{
+	testCodecRoundTrip(t, toCodec(lexy.BigInt()), []testCase[*big.Int]{
 		{"big positive", newBigInt("1234567890123456789012345678901234567890"), nil},
 		{"big negative", newBigInt("-1234567890123456789012345678901234567890"), nil},
 	})
 }
 
 func TestBigIntOrdering(t *testing.T) {
-	encode := encoderFor(lexy.BigInt())
+	encode := encoderFor(toCodec(lexy.BigInt()))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(newBigInt("-12345")),
@@ -83,8 +83,8 @@ func TestBigIntOrdering(t *testing.T) {
 }
 
 func TestBigIntNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(lexy.BigInt())
-	encodeLast := encoderFor(lexy.BigIntNilsLast())
+	encodeFirst := encoderFor(toCodec(lexy.BigInt()))
+	encodeLast := encoderFor(toCodec(lexy.BigInt().NilsLast()))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(newBigInt("-12345")),
@@ -136,7 +136,7 @@ func TestBigFloat(t *testing.T) {
 		"12345678901234567890123456789012345678901234567890", 10)
 	complexTiny.SetPrec(complexTiny.MinPrec())
 
-	testCodecRoundTrip(t, lexy.BigFloat(), []testCase[*big.Float]{
+	testCodecRoundTrip(t, toCodec(lexy.BigFloat()), []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
 		{"seven(3)", newBigFloat(7.0, 0, 3), nil},
@@ -174,7 +174,7 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
-	encode := encoderFor(lexy.BigFloat())
+	encode := encoderFor(toCodec(lexy.BigFloat()))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(&negInf),
@@ -255,13 +255,13 @@ func newBigRat(num, denom string) *big.Rat {
 func TestBigRat(t *testing.T) {
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
-	testCodecRoundTrip(t, lexy.BigRat(), []testCase[*big.Rat]{
+	testCodecRoundTrip(t, toCodec(lexy.BigRat()), []testCase[*big.Rat]{
 		{"-1/3", newBigRat("-1", "3"), nil},
 		{"0/123", newBigRat("0", "123"), nil},
 		{"5432/42", newBigRat("5432", "42"), nil},
 	})
 
-	encode := encoderFor(lexy.BigRat())
+	encode := encoderFor(toCodec(lexy.BigRat()))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(newBigRat("-1", "1")),

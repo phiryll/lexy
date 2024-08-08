@@ -56,3 +56,7 @@ func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
 func (c mapCodec[M, K, V]) RequiresTerminator() bool {
 	return true
 }
+
+func (c mapCodec[M, K, V]) NilsLast() NillableCodec[M] {
+	return mapCodec[M, K, V]{c.keyCodec, c.valueCodec, false}
+}

@@ -45,6 +45,10 @@ func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
 	return nil
 }
 
-func (c sliceCodec[P, E]) RequiresTerminator() bool {
+func (c sliceCodec[S, E]) RequiresTerminator() bool {
 	return true
+}
+
+func (c sliceCodec[S, E]) NilsLast() NillableCodec[S] {
+	return sliceCodec[S, E]{c.elemCodec, false}
 }

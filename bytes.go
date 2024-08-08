@@ -38,3 +38,7 @@ func (c bytesCodec[S]) Write(w io.Writer, value S) error {
 func (c bytesCodec[S]) RequiresTerminator() bool {
 	return true
 }
+
+func (c bytesCodec[S]) NilsLast() NillableCodec[S] {
+	return bytesCodec[S]{false}
+}

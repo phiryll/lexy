@@ -22,20 +22,20 @@ type (
 var (
 	empty           = emptyStruct{}
 	emptyCodec      = lexy.Empty[emptyStruct]()
-	keyEmptyCodec   = lexy.MakeMapOf[mKey](emptyCodec, lexy.Uint8())
-	valueEmptyCodec = lexy.MakeMapOf[mValue](lexy.Uint8(), emptyCodec)
+	keyEmptyCodec   = toCodec(lexy.MakeMapOf[mKey](emptyCodec, lexy.Uint8()))
+	valueEmptyCodec = toCodec(lexy.MakeMapOf[mValue](lexy.Uint8(), emptyCodec))
 )
 
 func TestPointerEmpty(t *testing.T) {
-	testCodec(t, lexy.PointerTo(emptyCodec), []testCase[*emptyStruct]{
+	testCodec(t, toCodec(lexy.PointerTo(emptyCodec)), []testCase[*emptyStruct]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(empty), []byte{pNonNil}},
 	})
-	testCodecFail(t, lexy.PointerTo(emptyCodec), nil)
+	testCodecFail(t, toCodec(lexy.PointerTo(emptyCodec)), nil)
 }
 
 func TestSliceEmpty(t *testing.T) {
-	testCodec(t, lexy.SliceOf(emptyCodec), []testCase[[]emptyStruct]{
+	testCodec(t, toCodec(lexy.SliceOf(emptyCodec)), []testCase[[]emptyStruct]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", []emptyStruct{}, []byte{pNonNil}},
 		{"[empty]", []emptyStruct{empty}, []byte{pNonNil, term}},
@@ -43,7 +43,7 @@ func TestSliceEmpty(t *testing.T) {
 			pNonNil, term, term, term,
 		}},
 	})
-	testCodecFail(t, lexy.SliceOf(emptyCodec), nil)
+	testCodecFail(t, toCodec(lexy.SliceOf(emptyCodec)), nil)
 }
 
 func TestMapKeyEmpty(t *testing.T) {
