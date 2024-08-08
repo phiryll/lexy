@@ -10,12 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// just making map codec declarations terser
-var (
-	sliceCodec   = lexy.SliceOf[[]string](aStringCodec)
-	pointerCodec = lexy.PointerTo[*string](aStringCodec)
-)
-
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
@@ -56,17 +50,17 @@ func dePointerMap(m map[*string]*string) map[string]string {
 }
 
 func TestMapInt(t *testing.T) {
-	testBasicMap(t, lexy.MapOf[map[string]int32](aStringCodec, int32Codec))
+	testBasicMap(t, lexy.MapOf(lexy.String(), lexy.Int32()))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
-	testBasicMap(t, lexy.MapOf[mStringInt](aStringCodec, int32Codec))
+	testBasicMap(t, lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32()))
 }
 
 func TestMapSlice(t *testing.T) {
-	codec := lexy.MapOf[map[string][]string](aStringCodec, sliceCodec)
+	codec := lexy.MapOf(lexy.String(), lexy.SliceOf(lexy.String()))
 	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -89,7 +83,8 @@ func TestMapSlice(t *testing.T) {
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the pointees into a new map and compare that.
-	codec := lexy.MapOf[map[*string]*string](pointerCodec, pointerCodec)
+	pointerCodec := lexy.PointerTo(lexy.String())
+	codec := lexy.MapOf(pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},
@@ -121,8 +116,8 @@ func TestMapPointerPointer(t *testing.T) {
 
 func TestMapNilsLast(t *testing.T) {
 	// Maps are randomly ordered, so we can only test nil/non-nil.
-	encodeFirst := encoderFor(lexy.MapOf[map[string]int32](aStringCodec, int32Codec))
-	encodeLast := encoderFor(lexy.MapOfNilsLast[map[string]int32](aStringCodec, int32Codec))
+	encodeFirst := encoderFor(lexy.MapOf(lexy.String(), lexy.Int32()))
+	encodeLast := encoderFor(lexy.MapOfNilsLast(lexy.String(), lexy.Int32()))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(map[string]int32{}),

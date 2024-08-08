@@ -63,8 +63,6 @@ func TestTime(t *testing.T) {
 }
 
 func TestTimeOrder(t *testing.T) {
-	codec := lexy.Time()
-
 	// in order from west to east, expected sort order,
 	// UTC is between NYC and Berlin.
 	locFixed := time.FixedZone("fixed", -12*3600)
@@ -118,7 +116,7 @@ func TestTimeOrder(t *testing.T) {
 	} {
 		t.Run(tt.string, func(t *testing.T) {
 			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.Time)
+			err := lexy.Time().Write(buf, tt.Time)
 			require.NoError(t, err)
 			current := buf.Bytes()
 			if i > 0 {

@@ -10,7 +10,7 @@ import (
 )
 
 func TestNegateInt32(t *testing.T) {
-	codec := lexy.Negate(int32Codec)
+	codec := lexy.Negate(lexy.Int32())
 	testCodecRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
 		{"-1", -1, nil},
@@ -34,13 +34,12 @@ func TestNegateInt32(t *testing.T) {
 // The simple implementation is to simply invert all the bits, but it doesn't work.
 // This tests for that regression, see the comments on negateCodec for details.
 func TestNegateLength(t *testing.T) {
-	encode := encoderFor(lexy.Negate(aStringCodec))
+	encode := encoderFor(lexy.Negate(lexy.String()))
 	assert.Less(t, encode("ab"), encode("a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
-	ptrCodec := lexy.PointerTo[*string](aStringCodec)
-	codec := lexy.Negate(ptrCodec)
+	codec := lexy.Negate(lexy.PointerTo(lexy.String()))
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
 		{"*empty", ptr(""), nil},
@@ -58,14 +57,8 @@ func TestNegatePtrString(t *testing.T) {
 	})
 }
 
-var negPIntCodec = lexy.Negate(lexy.PointerTo[*int16](int16Codec))
-var negaStringCodec = lexy.TerminateIfNeeded(lexy.Negate(aStringCodec))
-var ptraStringCodec = lexy.PointerTo[*string](aStringCodec)
-var slicePtraStringCodec = lexy.SliceOf[[]*string](ptraStringCodec)
-var negSlicePtraStringCodec = lexy.Negate(slicePtraStringCodec)
-
 func TestNegateSlicePtrString(t *testing.T) {
-	codec := negSlicePtraStringCodec
+	codec := lexy.Negate(lexy.SliceOf(lexy.PointerTo(lexy.String())))
 
 	testCodecRoundTrip(t, codec, []testCase[[]*string]{
 		{"nil", nil, nil},
@@ -101,22 +94,27 @@ type negateTest struct {
 // putting the negated varying length field in the middle is intentional
 type negateTestCodec struct{}
 
-var negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
+var (
+	negPtrIntCodec = lexy.Negate(lexy.PointerTo(lexy.Int16()))
+	negStringCodec = lexy.Negate(lexy.String())
+
+	negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
+)
 
 func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
-	u8, err := uint8Codec.Read(r)
+	u8, err := lexy.Uint8().Read(r)
 	if err != nil {
 		return zero, err
 	}
-	s, err := negaStringCodec.Read(r)
+	s, err := negStringCodec.Read(r)
 	if err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
 		return zero, err
 	}
-	pInt, err := negPIntCodec.Read(r)
+	pInt, err := negPtrIntCodec.Read(r)
 	if err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
@@ -127,13 +125,13 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 }
 
 func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
-	if err := uint8Codec.Write(w, value.uint8); err != nil {
+	if err := lexy.Uint8().Write(w, value.uint8); err != nil {
 		return err
 	}
-	if err := negaStringCodec.Write(w, value.string); err != nil {
+	if err := negStringCodec.Write(w, value.string); err != nil {
 		return err
 	}
-	return negPIntCodec.Write(w, value.pInt16)
+	return negPtrIntCodec.Write(w, value.pInt16)
 }
 
 func (n negateTestCodec) RequiresTerminator() bool {

@@ -8,19 +8,18 @@ import (
 )
 
 func TestBytes(t *testing.T) {
-	codec := lexy.Bytes[[]byte]()
-	testCodec(t, codec, []testCase[[]byte]{
+	testCodec(t, lexy.Bytes(), []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []byte{}, []byte{pNonNil}},
 		{"[0]", []byte{0}, []byte{pNonNil, 0x00}},
 		{"[1, 2, 3]", []byte{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
 	})
-	testCodecFail(t, codec, []byte{0})
+	testCodecFail(t, lexy.Bytes(), []byte{0})
 }
 
 func TestBytesUnderlyingType(t *testing.T) {
 	type header []byte
-	codec := lexy.Bytes[header]()
+	codec := lexy.MakeBytes[header]()
 	testCodec(t, codec, []testCase[header]{
 		{"nil", header(nil), []byte{pNilFirst}},
 		{"empty", header{}, []byte{pNonNil}},
@@ -31,8 +30,8 @@ func TestBytesUnderlyingType(t *testing.T) {
 }
 
 func TestBytesNilsLast(t *testing.T) {
-	encodeFirst := encoderFor(lexy.Bytes[[]byte]())
-	encodeLast := encoderFor(lexy.BytesNilsLast[[]byte]())
+	encodeFirst := encoderFor(lexy.Bytes())
+	encodeLast := encoderFor(lexy.BytesNilsLast())
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst([]byte{0}),

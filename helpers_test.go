@@ -9,30 +9,10 @@ import (
 	"io"
 	"testing"
 	"testing/iotest"
-	"time"
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-)
-
-// Codecs used by tests
-var (
-	boolCodec  = lexy.Bool[bool]()
-	uintCodec  = lexy.Uint[uint]()
-	uint8Codec = lexy.Uint8[uint8]()
-	// uint16Codec   = lexy.UintCodec[uint16]()
-	uint32Codec = lexy.Uint32[uint32]()
-	// uint64Codec   = lexy.UintCodec[uint64]()
-	intCodec      = lexy.Int[int]()
-	int8Codec     = lexy.Int8[int8]()
-	int16Codec    = lexy.Int16[int16]()
-	int32Codec    = lexy.Int32[int32]()
-	int64Codec    = lexy.Int64[int64]()
-	float32Codec  = lexy.Float32[float32]()
-	float64Codec  = lexy.Float64[float64]()
-	durationCodec = lexy.Int64[time.Duration]()
-	aStringCodec  = lexy.String[string]()
 )
 
 func ptr[T any](value T) *T {

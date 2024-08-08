@@ -39,7 +39,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		return nil, err
 	}
 	neg := false
-	size, err := int64Codec.Read(r)
+	size, err := stdInt64Codec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -75,7 +75,7 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 		size = -size
 		neg = true
 	}
-	if err := int64Codec.Write(w, int64(size)); err != nil {
+	if err := stdInt64Codec.Write(w, int64(size)); err != nil {
 		return err
 	}
 	if neg {
@@ -188,7 +188,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	kind, err := int8Codec.Read(r)
+	kind, err := stdInt8Codec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -209,7 +209,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 		mantReader = negateReader{r}
 	}
 
-	exp, err := int32Codec.Read(r)
+	exp, err := stdInt32Codec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -217,7 +217,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
-	prec, err := int32Codec.Read(r)
+	prec, err := stdInt32Codec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -275,7 +275,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	case !signbit:
 		kind = nonNegFinite
 	}
-	if err := int8Codec.Write(w, kind); err != nil {
+	if err := stdInt8Codec.Write(w, kind); err != nil {
 		return err
 	}
 	if isInf || isZero {
@@ -290,7 +290,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		mantWriter = negateWriter{w}
 	}
 
-	if err := int32Codec.Write(w, exp); err != nil {
+	if err := stdInt32Codec.Write(w, exp); err != nil {
 		return err
 	}
 
@@ -306,7 +306,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		return err
 	}
 
-	if err := int32Codec.Write(w, prec); err != nil {
+	if err := stdInt32Codec.Write(w, prec); err != nil {
 		return err
 	}
 	return modeCodec.Write(w, mode)

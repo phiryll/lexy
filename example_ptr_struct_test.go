@@ -33,7 +33,6 @@ func (c Container) Equals(other Container) bool {
 var (
 	PtrToBigStructCodec = ptrToBigStructCodec{}
 	ContainerCodec      = containterCodec{}
-	termStringCodec     = lexy.Terminate(lexy.String[string]())
 )
 
 // A Codec[*BigStruct]
@@ -43,7 +42,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	if done, err := lexy.ReadPrefix(r); done {
 		return nil, err
 	}
-	name, err := termStringCodec.Read(r)
+	name, err := lexy.TerminatedString().Read(r)
 	if err != nil {
 		return nil, lexy.UnexpectedIfEOF(err)
 	}
@@ -57,7 +56,7 @@ func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	if done, err := lexy.WritePrefix(w, value == nil, true); done {
 		return err
 	}
-	if err := termStringCodec.Write(w, value.name); err != nil {
+	if err := lexy.TerminatedString().Write(w, value.name); err != nil {
 		return err
 	}
 	// Write other fields.
@@ -101,7 +100,7 @@ func (c containterCodec) RequiresTerminator() bool {
 // The same is true of time.Time and time.Duration instances.
 //
 // Normally, a Codec[BigStruct] would be defined and Container's Codec
-// would use it as lexy.PointerTo[*BigStruct](bigStructCodec).
+// would use it as lexy.PointerTo(bigStructCodec).
 // However, calls to a Codec[BigStruct] will pass BigStruct instances by value,
 // even though the wrapping pointer Codec is only copying pointers.
 //
