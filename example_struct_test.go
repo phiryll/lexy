@@ -42,9 +42,10 @@ func (s SimpleStruct) String() string {
 // Codecs used in these examples.
 // All of these are safe for concurrent access.
 var (
-	anIntCodec      = lexy.Int16()
-	aFloatCodec     = lexy.Float32()
-	stringsCodec    = lexy.Terminate(lexy.SliceOf(lexy.String()))
+	anIntCodec  = lexy.Int16()
+	aFloatCodec = lexy.Float32()
+	// The cast is only necessary when using go versions prior to 1.21.
+	stringsCodec    = lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
 	fnsiCodec       = floatNegStringsIntCodec{}

@@ -29,6 +29,10 @@ func encoderFor[T any](codec lexy.Codec[T]) func(value T) []byte {
 	}
 }
 
+func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] {
+	return codec
+}
+
 type testCase[T any] struct {
 	name  string
 	value T

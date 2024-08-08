@@ -37,3 +37,7 @@ func (c pointerCodec[P, E]) Write(w io.Writer, value P) error {
 func (c pointerCodec[P, E]) RequiresTerminator() bool {
 	return c.elemCodec.RequiresTerminator()
 }
+
+func (c pointerCodec[P, E]) NilsLast() NillableCodec[P] {
+	return pointerCodec[P, E]{c.elemCodec, false}
+}

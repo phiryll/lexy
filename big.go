@@ -89,6 +89,10 @@ func (c bigIntCodec) RequiresTerminator() bool {
 	return false
 }
 
+func (c bigIntCodec) NilsLast() NillableCodec[*big.Int] {
+	return bigIntCodec{false}
+}
+
 // bigFloatCodec is the Codec for *big.Float values.
 //
 // This is roughly similar to the float32/64 Codecs, but there are some wrinkles.
@@ -316,6 +320,10 @@ func (c bigFloatCodec) RequiresTerminator() bool {
 	return true
 }
 
+func (c bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
+	return bigFloatCodec{false}
+}
+
 // bigRatCodec is the Codec for *big.Rat values.
 // The denominator cannot be zero.
 // Note that big.Rat will normalize the numerator and denominator to lowest terms, including 0/N to 0/1.
@@ -358,4 +366,8 @@ func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 
 func (c bigRatCodec) RequiresTerminator() bool {
 	return false
+}
+
+func (c bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
+	return bigRatCodec{false}
 }

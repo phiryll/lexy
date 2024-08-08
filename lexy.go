@@ -75,31 +75,49 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
+// A NillableCodec[T] is a Codec[T] where value of type T can be nil.
+// This interface exists to support the [NillableCodec.NilsLast] method.
+//
+// In go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
+// However, an explicit cast can still be made and works as expected, like this:
+//
+//	lexy.Codec[*int](lexy.PointerTo(lexy.Int()))
+//
+// If go cannot be upgraded to 1.21, a function like this could be helpful.
+//
+//	func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] { return codec }
+type NillableCodec[T any] interface {
+	Codec[T]
+
+	// NilsLast returns a Codec exactly like this Codec, but with nil values ordered last.
+	NilsLast() NillableCodec[T]
+}
+
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBoolCodec       Codec[bool]          = uintCodec[bool]{}
-	stdUintCodec       Codec[uint]          = asUint64Codec[uint]{}
-	stdUint8Codec      Codec[uint8]         = uintCodec[uint8]{}
-	stdUint16Codec     Codec[uint16]        = uintCodec[uint16]{}
-	stdUint32Codec     Codec[uint32]        = uintCodec[uint32]{}
-	stdUint64Codec     Codec[uint64]        = uintCodec[uint64]{}
-	stdIntCodec        Codec[int]           = asInt64Codec[int]{}
-	stdInt8Codec       Codec[int8]          = intCodec[int8]{math.MinInt8}
-	stdInt16Codec      Codec[int16]         = intCodec[int16]{math.MinInt16}
-	stdInt32Codec      Codec[int32]         = intCodec[int32]{math.MinInt32}
-	stdInt64Codec      Codec[int64]         = intCodec[int64]{math.MinInt64}
-	stdFloat32Codec    Codec[float32]       = float32Codec[float32]{}
-	stdFloat64Codec    Codec[float64]       = float64Codec[float64]{}
-	stdComplex64Codec  Codec[complex64]     = complex64Codec{}
-	stdComplex128Codec Codec[complex128]    = complex128Codec{}
-	stdStringCodec     Codec[string]        = stringCodec[string]{}
-	stdDurationCodec   Codec[time.Duration] = intCodec[time.Duration]{math.MinInt64}
-	stdTimeCodec       Codec[time.Time]     = timeCodec{}
-	stdBigIntCodec     Codec[*big.Int]      = bigIntCodec{true}
-	stdBigFloatCodec   Codec[*big.Float]    = bigFloatCodec{true}
-	stdBigRatCodec     Codec[*big.Rat]      = bigRatCodec{true}
-	stdBytesCodec      Codec[[]byte]        = bytesCodec[[]byte]{true}
+	stdBoolCodec       Codec[bool]               = uintCodec[bool]{}
+	stdUintCodec       Codec[uint]               = asUint64Codec[uint]{}
+	stdUint8Codec      Codec[uint8]              = uintCodec[uint8]{}
+	stdUint16Codec     Codec[uint16]             = uintCodec[uint16]{}
+	stdUint32Codec     Codec[uint32]             = uintCodec[uint32]{}
+	stdUint64Codec     Codec[uint64]             = uintCodec[uint64]{}
+	stdIntCodec        Codec[int]                = asInt64Codec[int]{}
+	stdInt8Codec       Codec[int8]               = intCodec[int8]{math.MinInt8}
+	stdInt16Codec      Codec[int16]              = intCodec[int16]{math.MinInt16}
+	stdInt32Codec      Codec[int32]              = intCodec[int32]{math.MinInt32}
+	stdInt64Codec      Codec[int64]              = intCodec[int64]{math.MinInt64}
+	stdFloat32Codec    Codec[float32]            = float32Codec[float32]{}
+	stdFloat64Codec    Codec[float64]            = float64Codec[float64]{}
+	stdComplex64Codec  Codec[complex64]          = complex64Codec{}
+	stdComplex128Codec Codec[complex128]         = complex128Codec{}
+	stdStringCodec     Codec[string]             = stringCodec[string]{}
+	stdDurationCodec   Codec[time.Duration]      = intCodec[time.Duration]{math.MinInt64}
+	stdTimeCodec       Codec[time.Time]          = timeCodec{}
+	stdBigIntCodec     NillableCodec[*big.Int]   = bigIntCodec{true}
+	stdBigFloatCodec   NillableCodec[*big.Float] = bigFloatCodec{true}
+	stdBigRatCodec     NillableCodec[*big.Rat]   = bigRatCodec{true}
+	stdBytesCodec      NillableCodec[[]byte]     = bytesCodec[[]byte]{true}
 
 	stdTermStringCodec   Codec[string]     = terminatorCodec[string]{stdStringCodec}
 	stdTermBigFloatCodec Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloatCodec}
@@ -227,100 +245,55 @@ func Time() Codec[time.Time] { return stdTimeCodec }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
 // This Codec does require a terminator when used within an aggregate Codec.
-func BigInt() Codec[*big.Int] { return stdBigIntCodec }
-
-// BigIntNilsLast returns a Codec for the *big.Int type, with nils ordered last.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func BigIntNilsLast() Codec[*big.Int] { return bigIntCodec{false} }
+func BigInt() NillableCodec[*big.Int] { return stdBigIntCodec }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
 // This Codec requires a terminator when used within an aggregate Codec.
 //
 // This Codec is lossy. It does not encode the Accuracy.
-func BigFloat() Codec[*big.Float] { return stdBigFloatCodec }
+func BigFloat() NillableCodec[*big.Float] { return stdBigFloatCodec }
 
 // TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloatCodec }
 
-// BigFloatNilsLast returns a Codec for the *big.Float type, with nils ordered last.
-// The encoded order is the numeric value first, precision second, and rounding mode third.
-// This Codec requires a terminator when used within an aggregate Codec.
-//
-// This Codec is lossy. It does not encode the Accuracy.
-func BigFloatNilsLast() Codec[*big.Float] { return bigFloatCodec{false} }
-
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func BigRat() Codec[*big.Rat] { return stdBigRatCodec }
-
-// BigRatNilsLast returns a Codec for the *big.Rat type, with nils ordered last.
-// The encoded order is signed numerator first, positive denominator second.
-// Note that big.Rat will normalize its value to lowest terms.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func BigRatNilsLast() Codec[*big.Rat] { return bigRatCodec{false} }
+func BigRat() NillableCodec[*big.Rat] { return stdBigRatCodec }
 
 // Bytes returns a Codec for the []byte type, with nil slices ordered first.
 // The encoded order is lexicographical.
 // This Codec is more efficient than Codecs produced by SliceOf[[]byte],
 // and will allow nil unlike String.
 // This Codec requires a terminator when used within an aggregate Codec.
-func Bytes() Codec[[]byte] { return stdBytesCodec }
+func Bytes() NillableCodec[[]byte] { return stdBytesCodec }
 
 // TerminatedBigFloat returns a Codec for the []byte type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func TerminatedBytes() Codec[[]byte] { return stdTermBytesCodec }
 
-// Bytes returns a Codec for the []byte type, with nil slices ordered last.
-// The encoded order is lexicographical.
-// This Codec is more efficient than Codecs produced by SliceOf[[]byte],
-// and will allow nil unlike String.
-// This Codec requires a terminator when used within an aggregate Codec.
-func BytesNilsLast() Codec[[]byte] { return bytesCodec[[]byte]{false} }
-
 // PointerTo returns a Codec for pointers to the type handled by elemCodec, with nil pointers ordered first.
 // The encoded order of non-nil values is the same as is produced by elemCodec.
 // This Codec may require a terminator when used within an aggregate Codec.
-func PointerTo[P *E, E any](elemCodec Codec[E]) Codec[P] {
+func PointerTo[P *E, E any](elemCodec Codec[E]) NillableCodec[P] {
 	return MakePointerTo[P](elemCodec)
-}
-
-// PointerToNilsLast returns a Codec for pointers to the type handled by elemCodec, with nil pointers ordered last.
-// The encoded order of non-nil values is the same as is produced by elemCodec.
-// This Codec may require a terminator when used within an aggregate Codec.
-func PointerToNilsLast[P *E, E any](elemCodec Codec[E]) Codec[P] {
-	return MakePointerToNilsLast[P](elemCodec)
 }
 
 // SliceOf returns a Codec for the slice type S with element type E, with nil slices ordered first.
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.
-func SliceOf[S []E, E any](elemCodec Codec[E]) Codec[S] {
+func SliceOf[S []E, E any](elemCodec Codec[E]) NillableCodec[S] {
 	return MakeSliceOf[S](elemCodec)
-}
-
-// SliceOfNilsLast returns a Codec for the slice type S with element type E, with nil slices ordered last.
-// The encoded order is lexicographical using the encoded order of elemCodec for the elements.
-// This Codec requires a terminator when used within an aggregate Codec.
-func SliceOfNilsLast[S []E, E any](elemCodec Codec[E]) Codec[S] {
-	return MakeSliceOfNilsLast[S](elemCodec)
 }
 
 // MapOf returns a Codec for the map type M using keyCodec and valueCodec, with nil maps ordered first.
 // The encoded order for non-nil maps is empty maps first, with all other maps randomly ordered after.
 // This Codec requires a terminator when used within an aggregate Codec.
-func MapOf[M map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+func MapOf[M map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
 	return MakeMapOf[M](keyCodec, valueCodec)
-}
-
-// MapOfNilsLast returns a Codec for the map type M using keyCodec and valueCodec, with nil maps ordered last.
-// The encoded order for non-nil maps is empty maps first, with all other maps randomly ordered after.
-// This Codec requires a terminator when used within an aggregate Codec.
-func MapOfNilsLast[M map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	return MakeMapOfNilsLast[M](keyCodec, valueCodec)
 }
 
 // Negate returns a new Codec reversing the encoded order produced by codec.
@@ -425,51 +398,29 @@ func MakeString[T ~string]() Codec[T] { return stringCodec[T]{} }
 
 // MakeBytes creates a new Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, it is the same as [Bytes].
-func MakeBytes[S ~[]byte]() Codec[S] { return bytesCodec[S]{true} }
-
-// MakeBytesNilsLast creates a new Codec for a type with an underlying type of []byte, with nil slices ordered last.
-// Other than the underlying type, it is the same as [BytesNilsLast].
-func MakeBytesNilsLast[S ~[]byte]() Codec[S] { return bytesCodec[S]{false} }
+func MakeBytes[S ~[]byte]() NillableCodec[S] { return bytesCodec[S]{true} }
 
 // MakePointerTo creates a new Codec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, it is the same as [PointerTo].
-func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
+func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
 	return pointerCodec[P, E]{elemCodec, true}
 }
 
-// MakePointerToNilsLast creates a new Codec for a type with an underlying type of *E, with nil pointers ordered last.
-// Other than the underlying type, it is the same as [PointerToNilsLast].
-func MakePointerToNilsLast[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return pointerCodec[P, E]{elemCodec, false}
-}
-
 // MakeSliceOf creates a new Codec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, it is the same as [SliceOf].
-func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
+func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
 	}
 	return sliceCodec[S, E]{TerminateIfNeeded(elemCodec), true}
 }
 
-// MakeSliceOfNilsLast creates a new Codec for a type with an underlying type of []E, with nil slices ordered last.
-// Other than the underlying type, it is the same as [SliceOfNilsLast].
-func MakeSliceOfNilsLast[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return sliceCodec[S, E]{TerminateIfNeeded(elemCodec), false}
-}
-
 // MakeMapOf creates a new Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, it is the same as [MapOf].
-func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
 	if keyCodec == nil {
 		panic("keyCodec must be non-nil")
 	}
@@ -480,22 +431,6 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
 		true,
-	}
-}
-
-// MakeMapOfNilsLast creates a new Codec for a type with an underlying type of map[K]V, with nil maps ordered last.
-// Other than the underlying type, it is the same as [MapOfNilsLast].
-func MakeMapOfNilsLast[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
-	return mapCodec[M, K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
-		false,
 	}
 }
 

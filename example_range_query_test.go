@@ -59,7 +59,8 @@ func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 // BEGIN KEY CODEC
 
 var (
-	wordsCodec = lexy.Terminate(lexy.SliceOf(lexy.String()))
+	// The cast is only necessary when using go versions prior to 1.21.
+	wordsCodec = lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 	costCodec  = lexy.Int32()
 	keyCodec   = KeyCodec{}
 )
