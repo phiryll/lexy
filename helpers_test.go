@@ -9,7 +9,6 @@ import (
 	"io"
 	"testing"
 	"testing/iotest"
-	"time"
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
@@ -18,21 +17,21 @@ import (
 
 // Codecs used by tests
 var (
-	boolCodec  = lexy.MakeBool[bool]()
-	uintCodec  = lexy.MakeUint[uint]()
-	uint8Codec = lexy.MakeUint8[uint8]()
+	boolCodec  = lexy.Bool()
+	uintCodec  = lexy.Uint()
+	uint8Codec = lexy.Uint8()
 	// uint16Codec   = lexy.UintCodec[uint16]()
-	uint32Codec = lexy.MakeUint32[uint32]()
+	uint32Codec = lexy.Uint32()
 	// uint64Codec   = lexy.UintCodec[uint64]()
-	intCodec      = lexy.MakeInt[int]()
-	int8Codec     = lexy.MakeInt8[int8]()
-	int16Codec    = lexy.MakeInt16[int16]()
-	int32Codec    = lexy.MakeInt32[int32]()
-	int64Codec    = lexy.MakeInt64[int64]()
-	float32Codec  = lexy.MakeFloat32[float32]()
-	float64Codec  = lexy.MakeFloat64[float64]()
-	durationCodec = lexy.MakeInt64[time.Duration]()
-	aStringCodec  = lexy.MakeString[string]()
+	intCodec      = lexy.Int()
+	int8Codec     = lexy.Int8()
+	int16Codec    = lexy.Int16()
+	int32Codec    = lexy.Int32()
+	int64Codec    = lexy.Int64()
+	float32Codec  = lexy.Float32()
+	float64Codec  = lexy.Float64()
+	durationCodec = lexy.Duration()
+	aStringCodec  = lexy.String()
 )
 
 func ptr[T any](value T) *T {

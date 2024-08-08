@@ -11,7 +11,7 @@ import (
 
 type Quaternion [4]float64
 
-var elemCodec = lexy.MakeFloat64[float64]()
+var elemCodec = lexy.Float64()
 
 type quaternionCodec struct{}
 
