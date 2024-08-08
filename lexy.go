@@ -75,15 +75,35 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// Codecs used by other Codecs.
+// Codecs with no generics, for the common use case.
+// There are corresponding exported functions for each of these.
 var (
-	stdUint32Codec  Codec[uint32]  = uintCodec[uint32]{}
-	stdUint64Codec  Codec[uint64]  = uintCodec[uint64]{}
-	stdInt8Codec    Codec[int8]    = intCodec[int8]{signBit: math.MinInt8}
-	stdInt32Codec   Codec[int32]   = intCodec[int32]{signBit: math.MinInt32}
-	stdInt64Codec   Codec[int64]   = intCodec[int64]{signBit: math.MinInt64}
-	stdFloat32Codec Codec[float32] = float32Codec[float32]{}
-	stdFloat64Codec Codec[float64] = float64Codec[float64]{}
+	stdBoolCodec       Codec[bool]          = uintCodec[bool]{}
+	stdUintCodec       Codec[uint]          = asUint64Codec[uint]{}
+	stdUint8Codec      Codec[uint8]         = uintCodec[uint8]{}
+	stdUint16Codec     Codec[uint16]        = uintCodec[uint16]{}
+	stdUint32Codec     Codec[uint32]        = uintCodec[uint32]{}
+	stdUint64Codec     Codec[uint64]        = uintCodec[uint64]{}
+	stdIntCodec        Codec[int]           = asInt64Codec[int]{}
+	stdInt8Codec       Codec[int8]          = intCodec[int8]{math.MinInt8}
+	stdInt16Codec      Codec[int16]         = intCodec[int16]{math.MinInt16}
+	stdInt32Codec      Codec[int32]         = intCodec[int32]{math.MinInt32}
+	stdInt64Codec      Codec[int64]         = intCodec[int64]{math.MinInt64}
+	stdFloat32Codec    Codec[float32]       = float32Codec[float32]{}
+	stdFloat64Codec    Codec[float64]       = float64Codec[float64]{}
+	stdComplex64Codec  Codec[complex64]     = complex64Codec{}
+	stdComplex128Codec Codec[complex128]    = complex128Codec{}
+	stdStringCodec     Codec[string]        = stringCodec[string]{}
+	stdDurationCodec   Codec[time.Duration] = intCodec[time.Duration]{math.MinInt64}
+	stdTimeCodec       Codec[time.Time]     = timeCodec{}
+	stdBigIntCodec     Codec[*big.Int]      = bigIntCodec{true}
+	stdBigFloatCodec   Codec[*big.Float]    = bigFloatCodec{true}
+	stdBigRatCodec     Codec[*big.Rat]      = bigRatCodec{true}
+	stdBytesCodec      Codec[[]byte]        = bytesCodec[[]byte]{true}
+
+	stdTermStringCodec   Codec[string]     = terminatorCodec[string]{stdStringCodec}
+	stdTermBigFloatCodec Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloatCodec}
+	stdTermBytesCodec    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytesCodec}
 )
 
 // Codecs that do not delegate to other Codecs, for types with builtin underlying types.
