@@ -207,6 +207,10 @@ func Complex128() Codec[complex128] { return stdComplex128Codec }
 // This Codec requires a terminator when used within an aggregate Codec.
 func String() Codec[string] { return stdStringCodec }
 
+// TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func TerminatedString() Codec[string] { return stdTermStringCodec }
+
 // Duration returns a Codec for the time.Duration type.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Duration() Codec[time.Duration] { return stdDurationCodec }
@@ -222,23 +226,27 @@ func Duration() Codec[time.Duration] { return stdDurationCodec }
 func Time() Codec[time.Time] { return stdTimeCodec }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec does require a terminator when used within an aggregate Codec.
 func BigInt() Codec[*big.Int] { return stdBigIntCodec }
 
 // BigIntNilsLast returns a Codec for the *big.Int type, with nils ordered last.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
 func BigIntNilsLast() Codec[*big.Int] { return bigIntCodec{false} }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec requires a terminator when used within an aggregate Codec.
 //
 // This Codec is lossy. It does not encode the Accuracy.
 func BigFloat() Codec[*big.Float] { return stdBigFloatCodec }
 
+// TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloatCodec }
+
 // BigFloatNilsLast returns a Codec for the *big.Float type, with nils ordered last.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec requires a terminator when used within an aggregate Codec.
 //
 // This Codec is lossy. It does not encode the Accuracy.
 func BigFloatNilsLast() Codec[*big.Float] { return bigFloatCodec{false} }
@@ -246,13 +254,13 @@ func BigFloatNilsLast() Codec[*big.Float] { return bigFloatCodec{false} }
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
 func BigRat() Codec[*big.Rat] { return stdBigRatCodec }
 
 // BigRatNilsLast returns a Codec for the *big.Rat type, with nils ordered last.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
 func BigRatNilsLast() Codec[*big.Rat] { return bigRatCodec{false} }
 
 // Bytes returns a Codec for the []byte type, with nil slices ordered first.
@@ -261,6 +269,10 @@ func BigRatNilsLast() Codec[*big.Rat] { return bigRatCodec{false} }
 // and will allow nil unlike String.
 // This Codec requires a terminator when used within an aggregate Codec.
 func Bytes() Codec[[]byte] { return stdBytesCodec }
+
+// TerminatedBigFloat returns a Codec for the []byte type which escapes and terminates the encoded bytes.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func TerminatedBytes() Codec[[]byte] { return stdTermBytesCodec }
 
 // Bytes returns a Codec for the []byte type, with nil slices ordered last.
 // The encoded order is lexicographical.
