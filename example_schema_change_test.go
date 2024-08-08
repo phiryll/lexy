@@ -27,7 +27,7 @@ type schema struct {
 }
 
 var (
-	nameCodec     = lexy.Terminate(lexy.String())
+	nameCodec     = lexy.TerminatedString()
 	countCodec    = lexy.Uint16()
 	PreviousCodec = previousCodec{}
 	SchemaCodec   = schemaCodec{}

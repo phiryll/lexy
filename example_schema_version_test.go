@@ -41,6 +41,9 @@ var (
 	SchemaVersion3Codec = lexy.TerminateIfNeeded[schemaVersion3](schemaVersion3Codec{})
 	SchemaVersion4Codec = lexy.TerminateIfNeeded[schemaVersion4](schemaVersion4Codec{})
 	VersionedCodec      = versionedCodec{}
+
+	NameCodec  = lexy.TerminatedString()
+	CountCodec = lexy.Uint16()
 )
 
 type versionedCodec struct{}
@@ -91,11 +94,6 @@ func (c versionedCodec) Write(w io.Writer, value schemaVersion4) error {
 func (c versionedCodec) RequiresTerminator() bool {
 	return false
 }
-
-var (
-	NameCodec  = lexy.Terminate(lexy.String())
-	CountCodec = lexy.Uint16()
-)
 
 // Version 1
 

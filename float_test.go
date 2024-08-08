@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -172,7 +173,7 @@ func TestNames32(t *testing.T) {
 
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
-	encode := encoderFor(float32Codec)
+	encode := encoderFor(lexy.Float32())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN32))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN32))
 
@@ -272,7 +273,7 @@ func TestNames64(t *testing.T) {
 }
 
 func TestFloat64CodecOrdering(t *testing.T) {
-	encode := encoderFor(float64Codec)
+	encode := encoderFor(lexy.Float64())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN64))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN64))
 

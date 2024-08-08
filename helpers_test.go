@@ -15,25 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Codecs used by tests
-var (
-	boolCodec  = lexy.Bool()
-	uintCodec  = lexy.Uint()
-	uint8Codec = lexy.Uint8()
-	// uint16Codec   = lexy.UintCodec[uint16]()
-	uint32Codec = lexy.Uint32()
-	// uint64Codec   = lexy.UintCodec[uint64]()
-	intCodec      = lexy.Int()
-	int8Codec     = lexy.Int8()
-	int16Codec    = lexy.Int16()
-	int32Codec    = lexy.Int32()
-	int64Codec    = lexy.Int64()
-	float32Codec  = lexy.Float32()
-	float64Codec  = lexy.Float64()
-	durationCodec = lexy.Duration()
-	aStringCodec  = lexy.String()
-)
-
 func ptr[T any](value T) *T {
 	return &value
 }

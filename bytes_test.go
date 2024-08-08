@@ -8,14 +8,13 @@ import (
 )
 
 func TestBytes(t *testing.T) {
-	codec := lexy.Bytes()
-	testCodec(t, codec, []testCase[[]byte]{
+	testCodec(t, lexy.Bytes(), []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []byte{}, []byte{pNonNil}},
 		{"[0]", []byte{0}, []byte{pNonNil, 0x00}},
 		{"[1, 2, 3]", []byte{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
 	})
-	testCodecFail(t, codec, []byte{0})
+	testCodecFail(t, lexy.Bytes(), []byte{0})
 }
 
 func TestBytesUnderlyingType(t *testing.T) {
