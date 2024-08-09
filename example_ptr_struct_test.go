@@ -94,7 +94,7 @@ func (c containterCodec) RequiresTerminator() bool {
 
 // Example (PointerToStruct) shows how to use pointers for efficiency
 // in a custom Codec, to avoid unnecessarily copying large data structures.
-// Note that types in go other than structs and arrays do not have this problem.
+// Note that types in Go other than structs and arrays do not have this problem.
 // Complex numbers, strings, pointers, slices, and maps
 // all have a relatively small footprint when passed by value.
 // The same is true of time.Time and time.Duration instances.

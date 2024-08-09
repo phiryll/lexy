@@ -132,14 +132,14 @@ func (s schemaCodec) RequiresTerminator() bool {
 // correctly with respect to each other, regardless of the technique used.
 //
 // Only field values should be encoded if any of the following are true:
-// - the schema is expected to never change, or
-// - the encoded data will be replaced wholesale if the schema changes, or
-// - schema versioning is used (see the schema version example).
+//   - the schema is expected to never change, or
+//   - the encoded data will be replaced wholesale if the schema changes, or
+//   - schema versioning is used (see the schema version example).
 //
 // The kinds of schema change addressed by this example are:
-// - field added
-// - field removed
-// - field renamed
+//   - field added
+//   - field removed
+//   - field renamed
 //
 // If a field's type might change, the best option is to use versioning.
 // Otherwise, it would be necessary to encode the field's type before its value,

@@ -44,7 +44,7 @@ func (s SimpleStruct) String() string {
 var (
 	anIntCodec  = lexy.Int16()
 	aFloatCodec = lexy.Float32()
-	// The cast is only necessary when using go versions prior to 1.21.
+	// The cast is only necessary when using Go versions prior to 1.21.
 	stringsCodec    = lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
@@ -132,7 +132,7 @@ func (s sortableWrapper) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[
 // Example (SimpleStruct) encodes a struct type using two differently ordered Codecs.
 // The pattern will be the same for creating any Codec for a user-defined type.
 // Codecs for structs don't usually require enclosing Codecs to use terminators,
-// but some do. There are more complex examples in the go docs.
+// but some do. There are more complex examples in the Go docs.
 //
 // The general rules are:
 //   - The order in which encoded data is written defines the Codec's ordering.

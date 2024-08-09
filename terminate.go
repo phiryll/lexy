@@ -136,8 +136,8 @@ func doEscape(w io.Writer, p []byte) (int, error) {
 	return n, nil
 }
 
-// doUnescape reads and unescapes data from from r until the first unescaped terminator,
-// or until no bytes are read from r and and error occurs.
+// doUnescape reads and unescapes data from r until the first unescaped terminator,
+// or until no bytes are read from r and an error occurs.
 // doUnescape does not return the trailing terminator.
 // If the returned error is non-nil, the unescaped terminator was not reached.
 // However, the data is valid for what was read from r,
