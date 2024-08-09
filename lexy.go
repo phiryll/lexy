@@ -375,7 +375,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return terminatorCodec[T]{codec}
 }
 
-// Factory functions that do require specifying type paramaters to use.
+// Factory functions that do require specifying type parameters to use.
 
 // Empty returns a Codec that reads and writes no data.
 // [Codec.Read] returns the zero value of T.
