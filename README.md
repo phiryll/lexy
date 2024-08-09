@@ -7,9 +7,9 @@
 Lexicographical Byte Order Encodings
 
 Lexy is a library for order-preserving lexicographical binary encodings.
-It supports many common Go types as well as user-defined types,
-and allows for encodings ordered differently than a type's natural ordering.
-Lexy uses generics and requires go 1.18 to use. It has been tested through go 1.22.
+Most common Go types and user-defined types are supported,
+and it allows for encodings ordered differently than a type's natural ordering.
+Lexy uses generics and requires Go 1.18 to use. It has been tested through Go 1.22.
 Lexy has no non-test dependencies.
 
 It may be more efficient to use another encoding if lexicographical unsigned byte ordering is not needed.
@@ -17,7 +17,7 @@ Lexy's primary purpose is to make it easier to use an
 [ordered key-value store](https://en.wikipedia.org/wiki/Ordered_Key-Value_Store),
 an ordered binary trie, or similar.
 
-The primary interface in lexy is `Codec`, with this definition (details in go docs):
+The primary interface in lexy is `Codec`, with this definition (details in Go docs):
 
 ```go
 type Codec[T any] interface {
@@ -46,7 +46,13 @@ type Value struct {
 }
 
 // keyCodec is safe for concurrent use.
-var keyCodec = lexy.SliceOf[Key](lexy.String[Word]())
+var keyCodec = lexy.MakeSliceOf[Key](lexy.MakeString[Word]())
+
+// The terser functions lexy.SliceOf and lexy.String can be used
+// if the types involved are the same as their underlying types,
+// string and []string in this case. That would look like this:
+//
+// var keyCodec = lexy.SliceOf(lexy.String())
 
 // lexy could be used here, but it's overkill if ordered Values aren't needed.
 func EncodeValue(v *Value) ([]byte, error) { /* ... */ }
@@ -84,79 +90,58 @@ func (db *KeyValueDB) Get(key Key) (*Value, error) {
 
 All `Codecs` provided by lexy are safe for concurrent use if their delegate `Codecs` (if any) are.
 
-Lexy provides `Codecs` for these types that preserve their natural ordering.
+`Codecs` do not normally encode a data's type, users must know what is being decoded.
+This aligns with best practices in Go, types should be known at compile time.
+A custom `Codec` handling multiple types could be created, but it is not recommended,
+and it would still require a concrete wrapper type to conform to the `Codec[T]` interface.
 
-* `bool`  
-  `false` is ordered before `true`.
-* `uint`  
-  Instances are encoded using the `uint64` Codec.
+Different `Codecs` will generally not produce encodings with consistent orderings with respect to each other.
+For example, `Encode(Int8(), 1)` will produce an encoding
+that is lexicographically greater than the encoding produced by `Encode(Uint8(), 100)`.
+
+The `Codecs` provided by lexy can encode `nil` to be less than or greater than
+the encodings for non-`nil` values, for types that allow `nil` values.
+
+Lexy provides order-preserving `Codecs` for the following types.
+
+* `bool`
 * `uint8` (aka `byte`), `uint16`, `uint32`, `uint64`
-* `int`  
-  Instances are encoded using the `int64` Codec.
 * `int8`, `int16`, `int32` (aka `rune`), `int64`
+* `uint`, `int` (encoded as 64-bit values)
 * `float32`, `float64`
-* `*math.big.Int`  
-  `nil` can be less than or greater than all non-`nil` values.
-* `*math.big.Float`  
-  `nil` can be less than or greater than all non-`nil` values.
+* `*math.big.Int`
+* `*math.big.Float` (does not encode Accuracy)
 * `string`
-* `time.Time`  
-  Instances are ordered by UTC time first, timezone offset (at that instant) second.
+* `time.Time` (encodes timezone offset, but not its name)
 * `time.Duration`
-* pointers  
-  `nil` can be less than or greater than all non-`nil` values.
-* slices  
-  `nil` can be less than or greater than all non-`nil` values.
-  Slices are ordered lexicographically by their elements.
-  For example,  
-  `{0, 1} < {0, 1, 100} < {0, 2} < {1}`
-* `[]byte`  
-  `nil` can be less than or greater than all non-`nil` values.
-  This `Codec` is optimized for byte slices, and is more efficient than a slice `Codec` would be.
-  It differs from the `string` `Codec` in that a `[]byte` can be `nil`.
+* pointers (also encodes the referent)
+* slices
+* `[]byte` (optimized for byte slices)
 
-Lexy provides `Codecs` for these types which either have no natural ordering,
+Lexy provides `Codecs` for the following types which either have no natural ordering,
 or whose natural ordering cannot be preserved while being encoded at full precision.
 
-* maps  
-  `nil` can be less than or greater than all non-`nil` maps.
-  Empty maps are always less than non-empty maps.
-  Non-empty maps are randomly ordered.
-* `complex64`, `complex128`  
-  The encoded order is real part first, imaginary part second.
-* `*math.big.Rat`  
-  `nil` can be less than or greater than all non-`nil` values.
-  The encoded order for non-`nil` values is signed numerator first, positive denominator second.
-  There is no way to finitely encode rational numbers with a lexicographical order that isn't lossy.
-  A lossy approximation can be made by converting to (possibly rounded) `big.Floats` and encoding those.
+* maps
+* `complex64`, `complex128`
+* `*math.big.Rat`
 
 Lexy provides a `Codec` for types with no value except the zero value,
-useful as value types for maps used as sets.
+useful for the value types of maps used as sets.
 
-Lexy does not does not provide `Codecs` for these types, but a custom `Codec` is easy to create.
-See the provided examples for how to create custom `Codecs`.
+Lexy does not does not provide `Codecs` for the following types, but custom `Codecs` are easy to create.
+See the Go docs for examples.
 
 * structs, pointers to structs  
-  The inherent limitations of generic types and reflection in go make it impossible
-  to do this in a general way without having a parallel, but completely separate, set of non-generic codecs.
-  Writing a strongly-typed custom `Codec` is a much simpler and safer alternative,
+  The inherent limitations of generic types in Go make it impossible
+  to do this in a general way without having a separate parallel set of non-generic codecs.
+  This is not a bad thing, resolving types at compile time is one of the reasons Go is so efficient.
+  Creating a strongly-typed custom `Codec` is a much simpler and safer alternative,
   and also prevents silently changing an encoding when the data type it encodes is changed.
 * arrays, pointers to arrays  
   While it is possible to create a general `Codec` for array types,
   the generics are very messy and it requires using reflection extensively.
-  As is the case for structs, writing a strongly-typed custom `Codec` is a better option.
+  As is the case for structs, creating a strongly-typed custom `Codec` is a better option.
 * `uintptr`  
-  This type has an implementation-specific size.
-* functions
-* interfaces
-* channels
-
-The provided `Codecs` do not encode the types of encoded data, users must know what is being decoded.
-A custom `Codec` that handles multiple types could be created,
-but it would require a concrete wrapper type to conform to the `Codec[T]` interface.
-
-Types defined with a different underlying type will work correctly if the `Codec` is defined appropriately.
-For example, values of type `type MyInt int16` can be used with a `Codec` created by `lexy.Int16[MyInt]()`.
-
-Encoded values of different data types will not have a consistent ordering with respect to each other.
-For example, the encoded value of `int32(1)` is greater than the encoded value of `uint32(2)`.
+  This type has an implementation-specific size,
+  and encoding a pointer without encoding what it points to doesn't make much sense.
+* functions, interfaces, channels
