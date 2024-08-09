@@ -1,6 +1,64 @@
-// Package lexy defines an API for lexicographically ordered binary encodings.
-// Implementations are provided for most builtin go data types,
-// and supporting functions are provided to allow clients to create custom encodings.
+/*
+Package lexy defines an API for lexicographically ordered binary encodings.
+Implementations are provided for most builtin Go data types,
+and supporting functions are provided to allow the creation of custom encodings.
+
+There are two kinds of [Codec]-returning functions in lexy,
+those for which Go can infer the type arguments, and those for which Go cannot.
+The former have terser names, as in [Int16].
+The latter have names starting with "Make", as in [MakeInt16].
+These are only needed when creating a Codec for a type that is not the same as its underlying type.
+For example, this:
+
+	type Phrase []string
+	var phraseCodec = lexy.MakeSliceOf[Phrase](lexy.String())
+
+as opposed to this:
+
+	// a Codec[[]string]
+	var phraseCodec = lexy.SliceOf(lexy.String())
+
+[Empty] also requires a type argument when used and is the only exception to this naming convention.
+
+Functions returning Codecs for types that allow nil values return a [NillableCodec].
+The Codecs returned by these functions will always order nil before all non-nil values.
+[NillableCodec.NilsLast] will return a new Codec with same ordering,
+except nils will be ordered after all non-nil values.
+
+See [Codec.RequiresTerminator] for details on when escaping and terminating encoded bytes is required,
+and see the SimpleStruct example for an example where this matters.
+
+These Codec-returning functions do not require type parameters.
+  - [Bool]
+  - [Uint], [Uint8], [Uint16], [Uint32], [Uint64]
+  - [Int], [Int8], [Int16], [Int32], [Int64]
+  - [Float32], [Float64]
+  - [Complex64], [Complex128]
+  - [String], [TerminatedString]
+  - [Time], [Duration]
+  - [BigInt], [BigFloat], [BigRat], [TerminatedBigFloat]
+  - [Bytes], [TerminatedBytes]
+  - [PointerTo], [SliceOf], [MapOf]
+  - [Negate]
+  - [Terminate], [TerminateIfNeeded]
+
+These Codec-returning functions require type parameters.
+  - [Empty]
+  - [MakeBool]
+  - [MakeUint], [MakeUint8], [MakeUint16], [MakeUint32], [MakeUint64]
+  - [MakeInt], [MakeInt8], [MakeInt16], [MakeInt32], [MakeInt64]
+  - [MakeFloat32], [MakeFloat64]
+  - [MakeString]
+  - [MakeBytes]
+  - [MakePointerTo], [MakeSliceOf], [MakeMapOf]
+
+These are convenience functions using a []byte instead of an [io.Reader] or [io.Writer].
+  - [Encode], [Decode]
+
+These functions are used when creating custom Codecs.
+  - [UnexpectedIfEOF]
+  - [ReadPrefix], [WritePrefix]
+*/
 package lexy
 
 import (
@@ -76,14 +134,14 @@ type Codec[T any] interface {
 }
 
 // A NillableCodec[T] is a Codec[T] where value of type T can be nil.
-// This interface exists to support the [NillableCodec.NilsLast] method.
+// This interface exists to support the NilsLast method.
 //
-// In go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
-// However, an explicit cast can still be made and works as expected, like this:
+// In Go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
+// However, an explicit cast works as expected, like this:
 //
-//	lexy.Codec[*int](lexy.PointerTo(lexy.Int()))
+//	lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 //
-// If go cannot be upgraded to 1.21, a function like this could be helpful.
+// If Go cannot be upgraded to 1.21, a function like this might be helpful.
 //
 //	func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] { return codec }
 type NillableCodec[T any] interface {
@@ -128,6 +186,7 @@ var (
 // because the compiler can infer them from the arguments, if any.
 
 // Bool returns a Codec for the bool type.
+// The encoded order is false, then true.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Bool() Codec[bool] { return stdBoolCodec }
 
@@ -239,8 +298,8 @@ func Duration() Codec[time.Duration] { return stdDurationCodec }
 //
 // This Codec is lossy. It encodes the timezone's offset, but not its name.
 // It will therefore lose information about Daylight Saving Time.
-// Timezone names and DST behavior are defined outside of go's control (as they must be),
-// and Time.Zone() can return names that will fail with Location.LoadLocation(name).
+// Timezone names and DST behavior are defined outside of Go's control (as they must be),
+// and Time.Zone() can return names that will fail with Location.LoadLocation(name) in the same program.
 func Time() Codec[time.Time] { return stdTimeCodec }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
