@@ -413,7 +413,7 @@ func ExampleMapOf() {
 }
 
 func ExampleNegate() {
-	// Exactly the same as the lexy.Int() example, except negated.
+	// Exactly the same as the lexy.Int32() example, except negated.
 	codec := lexy.Negate(lexy.Int32())
 	var buf bytes.Buffer
 	var encoded [][]byte

@@ -131,13 +131,13 @@ useful for the value types of maps used as sets.
 Lexy does not does not provide `Codecs` for the following types, but custom `Codecs` are easy to create.
 See the Go docs for examples.
 
-* structs, pointers to structs  
+* structs  
   The inherent limitations of generic types in Go make it impossible
   to do this in a general way without having a separate parallel set of non-generic codecs.
   This is not a bad thing, resolving types at compile time is one of the reasons Go is so efficient.
   Creating a strongly-typed custom `Codec` is a much simpler and safer alternative,
   and also prevents silently changing an encoding when the data type it encodes is changed.
-* arrays, pointers to arrays  
+* arrays  
   While it is possible to create a general `Codec` for array types,
   the generics are very messy and it requires using reflection extensively.
   As is the case for structs, creating a strongly-typed custom `Codec` is a better option.

@@ -5,19 +5,9 @@ and supporting functions are provided to allow the creation of custom encodings.
 
 There are two kinds of [Codec]-returning functions in lexy,
 those for which Go can infer the type arguments, and those for which Go cannot.
-The former have terser names, as in [Int16].
-The latter have names starting with "Make", as in [MakeInt16].
-These are only needed when creating a Codec for a type that is not the same as its underlying type.
-For example, this:
-
-	type Phrase []string
-	var phraseCodec = lexy.MakeSliceOf[Phrase](lexy.String())
-
-as opposed to this:
-
-	// a Codec[[]string]
-	var phraseCodec = lexy.SliceOf(lexy.String())
-
+The former have terser names, as in [Int16]().
+The latter have names starting with "Make", as in [MakeInt16][MyIntType]().
+These latter functions are only needed when creating a Codec for a type that is not the same as its underlying type.
 [Empty] also requires a type argument when used and is the only exception to this naming convention.
 
 Functions returning Codecs for types that allow nil values return a [NillableCodec].
@@ -133,7 +123,7 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// A NillableCodec[T] is a Codec[T] where value of type T can be nil.
+// A NillableCodec[T] is a Codec[T] where the value of type T can be nil.
 // This interface exists to support the NilsLast method.
 //
 // In Go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
@@ -315,7 +305,7 @@ func BigRat() NillableCodec[*big.Rat] { return stdBigRatCodec }
 // This Codec requires a terminator when used within an aggregate Codec.
 func Bytes() NillableCodec[[]byte] { return stdBytesCodec }
 
-// TerminatedBigFloat returns a Codec for the []byte type which escapes and terminates the encoded bytes.
+// TerminatedBytes returns a Codec for the []byte type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func TerminatedBytes() Codec[[]byte] { return stdTermBytesCodec }
 
@@ -584,7 +574,7 @@ func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 
 // Convenience functions.
 
-// Encode returns value encoded using codec as a new []byte.
+// Encode returns value encoded using codec as a []byte.
 //
 // This is a convenience function.
 // Use [Codec.Write] when encoding multiple values to the same byte stream.
@@ -596,7 +586,7 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Decode returns a decoded value from a []byte using codec.
+// Decode returns a value decoded from data using codec.
 //
 // This is a convenience function.
 // Use [Codec.Read] when decoding multiple values from the same byte stream.
