@@ -295,8 +295,8 @@ func Example_schemaVersion() {
 	// When the encodings are sorted, they will be in the order:
 	// - primary: version
 	// - secondary: the encoded order for that version
-	// sortableByteSlices is defined in the Struct example.
-	sort.Sort(sortableByteSlices{encoded})
+	// sortableEncodings is defined in the Struct example.
+	sort.Sort(sortableEncodings{encoded})
 
 	for _, b := range encoded {
 		value, err := VersionedCodec.Read(bytes.NewReader(b))

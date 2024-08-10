@@ -10,201 +10,186 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-type SimpleStruct struct {
-	anInt   int16
-	aFloat  float32
-	strings []string
+type SomeStruct struct {
+	size  int32
+	score float32
+	tags  []string
 }
 
-func stringsEqual(a, b []string) bool {
-	if len(a) != len(b) {
+func (s SomeStruct) String() string {
+	return fmt.Sprintf("{%d %.2f %#v}", s.size, s.score, s.tags)
+}
+
+// All of these are safe for concurrent access.
+var (
+	// score sorts high to low
+	negScoreCodec = lexy.Negate(lexy.Float32())
+	// The type cast is only necessary when using Go versions prior to 1.21.
+	tagsCodec       = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
+	SomeStructCodec = someStructCodec{}
+)
+
+// Sort order is:
+//   - size
+//   - score (high to low)
+//   - tags
+type someStructCodec struct{}
+
+func (c someStructCodec) Read(r io.Reader) (SomeStruct, error) {
+	var zero SomeStruct
+	size, err := lexy.Int32().Read(r)
+	if err != nil {
+		return zero, err
+	}
+	score, err := negScoreCodec.Read(r)
+	if err != nil {
+		return zero, lexy.UnexpectedIfEOF(err)
+	}
+	tags, err := tagsCodec.Read(r)
+	if err != nil {
+		return zero, lexy.UnexpectedIfEOF(err)
+	}
+	return SomeStruct{size, score, tags}, nil
+}
+
+func (c someStructCodec) Write(w io.Writer, value SomeStruct) error {
+	if err := lexy.Int32().Write(w, value.size); err != nil {
+		return err
+	}
+	if err := negScoreCodec.Write(w, value.score); err != nil {
+		return err
+	}
+	return tagsCodec.Write(w, value.tags)
+}
+
+func (c someStructCodec) RequiresTerminator() bool {
+	return false
+}
+
+// Only defined to test whether two SomeStructs are equal.
+func structsEqual(a, b SomeStruct) bool {
+	if a.size != b.size {
 		return false
 	}
-	for i := range a {
-		if a[i] != b[i] {
+	// NaN != NaN, even when they're the exact same bits.
+	if math.Float32bits(a.score) != math.Float32bits(b.score) {
+		return false
+	}
+	if len(a.tags) != len(b.tags) {
+		return false
+	}
+	for i := range a.tags {
+		if a.tags[i] != b.tags[i] {
 			return false
 		}
 	}
 	return true
 }
 
-func (s SimpleStruct) Equals(other SimpleStruct) bool {
-	// NaN != NaN, even when they're the exact same bits.
-	return s.anInt == other.anInt &&
-		math.Float32bits(s.aFloat) == math.Float32bits(other.aFloat) &&
-		stringsEqual(s.strings, other.strings)
-}
-
-func (s SimpleStruct) String() string {
-	return fmt.Sprintf("{%d %.2f %#v}", s.anInt, s.aFloat, s.strings)
-}
-
-// Codecs used in these examples.
-// All of these are safe for concurrent access.
-var (
-	anIntCodec  = lexy.Int16()
-	aFloatCodec = lexy.Float32()
-	// The cast is only necessary when using Go versions prior to 1.21.
-	stringsCodec    = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
-	negStringsCodec = lexy.Negate(stringsCodec)
-	ifsCodec        = intFloatStringsCodec{}
-	fnsiCodec       = floatNegStringsIntCodec{}
-)
-
-// The orderings for these Codecs are in their type names.
-
-type intFloatStringsCodec struct{}
-
-func (c intFloatStringsCodec) Read(r io.Reader) (SimpleStruct, error) {
-	var zero SimpleStruct
-	anInt, err := anIntCodec.Read(r)
-	if err != nil {
-		return zero, err
-	}
-	aFloat, err := aFloatCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	strings, err := stringsCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	return SimpleStruct{anInt, aFloat, strings}, nil
-}
-
-func (c intFloatStringsCodec) Write(w io.Writer, value SimpleStruct) error {
-	if err := anIntCodec.Write(w, value.anInt); err != nil {
-		return err
-	}
-	if err := aFloatCodec.Write(w, value.aFloat); err != nil {
-		return err
-	}
-	return stringsCodec.Write(w, value.strings)
-}
-
-func (c intFloatStringsCodec) RequiresTerminator() bool {
-	return false
-}
-
-type floatNegStringsIntCodec struct{}
-
-func (c floatNegStringsIntCodec) Read(r io.Reader) (SimpleStruct, error) {
-	var zero SimpleStruct
-	aFloat, err := aFloatCodec.Read(r)
-	if err != nil {
-		return zero, err
-	}
-	strings, err := negStringsCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	anInt, err := anIntCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	return SimpleStruct{anInt, aFloat, strings}, nil
-}
-
-func (c floatNegStringsIntCodec) Write(w io.Writer, value SimpleStruct) error {
-	if err := aFloatCodec.Write(w, value.aFloat); err != nil {
-		return err
-	}
-	if err := negStringsCodec.Write(w, value.strings); err != nil {
-		return err
-	}
-	return anIntCodec.Write(w, value.anInt)
-}
-
-func (c floatNegStringsIntCodec) RequiresTerminator() bool {
-	return false
-}
-
-type sortableByteSlices struct {
+type sortableEncodings struct {
 	b [][]byte
 }
 
-var _ sort.Interface = sortableByteSlices{}
+var _ sort.Interface = sortableEncodings{}
 
-func (s sortableByteSlices) Len() int               { return len(s.b) }
-func (s sortableByteSlices) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
-func (s sortableByteSlices) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
+func (s sortableEncodings) Len() int               { return len(s.b) }
+func (s sortableEncodings) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
+func (s sortableEncodings) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
-// Example (SimpleStruct) encodes a struct type using two differently ordered Codecs.
-// The pattern will be the same for creating any Codec for a user-defined type.
-// Codecs for structs don't usually require enclosing Codecs to use terminators,
-// but some do. There are more complex examples in the Go docs.
-//
-// The general rules are:
+// ExampleStruct shows how to define a typical user-defined Codec.
+// The rules of thumb are:
 //   - The order in which encoded data is written defines the Codec's ordering.
 //     Read data in the same order it was written, using the same Codecs.
-//     An exception to this rule is in the schema change example.
-//   - Use lexy.Terminate/TerminateIfNeeded for values that do/might
-//     require terminating and escaping.
-//     It won't be much of a performance hit to use lexy.TerminateIfNeeded,
-//     since it returns the argument Codec if it doesn't require termination.
-//   - If no bytes are read and EOF is reached when reading,
-//     return the zero value and io.EOF from Codec.Read.
-//     If EOF is clearly reached before a complete value has been read,
-//     return io.ErrUnexpectedEOF.
-//     If EOF is reached and what has been read could be a complete value,
-//     return the value and no error.
-func Example_simpleStruct() {
-	structs := []SimpleStruct{
+//     The schema change example has an exception to this.
+//   - Use [lexy.ReadPrefix] and [lexy.WritePrefix] if the value can be nil.
+//   - Return the type's zero value and [io.EOF] from Read
+//     only if no bytes were read and EOF was reached.
+//     In the fooCodec example in this comment below,
+//     note that the first element read does not use [lexy.UnexpectedIfEOF].
+//   - If the value can be nil, lexy.ReadPrefix is the first element read,
+//     and the next element read after that should use lexy.UnexpectedIfEOF.
+//   - Use [lexy.TerminateIfNeeded] when an element's Codec might require it.
+//     See [tagsCodec] in this example for a typical usage.
+//   - Return true from [lexy.Codec.RequiresTerminator] when appropriate,
+//     whether or not it's relevant at the moment.
+//     This allows the Codec to be safely used by others later.
+//
+// The pattern for a typical struct Codec implementation follows in this comment.
+// The same pattern is used for non-struct types,
+// see the array example for one such use case.
+// The first/second/.../nthCodecs in the example are not meant to imply
+// that each field needs its own Codec.
+// All the Codecs provided by lexy are safe for concurrent use and reusable,
+// assuming their delegate Codecs are safe for concurrent use
+// (the argument Codecs used to construct slice and map Codecs, e.g.).
+//
+//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
+//	    var zero Foo
+//	    first, err := firstCodec.Read(r)
+//	    if err != nil {
+//	        return zero, err
+//	    }
+//	    second, err := secondCodec.Read(r)
+//	    if err != nil {
+//	        return zero, lexy.UnexpectedIfEOF(err)
+//	    }
+//	    // ...
+//	    nth, err := nthCodec.Read(r)
+//	    if err != nil {
+//	        return zero, lexy.UnexpectedIfEOF(err)
+//	    }
+//	    return Foo{first, second, ..., nth}, nil
+//	}
+//
+//	func (c fooCodec) Write(w io.Writer, value Foo) error {
+//	    if err := firstCodec.Write(w, value.first); err != nil {
+//	        return err
+//	    }
+//	    if err := secondCodec.Write(w, value.second); err != nil {
+//	        return err
+//	    }
+//	    // ...
+//	    return nthCodec.Write(w, value.nth)
+//	}
+//
+//	func (c fooCodec) RequiresTerminator() bool {
+//	    return false
+//	}
+//
+// [someStructCodec] in this example code follows the same pattern.
+func Example_struct() {
+	structs := []SomeStruct{
 		{1, 5.0, nil},
-		{-72, -37.54, []string{"w", "x", "y", "z"}},
-		{42, float32(math.Inf(-1)), []string{}},
-		{-100, -37.54, []string{"a", "b"}},
-		{42, -37.54, []string{"a", "b", "a"}},
+		{-72, 37.54, []string{"w", "x", "y", "z"}},
+		{42, 37.6, []string{"p", "q", "r"}},
+		{42, float32(math.Inf(1)), []string{}},
+		{-100, 37.54, []string{"a", "b"}},
+		{42, 37.54, []string{"a", "b", "a"}},
 		{-100, float32(math.NaN()), []string{"cat"}},
-		{42, -37.54, nil},
-		{153, -37.54, []string{"d"}},
+		{42, 37.54, nil},
+		{153, 37.54, []string{"d"}},
 	}
 	var buf bytes.Buffer
 
-	var ifsEncoded [][]byte
-	fmt.Println("Int-Float-Strings round trip")
+	var encoded [][]byte
+	fmt.Println("Round Trip Equals:")
 	for _, value := range structs {
 		buf.Reset()
-		if err := ifsCodec.Write(&buf, value); err != nil {
+		if err := SomeStructCodec.Write(&buf, value); err != nil {
 			panic(err)
 		}
-		ifsEncoded = append(ifsEncoded, append([]byte{}, buf.Bytes()...))
-		decoded, err := ifsCodec.Read(&buf)
+		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		decoded, err := SomeStructCodec.Read(&buf)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(value.Equals(decoded))
+		fmt.Println(structsEqual(value, decoded))
 	}
 
-	var fnsiEncoded [][]byte
-	fmt.Println("Float-NegStrings-Int round trip")
-	for _, value := range structs {
-		buf.Reset()
-		if err := fnsiCodec.Write(&buf, value); err != nil {
-			panic(err)
-		}
-		fnsiEncoded = append(fnsiEncoded, append([]byte{}, buf.Bytes()...))
-		decoded, err := fnsiCodec.Read(&buf)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(value.Equals(decoded))
-	}
-
-	sort.Sort(sortableByteSlices{ifsEncoded})
-	fmt.Println("Int-Float-Strings sorted:")
-	for _, encoded := range ifsEncoded {
-		decoded, err := ifsCodec.Read(bytes.NewReader(encoded))
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(decoded.String())
-	}
-
-	sort.Sort(sortableByteSlices{fnsiEncoded})
-	fmt.Println("Float-NegStrings-Int sorted:")
-	for _, encoded := range fnsiEncoded {
-		decoded, err := fnsiCodec.Read(bytes.NewReader(encoded))
+	sort.Sort(sortableEncodings{encoded})
+	fmt.Println("Sorted:")
+	for _, encoded := range encoded {
+		decoded, err := SomeStructCodec.Read(bytes.NewReader(encoded))
 		if err != nil {
 			panic(err)
 		}
@@ -212,7 +197,7 @@ func Example_simpleStruct() {
 	}
 
 	// Output:
-	// Int-Float-Strings round trip
+	// Round Trip Equals:
 	// true
 	// true
 	// true
@@ -221,31 +206,15 @@ func Example_simpleStruct() {
 	// true
 	// true
 	// true
-	// Float-NegStrings-Int round trip
 	// true
-	// true
-	// true
-	// true
-	// true
-	// true
-	// true
-	// true
-	// Int-Float-Strings sorted:
-	// {-100 -37.54 []string{"a", "b"}}
+	// Sorted:
 	// {-100 NaN []string{"cat"}}
-	// {-72 -37.54 []string{"w", "x", "y", "z"}}
+	// {-100 37.54 []string{"a", "b"}}
+	// {-72 37.54 []string{"w", "x", "y", "z"}}
 	// {1 5.00 []string(nil)}
-	// {42 -Inf []string{}}
-	// {42 -37.54 []string(nil)}
-	// {42 -37.54 []string{"a", "b", "a"}}
-	// {153 -37.54 []string{"d"}}
-	// Float-NegStrings-Int sorted:
-	// {42 -Inf []string{}}
-	// {-72 -37.54 []string{"w", "x", "y", "z"}}
-	// {153 -37.54 []string{"d"}}
-	// {42 -37.54 []string{"a", "b", "a"}}
-	// {-100 -37.54 []string{"a", "b"}}
-	// {42 -37.54 []string(nil)}
-	// {1 5.00 []string(nil)}
-	// {-100 NaN []string{"cat"}}
+	// {42 +Inf []string{}}
+	// {42 37.60 []string{"p", "q", "r"}}
+	// {42 37.54 []string(nil)}
+	// {42 37.54 []string{"a", "b", "a"}}
+	// {153 37.54 []string{"d"}}
 }
