@@ -119,20 +119,20 @@ func TestBigFloat(t *testing.T) {
 	var complexWhole big.Float
 	// Parse truncates to 64 bits if precision is currently 0
 	complexWhole.SetPrec(100000)
-	complexWhole.Parse("12345678901234567890123456789012345678901234567890", 10)
+	_, _, _ = complexWhole.Parse("12345678901234567890123456789012345678901234567890", 10)
 	complexWhole.SetPrec(complexWhole.MinPrec())
 
 	var complexMixed big.Float
 	// Parse truncates to 64 bits if precision is currently 0
 	complexMixed.SetPrec(100000)
-	complexMixed.Parse("12345678901234567890123456789012345678901234567890"+
+	_, _, _ = complexMixed.Parse("12345678901234567890123456789012345678901234567890"+
 		".12345678901234567890123456789012345678901234567890", 10)
 	complexMixed.SetPrec(complexMixed.MinPrec())
 
 	var complexTiny big.Float
 	// Parse truncates to 64 bits if precision is currently 0
 	complexTiny.SetPrec(100000)
-	complexTiny.Parse("0.0000000000000000000000000000000000000"+
+	_, _, _ = complexTiny.Parse("0.0000000000000000000000000000000000000"+
 		"12345678901234567890123456789012345678901234567890", 10)
 	complexTiny.SetPrec(complexTiny.MinPrec())
 
