@@ -33,14 +33,14 @@ type schemaVersion4 struct {
 }
 
 var (
-	// Even though these schemas don't require it,
-	// it's good practice to wrap with lexy.TerminateIfNeeded
-	// if the Codec might change in the future.
-	SchemaVersion1Codec = lexy.TerminateIfNeeded[schemaVersion1](schemaVersion1Codec{})
-	SchemaVersion2Codec = lexy.TerminateIfNeeded[schemaVersion2](schemaVersion2Codec{})
-	SchemaVersion3Codec = lexy.TerminateIfNeeded[schemaVersion3](schemaVersion3Codec{})
-	SchemaVersion4Codec = lexy.TerminateIfNeeded[schemaVersion4](schemaVersion4Codec{})
-	VersionedCodec      = versionedCodec{}
+	// The types of the Codecs can be inferred if using Go 1.21 or later.
+	SchemaVersion1Codec lexy.Codec[schemaVersion1] = schemaVersion1Codec{}
+	SchemaVersion2Codec lexy.Codec[schemaVersion2] = schemaVersion2Codec{}
+	SchemaVersion3Codec lexy.Codec[schemaVersion3] = schemaVersion3Codec{}
+	SchemaVersion4Codec lexy.Codec[schemaVersion4] = schemaVersion4Codec{}
+
+	// Which schema this returns will be updated as new versions are added.
+	VersionedCodec lexy.Codec[schemaVersion4] = versionedCodec{}
 
 	NameCodec  = lexy.TerminatedString()
 	CountCodec = lexy.Uint16()
@@ -222,7 +222,7 @@ func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], v
 	return codec.Write(w, value)
 }
 
-// Example (SchemaVersion) shows how schema versioning could be implemented.
+// ExampleSchemaVersion shows how schema versioning could be implemented.
 // This can be done in other ways, and more or less leniently.
 // This is just an example, and likely a poorly structured one at that.
 //
@@ -295,8 +295,8 @@ func Example_schemaVersion() {
 	// When the encodings are sorted, they will be in the order:
 	// - primary: version
 	// - secondary: the encoded order for that version
-	// sortableWrapper is defined in the SimpleStruct example.
-	sort.Sort(sortableWrapper{encoded})
+	// sortableEncodings is defined in the Struct example.
+	sort.Sort(sortableEncodings{encoded})
 
 	for _, b := range encoded {
 		value, err := VersionedCodec.Read(bytes.NewReader(b))

@@ -59,8 +59,8 @@ func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 // BEGIN KEY CODEC
 
 var (
-	// The cast is only necessary when using go versions prior to 1.21.
-	wordsCodec = lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
+	// The cast is only necessary when using Go versions prior to 1.21.
+	wordsCodec = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 	costCodec  = lexy.Int32()
 	keyCodec   = KeyCodec{}
 )
@@ -150,7 +150,7 @@ func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 
 // END USER DB ABSTRACTION
 
-// Example (RangeQuery) shows how a range query might be implemented.
+// ExampleRangeQuery shows how a range query might be implemented.
 func Example_rangeQuery() {
 	userDB := UserDB{}
 	for _, item := range []struct {

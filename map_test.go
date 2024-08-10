@@ -82,7 +82,7 @@ func TestMapSlice(t *testing.T) {
 
 func TestMapPointerPointer(t *testing.T) {
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
-	// Instead, we'll dump the pointees into a new map and compare that.
+	// Instead, we'll dump the referents into a new map and compare that.
 	pointerCodec := toCodec(lexy.PointerTo(lexy.String()))
 	codec := lexy.MapOf(pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{

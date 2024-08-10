@@ -3,7 +3,9 @@ Package lexy defines an API for lexicographically ordered binary encodings.
 Implementations are provided for most builtin Go data types,
 and supporting functions are provided to allow the creation of custom encodings.
 
-There are two kinds of [Codec]-returning functions in lexy,
+The [Codec][T] interface defines an encoding, with methods to encode and decode values of type T.
+Functions returning Codecs for different types constitute the majority of this API.
+There are two kinds of Codec-returning functions defined by this package,
 those for which Go can infer the type arguments, and those for which Go cannot.
 The former have terser names, as in [Int16]().
 The latter have names starting with "Make", as in [MakeInt16][MyIntType]().
@@ -12,13 +14,13 @@ These latter functions are only needed when creating a Codec for a type that is 
 
 Functions returning Codecs for types that allow nil values return a [NillableCodec].
 The Codecs returned by these functions will always order nil before all non-nil values.
-Invoking [NillableCodec.NilsLast] will return a new Codec with same ordering,
+Invoking [NillableCodec.NilsLast] on a NillableCodec will return a new Codec with same ordering,
 except nils will be ordered after all non-nil values.
 
 See [Codec.RequiresTerminator] for details on when escaping and terminating encoded bytes is required,
 and see the SimpleStruct example for an example where this matters.
 
-These Codec-returning functions do not require type parameters.
+These Codec-returning functions do not require specifying a type parameter when invoked.
   - [Bool]
   - [Uint], [Uint8], [Uint16], [Uint32], [Uint64]
   - [Int], [Int8], [Int16], [Int32], [Int64]
@@ -32,7 +34,7 @@ These Codec-returning functions do not require type parameters.
   - [Negate]
   - [Terminate], [TerminateIfNeeded]
 
-These Codec-returning functions require type parameters.
+These Codec-returning functions require specifying a type parameter when invoked.
   - [Empty]
   - [MakeBool]
   - [MakeUint], [MakeUint8], [MakeUint16], [MakeUint32], [MakeUint64]
@@ -60,9 +62,9 @@ import (
 	"time"
 )
 
-// A Codec defines a lexicographically ordered binary encoding for values of a data type.
-//
-// Encoded values should normally have the same order as the values they encode.
+// Codec defines a binary encoding for values of type T.
+// Most of the Codec implementations provided by this package preserve the type's natural ordering,
+// but nothing requires that behavior.
 // The Read and Write methods should be lossless inverse operations.
 // Exceptions to either of these behaviors should be clearly documented.
 //
@@ -70,18 +72,19 @@ import (
 type Codec[T any] interface {
 	// Read reads from r and decodes a value of type T.
 	//
-	// Read will read from r until either it has all the data it needs, or r stops returning data.
-	// [io.Reader.Read] is permitted to return only immediately available data instead of waiting for more.
-	// This may cause an error, or it may silently return incomplete data, depending on this Codec's implementation.
-	// Implementations of Read should never knowingly return incomplete data.
-	//
+	// Read will read from r until either it has all the data it needs, or EOF is reached.
 	// If the returned error is non-nil, including [io.EOF], the returned value should be discarded.
 	// Read will only return io.EOF if r returned io.EOF and no bytes were read.
 	// Read will return [io.ErrUnexpectedEOF] if r returned io.EOF and a complete value was not successfully read.
+	// Implementations of Read should never knowingly return an incomplete value.
 	//
 	// If instances of type T can be nil,
 	// implementations of Read should invoke [ReadPrefix] as the first step,
 	// and Write should invoke [WritePrefix].
+	//
+	// [io.Reader.Read] is permitted to return only immediately available data instead of waiting for more.
+	// This may cause an error, or it may silently return incomplete data, depending on this Codec's implementation.
+	// Implementations can use functions such as [io.Copy] and [io.ReadFull] to help avoid this problem.
 	//
 	// Read may repeatedly read small amounts of data from r,
 	// so using a buffered io.Reader is recommended if appropriate.
@@ -101,29 +104,23 @@ type Codec[T any] interface {
 	// but if they do, the buffered io.Writer must be flushed before returning from Write.
 	Write(w io.Writer, value T) error
 
-	// RequiresTerminator returns whether encoded data written by this Codec requires a terminator,
-	// and therefore also must be escaped, if more data is written following the encoded data.
-	// Stated another way, RequiresTerminator must return true if Read may not know
-	// when to stop reading the data encoded by Write,
-	// or if Write could encode zero bytes for some value.
-	// This is the case for unbounded types like strings, slices, and maps, as well as empty struct types.
+	// RequiresTerminator returns whether data written by this Codec requires a terminator and escaping
+	// when more data may be written to the same stream following the data written by this Codec.
+	// This is true if either
+	//   - Read may not know when to stop reading the data written by Write (strings, maps, some pointers, ...), or
+	//   - Write could encode zero bytes for some value (strings, [Empty], ...).
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
-	// and more data could be written following the encoded data,
-	// or if Write could encode zero bytes for some value.
-	// For example, [SliceOf] must wrap its element Codec with TerminateIfNeeded.
-	// A user does not need to consider wrapping this Codec if either:
-	//	- this Codec is known to not require it, and will never require it ([Int8], e.g.), or
-	//	- the data written by this Codec will always be at the end of the stream when read, and cannot be zero bytes.
+	// and more data could be written following the data written by this Codec.
+	// This is optional because terminating and escaping is unnecessary if this Codec should read until EOF,
+	// and only the caller knows this.
 	//
-	// The implementation returned by [PointerTo] is an unusual use case in that it only requires a terminator
-	// if its element Codec requires one.
-	// This is only because the pointer Codec encodes at most a single element,
-	// and does not itself encode any data following that element.
+	// The Codec returned by [PointerTo] is unusual in that it only requires a terminator
+	// if its referent Codec requires one.
 	RequiresTerminator() bool
 }
 
-// A NillableCodec[T] is a Codec[T] where the value of type T can be nil.
+// A NillableCodec is a Codec where the value of type T can be nil.
 // This interface exists to support the NilsLast method.
 //
 // In Go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
@@ -133,7 +130,7 @@ type Codec[T any] interface {
 //
 // If Go cannot be upgraded to 1.21, a function like this might be helpful.
 //
-//	func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] { return codec }
+//	func castToCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] { return codec }
 type NillableCodec[T any] interface {
 	Codec[T]
 
@@ -172,7 +169,7 @@ var (
 	stdTermBytesCodec    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytesCodec}
 )
 
-// Factory functions that don't require specifying type parameters to use,
+// Codec-returning functions that don't require specifying a type parameter to use,
 // because the compiler can infer them from the arguments, if any.
 
 // Bool returns a Codec for the bool type.
@@ -225,7 +222,7 @@ func Int64() Codec[int64] { return stdInt64Codec }
 // Float32 returns a Codec for the float32 type.
 // All bits of the value are preserved by this encoding.
 // There are many different bit patterns for NaN, and their encodings will be distinct.
-// No distinction is made between quiet and signaling NaNs.
+// No ordering distinction is made between quiet and signaling NaNs.
 // This Codec does not require a terminator when used within an aggregate Codec.
 // The order of encoded values is:
 //
@@ -257,6 +254,13 @@ func Complex128() Codec[complex128] { return stdComplex128Codec }
 
 // String returns a Codec for the string type.
 // This Codec requires a terminator when used within an aggregate Codec.
+//
+// A string is encoded as its bytes.
+// This encoded order may be surprising.
+// A string in Go is essentially an immutable []byte without any text semantics.
+// For a UTF-8 string, the order is the same as the lexicographical order of the Unicode code points.
+// However, even this is not intuitive. For example, 'Z' < 'a'.
+// Collation is locale-dependent, and any ordering could be incorrect in another locale.
 func String() Codec[string] { return stdStringCodec }
 
 // TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
@@ -283,9 +287,11 @@ func BigInt() NillableCodec[*big.Int] { return stdBigIntCodec }
 
 // BigFloat returns a NillableCodec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
+// Like floats, -Inf, -0.0, +0.0, and +Inf all have a big.Float representation.
+// However, there is no big.Float representation for NaN.
 // This Codec requires a terminator when used within an aggregate Codec.
 //
-// This Codec is lossy. It does not encode the [big.Accuracy].
+// This Codec is lossy. It does not encode the value's [big.Accuracy].
 func BigFloat() NillableCodec[*big.Float] { return stdBigFloatCodec }
 
 // TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
@@ -299,7 +305,7 @@ func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloatCodec }
 func BigRat() NillableCodec[*big.Rat] { return stdBigRatCodec }
 
 // Bytes returns a NillableCodec for the []byte type, with nil slices ordered first.
-// The encoded order is lexicographical.
+// A []byte is written as-is following a nil/non-nil indicator.
 // This Codec is more efficient than Codecs produced by [SliceOf]([Uint8]()),
 // and will allow nil unlike [String].
 // This Codec requires a terminator when used within an aggregate Codec.
@@ -311,7 +317,7 @@ func TerminatedBytes() Codec[[]byte] { return stdTermBytesCodec }
 
 // PointerTo returns a NillableCodec for the *E type, with nil pointers ordered first.
 // The encoded order of non-nil values is the same as is produced by elemCodec.
-// This Codec may require a terminator when used within an aggregate Codec.
+// This Codec requires a terminator when used within an aggregate Codec if elemCodec does.
 func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
 	return MakePointerTo[*E](elemCodec)
 }
@@ -330,7 +336,7 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Nillable
 	return MakeMapOf[map[K]V](keyCodec, valueCodec)
 }
 
-// Negate returns a Codec reversing the encoded order produced by codec.
+// Negate returns a Codec reversing the encoded order of codec.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Negate[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
@@ -345,6 +351,9 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 }
 
 // Terminate returns a Codec that escapes and terminates the encodings produced by codec.
+// This function is for the rare edge case requiring a Codec's encodings to be escaped and terminated,
+// whether or not it normally requires it.
+// Most of the time, [TerminateIfNeeded] should be used instead.
 func Terminate[T any](codec Codec[T]) Codec[T] {
 	if codec == nil {
 		panic("codec must be non-nil")
@@ -365,7 +374,7 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 	return terminatorCodec[T]{codec}
 }
 
-// Factory functions that do require specifying type parameters to use.
+// Codec-returning functions that require specifying a type parameter to use.
 
 // Empty returns a Codec that reads and writes no data.
 // [Codec.Read] returns the zero value of T.
@@ -375,67 +384,67 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
 
 // MakeBool returns a Codec for a type with an underlying type of bool.
-// Other than the underlying type, it is the same as [Bool].
+// Other than the underlying type, this is the same as [Bool].
 func MakeBool[T ~bool]() Codec[T] { return uintCodec[T]{} }
 
 // MakeUint returns a Codec for a type with an underlying type of uint.
-// Other than the underlying type, it is the same as [Uint].
+// Other than the underlying type, this is the same as [Uint].
 func MakeUint[T ~uint]() Codec[T] { return asUint64Codec[T]{} }
 
 // MakeUint8 returns a Codec for a type with an underlying type of uint8.
-// Other than the underlying type, it is the same as [Uint8].
+// Other than the underlying type, this is the same as [Uint8].
 func MakeUint8[T ~uint8]() Codec[T] { return uintCodec[T]{} }
 
 // MakeUint16 returns a Codec for a type with an underlying type of uint16.
-// Other than the underlying type, it is the same as [Uint16].
+// Other than the underlying type, this is the same as [Uint16].
 func MakeUint16[T ~uint16]() Codec[T] { return uintCodec[T]{} }
 
 // MakeUint32 returns a Codec for a type with an underlying type of uint32.
-// Other than the underlying type, it is the same as [Uint32].
+// Other than the underlying type, this is the same as [Uint32].
 func MakeUint32[T ~uint32]() Codec[T] { return uintCodec[T]{} }
 
 // MakeUint64 returns a Codec for a type with an underlying type of uint64.
-// Other than the underlying type, it is the same as [Uint64].
+// Other than the underlying type, this is the same as [Uint64].
 func MakeUint64[T ~uint64]() Codec[T] { return uintCodec[T]{} }
 
 // MakeInt returns a Codec for a type with an underlying type of int.
-// Other than the underlying type, it is the same as [Int].
+// Other than the underlying type, this is the same as [Int].
 func MakeInt[T ~int]() Codec[T] { return asInt64Codec[T]{} }
 
 // MakeInt8 returns a Codec for a type with an underlying type of int8.
-// Other than the underlying type, it is the same as [Int8].
+// Other than the underlying type, this is the same as [Int8].
 func MakeInt8[T ~int8]() Codec[T] { return intCodec[T]{math.MinInt8} }
 
 // MakeInt16 returns a Codec for a type with an underlying type of int16.
-// Other than the underlying type, it is the same as [Int16].
+// Other than the underlying type, this is the same as [Int16].
 func MakeInt16[T ~int16]() Codec[T] { return intCodec[T]{math.MinInt16} }
 
 // MakeInt32 returns a Codec for a type with an underlying type of int32.
-// Other than the underlying type, it is the same as [Int32].
+// Other than the underlying type, this is the same as [Int32].
 func MakeInt32[T ~int32]() Codec[T] { return intCodec[T]{math.MinInt32} }
 
 // MakeInt64 returns a Codec for a type with an underlying type of int64.
-// Other than the underlying type, it is the same as [Int64].
+// Other than the underlying type, this is the same as [Int64].
 func MakeInt64[T ~int64]() Codec[T] { return intCodec[T]{math.MinInt64} }
 
 // MakeFloat32 returns a Codec for a type with an underlying type of float32.
-// Other than the underlying type, it is the same as [Float32].
+// Other than the underlying type, this is the same as [Float32].
 func MakeFloat32[T ~float32]() Codec[T] { return float32Codec[T]{} }
 
 // MakeFloat64 returns a Codec for a type with an underlying type of float64.
-// Other than the underlying type, it is the same as [Float64].
+// Other than the underlying type, this is the same as [Float64].
 func MakeFloat64[T ~float64]() Codec[T] { return float64Codec[T]{} }
 
 // MakeString returns a Codec for a type with an underlying type of string.
-// Other than the underlying type, it is the same as [String].
+// Other than the underlying type, this is the same as [String].
 func MakeString[T ~string]() Codec[T] { return stringCodec[T]{} }
 
 // MakeBytes returns a NillableCodec for a type with an underlying type of []byte, with nil slices ordered first.
-// Other than the underlying type, it is the same as [Bytes].
+// Other than the underlying type, this is the same as [Bytes].
 func MakeBytes[S ~[]byte]() NillableCodec[S] { return bytesCodec[S]{true} }
 
 // MakePointerTo returns a NillableCodec for a type with an underlying type of *E, with nil pointers ordered first.
-// Other than the underlying type, it is the same as [PointerTo].
+// Other than the underlying type, this is the same as [PointerTo].
 func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
@@ -444,7 +453,7 @@ func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
 }
 
 // MakeSliceOf returns a NillableCodec for a type with an underlying type of []E, with nil slices ordered first.
-// Other than the underlying type, it is the same as [SliceOf].
+// Other than the underlying type, this is the same as [SliceOf].
 func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
 	if elemCodec == nil {
 		panic("elemCodec must be non-nil")
@@ -453,7 +462,7 @@ func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
 }
 
 // MakeMapOf returns a NillableCodec for a type with an underlying type of map[K]V, with nil maps ordered first.
-// Other than the underlying type, it is the same as [MapOf].
+// Other than the underlying type, this is the same as [MapOf].
 func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
 	if keyCodec == nil {
 		panic("keyCodec must be non-nil")
@@ -472,7 +481,7 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 
 // UnexpectedIfEOF returns [io.ErrUnexpectedEOF] if err is [io.EOF], and returns err otherwise.
 //
-// This helps make [Codec.Read] implementations a little easier to read.
+// This helps make [Codec.Read] implementations easier to read.
 // See the examples for usage patterns.
 func UnexpectedIfEOF(err error) error {
 	if err == io.EOF {
@@ -482,10 +491,10 @@ func UnexpectedIfEOF(err error) error {
 }
 
 // Prefixes to use for encodings for types whose instances can be nil.
-// The values were chosen so that nils-first < non-nil < nils-last,
+// The values were chosen so that prefixNilFirst < prefixNonNil < prefixNilLast,
 // and neither the prefixes nor their complements need to be escaped.
 const (
-	// Room for more between non-nil and nils-last if needed.
+	// Room for more between prefixNonNil and prefixNilLast if needed.
 	prefixNilFirst byte = 0x02
 	prefixNonNil   byte = 0x03
 	prefixNilLast  byte = 0xFD
@@ -501,7 +510,7 @@ var (
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
 // Invoking ReadPrefix should the first action taken by [Codec.Read] for these Codecs,
-// since it allows an early return if the value read is nil.
+// since it allows an early return if the decoded value is nil.
 // This is a typical usage:
 //
 //	func (c someCodecType) Read(r io.Reader) (T, error) {
@@ -539,8 +548,8 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 }
 
 // WritePrefix writes a nil/non-nil prefix byte to w based on the values of isNil and nilsFirst.
-// Invoking WritePrefix should the first action taken by [Codec.Write] for these Codecs,
-// since it allows an early return if the value written is nil.
+// Invoking WritePrefix should be the first action taken by [Codec.Write] for these Codecs,
+// since it allows an early return if value is nil.
 // This is a typical usage:
 //
 //	func (c someCodecType) Write(w io.Writer, value T) error {
@@ -553,7 +562,7 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 // WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
 // in which case the caller still needs to write the non-nil value to w.
 //
-// If WritePrefix returns done == true, then the caller is done writing the current value to w
+// If WritePrefix returns done == true, then the caller is done writing the value to w
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was successfully written.
 func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {

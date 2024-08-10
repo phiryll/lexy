@@ -4,13 +4,10 @@ import (
 	"io"
 )
 
-// pointerCodec is the Codec for pointers, using elemCodec to encode and decode its pointee.
+// pointerCodec is the Codec for pointers, using elemCodec to encode and decode its referent.
 // A pointer is encoded as:
-//
-// - if nil, prefixNilFirst/Last
-// - if non-nil, prefixNonNil followed by its encoded pointee
-//
-// The prefix is required to disambiguate a nil pointer from a pointer to a nil value.
+//   - if nil, prefixNilFirst/Last
+//   - if non-nil, prefixNonNil followed by its encoded referent
 type pointerCodec[P ~*E, E any] struct {
 	elemCodec Codec[E]
 	nilsFirst bool

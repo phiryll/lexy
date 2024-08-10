@@ -22,7 +22,7 @@ var (
 	seedsInt64  = []int64{0, 1, -1, math.MinInt64, math.MaxInt64}
 
 	// Fuzzing bit patterns instead of floats
-	// because go's float fuzzer only generates one pattern for NaN.
+	// because Go's float fuzzer only generates one pattern for NaN.
 	seedsFloat32 = []uint32{
 		math.Float32bits(math.MaxFloat32),
 		math.Float32bits(math.SmallestNonzeroFloat32),
@@ -75,7 +75,7 @@ var (
 	}
 )
 
-// Helper function somewhat duplicating cmp.Compare (go 1.21, so trying to avoid)
+// Helper function somewhat duplicating cmp.Compare (Go 1.21)
 func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
 	switch {
 	case x < y:

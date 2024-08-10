@@ -10,7 +10,7 @@ import (
 //
 // Unlike most Codecs, timeCodec is lossy. It encodes the timezone's offset, but not its name.
 // It will therefore lose information about Daylight Saving Time.
-// Timezone names and DST behavior are defined outside go's control (as they must be),
+// Timezone names and DST behavior are defined outside Go's control (as they must be),
 // and time.Time.Zone can return names that will fail with time.Location.LoadLocation.
 // The order of encoded instances is UTC time first, timezone offset second.
 //

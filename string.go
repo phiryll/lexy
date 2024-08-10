@@ -9,11 +9,9 @@ import (
 //
 // A string is encoded as its bytes.
 // Read will fully consume its argument io.Reader, and will not return io.EOF.
-// If a string is part of a larger aggregate and not fixed-length,
-// its encoding should be escaped and terminated by the enclosing Codec.
 //
 // The order of strings, and this encoding, may be surprising.
-// A string in go is essentially an immutable []byte without text semantics.
+// A string in Go is essentially an immutable []byte without text semantics.
 // For an encoded UTF-8 string, the order is the same as the lexicographical order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
 // Collation is locale-dependent. Any ordering could be incorrect in another locale.

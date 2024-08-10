@@ -58,8 +58,9 @@ func (p previousCodec) Write(w io.Writer, value schemaPrevious) error {
 	return nameCodec.Write(w, value.name)
 }
 
-// Codecs that don't know when to stop reading must be terminated.
-// Any enclosing Codec should handle this appropriately.
+// Returns true because struct Codecs storing field name/value pairs
+// to handle previous versions must be tolerant of missing fields.
+// This Codec is essentially a map.
 func (p previousCodec) RequiresTerminator() bool {
 	return true
 }
@@ -73,7 +74,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	for {
 		field, err := nameCodec.Read(r)
 		if err == io.EOF {
-			// Must have already read the last field.
+			// EOF at this point means we're done.
 			return value, nil
 		}
 		if err != nil {
@@ -117,14 +118,15 @@ func (s schemaCodec) Write(w io.Writer, value schema) error {
 	panic("unused in this example")
 }
 
-// Codecs that don't know when to stop reading must be terminated.
-// Any enclosing Codec should handle this appropriately.
+// Returns true because struct Codecs storing field name/value pairs
+// to handle previous versions must be tolerant of missing fields.
+// This Codec is essentially a map.
 func (s schemaCodec) RequiresTerminator() bool {
 	return true
 }
 
-// Example (SchemaChange) shows one way to allow for schema changes.
-// The gist is to encode field names as well as field values.
+// ExampleSchemaChange shows one way to allow for schema changes.
+// The gist of this example is to encode field names as well as field values.
 // This can be done in other ways, and more or less leniently.
 // This is just an example.
 //
@@ -132,19 +134,20 @@ func (s schemaCodec) RequiresTerminator() bool {
 // correctly with respect to each other, regardless of the technique used.
 //
 // Only field values should be encoded if any of the following are true:
-// - the schema is expected to never change, or
-// - the encoded data will be replaced wholesale if the schema changes, or
-// - schema versioning is used (see the schema version example).
+//   - the schema is expected to never change, or
+//   - the encoded data will be replaced wholesale if the schema changes, or
+//   - schema versioning is used (see the schema version example).
 //
 // The kinds of schema change addressed by this example are:
-// - field added
-// - field removed
-// - field renamed
+//   - field added
+//   - field removed
+//   - field renamed
 //
 // If a field's type might change, the best option is to use versioning.
 // Otherwise, it would be necessary to encode the field's type before its value,
-// because there's no way to know how to read the value otherwise.
-// That said, encoding a value's type is discouraged.
+// because there's no way to know how to read the value otherwise,
+// and then the type would be the primary sort key for that field.
+// Encoding a value's type is discouraged.
 //
 // The sort order of encoded data cannot be changed.
 // However, there is nothing wrong with creating multiple Codecs

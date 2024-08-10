@@ -145,8 +145,7 @@ func (c bigIntCodec) NilsLast() NillableCodec[*big.Int] {
 //
 //	write prefixNilFirst/Last if value is nil and return immediately
 //	write prefixNonNil
-//	write int8: -3/-2/-1/+1/+2/+3 for
-//		-Inf / (-Inf,0) / -0 / +0 / (0,+Inf) / +Inf
+//	write int8: negInf/negFinite/negZero/posZero/posFinite/posInf
 //	if infinite or zero, we're done
 //	write int32 exponent
 //		negate exponent first if Float is negative
@@ -161,15 +160,16 @@ type bigFloatCodec struct {
 	nilsFirst bool
 }
 
-// The second byte written in the *big.Float encoding after the initial
-// prefixNonNil byte if non-nil.
+// The second byte written in the *big.Float encoding after the initial prefixNonNil byte if non-nil.
+// The values were chosen so that negInf < negFinite < negZero < posZero < posFinite < posInf.
+// Neither the encoded values for these constants nor their complements need to be escaped.
 const (
-	negInf       int8 = -3
-	negFinite    int8 = -2
-	negZero      int8 = -1
-	posZero      int8 = +1
-	nonNegFinite int8 = +2
-	posInf       int8 = +3
+	negInf    int8 = -3
+	negFinite int8 = -2
+	negZero   int8 = -1
+	posZero   int8 = +1
+	posFinite int8 = +2
+	posInf    int8 = +3
 )
 
 var modeCodec = uintCodec[big.RoundingMode]{}
@@ -277,7 +277,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	case signbit:
 		kind = negFinite
 	case !signbit:
-		kind = nonNegFinite
+		kind = posFinite
 	}
 	if err := stdInt8Codec.Write(w, kind); err != nil {
 		return err
