@@ -45,7 +45,7 @@ var (
 	anIntCodec  = lexy.Int16()
 	aFloatCodec = lexy.Float32()
 	// The cast is only necessary when using Go versions prior to 1.21.
-	stringsCodec    = lexy.Terminate(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
+	stringsCodec    = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
 	negStringsCodec = lexy.Negate(stringsCodec)
 	ifsCodec        = intFloatStringsCodec{}
 	fnsiCodec       = floatNegStringsIntCodec{}
