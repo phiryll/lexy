@@ -62,7 +62,7 @@ import (
 	"time"
 )
 
-// A Codec[T] defines a binary encoding for values of type T.
+// Codec defines a binary encoding for values of type T.
 // Most of the Codec implementations provided by this package preserve the type's natural ordering,
 // but nothing requires that behavior.
 // The Read and Write methods should be lossless inverse operations.
@@ -120,7 +120,7 @@ type Codec[T any] interface {
 	RequiresTerminator() bool
 }
 
-// A NillableCodec[T] is a Codec[T] where the value of type T can be nil.
+// A NillableCodec is a Codec where the value of type T can be nil.
 // This interface exists to support the NilsLast method.
 //
 // In Go versions prior to 1.21, the compiler will not infer that a NillableCodec[T] is a Codec[T].
