@@ -20,16 +20,6 @@ type Container struct {
 	// to create a Codec[*Container] instead.
 }
 
-func (c Container) Equals(other Container) bool {
-	if c.big == nil && other.big == nil {
-		return true
-	}
-	if c.big == nil || other.big == nil {
-		return false
-	}
-	return *c.big == *other.big
-}
-
 var (
 	PtrToBigStructCodec = ptrToBigStructCodec{}
 	ContainerCodec      = containterCodec{}
@@ -71,9 +61,9 @@ func (c ptrToBigStructCodec) RequiresTerminator() bool {
 type containterCodec struct{}
 
 func (c containterCodec) Read(r io.Reader) (Container, error) {
+	var zero Container
 	big, err := PtrToBigStructCodec.Read(r)
 	if err != nil {
-		var zero Container
 		return zero, err
 	}
 	// Read other fields.
@@ -92,12 +82,23 @@ func (c containterCodec) RequiresTerminator() bool {
 	return false
 }
 
-// Example (PointerToStruct) shows how to use pointers for efficiency
+// only used for printing output in the example
+func containerEquals(a, b Container) bool {
+	if a.big == nil && b.big == nil {
+		return true
+	}
+	if a.big == nil || b.big == nil {
+		return false
+	}
+	return *a.big == *b.big
+}
+
+// ExamplePointerToStruct shows how to use pointers for efficiency
 // in a custom Codec, to avoid unnecessarily copying large data structures.
 // Note that types in Go other than structs and arrays do not have this problem.
 // Complex numbers, strings, pointers, slices, and maps
 // all have a relatively small footprint when passed by value.
-// The same is true of time.Time and time.Duration instances.
+// The same is true of [time.Time] and [time.Duration] instances.
 //
 // Normally, a Codec[BigStruct] would be defined and Container's Codec
 // would use it as lexy.PointerTo(bigStructCodec).
@@ -120,7 +121,7 @@ func Example_pointerToStruct() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(value.Equals(decoded))
+		fmt.Println(containerEquals(value, decoded))
 	}
 	// Output:
 	// true

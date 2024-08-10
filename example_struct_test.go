@@ -119,15 +119,15 @@ func (c floatNegStringsIntCodec) RequiresTerminator() bool {
 	return false
 }
 
-type sortableWrapper struct {
+type sortableByteSlices struct {
 	b [][]byte
 }
 
-var _ sort.Interface = sortableWrapper{}
+var _ sort.Interface = sortableByteSlices{}
 
-func (s sortableWrapper) Len() int               { return len(s.b) }
-func (s sortableWrapper) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
-func (s sortableWrapper) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
+func (s sortableByteSlices) Len() int               { return len(s.b) }
+func (s sortableByteSlices) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
+func (s sortableByteSlices) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
 // Example (SimpleStruct) encodes a struct type using two differently ordered Codecs.
 // The pattern will be the same for creating any Codec for a user-defined type.
@@ -191,7 +191,7 @@ func Example_simpleStruct() {
 		fmt.Println(value.Equals(decoded))
 	}
 
-	sort.Sort(sortableWrapper{ifsEncoded})
+	sort.Sort(sortableByteSlices{ifsEncoded})
 	fmt.Println("Int-Float-Strings sorted:")
 	for _, encoded := range ifsEncoded {
 		decoded, err := ifsCodec.Read(bytes.NewReader(encoded))
@@ -201,7 +201,7 @@ func Example_simpleStruct() {
 		fmt.Println(decoded.String())
 	}
 
-	sort.Sort(sortableWrapper{fnsiEncoded})
+	sort.Sort(sortableByteSlices{fnsiEncoded})
 	fmt.Println("Float-NegStrings-Int sorted:")
 	for _, encoded := range fnsiEncoded {
 		decoded, err := fnsiCodec.Read(bytes.NewReader(encoded))

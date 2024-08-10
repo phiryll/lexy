@@ -150,7 +150,7 @@ func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 
 // END USER DB ABSTRACTION
 
-// Example (RangeQuery) shows how a range query might be implemented.
+// ExampleRangeQuery shows how a range query might be implemented.
 func Example_rangeQuery() {
 	userDB := UserDB{}
 	for _, item := range []struct {
