@@ -150,8 +150,10 @@ func TestNames32(t *testing.T) {
 	assert.Equal(t, math.Inf(1), float64(posInf32), "+Inf: %x", posInf32)
 	assert.Equal(t, -float32(math.MaxFloat32), negMaxNormal32, "max negative float32: %x", negMaxNormal32)
 	assert.Equal(t, float32(math.MaxFloat32), posMaxNormal32, "max positive float32: %x", posMaxNormal32)
-	assert.Equal(t, -float32(math.SmallestNonzeroFloat32), negMinSubnormal32, "min negative float32: %x", negMinSubnormal32)
-	assert.Equal(t, float32(math.SmallestNonzeroFloat32), posMinSubnormal32, "min positive float32: %x", posMinSubnormal32)
+	assert.Equal(t, -float32(math.SmallestNonzeroFloat32), negMinSubnormal32,
+		"min negative float32: %x", negMinSubnormal32)
+	assert.Equal(t, float32(math.SmallestNonzeroFloat32), posMinSubnormal32,
+		"min positive float32: %x", posMinSubnormal32)
 	assert.Equal(t, float32(math.Copysign(0.0, -1.0)), negZero32, "should be -0.0: %x", negZero32)
 	assert.Equal(t, float32(math.Copysign(0.0, 1.0)), posZero32, "should be +0.0: %x", posZero32)
 
