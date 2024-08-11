@@ -25,7 +25,6 @@ var (
 	ContainerCodec      = containterCodec{}
 )
 
-// A Codec[*BigStruct]
 type ptrToBigStructCodec struct{}
 
 func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {

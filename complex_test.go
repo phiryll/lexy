@@ -13,7 +13,7 @@ import (
 
 // Reusing things from float_test.
 
-// float32s in increasing order
+// float32s in increasing order.
 var float32s = []struct {
 	name  string
 	value float32
@@ -86,7 +86,7 @@ func TestComplex64(t *testing.T) {
 	}
 }
 
-// float64s in increasing order
+// float64s in increasing order.
 var float64s = []struct {
 	name  string
 	value float64
