@@ -34,7 +34,7 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	})
 }
 
-// nil => "nil"
+// Derefs all the pointers, with nil => "nil".
 func dePointerMap(m map[*string]*string) map[string]string {
 	deref := func(p *string) string {
 		if p == nil {

@@ -90,8 +90,8 @@ type negateTest struct {
 	string string
 }
 
-// order is: uint8, neg(string), neg(pInt16)
-// putting the negated varying length field in the middle is intentional
+// Sort order is: uint8, neg(string), neg(pInt16).
+// Putting the negated varying length field in the middle is intentional.
 type negateTestCodec struct{}
 
 var (

@@ -52,7 +52,6 @@ func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	return nil
 }
 
-// A Codec[Container]
 func (c ptrToBigStructCodec) RequiresTerminator() bool {
 	return false
 }
@@ -81,7 +80,7 @@ func (c containterCodec) RequiresTerminator() bool {
 	return false
 }
 
-// only used for printing output in the example
+// This is only used for printing output in the example.
 func containerEquals(a, b Container) bool {
 	if a.big == nil && b.big == nil {
 		return true

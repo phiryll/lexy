@@ -75,7 +75,7 @@ var (
 	}
 )
 
-// Helper function somewhat duplicating cmp.Compare (Go 1.21)
+// Helper function somewhat duplicating cmp.Compare (Go 1.21).
 func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
 	switch {
 	case x < y:
@@ -87,7 +87,7 @@ func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 |
 	}
 }
 
-// translates representations, used for bits<->float
+// Translates representations, used for bits<->float.
 type converter[T, U any] interface {
 	To(t T) U
 	From(u U) T
@@ -126,7 +126,7 @@ func addValues[T any](f *testing.F, values ...T) {
 	}
 }
 
-// used for testing cmp(v1, v2)
+// Used for testing cmp(v1, v2).
 func addUnorderedPairs[T any](f *testing.F, values ...T) {
 	for i, x := range values {
 		for _, y := range values[i+1:] {
@@ -322,7 +322,7 @@ func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func
 	}
 }
 
-// because bytes.Compare(nil, {}) == 0
+// This is necessary because bytes.Compare(nil, {}) == 0.
 func cmpBytes(a, b []byte) int {
 	switch {
 	case a == nil && b == nil:

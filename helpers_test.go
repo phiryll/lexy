@@ -48,8 +48,7 @@ const (
 	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
-// Tests:
-// - Codec.Read() and Codec.Write() are invertible for the given test cases
+// Tests that Codec.Read() and Codec.Write() are invertible for the given test cases.
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		for _, tt := range tests {
@@ -96,8 +95,8 @@ var (
 )
 
 // Tests:
-// - Codec.Read() fails when reading from a failing io.Reader
-// - Codec.Write() fails when writing nonEmpty to a failing io.Writer
+// - Codec.Read() fails when reading from a failing io.Reader.
+// - Codec.Write() fails when writing nonEmpty to a failing io.Writer.
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("fail read", func(t *testing.T) {
 		_, err := codec.Read(iotest.ErrReader(readErr))
@@ -125,7 +124,7 @@ func (w failWriter) Write(_ []byte) (int, error) {
 	return 0, writeErr
 }
 
-// return number written from p
+// Return number of bytes written from p.
 func (w *boundedWriter) Write(p []byte) (int, error) {
 	remaining := w.limit - w.count
 	numToWrite := len(p)

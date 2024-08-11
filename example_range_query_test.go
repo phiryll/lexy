@@ -46,7 +46,7 @@ func (db *DB) Put(key []byte, value int) error {
 	return nil
 }
 
-// Returns Entries, in order, such that (begin <= entry.Key < end)
+// Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 	a, _ := db.search(Entry{begin, 0})
 	b, _ := db.search(Entry{end, 0})
@@ -120,7 +120,7 @@ func (db *UserDB) Put(key UserKey, value int) error {
 	return db.realDB.Put(buf.Bytes(), value)
 }
 
-// Returns Entries, in order, such that (begin <= entry.Key < end)
+// Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 	var buf bytes.Buffer
 	if err := keyCodec.Write(&buf, begin); err != nil {
