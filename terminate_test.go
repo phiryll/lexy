@@ -16,27 +16,41 @@ func TestEscape(t *testing.T) {
 		data    []byte
 		escaped []byte
 	}{
-		{"no special bytes",
+		{
+			"no special bytes",
 			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6, 0}},
-		{"with special bytes",
+			[]byte{2, 3, 5, 4, 7, 6, 0},
+		},
+		{
+			"with special bytes",
 			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0}},
-		{"empty",
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0},
+		},
+		{
+			"empty",
 			[]byte{},
-			[]byte{0}},
-		{"terminator",
 			[]byte{0},
-			[]byte{1, 0, 0}},
-		{"escape",
+		},
+		{
+			"terminator",
+			[]byte{0},
+			[]byte{1, 0, 0},
+		},
+		{
+			"escape",
 			[]byte{1},
-			[]byte{1, 1, 0}},
-		{"trailing terminator",
+			[]byte{1, 1, 0},
+		},
+		{
+			"trailing terminator",
 			[]byte{0, 1, 2, 3, 1, 4, 0},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0}},
-		{"trailing escape",
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0},
+		},
+		{
+			"trailing escape",
 			[]byte{0, 1, 2, 3, 1, 4, 1},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0}},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,36 +71,48 @@ func TestEscapeFail(t *testing.T) {
 		count   int
 		wantErr bool
 	}{
-		{"no special bytes, at limit",
+		{
+			"no special bytes, at limit",
 			[]byte{2, 3, 5, 4, 7},
 			[]byte{2, 3, 5, 4, 7, 0},
 			5,
-			false},
-		{"no special bytes, over limit",
+			false,
+		},
+		{
+			"no special bytes, over limit",
 			[]byte{2, 3, 5, 4, 7, 6},
 			[]byte{2, 3, 5, 4, 7, 6},
 			6,
-			true},
-		{"with special bytes, at limit",
+			true,
+		},
+		{
+			"with special bytes, at limit",
 			[]byte{0, 1, 2},
 			[]byte{1, 0, 1, 1, 2, 0},
 			3,
-			false},
-		{"with special bytes, over limit",
+			false,
+		},
+		{
+			"with special bytes, over limit",
 			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
 			[]byte{1, 0, 1, 1, 2, 3},
 			4,
-			true},
-		{"special at limit",
+			true,
+		},
+		{
+			"special at limit",
 			[]byte{2, 3, 4, 0},
 			[]byte{2, 3, 4, 1, 0, 0},
 			4,
-			false},
-		{"escaped crosses limit",
+			false,
+		},
+		{
+			"escaped crosses limit",
 			[]byte{2, 3, 4, 5, 0},
 			[]byte{2, 3, 4, 5, 1, 0},
 			5,
-			true},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -111,47 +137,67 @@ func TestUnescape(t *testing.T) {
 		unescaped []byte
 		atEOF     bool
 	}{
-		{"no special bytes",
+		{
+			"no special bytes",
 			[]byte{2, 3, 5, 4, 7, 6},
 			[]byte{2, 3, 5, 4, 7, 6},
-			true},
-		{"with special bytes",
+			true,
+		},
+		{
+			"with special bytes",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6},
 			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			true},
-		{"empty",
+			true,
+		},
+		{
+			"empty",
 			[]byte{},
 			[]byte{},
-			true},
-		{"terminator",
+			true,
+		},
+		{
+			"terminator",
 			[]byte{1, 0},
 			[]byte{0},
-			true},
-		{"escape",
+			true,
+		},
+		{
+			"escape",
 			[]byte{1, 1},
 			[]byte{1},
-			true},
-		{"trailing escaped terminator",
+			true,
+		},
+		{
+			"trailing escaped terminator",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0},
 			[]byte{0, 1, 2, 3, 1, 4, 0},
-			true},
-		{"trailing escaped escape",
+			true,
+		},
+		{
+			"trailing escaped escape",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1},
 			[]byte{0, 1, 2, 3, 1, 4, 1},
-			true},
-		{"trailing unescaped terminator",
+			true,
+		},
+		{
+			"trailing unescaped terminator",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 0},
 			[]byte{0, 1, 2, 3, 1, 4},
-			false},
+			false,
+		},
 		// This case is malformed, but testing expected behavior (white-box testing here).
-		{"trailing unescaped escape",
+		{
+			"trailing unescaped escape",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1},
 			[]byte{0, 1, 2, 3, 1, 4},
-			true},
-		{"non-trailing unescaped terminator",
+			true,
+		},
+		{
+			"non-trailing unescaped terminator",
 			[]byte{2, 3, 4, 1, 0, 5, 6, 0, 7, 8, 9},
 			[]byte{2, 3, 4, 0, 5, 6},
-			false},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

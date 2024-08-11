@@ -169,7 +169,7 @@ const (
 
 var modeCodec = uintCodec[big.RoundingMode]{}
 
-func computeShift(exp int32, prec int32) int {
+func computeShift(exp, prec int32) int {
 	// (prec - exp) is a shift of significant bits to immediately left of the point.
 	shift := prec - exp
 	// Shift a little further so the high bit in the high byte is 1.

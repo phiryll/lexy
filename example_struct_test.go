@@ -92,9 +92,9 @@ type sortableEncodings struct {
 
 var _ sort.Interface = sortableEncodings{nil}
 
-func (s sortableEncodings) Len() int               { return len(s.b) }
-func (s sortableEncodings) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
-func (s sortableEncodings) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
+func (s sortableEncodings) Len() int           { return len(s.b) }
+func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
+func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
 // ExampleStruct shows how to define a typical user-defined Codec.
 // The rules of thumb are:
