@@ -116,7 +116,7 @@ var (
 	_ io.Writer = &boundedWriter{}
 )
 
-func (w failWriter) Write(p []byte) (int, error) {
+func (w failWriter) Write(_ []byte) (int, error) {
 	return 0, fmt.Errorf("failed to write")
 }
 

@@ -35,7 +35,7 @@ var (
 
 type previousCodec struct{}
 
-func (p previousCodec) Read(r io.Reader) (schemaPrevious, error) {
+func (p previousCodec) Read(_ io.Reader) (schemaPrevious, error) {
 	panic("unused in this example")
 }
 
@@ -114,7 +114,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	}
 }
 
-func (s schemaCodec) Write(w io.Writer, value schema) error {
+func (s schemaCodec) Write(_ io.Writer, _ schema) error {
 	panic("unused in this example")
 }
 
