@@ -21,10 +21,9 @@ type Entry struct {
 }
 
 func (db *DB) insert(i int, entry Entry) {
-	entries := append(db.entries, Entry{})
-	copy(entries[i+1:], entries[i:])
-	entries[i] = entry
-	db.entries = entries
+	db.entries = append(db.entries, Entry{})
+	copy(db.entries[i+1:], db.entries[i:])
+	db.entries[i] = entry
 }
 
 func (db *DB) search(entry Entry) (int, bool) {
