@@ -5,7 +5,7 @@ package lexy_test
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"testing"
 	"testing/iotest"
@@ -90,12 +90,17 @@ func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCa
 	}
 }
 
+var (
+	readErr  = errors.New("failed to read")
+	writeErr = errors.New("failed to write")
+)
+
 // Tests:
 // - Codec.Read() fails when reading from a failing io.Reader
 // - Codec.Write() fails when writing nonEmpty to a failing io.Writer
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("fail read", func(t *testing.T) {
-		_, err := codec.Read(iotest.ErrReader(fmt.Errorf("failed to read")))
+		_, err := codec.Read(iotest.ErrReader(readErr))
 		assert.Error(t, err)
 	})
 	t.Run("fail write", func(t *testing.T) {
@@ -117,7 +122,7 @@ var (
 )
 
 func (w failWriter) Write(_ []byte) (int, error) {
-	return 0, fmt.Errorf("failed to write")
+	return 0, writeErr
 }
 
 // return number written from p
