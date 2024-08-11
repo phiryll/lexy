@@ -1,6 +1,8 @@
 package lexy
 
-import "io"
+import (
+	"io"
+)
 
 // complex64Codec is the Codec for complex64.
 //
@@ -41,7 +43,7 @@ func (c complex128Codec) Read(r io.Reader) (complex128, error) {
 		return 0, err
 	}
 	imagPart, err := stdFloat64Codec.Read(r)
-	if err != nil && err != io.EOF {
+	if err != nil {
 		return 0, UnexpectedIfEOF(err)
 	}
 	return complex(realPart, imagPart), nil
