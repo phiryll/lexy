@@ -18,7 +18,7 @@ func (c bytesCodec[S]) Read(r io.Reader) (S, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(make([]byte, 0, 64))
+	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 	// io.Copy will not return io.EOF
 	_, err := io.Copy(buf, r)
 	if err != nil {

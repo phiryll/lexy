@@ -585,12 +585,15 @@ func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 
 // Convenience functions.
 
+// The default size when allocating a buffer, chosen because it should fit in a cache line.
+const defaultBufSize = 64
+
 // Encode returns value encoded using codec as a []byte.
 //
 // This is a convenience function.
 // Use [Codec.Write] when encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	buf := bytes.NewBuffer(make([]byte, 0, 64))
+	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 	if err := codec.Write(buf, value); err != nil {
 		return nil, err
 	}

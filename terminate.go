@@ -78,7 +78,7 @@ func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 }
 
 func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
-	buf := bytes.NewBuffer(make([]byte, 0, 64))
+	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 	if err := c.codec.Write(buf, value); err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func doEscape(w io.Writer, p []byte) (int, error) {
 func doUnescape(r io.Reader) ([]byte, error) {
 	// Reading from r one byte at a time, because we can't unread.
 	in := []byte{0}
-	out := bytes.NewBuffer(make([]byte, 0, 64))
+	out := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 
 	escaped := false // if the previous byte read is an escape
 	for {
