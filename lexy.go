@@ -17,8 +17,7 @@ The Codecs returned by these functions will always order nil before all non-nil 
 Invoking [NillableCodec.NilsLast] on a NillableCodec will return a new Codec with same ordering,
 except nils will be ordered after all non-nil values.
 
-See [Codec.RequiresTerminator] for details on when escaping and terminating encoded bytes is required,
-and see the SimpleStruct example for an example where this matters.
+See [Codec.RequiresTerminator] for details on when escaping and terminating encoded bytes is required.
 
 These Codec-returning functions do not require specifying a type parameter when invoked.
   - [Bool]
@@ -547,7 +546,9 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 	}
 }
 
-// WritePrefix writes a nil/non-nil prefix byte to w based on the values of isNil and nilsFirst.
+// WritePrefix is used to write the initial nil/non-nil prefix byte to w by Codecs
+// that encode types whose instances can be nil.
+// The prefix written depends on the values of isNil and nilsFirst.
 // Invoking WritePrefix should be the first action taken by [Codec.Write] for these Codecs,
 // since it allows an early return if value is nil.
 // This is a typical usage:
