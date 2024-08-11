@@ -2,6 +2,7 @@ package lexy_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 
@@ -35,7 +36,7 @@ var (
 
 type previousCodec struct{}
 
-func (p previousCodec) Read(r io.Reader) (schemaPrevious, error) {
+func (p previousCodec) Read(_ io.Reader) (schemaPrevious, error) {
 	panic("unused in this example")
 }
 
@@ -73,7 +74,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	var zero, value schema
 	for {
 		field, err := nameCodec.Read(r)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			// EOF at this point means we're done.
 			return value, nil
 		}
@@ -114,7 +115,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	}
 }
 
-func (s schemaCodec) Write(w io.Writer, value schema) error {
+func (s schemaCodec) Write(_ io.Writer, _ schema) error {
 	panic("unused in this example")
 }
 

@@ -10,6 +10,7 @@ import (
 )
 
 func TestNegateInt32(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
 	testCodecRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
@@ -34,11 +35,13 @@ func TestNegateInt32(t *testing.T) {
 // The simple implementation is to simply invert all the bits, but it doesn't work.
 // This tests for that regression, see the comments on negateCodec for details.
 func TestNegateLength(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(lexy.Negate(lexy.String()))
 	assert.Less(t, encode("ab"), encode("a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.PointerTo(lexy.String())))
 	testCodecRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
@@ -58,8 +61,8 @@ func TestNegatePtrString(t *testing.T) {
 }
 
 func TestNegateSlicePtrString(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.String())))))
-
 	testCodecRoundTrip(t, codec, []testCase[[]*string]{
 		{"nil", nil, nil},
 		{"[]", []*string{}, nil},
@@ -90,8 +93,8 @@ type negateTest struct {
 	string string
 }
 
-// order is: uint8, neg(string), neg(pInt16)
-// putting the negated varying length field in the middle is intentional
+// Sort order is: uint8, neg(string), neg(pInt16).
+// Putting the negated varying length field in the middle is intentional.
 type negateTestCodec struct{}
 
 var (
@@ -109,17 +112,11 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	}
 	s, err := negStringCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	pInt, err := negPtrIntCodec.Read(r)
 	if err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return zero, err
+		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return negateTest{u8, pInt, s}, nil
 }
@@ -139,6 +136,7 @@ func (n negateTestCodec) RequiresTerminator() bool {
 }
 
 func TestNegateComplex(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(negTestCodec)
 	ptr := func(x int) *int16 {
 		i16 := int16(x)

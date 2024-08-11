@@ -99,7 +99,7 @@ func (c versionedCodec) RequiresTerminator() bool {
 
 type schemaVersion1Codec struct{}
 
-func (p schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
+func (c schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
 	var zero schemaVersion1
 	name, err := NameCodec.Read(r)
 	if err != nil {
@@ -108,11 +108,11 @@ func (p schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
 	return schemaVersion1{name}, nil
 }
 
-func (p schemaVersion1Codec) Write(w io.Writer, value schemaVersion1) error {
+func (c schemaVersion1Codec) Write(w io.Writer, value schemaVersion1) error {
 	return NameCodec.Write(w, value.name)
 }
 
-func (p schemaVersion1Codec) RequiresTerminator() bool {
+func (c schemaVersion1Codec) RequiresTerminator() bool {
 	return false
 }
 
@@ -120,7 +120,7 @@ func (p schemaVersion1Codec) RequiresTerminator() bool {
 
 type schemaVersion2Codec struct{}
 
-func (p schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
+func (c schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
 	var zero schemaVersion2
 	lastName, err := NameCodec.Read(r)
 	if err != nil {
@@ -133,14 +133,14 @@ func (p schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
 	return schemaVersion2{name, lastName}, nil
 }
 
-func (p schemaVersion2Codec) Write(w io.Writer, value schemaVersion2) error {
+func (c schemaVersion2Codec) Write(w io.Writer, value schemaVersion2) error {
 	if err := NameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
 	return NameCodec.Write(w, value.name)
 }
 
-func (p schemaVersion2Codec) RequiresTerminator() bool {
+func (c schemaVersion2Codec) RequiresTerminator() bool {
 	return false
 }
 
@@ -148,7 +148,7 @@ func (p schemaVersion2Codec) RequiresTerminator() bool {
 
 type schemaVersion3Codec struct{}
 
-func (p schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
+func (c schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
 	var zero schemaVersion3
 	count, err := CountCodec.Read(r)
 	if err != nil {
@@ -165,7 +165,7 @@ func (p schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
 	return schemaVersion3{name, lastName, count}, nil
 }
 
-func (p schemaVersion3Codec) Write(w io.Writer, value schemaVersion3) error {
+func (c schemaVersion3Codec) Write(w io.Writer, value schemaVersion3) error {
 	if err := CountCodec.Write(w, value.count); err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (p schemaVersion3Codec) Write(w io.Writer, value schemaVersion3) error {
 	return NameCodec.Write(w, value.name)
 }
 
-func (p schemaVersion3Codec) RequiresTerminator() bool {
+func (c schemaVersion3Codec) RequiresTerminator() bool {
 	return false
 }
 
@@ -183,7 +183,7 @@ func (p schemaVersion3Codec) RequiresTerminator() bool {
 
 type schemaVersion4Codec struct{}
 
-func (s schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
+func (c schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
 	var zero schemaVersion4
 	lastName, err := NameCodec.Read(r)
 	if err != nil {
@@ -200,7 +200,7 @@ func (s schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
 	return schemaVersion4{firstName, middleName, lastName}, nil
 }
 
-func (s schemaVersion4Codec) Write(w io.Writer, value schemaVersion4) error {
+func (c schemaVersion4Codec) Write(w io.Writer, value schemaVersion4) error {
 	if err := NameCodec.Write(w, value.lastName); err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (s schemaVersion4Codec) Write(w io.Writer, value schemaVersion4) error {
 	return NameCodec.Write(w, value.middleName)
 }
 
-func (p schemaVersion4Codec) RequiresTerminator() bool {
+func (c schemaVersion4Codec) RequiresTerminator() bool {
 	return false
 }
 

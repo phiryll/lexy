@@ -11,6 +11,7 @@ import (
 )
 
 func TestTime(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Time()
 
 	// West of UTC, negative timezone offset
@@ -41,7 +42,9 @@ func TestTime(t *testing.T) {
 		{"berlin", berlin},
 		{"no zone name", noZoneName},
 	} {
+		tt := tt
 		t.Run(tt.string, func(t *testing.T) {
+			t.Parallel()
 			when := tt.Time
 			_, expectedOffset := when.Zone()
 
@@ -63,6 +66,7 @@ func TestTime(t *testing.T) {
 }
 
 func TestTimeOrder(t *testing.T) {
+	t.Parallel()
 	// in order from west to east, expected sort order,
 	// UTC is between NYC and Berlin.
 	locFixed := time.FixedZone("fixed", -12*3600)

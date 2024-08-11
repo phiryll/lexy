@@ -1,6 +1,7 @@
 package lexy
 
 import (
+	"errors"
 	"io"
 )
 
@@ -24,7 +25,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	m := make(M)
 	for {
 		key, err := c.keyCodec.Read(r)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return m, nil
 		}
 		if err != nil {

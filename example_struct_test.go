@@ -22,7 +22,7 @@ func (s SomeStruct) String() string {
 
 // All of these are safe for concurrent access.
 var (
-	// score sorts high to low
+	// Score sorts high to low.
 	negScoreCodec = lexy.Negate(lexy.Float32())
 	// The type cast is only necessary when using Go versions prior to 1.21.
 	tagsCodec       = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
@@ -90,11 +90,11 @@ type sortableEncodings struct {
 	b [][]byte
 }
 
-var _ sort.Interface = sortableEncodings{}
+var _ sort.Interface = sortableEncodings{nil}
 
-func (s sortableEncodings) Len() int               { return len(s.b) }
-func (s sortableEncodings) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
-func (s sortableEncodings) Swap(i int, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
+func (s sortableEncodings) Len() int           { return len(s.b) }
+func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
+func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
 // ExampleStruct shows how to define a typical user-defined Codec.
 // The rules of thumb are:

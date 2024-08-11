@@ -8,6 +8,7 @@ import (
 )
 
 func TestPointerInt32(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.PointerTo(lexy.Int32()))
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -18,6 +19,7 @@ func TestPointerInt32(t *testing.T) {
 }
 
 func TestPointerString(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.PointerTo(lexy.String()))
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -28,6 +30,7 @@ func TestPointerString(t *testing.T) {
 }
 
 func TestPointerPointerString(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.PointerTo(toCodec(lexy.PointerTo(lexy.String()))))
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -39,6 +42,7 @@ func TestPointerPointerString(t *testing.T) {
 }
 
 func TestPointerSliceInt32(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.PointerTo(toCodec(lexy.SliceOf(lexy.Int32()))))
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -56,6 +60,7 @@ func TestPointerSliceInt32(t *testing.T) {
 }
 
 func TestPointerNilsLast(t *testing.T) {
+	t.Parallel()
 	encodeFirst := encoderFor(toCodec(lexy.PointerTo(lexy.String())))
 	encodeLast := encoderFor(toCodec(lexy.PointerTo(lexy.String()).NilsLast()))
 	assert.IsIncreasing(t, [][]byte{
@@ -75,6 +80,7 @@ func TestPointerNilsLast(t *testing.T) {
 type pInt *int32
 
 func TestPointerUnderlyingType(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.MakePointerTo[pInt](lexy.Int32()))
 	testCodec(t, codec, []testCase[pInt]{
 		{"nil", pInt(nil), []byte{pNilFirst}},

@@ -1,6 +1,8 @@
 package lexy
 
-import "io"
+import (
+	"io"
+)
 
 // complex64Codec is the Codec for complex64.
 //
@@ -8,15 +10,15 @@ import "io"
 type complex64Codec struct{}
 
 func (c complex64Codec) Read(r io.Reader) (complex64, error) {
-	real, err := stdFloat32Codec.Read(r)
+	realPart, err := stdFloat32Codec.Read(r)
 	if err != nil {
 		return 0, err
 	}
-	imag, err := stdFloat32Codec.Read(r)
+	imagPart, err := stdFloat32Codec.Read(r)
 	if err != nil {
 		return 0, UnexpectedIfEOF(err)
 	}
-	return complex(real, imag), nil
+	return complex(realPart, imagPart), nil
 }
 
 func (c complex64Codec) Write(w io.Writer, value complex64) error {
@@ -36,15 +38,15 @@ func (c complex64Codec) RequiresTerminator() bool {
 type complex128Codec struct{}
 
 func (c complex128Codec) Read(r io.Reader) (complex128, error) {
-	real, err := stdFloat64Codec.Read(r)
+	realPart, err := stdFloat64Codec.Read(r)
 	if err != nil {
 		return 0, err
 	}
-	imag, err := stdFloat64Codec.Read(r)
-	if err != nil && err != io.EOF {
+	imagPart, err := stdFloat64Codec.Read(r)
+	if err != nil {
 		return 0, UnexpectedIfEOF(err)
 	}
-	return complex(real, imag), nil
+	return complex(realPart, imagPart), nil
 }
 
 func (c complex128Codec) Write(w io.Writer, value complex128) error {

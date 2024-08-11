@@ -39,39 +39,39 @@ func mant64(value float64) uint64 {
 // They are defined here in the same order that they should be in when encoded by the Codec.
 // "Min" and "Max" in these variable names denote absolute semantic distance from 0.
 var (
-	negMaxNaN32       float32 = math.Float32frombits(0xFF_FF_FF_FF)
-	negMinNaN32       float32 = math.Float32frombits(0xFF_80_00_01)
-	negInf32          float32 = math.Float32frombits(0xFF_80_00_00)
-	negMaxNormal32    float32 = math.Float32frombits(0xFF_7F_FF_FF)
-	negMinNormal32    float32 = math.Float32frombits(0x80_80_00_00)
-	negMaxSubnormal32 float32 = math.Float32frombits(0x80_7F_FF_FF)
-	negMinSubnormal32 float32 = math.Float32frombits(0x80_00_00_01)
-	negZero32         float32 = math.Float32frombits(0x80_00_00_00)
-	posZero32         float32 = math.Float32frombits(0x00_00_00_00)
-	posMinSubnormal32 float32 = math.Float32frombits(0x00_00_00_01)
-	posMaxSubnormal32 float32 = math.Float32frombits(0x00_7F_FF_FF)
-	posMinNormal32    float32 = math.Float32frombits(0x00_80_00_00)
-	posMaxNormal32    float32 = math.Float32frombits(0x7F_7F_FF_FF)
-	posInf32          float32 = math.Float32frombits(0x7F_80_00_00)
-	posMinNaN32       float32 = math.Float32frombits(0x7F_80_00_01)
-	posMaxNaN32       float32 = math.Float32frombits(0x7F_FF_FF_FF)
+	negMaxNaN32       = math.Float32frombits(0xFF_FF_FF_FF)
+	negMinNaN32       = math.Float32frombits(0xFF_80_00_01)
+	negInf32          = math.Float32frombits(0xFF_80_00_00)
+	negMaxNormal32    = math.Float32frombits(0xFF_7F_FF_FF)
+	negMinNormal32    = math.Float32frombits(0x80_80_00_00)
+	negMaxSubnormal32 = math.Float32frombits(0x80_7F_FF_FF)
+	negMinSubnormal32 = math.Float32frombits(0x80_00_00_01)
+	negZero32         = math.Float32frombits(0x80_00_00_00)
+	posZero32         = math.Float32frombits(0x00_00_00_00)
+	posMinSubnormal32 = math.Float32frombits(0x00_00_00_01)
+	posMaxSubnormal32 = math.Float32frombits(0x00_7F_FF_FF)
+	posMinNormal32    = math.Float32frombits(0x00_80_00_00)
+	posMaxNormal32    = math.Float32frombits(0x7F_7F_FF_FF)
+	posInf32          = math.Float32frombits(0x7F_80_00_00)
+	posMinNaN32       = math.Float32frombits(0x7F_80_00_01)
+	posMaxNaN32       = math.Float32frombits(0x7F_FF_FF_FF)
 
-	negMaxNaN64       float64 = math.Float64frombits(0xFF_FF_FF_FF_FF_FF_FF_FF)
-	negMinNaN64       float64 = math.Float64frombits(0xFF_F0_00_00_00_00_00_01)
-	negInf64          float64 = math.Float64frombits(0xFF_F0_00_00_00_00_00_00)
-	negMaxNormal64    float64 = math.Float64frombits(0xFF_EF_FF_FF_FF_FF_FF_FF)
-	negMinNormal64    float64 = math.Float64frombits(0x80_10_00_00_00_00_00_00)
-	negMaxSubnormal64 float64 = math.Float64frombits(0x80_0F_FF_FF_FF_FF_FF_FF)
-	negMinSubnormal64 float64 = math.Float64frombits(0x80_00_00_00_00_00_00_01)
-	negZero64         float64 = math.Float64frombits(0x80_00_00_00_00_00_00_00)
-	posZero64         float64 = math.Float64frombits(0x00_00_00_00_00_00_00_00)
-	posMinSubnormal64 float64 = math.Float64frombits(0x00_00_00_00_00_00_00_01)
-	posMaxSubnormal64 float64 = math.Float64frombits(0x00_0F_FF_FF_FF_FF_FF_FF)
-	posMinNormal64    float64 = math.Float64frombits(0x00_10_00_00_00_00_00_00)
-	posMaxNormal64    float64 = math.Float64frombits(0x7F_EF_FF_FF_FF_FF_FF_FF)
-	posInf64          float64 = math.Float64frombits(0x7F_F0_00_00_00_00_00_00)
-	posMinNaN64       float64 = math.Float64frombits(0x7F_F0_00_00_00_00_00_01)
-	posMaxNaN64       float64 = math.Float64frombits(0x7F_FF_FF_FF_FF_FF_FF_FF)
+	negMaxNaN64       = math.Float64frombits(0xFF_FF_FF_FF_FF_FF_FF_FF)
+	negMinNaN64       = math.Float64frombits(0xFF_F0_00_00_00_00_00_01)
+	negInf64          = math.Float64frombits(0xFF_F0_00_00_00_00_00_00)
+	negMaxNormal64    = math.Float64frombits(0xFF_EF_FF_FF_FF_FF_FF_FF)
+	negMinNormal64    = math.Float64frombits(0x80_10_00_00_00_00_00_00)
+	negMaxSubnormal64 = math.Float64frombits(0x80_0F_FF_FF_FF_FF_FF_FF)
+	negMinSubnormal64 = math.Float64frombits(0x80_00_00_00_00_00_00_01)
+	negZero64         = math.Float64frombits(0x80_00_00_00_00_00_00_00)
+	posZero64         = math.Float64frombits(0x00_00_00_00_00_00_00_00)
+	posMinSubnormal64 = math.Float64frombits(0x00_00_00_00_00_00_00_01)
+	posMaxSubnormal64 = math.Float64frombits(0x00_0F_FF_FF_FF_FF_FF_FF)
+	posMinNormal64    = math.Float64frombits(0x00_10_00_00_00_00_00_00)
+	posMaxNormal64    = math.Float64frombits(0x7F_EF_FF_FF_FF_FF_FF_FF)
+	posInf64          = math.Float64frombits(0x7F_F0_00_00_00_00_00_00)
+	posMinNaN64       = math.Float64frombits(0x7F_F0_00_00_00_00_00_01)
+	posMaxNaN64       = math.Float64frombits(0x7F_FF_FF_FF_FF_FF_FF_FF)
 )
 
 // Some of these tests are to make sure I didn't fat-finger anything,
@@ -90,6 +90,7 @@ func assertNext64(t *testing.T, a, b float64) {
 // Test the expected ordering of the IEEE 754 32-bit encodings as uint32.
 // This ensures that none of the ranges defined by the bit patterns overlap.
 func TestIEEEOrdering32(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []uint32{
 		math.Float32bits(posZero32),
 		math.Float32bits(posMinSubnormal32),
@@ -128,6 +129,7 @@ func TestIEEEOrdering32(t *testing.T) {
 // This also tests that all the normal/subnormal constants are neither NaN nor infinite,
 // because NaNs are not orderable, and negInf32 and posInf32 are at the extremes of this test.
 func TestSemanticOrdering32(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []float32{
 		negInf32,
 		negMaxNormal32,
@@ -145,13 +147,16 @@ func TestSemanticOrdering32(t *testing.T) {
 
 // Test that the bit patterns are what their names say they are.
 func TestNames32(t *testing.T) {
+	t.Parallel()
 	// Testable exact values
 	assert.Equal(t, math.Inf(-1), float64(negInf32), "-Inf: %x", negInf32)
 	assert.Equal(t, math.Inf(1), float64(posInf32), "+Inf: %x", posInf32)
 	assert.Equal(t, -float32(math.MaxFloat32), negMaxNormal32, "max negative float32: %x", negMaxNormal32)
 	assert.Equal(t, float32(math.MaxFloat32), posMaxNormal32, "max positive float32: %x", posMaxNormal32)
-	assert.Equal(t, -float32(math.SmallestNonzeroFloat32), negMinSubnormal32, "min negative float32: %x", negMinSubnormal32)
-	assert.Equal(t, float32(math.SmallestNonzeroFloat32), posMinSubnormal32, "min positive float32: %x", posMinSubnormal32)
+	assert.Equal(t, -float32(math.SmallestNonzeroFloat32), negMinSubnormal32,
+		"min negative float32: %x", negMinSubnormal32)
+	assert.Equal(t, float32(math.SmallestNonzeroFloat32), posMinSubnormal32,
+		"min positive float32: %x", posMinSubnormal32)
 	assert.Equal(t, float32(math.Copysign(0.0, -1.0)), negZero32, "should be -0.0: %x", negZero32)
 	assert.Equal(t, float32(math.Copysign(0.0, 1.0)), posZero32, "should be +0.0: %x", posZero32)
 
@@ -173,6 +178,7 @@ func TestNames32(t *testing.T) {
 
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(lexy.Float32())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN32))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN32))
@@ -200,6 +206,7 @@ func TestFloat32CodecOrdering(t *testing.T) {
 // The 64-bit float tests are the same as the 32-bit float tests.
 
 func TestIEEEOrdering64(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []uint64{
 		math.Float64bits(posZero64),
 		math.Float64bits(posMinSubnormal64),
@@ -234,6 +241,7 @@ func TestIEEEOrdering64(t *testing.T) {
 }
 
 func TestSemanticOrdering64(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []float64{
 		negInf64,
 		negMaxNormal64,
@@ -250,6 +258,7 @@ func TestSemanticOrdering64(t *testing.T) {
 }
 
 func TestNames64(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, math.Inf(-1), negInf64, "-Inf: %x", negInf64)
 	assert.Equal(t, math.Inf(1), posInf64, "+Inf: %x", posInf64)
 	assert.Equal(t, -math.MaxFloat64, negMaxNormal64, "max negative float64: %x", negMaxNormal64)
@@ -273,6 +282,7 @@ func TestNames64(t *testing.T) {
 }
 
 func TestFloat64CodecOrdering(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(lexy.Float64())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN64))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN64))

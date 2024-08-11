@@ -54,6 +54,7 @@ package lexy
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -483,7 +484,7 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 // This helps make [Codec.Read] implementations easier to read.
 // See the examples for usage patterns.
 func UnexpectedIfEOF(err error) error {
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return io.ErrUnexpectedEOF
 	}
 	return err
@@ -584,12 +585,15 @@ func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 
 // Convenience functions.
 
+// The default size when allocating a buffer, chosen because it should fit in a cache line.
+const defaultBufSize = 64
+
 // Encode returns value encoded using codec as a []byte.
 //
 // This is a convenience function.
 // Use [Codec.Write] when encoding multiple values to the same byte stream.
 func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	buf := bytes.NewBuffer(make([]byte, 0, 64))
+	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 	if err := codec.Write(buf, value); err != nil {
 		return nil, err
 	}

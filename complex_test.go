@@ -13,7 +13,7 @@ import (
 
 // Reusing things from float_test.
 
-// float32s in increasing order
+// float32s in increasing order.
 var float32s = []struct {
 	name  string
 	value float32
@@ -37,6 +37,7 @@ var float32s = []struct {
 }
 
 func TestComplex64(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Complex64()
 	// Ensure we don't get complex128 without having to cast the arguments.
 	comp := func(r, i float32) complex64 { return complex(r, i) }
@@ -55,7 +56,9 @@ func TestComplex64(t *testing.T) {
 
 	// test round trip
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			buf := bytes.NewBuffer([]byte{})
 			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
@@ -86,7 +89,7 @@ func TestComplex64(t *testing.T) {
 	}
 }
 
-// float64s in increasing order
+// float64s in increasing order.
 var float64s = []struct {
 	name  string
 	value float64
@@ -110,6 +113,7 @@ var float64s = []struct {
 }
 
 func TestComplex128(t *testing.T) {
+	t.Parallel()
 	codec := lexy.Complex128()
 	// Ensure we don't get complex128 without having to cast the arguments.
 	comp := func(r, i float64) complex128 { return complex(r, i) }
@@ -128,13 +132,17 @@ func TestComplex128(t *testing.T) {
 
 	// test round trip
 	for _, tt := range testCases {
-		buf := bytes.NewBuffer([]byte{})
-		err := codec.Write(buf, tt.value)
-		require.NoError(t, err)
-		got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-		require.NoError(t, err)
-		// works for NaN as well
-		assert.Equal(t, math.Float64bits(real(tt.value)), math.Float64bits(real(got)))
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			buf := bytes.NewBuffer([]byte{})
+			err := codec.Write(buf, tt.value)
+			require.NoError(t, err)
+			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
+			require.NoError(t, err)
+			// works for NaN as well
+			assert.Equal(t, math.Float64bits(real(tt.value)), math.Float64bits(real(got)))
+		})
 	}
 
 	// test ordering

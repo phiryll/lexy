@@ -11,6 +11,7 @@ import (
 // Testing bool, uint/int, uint/int8, and uint/int32 should be sufficient.
 
 func TestBool(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Bool(), []testCase[bool]{
 		{"false", false, []byte{0}},
 		{"true", true, []byte{1}},
@@ -19,6 +20,7 @@ func TestBool(t *testing.T) {
 }
 
 func TestUint8(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Uint8(), []testCase[uint8]{
 		{"0x00", 0x00, []byte{0x00}},
 		{"0x01", 0x01, []byte{0x01}},
@@ -30,6 +32,7 @@ func TestUint8(t *testing.T) {
 }
 
 func TestUint32(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Uint32(), []testCase[uint32]{
 		{"0x00000000", 0x00000000, []byte{0x00, 0x00, 0x00, 0x00}},
 		{"0x00000001", 0x00000001, []byte{0x00, 0x00, 0x00, 0x01}},
@@ -41,6 +44,7 @@ func TestUint32(t *testing.T) {
 }
 
 func TestUint(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Uint(), []testCase[uint]{
 		{"0", 0, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 		{"1", 1, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
@@ -51,6 +55,7 @@ func TestUint(t *testing.T) {
 }
 
 func TestInt8(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Int8(), []testCase[int8]{
 		{"min", math.MinInt8, []byte{0x00}},
 		{"-1", -1, []byte{0x7F}},
@@ -62,6 +67,7 @@ func TestInt8(t *testing.T) {
 }
 
 func TestInt32(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Int32(), []testCase[int32]{
 		{"min", math.MinInt32, []byte{0x00, 0x00, 0x00, 0x00}},
 		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF}},
@@ -73,6 +79,7 @@ func TestInt32(t *testing.T) {
 }
 
 func TestInt(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Int(), []testCase[int]{
 		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
 		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
@@ -82,6 +89,7 @@ func TestInt(t *testing.T) {
 }
 
 func TestDuration(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.Duration(), []testCase[time.Duration]{
 		{"min", math.MinInt64 * time.Nanosecond, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 		{"-1", -time.Nanosecond, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
@@ -95,6 +103,7 @@ func TestDuration(t *testing.T) {
 type aBool bool
 
 func TestBoolUnderlyingType(t *testing.T) {
+	t.Parallel()
 	codec := lexy.MakeBool[aBool]()
 	testCodec(t, codec, []testCase[aBool]{
 		{"false", aBool(false), []byte{0}},

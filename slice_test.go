@@ -8,6 +8,7 @@ import (
 )
 
 func TestSliceInt32(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.SliceOf(lexy.Int32()))
 	testCodec(t, codec, []testCase[[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -25,6 +26,7 @@ func TestSliceInt32(t *testing.T) {
 }
 
 func TestSliceString(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.SliceOf(lexy.String()))
 	testCodec(t, codec, []testCase[[]string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -44,6 +46,7 @@ func TestSliceString(t *testing.T) {
 // Unlike []*string, *uint8 does not require a terminator.
 // This tests for the special case of a slice of non-terminated, prefixed elements.
 func TestSlicePtrUint8(t *testing.T) {
+	t.Parallel()
 	p := ptr[uint8]
 	codec := toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.Uint8()))))
 	testCodec(t, codec, []testCase[[]*uint8]{
@@ -66,6 +69,7 @@ func TestSlicePtrUint8(t *testing.T) {
 }
 
 func TestSlicePtrString(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.String()))))
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -84,6 +88,7 @@ func TestSlicePtrString(t *testing.T) {
 }
 
 func TestSliceSliceInt32(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.SliceOf(toCodec(lexy.SliceOf(lexy.Int32()))))
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -118,8 +123,8 @@ func TestSliceSliceInt32(t *testing.T) {
 }
 
 func TestSliceSliceString(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.SliceOf(toCodec(lexy.SliceOf(lexy.String()))))
-
 	testCodec(t, codec, []testCase[[][]string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]string{}, []byte{pNonNil}},
@@ -203,6 +208,7 @@ func TestSliceSliceString(t *testing.T) {
 type sInt []int32
 
 func TestSliceUnderlyingType(t *testing.T) {
+	t.Parallel()
 	codec := toCodec(lexy.MakeSliceOf[sInt](lexy.Int32()))
 	testCodec(t, codec, []testCase[sInt]{
 		{"nil", sInt(nil), []byte{pNilFirst}},
@@ -220,6 +226,7 @@ func TestSliceUnderlyingType(t *testing.T) {
 }
 
 func TestSliceNilsLast(t *testing.T) {
+	t.Parallel()
 	encodeFirst := encoderFor(toCodec(lexy.SliceOf(lexy.Int32())))
 	encodeLast := encoderFor(toCodec(lexy.SliceOf(lexy.Int32()).NilsLast()))
 	assert.IsIncreasing(t, [][]byte{

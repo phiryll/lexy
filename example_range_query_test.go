@@ -21,10 +21,9 @@ type Entry struct {
 }
 
 func (db *DB) insert(i int, entry Entry) {
-	entries := append(db.entries, Entry{})
-	copy(entries[i+1:], entries[i:])
-	entries[i] = entry
-	db.entries = entries
+	db.entries = append(db.entries, Entry{})
+	copy(db.entries[i+1:], db.entries[i:])
+	db.entries[i] = entry
 }
 
 func (db *DB) search(entry Entry) (int, bool) {
@@ -47,7 +46,7 @@ func (db *DB) Put(key []byte, value int) error {
 	return nil
 }
 
-// Returns Entries, in order, such that (begin <= entry.Key < end)
+// Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 	a, _ := db.search(Entry{begin, 0})
 	b, _ := db.search(Entry{end, 0})
@@ -121,7 +120,7 @@ func (db *UserDB) Put(key UserKey, value int) error {
 	return db.realDB.Put(buf.Bytes(), value)
 }
 
-// Returns Entries, in order, such that (begin <= entry.Key < end)
+// Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 	var buf bytes.Buffer
 	if err := keyCodec.Write(&buf, begin); err != nil {
@@ -152,7 +151,7 @@ func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 
 // ExampleRangeQuery shows how a range query might be implemented.
 func Example_rangeQuery() {
-	userDB := UserDB{}
+	var userDB UserDB
 	for _, item := range []struct {
 		cost  int32
 		words []string

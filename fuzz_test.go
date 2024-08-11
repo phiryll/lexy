@@ -75,7 +75,7 @@ var (
 	}
 )
 
-// Helper function somewhat duplicating cmp.Compare (Go 1.21)
+// Helper function somewhat duplicating cmp.Compare (Go 1.21).
 func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | string](x, y T) int {
 	switch {
 	case x < y:
@@ -87,7 +87,7 @@ func compare[T uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 |
 	}
 }
 
-// translates representations, used for bits<->float
+// Translates representations, used for bits<->float.
 type converter[T, U any] interface {
 	To(t T) U
 	From(u U) T
@@ -104,27 +104,19 @@ type float32Converter struct{}
 
 func (c float32Converter) To(f float32) uint32   { return math.Float32bits(f) }
 func (c float32Converter) From(u uint32) float32 { return math.Float32frombits(u) }
-func (c float32Converter) Cmp(a, b float32) int {
-	return cmpFloats(math.Float32bits, a, b)
-}
+func (c float32Converter) Cmp(a, b float32) int  { return cmpFloats(math.Float32bits, a, b) }
 
 type float64Converter struct{}
 
 func (c float64Converter) To(f float64) uint64   { return math.Float64bits(f) }
 func (c float64Converter) From(u uint64) float64 { return math.Float64frombits(u) }
-func (c float64Converter) Cmp(a, b float64) int {
-	return cmpFloats(math.Float64bits, a, b)
-}
+func (c float64Converter) Cmp(a, b float64) int  { return cmpFloats(math.Float64bits, a, b) }
 
 type negFloat32Converter struct{}
 
-func (c negFloat32Converter) To(f float32) uint32 { return f32Conv.To(negativeFloat32(f)) }
-func (c negFloat32Converter) From(u uint32) float32 {
-	return negativeFloat32(f32Conv.From(u))
-}
-func (c negFloat32Converter) Cmp(a, b float32) int {
-	return f32Conv.Cmp(b, a)
-}
+func (c negFloat32Converter) To(f float32) uint32   { return f32Conv.To(negativeFloat32(f)) }
+func (c negFloat32Converter) From(u uint32) float32 { return negativeFloat32(f32Conv.From(u)) }
+func (c negFloat32Converter) Cmp(a, b float32) int  { return f32Conv.Cmp(b, a) }
 
 // Functions to add seed values to the fuzzer.
 
@@ -134,7 +126,7 @@ func addValues[T any](f *testing.F, values ...T) {
 	}
 }
 
-// used for testing cmp(v1, v2)
+// Used for testing cmp(v1, v2).
 func addUnorderedPairs[T any](f *testing.F, values ...T) {
 	for i, x := range values {
 		for _, y := range values[i+1:] {
@@ -330,7 +322,7 @@ func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func
 	}
 }
 
-// because bytes.Compare(nil, {}) == 0
+// This is necessary because bytes.Compare(nil, {}) == 0.
 func cmpBytes(a, b []byte) int {
 	switch {
 	case a == nil && b == nil:

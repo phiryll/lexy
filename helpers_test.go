@@ -5,7 +5,7 @@ package lexy_test
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"testing"
 	"testing/iotest"
@@ -48,12 +48,14 @@ const (
 	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
-// Tests:
-// - Codec.Read() and Codec.Write() are invertible for the given test cases
+// Tests that Codec.Read() and Codec.Write() are invertible for the given test cases.
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
+		t.Parallel()
 		for _, tt := range tests {
+			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
 				got, err := codec.Read(bytes.NewReader(tt.data))
 				require.NoError(t, err)
 				assert.IsType(t, tt.value, got)
@@ -62,8 +64,11 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 		}
 	})
 	t.Run("write", func(t *testing.T) {
+		t.Parallel()
 		for _, tt := range tests {
+			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
 				buf := bytes.NewBuffer([]byte{}) // don't let buf.Bytes() return nil
 				err := codec.Write(buf, tt.value)
 				require.NoError(t, err)
@@ -78,7 +83,9 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 // This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
 func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			buf := bytes.NewBuffer([]byte{})
 			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
@@ -90,15 +97,22 @@ func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCa
 	}
 }
 
+var (
+	errRead  = errors.New("failed to read")
+	errWrite = errors.New("failed to write")
+)
+
 // Tests:
-// - Codec.Read() fails when reading from a failing io.Reader
-// - Codec.Write() fails when writing nonEmpty to a failing io.Writer
+// - Codec.Read() fails when reading from a failing io.Reader.
+// - Codec.Write() fails when writing nonEmpty to a failing io.Writer.
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("fail read", func(t *testing.T) {
-		_, err := codec.Read(iotest.ErrReader(fmt.Errorf("failed to read")))
+		t.Parallel()
+		_, err := codec.Read(iotest.ErrReader(errRead))
 		assert.Error(t, err)
 	})
 	t.Run("fail write", func(t *testing.T) {
+		t.Parallel()
 		err := codec.Write(failWriter{}, nonEmpty)
 		assert.Error(t, err)
 	})
@@ -113,14 +127,14 @@ type boundedWriter struct {
 
 var (
 	_ io.Writer = failWriter{}
-	_ io.Writer = &boundedWriter{}
+	_ io.Writer = &boundedWriter{0, 0, nil}
 )
 
-func (w failWriter) Write(p []byte) (int, error) {
-	return 0, fmt.Errorf("failed to write")
+func (w failWriter) Write(_ []byte) (int, error) {
+	return 0, errWrite
 }
 
-// return number written from p
+// Return number of bytes written from p.
 func (w *boundedWriter) Write(p []byte) (int, error) {
 	remaining := w.limit - w.count
 	numToWrite := len(p)
