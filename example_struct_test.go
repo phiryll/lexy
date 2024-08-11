@@ -90,7 +90,7 @@ type sortableEncodings struct {
 	b [][]byte
 }
 
-var _ sort.Interface = sortableEncodings{}
+var _ sort.Interface = sortableEncodings{nil}
 
 func (s sortableEncodings) Len() int               { return len(s.b) }
 func (s sortableEncodings) Less(i int, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }

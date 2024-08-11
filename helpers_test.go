@@ -118,7 +118,7 @@ type boundedWriter struct {
 
 var (
 	_ io.Writer = failWriter{}
-	_ io.Writer = &boundedWriter{}
+	_ io.Writer = &boundedWriter{0, 0, nil}
 )
 
 func (w failWriter) Write(_ []byte) (int, error) {

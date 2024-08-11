@@ -151,7 +151,7 @@ func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
 
 // ExampleRangeQuery shows how a range query might be implemented.
 func Example_rangeQuery() {
-	userDB := UserDB{}
+	var userDB UserDB
 	for _, item := range []struct {
 		cost  int32
 		words []string

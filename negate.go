@@ -56,8 +56,8 @@ func negate(b []byte) {
 }
 
 var (
-	_ io.Reader = negateReader{}
-	_ io.Writer = negateWriter{}
+	_ io.Reader = negateReader{nil}
+	_ io.Writer = negateWriter{nil}
 )
 
 // negateReader is an io.Reader which flips all the bits,

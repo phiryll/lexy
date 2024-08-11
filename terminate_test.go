@@ -90,7 +90,8 @@ func TestEscapeFail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := boundedWriter{limit: 6}
+			var w boundedWriter
+			w.limit = 6
 			count, err := lexy.TestingDoEscape(&w, tt.data)
 			if tt.wantErr {
 				assert.Error(t, err)
