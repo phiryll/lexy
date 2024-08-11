@@ -298,10 +298,10 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		return err
 	}
 
-	var copy big.Float
-	copy.Copy(value)
-	copy.SetMantExp(&copy, shift)
-	mantInt, acc := copy.Int(nil)
+	var tmp big.Float
+	tmp.Copy(value)
+	tmp.SetMantExp(&tmp, shift)
+	mantInt, acc := tmp.Int(nil)
 	if acc != big.Exact {
 		panic("unexpected failure while encoding big.Float")
 	}
