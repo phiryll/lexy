@@ -2,6 +2,7 @@ package lexy
 
 import (
 	"bytes"
+	"errors"
 	"io"
 )
 
@@ -62,7 +63,7 @@ var (
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	var zero T
 	b, readErr := doUnescape(r)
-	if readErr == io.EOF && len(b) == 0 {
+	if errors.Is(readErr, io.EOF) && len(b) == 0 {
 		return zero, io.EOF
 	}
 	if readErr != nil {

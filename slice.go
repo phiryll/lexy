@@ -1,6 +1,7 @@
 package lexy
 
 import (
+	"errors"
 	"io"
 )
 
@@ -23,7 +24,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	values := S{}
 	for {
 		value, err := c.elemCodec.Read(r)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return values, nil
 		}
 		if err != nil {

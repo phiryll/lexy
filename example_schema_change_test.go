@@ -2,6 +2,7 @@ package lexy_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 
@@ -73,7 +74,7 @@ func (s schemaCodec) Read(r io.Reader) (schema, error) {
 	var zero, value schema
 	for {
 		field, err := nameCodec.Read(r)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			// EOF at this point means we're done.
 			return value, nil
 		}
