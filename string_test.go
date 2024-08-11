@@ -7,6 +7,7 @@ import (
 )
 
 func TestString(t *testing.T) {
+	t.Parallel()
 	testCodec(t, lexy.String(), []testCase[string]{
 		{"empty", "", []byte{}},
 		{"a", "a", []byte{'a'}},

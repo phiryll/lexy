@@ -90,6 +90,7 @@ func assertNext64(t *testing.T, a, b float64) {
 // Test the expected ordering of the IEEE 754 32-bit encodings as uint32.
 // This ensures that none of the ranges defined by the bit patterns overlap.
 func TestIEEEOrdering32(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []uint32{
 		math.Float32bits(posZero32),
 		math.Float32bits(posMinSubnormal32),
@@ -128,6 +129,7 @@ func TestIEEEOrdering32(t *testing.T) {
 // This also tests that all the normal/subnormal constants are neither NaN nor infinite,
 // because NaNs are not orderable, and negInf32 and posInf32 are at the extremes of this test.
 func TestSemanticOrdering32(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []float32{
 		negInf32,
 		negMaxNormal32,
@@ -145,6 +147,7 @@ func TestSemanticOrdering32(t *testing.T) {
 
 // Test that the bit patterns are what their names say they are.
 func TestNames32(t *testing.T) {
+	t.Parallel()
 	// Testable exact values
 	assert.Equal(t, math.Inf(-1), float64(negInf32), "-Inf: %x", negInf32)
 	assert.Equal(t, math.Inf(1), float64(posInf32), "+Inf: %x", posInf32)
@@ -175,6 +178,7 @@ func TestNames32(t *testing.T) {
 
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(lexy.Float32())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN32))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN32))
@@ -202,6 +206,7 @@ func TestFloat32CodecOrdering(t *testing.T) {
 // The 64-bit float tests are the same as the 32-bit float tests.
 
 func TestIEEEOrdering64(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []uint64{
 		math.Float64bits(posZero64),
 		math.Float64bits(posMinSubnormal64),
@@ -236,6 +241,7 @@ func TestIEEEOrdering64(t *testing.T) {
 }
 
 func TestSemanticOrdering64(t *testing.T) {
+	t.Parallel()
 	assert.IsIncreasing(t, []float64{
 		negInf64,
 		negMaxNormal64,
@@ -252,6 +258,7 @@ func TestSemanticOrdering64(t *testing.T) {
 }
 
 func TestNames64(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, math.Inf(-1), negInf64, "-Inf: %x", negInf64)
 	assert.Equal(t, math.Inf(1), posInf64, "+Inf: %x", posInf64)
 	assert.Equal(t, -math.MaxFloat64, negMaxNormal64, "max negative float64: %x", negMaxNormal64)
@@ -275,6 +282,7 @@ func TestNames64(t *testing.T) {
 }
 
 func TestFloat64CodecOrdering(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(lexy.Float64())
 	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN64))
 	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN64))

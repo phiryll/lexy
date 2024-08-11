@@ -23,6 +23,7 @@ func concatNonNil(slices ...[]byte) []byte {
 }
 
 func TestBigInt(t *testing.T) {
+	t.Parallel()
 	encodeSize := encoderFor(lexy.Int64())
 	testCodec(t, toCodec(lexy.BigInt()), []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -61,6 +62,7 @@ func TestBigInt(t *testing.T) {
 }
 
 func TestBigIntOrdering(t *testing.T) {
+	t.Parallel()
 	encode := encoderFor(toCodec(lexy.BigInt()))
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
@@ -83,6 +85,7 @@ func TestBigIntOrdering(t *testing.T) {
 }
 
 func TestBigIntNilsLast(t *testing.T) {
+	t.Parallel()
 	encodeFirst := encoderFor(toCodec(lexy.BigInt()))
 	encodeLast := encoderFor(toCodec(lexy.BigInt().NilsLast()))
 	assert.IsIncreasing(t, [][]byte{
@@ -107,6 +110,7 @@ func newBigFloat(f float64, shift int, prec uint) *big.Float {
 }
 
 func TestBigFloat(t *testing.T) {
+	t.Parallel()
 	var negInf, posInf, negZero, posZero big.Float
 	negInf.SetInf(true)
 	posInf.SetInf(false)
@@ -165,6 +169,7 @@ func TestBigFloat(t *testing.T) {
 }
 
 func TestBigFloatOrdering(t *testing.T) {
+	t.Parallel()
 	var negInf, posInf, negZero, posZero big.Float
 	negInf.SetInf(true)
 	posInf.SetInf(false)
@@ -253,6 +258,7 @@ func newBigRat(num, denom string) *big.Rat {
 }
 
 func TestBigRat(t *testing.T) {
+	t.Parallel()
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
 	testCodecRoundTrip(t, toCodec(lexy.BigRat()), []testCase[*big.Rat]{

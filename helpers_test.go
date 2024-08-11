@@ -51,8 +51,11 @@ const (
 // Tests that Codec.Read() and Codec.Write() are invertible for the given test cases.
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
+		t.Parallel()
 		for _, tt := range tests {
+			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
 				got, err := codec.Read(bytes.NewReader(tt.data))
 				require.NoError(t, err)
 				assert.IsType(t, tt.value, got)
@@ -61,8 +64,11 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 		}
 	})
 	t.Run("write", func(t *testing.T) {
+		t.Parallel()
 		for _, tt := range tests {
+			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
 				buf := bytes.NewBuffer([]byte{}) // don't let buf.Bytes() return nil
 				err := codec.Write(buf, tt.value)
 				require.NoError(t, err)
@@ -77,7 +83,9 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 // This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
 func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			buf := bytes.NewBuffer([]byte{})
 			err := codec.Write(buf, tt.value)
 			require.NoError(t, err)
@@ -99,10 +107,12 @@ var (
 // - Codec.Write() fails when writing nonEmpty to a failing io.Writer.
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 	t.Run("fail read", func(t *testing.T) {
+		t.Parallel()
 		_, err := codec.Read(iotest.ErrReader(errRead))
 		assert.Error(t, err)
 	})
 	t.Run("fail write", func(t *testing.T) {
+		t.Parallel()
 		err := codec.Write(failWriter{}, nonEmpty)
 		assert.Error(t, err)
 	})

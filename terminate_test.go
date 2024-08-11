@@ -11,6 +11,7 @@ import (
 )
 
 func TestEscape(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		data    []byte
@@ -53,7 +54,9 @@ func TestEscape(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			buf := bytes.NewBuffer([]byte{})
 			count, err := lexy.TestingDoEscape(buf, tt.data)
 			require.NoError(t, err)
@@ -64,6 +67,7 @@ func TestEscape(t *testing.T) {
 }
 
 func TestEscapeFail(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		data    []byte
@@ -115,7 +119,9 @@ func TestEscapeFail(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var w boundedWriter
 			w.limit = 6
 			count, err := lexy.TestingDoEscape(&w, tt.data)
@@ -131,6 +137,7 @@ func TestEscapeFail(t *testing.T) {
 }
 
 func TestUnescape(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		data      []byte
@@ -200,7 +207,9 @@ func TestUnescape(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			r := bytes.NewReader(tt.data)
 			got, err := lexy.TestingDoUnescape(r)
 			if tt.atEOF {
@@ -214,6 +223,7 @@ func TestUnescape(t *testing.T) {
 }
 
 func TestUnescapeMultiple(t *testing.T) {
+	t.Parallel()
 	data := []byte{2, 3, 1, 0, 5, 0, 7, 8, 9, 0, 10, 11, 12, 0}
 	r := bytes.NewReader(data)
 
