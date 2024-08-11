@@ -5,11 +5,6 @@ import (
 	"math/big"
 )
 
-var (
-	// used by bigRatCodec
-	bIntCodec = BigInt()
-)
-
 // bigIntCodec is the Codec for *big.Int values.
 //
 // Values are encoded using this logic:
@@ -342,11 +337,11 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	num, err := bIntCodec.Read(r)
+	num, err := stdBigIntCodec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
-	denom, err := bIntCodec.Read(r)
+	denom, err := stdBigIntCodec.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -358,10 +353,10 @@ func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
-	if err := bIntCodec.Write(w, value.Num()); err != nil {
+	if err := stdBigIntCodec.Write(w, value.Num()); err != nil {
 		return err
 	}
-	return bIntCodec.Write(w, value.Denom())
+	return stdBigIntCodec.Write(w, value.Denom())
 }
 
 func (c bigRatCodec) RequiresTerminator() bool {
