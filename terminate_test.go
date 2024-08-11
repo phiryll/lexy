@@ -108,7 +108,7 @@ func TestUnescape(t *testing.T) {
 		name      string
 		data      []byte
 		unescaped []byte
-		atEof     bool
+		atEOF     bool
 	}{
 		{"no special bytes",
 			[]byte{2, 3, 5, 4, 7, 6},
@@ -156,7 +156,7 @@ func TestUnescape(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := bytes.NewReader(tt.data)
 			got, err := lexy.TestingDoUnescape(r)
-			if tt.atEof {
+			if tt.atEOF {
 				assert.ErrorIs(t, err, io.EOF)
 			} else {
 				require.NoError(t, err)
