@@ -82,6 +82,7 @@ type negateWriter struct {
 }
 
 func (w negateWriter) Write(p []byte) (int, error) {
+	//nolint:gocritic
 	b := append(p[:0:0], p...)
 	negate(b)
 	return w.Writer.Write(b)

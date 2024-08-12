@@ -24,6 +24,7 @@ type timeCodec struct{}
 
 var formatCache = makeCache(formatOffset)
 
+//nolint:mnd
 func formatOffset(seconds int32) string {
 	sign := '+'
 	if seconds < 0 {

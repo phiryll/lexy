@@ -36,7 +36,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 		return nil, lexy.UnexpectedIfEOF(err)
 	}
 	// Read other fields.
-	return &BigStruct{name /*, other fields ...*/}, nil
+	return &BigStruct{name /* , other fields ... */}, nil
 }
 
 func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
@@ -65,7 +65,7 @@ func (c containterCodec) Read(r io.Reader) (Container, error) {
 		return zero, err
 	}
 	// Read other fields.
-	return Container{big /*, other fields ...*/}, nil
+	return Container{big /* , other fields ... */}, nil
 }
 
 func (c containterCodec) Write(w io.Writer, value Container) error {

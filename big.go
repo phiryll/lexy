@@ -176,6 +176,7 @@ func computeShift(exp, prec int32) int {
 	// Equivalently, the exponent is a multiple of 8.
 	// There are exactly prec bits to that leading bit,
 	// so shift enough to round up prec to the nearest multiple of 8.
+	//nolint:mnd
 	adjustment := (-prec) % 8
 	if adjustment < 0 {
 		adjustment += 8
@@ -183,6 +184,7 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
+//nolint:funlen
 func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -244,6 +246,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	return &value, nil
 }
 
+//nolint:cyclop,funlen
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
@@ -283,7 +286,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 
 	mantWriter := w
 	if signbit {
-		// These values are no longer being used except to write them
+		// These values are no longer being used except to write them.
 		exp = -exp
 		prec = -prec
 		mantWriter = negateWriter{w}
