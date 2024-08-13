@@ -38,15 +38,15 @@ func formatOffset(seconds int32) string {
 
 func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	var zero time.Time
-	seconds, err := stdInt64Codec.Read(r)
+	seconds, err := stdInt64.Read(r)
 	if err != nil {
 		return zero, err
 	}
-	nanos, err := stdUint32Codec.Read(r)
+	nanos, err := stdUint32.Read(r)
 	if err != nil {
 		return zero, UnexpectedIfEOF(err)
 	}
-	offset, err := stdInt32Codec.Read(r)
+	offset, err := stdInt32.Read(r)
 	if err != nil {
 		return zero, UnexpectedIfEOF(err)
 	}
@@ -60,13 +60,13 @@ func (c timeCodec) Write(w io.Writer, value time.Time) error {
 	nanos := utc.Nanosecond() // int nanoseconds within second (9 decimal digits, cast to int32)
 	_, offset := value.Zone() // abbreviation (ignored), int seconds east of UTC (cast to int32)
 
-	if err := stdInt64Codec.Write(w, seconds); err != nil {
+	if err := stdInt64.Write(w, seconds); err != nil {
 		return err
 	}
-	if err := stdUint32Codec.Write(w, uint32(nanos)); err != nil {
+	if err := stdUint32.Write(w, uint32(nanos)); err != nil {
 		return err
 	}
-	return stdInt32Codec.Write(w, int32(offset))
+	return stdInt32.Write(w, int32(offset))
 }
 
 func (c timeCodec) RequiresTerminator() bool {

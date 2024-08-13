@@ -112,29 +112,29 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 type castFloat32Codec[T ~float32] struct{}
 
 func (castFloat32Codec[T]) Read(r io.Reader) (T, error) {
-	value, err := stdFloat32Codec.Read(r)
+	value, err := stdFloat32.Read(r)
 	return T(value), err
 }
 
 func (castFloat32Codec[T]) Write(w io.Writer, value T) error {
-	return stdFloat32Codec.Write(w, float32(value))
+	return stdFloat32.Write(w, float32(value))
 }
 
 func (castFloat32Codec[T]) RequiresTerminator() bool {
-	return stdFloat32Codec.RequiresTerminator()
+	return stdFloat32.RequiresTerminator()
 }
 
 type castFloat64Codec[T ~float64] struct{}
 
 func (castFloat64Codec[T]) Read(r io.Reader) (T, error) {
-	value, err := stdFloat64Codec.Read(r)
+	value, err := stdFloat64.Read(r)
 	return T(value), err
 }
 
 func (castFloat64Codec[T]) Write(w io.Writer, value T) error {
-	return stdFloat64Codec.Write(w, float64(value))
+	return stdFloat64.Write(w, float64(value))
 }
 
 func (castFloat64Codec[T]) RequiresTerminator() bool {
-	return stdFloat64Codec.RequiresTerminator()
+	return stdFloat64.RequiresTerminator()
 }

@@ -141,32 +141,32 @@ type NillableCodec[T any] interface {
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBoolCodec       Codec[bool]               = uintCodec[bool]{}
-	stdUintCodec       Codec[uint]               = asUint64Codec[uint]{}
-	stdUint8Codec      Codec[uint8]              = uintCodec[uint8]{}
-	stdUint16Codec     Codec[uint16]             = uintCodec[uint16]{}
-	stdUint32Codec     Codec[uint32]             = uintCodec[uint32]{}
-	stdUint64Codec     Codec[uint64]             = uintCodec[uint64]{}
-	stdIntCodec        Codec[int]                = asInt64Codec[int]{}
-	stdInt8Codec       Codec[int8]               = intCodec[int8]{math.MinInt8}
-	stdInt16Codec      Codec[int16]              = intCodec[int16]{math.MinInt16}
-	stdInt32Codec      Codec[int32]              = intCodec[int32]{math.MinInt32}
-	stdInt64Codec      Codec[int64]              = intCodec[int64]{math.MinInt64}
-	stdFloat32Codec    Codec[float32]            = float32Codec{}
-	stdFloat64Codec    Codec[float64]            = float64Codec{}
-	stdComplex64Codec  Codec[complex64]          = complex64Codec{}
-	stdComplex128Codec Codec[complex128]         = complex128Codec{}
-	stdStringCodec     Codec[string]             = stringCodec[string]{}
-	stdDurationCodec   Codec[time.Duration]      = intCodec[time.Duration]{math.MinInt64}
-	stdTimeCodec       Codec[time.Time]          = timeCodec{}
-	stdBigIntCodec     NillableCodec[*big.Int]   = bigIntCodec{true}
-	stdBigFloatCodec   NillableCodec[*big.Float] = bigFloatCodec{true}
-	stdBigRatCodec     NillableCodec[*big.Rat]   = bigRatCodec{true}
-	stdBytesCodec      NillableCodec[[]byte]     = bytesCodec[[]byte]{true}
+	stdBool       Codec[bool]               = uintCodec[bool]{}
+	stdUint       Codec[uint]               = asUint64Codec[uint]{}
+	stdUint8      Codec[uint8]              = uintCodec[uint8]{}
+	stdUint16     Codec[uint16]             = uintCodec[uint16]{}
+	stdUint32     Codec[uint32]             = uintCodec[uint32]{}
+	stdUint64     Codec[uint64]             = uintCodec[uint64]{}
+	stdInt        Codec[int]                = asInt64Codec[int]{}
+	stdInt8       Codec[int8]               = intCodec[int8]{math.MinInt8}
+	stdInt16      Codec[int16]              = intCodec[int16]{math.MinInt16}
+	stdInt32      Codec[int32]              = intCodec[int32]{math.MinInt32}
+	stdInt64      Codec[int64]              = intCodec[int64]{math.MinInt64}
+	stdFloat32    Codec[float32]            = float32Codec{}
+	stdFloat64    Codec[float64]            = float64Codec{}
+	stdComplex64  Codec[complex64]          = complex64Codec{}
+	stdComplex128 Codec[complex128]         = complex128Codec{}
+	stdString     Codec[string]             = stringCodec[string]{}
+	stdDuration   Codec[time.Duration]      = intCodec[time.Duration]{math.MinInt64}
+	stdTime       Codec[time.Time]          = timeCodec{}
+	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{true}
+	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
+	stdBigRat     NillableCodec[*big.Rat]   = bigRatCodec{true}
+	stdBytes      NillableCodec[[]byte]     = bytesCodec[[]byte]{true}
 
-	stdTermStringCodec   Codec[string]     = terminatorCodec[string]{stdStringCodec}
-	stdTermBigFloatCodec Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloatCodec}
-	stdTermBytesCodec    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytesCodec}
+	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
+	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
+	stdTermBytes    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytes}
 )
 
 // Empty returns a Codec that reads and writes no data.
@@ -179,49 +179,49 @@ func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
 // Bool returns a Codec for the bool type.
 // The encoded order is false, then true.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Bool() Codec[bool] { return stdBoolCodec }
+func Bool() Codec[bool] { return stdBool }
 
 // Uint returns a Codec for the uint type.
 // Values are converted to/from uint64 and encoded with [Uint64].
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint() Codec[uint] { return stdUintCodec }
+func Uint() Codec[uint] { return stdUint }
 
 // Uint8 returns a Codec for the uint8 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint8() Codec[uint8] { return stdUint8Codec }
+func Uint8() Codec[uint8] { return stdUint8 }
 
 // Uint16 returns a Codec for the uint16 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint16() Codec[uint16] { return stdUint16Codec }
+func Uint16() Codec[uint16] { return stdUint16 }
 
 // Uint32 returns a Codec for the uint32 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint32() Codec[uint32] { return stdUint32Codec }
+func Uint32() Codec[uint32] { return stdUint32 }
 
 // Uint64 returns a Codec for the uint64 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Uint64() Codec[uint64] { return stdUint64Codec }
+func Uint64() Codec[uint64] { return stdUint64 }
 
 // Int returns a Codec for the int type.
 // Values are converted to/from int64 and encoded with [Int64].
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int() Codec[int] { return stdIntCodec }
+func Int() Codec[int] { return stdInt }
 
 // Int8 returns a Codec for the int8 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int8() Codec[int8] { return stdInt8Codec }
+func Int8() Codec[int8] { return stdInt8 }
 
 // Int16 returns a Codec for the int16 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int16() Codec[int16] { return stdInt16Codec }
+func Int16() Codec[int16] { return stdInt16 }
 
 // Int32 returns a Codec for the int32 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int32() Codec[int32] { return stdInt32Codec }
+func Int32() Codec[int32] { return stdInt32 }
 
 // Int64 returns a Codec for the int64 type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Int64() Codec[int64] { return stdInt64Codec }
+func Int64() Codec[int64] { return stdInt64 }
 
 // Float32 returns a Codec for the float32 type.
 // All bits of the value are preserved by this encoding.
@@ -238,23 +238,23 @@ func Int64() Codec[int64] { return stdInt64Codec }
 //	positive finite numbers
 //	+Inf
 //	+NaN
-func Float32() Codec[float32] { return stdFloat32Codec }
+func Float32() Codec[float32] { return stdFloat32 }
 
 // Float64 returns a Codec for the float64 type.
 // Other than handling float64 instances, this function behaves the same as [Float32].
-func Float64() Codec[float64] { return stdFloat64Codec }
+func Float64() Codec[float64] { return stdFloat64 }
 
 // Complex64 returns a Codec for the complex64 type.
 // The encoded order is real part first, imaginary part second,
 // with those parts ordered as documented for [Float32].
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Complex64() Codec[complex64] { return stdComplex64Codec }
+func Complex64() Codec[complex64] { return stdComplex64 }
 
 // Complex128 returns a Codec for the complex128 type.
 // The encoded order is real part first, imaginary part second,
 // with those parts ordered as documented for [Float64].
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Complex128() Codec[complex128] { return stdComplex128Codec }
+func Complex128() Codec[complex128] { return stdComplex128 }
 
 // String returns a Codec for the string type.
 // This Codec requires a terminator when used within an aggregate Codec.
@@ -265,15 +265,15 @@ func Complex128() Codec[complex128] { return stdComplex128Codec }
 // For a UTF-8 string, the order is the same as the lexicographical order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
 // Collation is locale-dependent, and any ordering could be incorrect in another locale.
-func String() Codec[string] { return stdStringCodec }
+func String() Codec[string] { return stdString }
 
 // TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func TerminatedString() Codec[string] { return stdTermStringCodec }
+func TerminatedString() Codec[string] { return stdTermString }
 
 // Duration returns a Codec for the time.Duration type.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func Duration() Codec[time.Duration] { return stdDurationCodec }
+func Duration() Codec[time.Duration] { return stdDuration }
 
 // Time returns a Codec for the time.Time type.
 // The encoded order is UTC time first, timezone offset second.
@@ -283,11 +283,11 @@ func Duration() Codec[time.Duration] { return stdDurationCodec }
 // It will therefore lose information about Daylight Saving Time.
 // Timezone names and DST behavior are defined outside of Go's control (as they must be),
 // and [time.Time.Zone] can return names that will fail with [time.LoadLocation] in the same program.
-func Time() Codec[time.Time] { return stdTimeCodec }
+func Time() Codec[time.Time] { return stdTime }
 
 // BigInt returns a NillableCodec for the *big.Int type, with nils ordered first.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func BigInt() NillableCodec[*big.Int] { return stdBigIntCodec }
+func BigInt() NillableCodec[*big.Int] { return stdBigInt }
 
 // BigFloat returns a NillableCodec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
@@ -296,28 +296,28 @@ func BigInt() NillableCodec[*big.Int] { return stdBigIntCodec }
 // This Codec requires a terminator when used within an aggregate Codec.
 //
 // This Codec is lossy. It does not encode the value's [big.Accuracy].
-func BigFloat() NillableCodec[*big.Float] { return stdBigFloatCodec }
+func BigFloat() NillableCodec[*big.Float] { return stdBigFloat }
 
 // TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloatCodec }
+func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloat }
 
 // BigRat returns a NillableCodec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func BigRat() NillableCodec[*big.Rat] { return stdBigRatCodec }
+func BigRat() NillableCodec[*big.Rat] { return stdBigRat }
 
 // Bytes returns a NillableCodec for the []byte type, with nil slices ordered first.
 // A []byte is written as-is following a nil/non-nil indicator.
 // This Codec is more efficient than Codecs produced by [SliceOf]([Uint8]()),
 // and will allow nil unlike [String].
 // This Codec requires a terminator when used within an aggregate Codec.
-func Bytes() NillableCodec[[]byte] { return stdBytesCodec }
+func Bytes() NillableCodec[[]byte] { return stdBytes }
 
 // TerminatedBytes returns a Codec for the []byte type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
-func TerminatedBytes() Codec[[]byte] { return stdTermBytesCodec }
+func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 
 // PointerTo returns a NillableCodec for the *E type, with nil pointers ordered first.
 // The encoded order of non-nil values is the same as is produced by elemCodec.
