@@ -58,11 +58,11 @@ func MakeInt64[T ~int64]() Codec[T] { return intCodec[T]{math.MinInt64} }
 
 // MakeFloat32 returns a Codec for a type with an underlying type of float32.
 // Other than the underlying type, this is the same as [Float32].
-func MakeFloat32[T ~float32]() Codec[T] { return castFloat32Codec[T]{} }
+func MakeFloat32[T ~float32]() Codec[T] { return castFloat32[T]{} }
 
 // MakeFloat64 returns a Codec for a type with an underlying type of float64.
 // Other than the underlying type, this is the same as [Float64].
-func MakeFloat64[T ~float64]() Codec[T] { return castFloat64Codec[T]{} }
+func MakeFloat64[T ~float64]() Codec[T] { return castFloat64[T]{} }
 
 // MakeString returns a Codec for a type with an underlying type of string.
 // Other than the underlying type, this is the same as [String].
@@ -109,32 +109,32 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 // It would be really nice to have just one castCodec[T ~U, U any],
 // but that's not possible in Go.
 
-type castFloat32Codec[T ~float32] struct{}
+type castFloat32[T ~float32] struct{}
 
-func (castFloat32Codec[T]) Read(r io.Reader) (T, error) {
+func (castFloat32[T]) Read(r io.Reader) (T, error) {
 	value, err := stdFloat32.Read(r)
 	return T(value), err
 }
 
-func (castFloat32Codec[T]) Write(w io.Writer, value T) error {
+func (castFloat32[T]) Write(w io.Writer, value T) error {
 	return stdFloat32.Write(w, float32(value))
 }
 
-func (castFloat32Codec[T]) RequiresTerminator() bool {
+func (castFloat32[T]) RequiresTerminator() bool {
 	return stdFloat32.RequiresTerminator()
 }
 
-type castFloat64Codec[T ~float64] struct{}
+type castFloat64[T ~float64] struct{}
 
-func (castFloat64Codec[T]) Read(r io.Reader) (T, error) {
+func (castFloat64[T]) Read(r io.Reader) (T, error) {
 	value, err := stdFloat64.Read(r)
 	return T(value), err
 }
 
-func (castFloat64Codec[T]) Write(w io.Writer, value T) error {
+func (castFloat64[T]) Write(w io.Writer, value T) error {
 	return stdFloat64.Write(w, float64(value))
 }
 
-func (castFloat64Codec[T]) RequiresTerminator() bool {
+func (castFloat64[T]) RequiresTerminator() bool {
 	return stdFloat64.RequiresTerminator()
 }
