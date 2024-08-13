@@ -13,9 +13,8 @@ jobs:
   golangci:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
         go: ['1.18', stable]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     name: lint
     steps:
       - uses: actions/checkout@v4
