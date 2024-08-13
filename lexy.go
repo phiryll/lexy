@@ -531,6 +531,8 @@ var (
 // ReadPrefix will not return an error if a prefix was successfully read and io.Reader.Read returned io.EOF,
 // because the read of the prefix was successful.
 // Any subsequent read from r should properly return 0 bytes read and io.EOF.
+//
+//nolint:nonamedreturns
 func ReadPrefix(r io.Reader) (done bool, err error) {
 	prefix := []byte{0}
 	_, err = io.ReadFull(r, prefix)
@@ -543,6 +545,7 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 	case prefixNonNil:
 		return false, nil
 	default:
+		//nolint:err113
 		return true, fmt.Errorf("unexpected prefix %X", prefix[0])
 	}
 }
@@ -567,6 +570,8 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 // If WritePrefix returns done == true, then the caller is done writing the value to w
 // regardless of the returned error value.
 // Either there was an error, or there was no error and the nil prefix was successfully written.
+//
+//nolint:nonamedreturns
 func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 	var prefix []byte
 	switch {

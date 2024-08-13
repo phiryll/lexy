@@ -79,16 +79,20 @@ var (
 
 // Assert that the bits of b are exactly one more than the bits of a.
 func assertNext32(t *testing.T, a, b float32) {
+	t.Helper()
 	assert.Equal(t, math.Float32bits(a)+1, math.Float32bits(b))
 }
 
 // Assert that the bits of b are exactly one more than the bits of a.
 func assertNext64(t *testing.T, a, b float64) {
+	t.Helper()
 	assert.Equal(t, math.Float64bits(a)+1, math.Float64bits(b))
 }
 
 // Test the expected ordering of the IEEE 754 32-bit encodings as uint32.
 // This ensures that none of the ranges defined by the bit patterns overlap.
+//
+//nolint:dupl
 func TestIEEEOrdering32(t *testing.T) {
 	t.Parallel()
 	assert.IsIncreasing(t, []uint32{
@@ -205,6 +209,7 @@ func TestFloat32CodecOrdering(t *testing.T) {
 
 // The 64-bit float tests are the same as the 32-bit float tests.
 
+//nolint:dupl
 func TestIEEEOrdering64(t *testing.T) {
 	t.Parallel()
 	assert.IsIncreasing(t, []uint64{

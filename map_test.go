@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:thelper
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
@@ -42,7 +43,7 @@ func dePointerMap(m map[*string]*string) map[string]string {
 		}
 		return *p
 	}
-	result := make(map[string]string)
+	result := map[string]string{}
 	for k, v := range m {
 		result[deref(k)] = deref(v)
 	}

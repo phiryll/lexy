@@ -49,6 +49,8 @@ const (
 )
 
 // Tests that Codec.Read() and Codec.Write() are invertible for the given test cases.
+//
+//nolint:thelper
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("read", func(t *testing.T) {
 		t.Parallel()
@@ -81,6 +83,8 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 // Tests input == output, where input => Codec.Write => Codec.Read => output.
 // Does not use testCase.data.
 // This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
+//
+//nolint:thelper
 func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	for _, tt := range tests {
 		tt := tt
@@ -106,6 +110,7 @@ var (
 // - Codec.Read() fails when reading from a failing io.Reader.
 // - Codec.Write() fails when writing nonEmpty to a failing io.Writer.
 func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
+	t.Helper()
 	t.Run("fail read", func(t *testing.T) {
 		t.Parallel()
 		_, err := codec.Read(iotest.ErrReader(errRead))

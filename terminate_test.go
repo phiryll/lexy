@@ -66,6 +66,7 @@ func TestEscape(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestEscapeFail(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -136,6 +137,7 @@ func TestEscapeFail(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestUnescape(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

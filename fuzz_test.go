@@ -121,6 +121,7 @@ func (c negFloat32Converter) Cmp(a, b float32) int  { return f32Conv.Cmp(b, a) }
 // Functions to add seed values to the fuzzer.
 
 func addValues[T any](f *testing.F, values ...T) {
+	f.Helper()
 	for _, x := range values {
 		f.Add(x)
 	}
@@ -128,6 +129,7 @@ func addValues[T any](f *testing.F, values ...T) {
 
 // Used for testing cmp(v1, v2).
 func addUnorderedPairs[T any](f *testing.F, values ...T) {
+	f.Helper()
 	for i, x := range values {
 		for _, y := range values[i+1:] {
 			f.Add(x, y)
@@ -138,6 +140,7 @@ func addUnorderedPairs[T any](f *testing.F, values ...T) {
 // These fuzzers test the encode-decode round trip.
 
 func valueTesterFor[T any](codec lexy.Codec[T]) func(*testing.T, T) {
+	//nolint:thelper
 	return func(t *testing.T, value T) {
 		b, err := lexy.Encode(codec, value)
 		require.NoError(t, err)
@@ -191,6 +194,7 @@ func cmpFloats[T float32 | float64, U uint32 | uint64](toBits func(T) U, a, b T)
 }
 
 func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U) {
+	//nolint:thelper
 	return func(t *testing.T, repr U) {
 		value := conv.From(repr)
 		b, err := lexy.Encode(codec, value)
@@ -305,6 +309,7 @@ func FuzzTerminateBytes(f *testing.F) {
 // These fuzzers test that the encoding order is consistent with the value order.
 
 func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
+	//nolint:thelper
 	return func(t *testing.T, a, b T) {
 		aEncoded, err := lexy.Encode(codec, a)
 		require.NoError(t, err)
@@ -317,6 +322,7 @@ func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing
 
 func pairTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) func(*testing.T, U, U) {
 	f := pairTesterFor(codec, conv.Cmp)
+	//nolint:thelper
 	return func(t *testing.T, a, b U) {
 		f(t, conv.From(a), conv.From(b))
 	}

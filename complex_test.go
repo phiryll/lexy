@@ -36,10 +36,11 @@ var float32s = []struct {
 	{"+max NaN", posMaxNaN32},
 }
 
+//nolint:dupl
 func TestComplex64(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex64()
-	// Ensure we don't get complex128 without having to cast the arguments.
+	// Ensure we get a complex64 without having to cast the arguments.
 	comp := func(r, i float32) complex64 { return complex(r, i) }
 
 	// all pairs of float32s in increasing "order"
@@ -72,6 +73,7 @@ func TestComplex64(t *testing.T) {
 	// test ordering
 	var prev []byte
 	for i, tt := range testCases {
+		i, tt := i, tt
 		name := tt.name
 		if i > 0 {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
@@ -112,10 +114,11 @@ var float64s = []struct {
 	{"+max NaN", posMaxNaN64},
 }
 
+//nolint:dupl
 func TestComplex128(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex128()
-	// Ensure we don't get complex128 without having to cast the arguments.
+	// Ensure we get a complex128 without having to cast the arguments.
 	comp := func(r, i float64) complex128 { return complex(r, i) }
 
 	// all pairs of float64s in increasing "order"
@@ -148,6 +151,7 @@ func TestComplex128(t *testing.T) {
 	// test ordering
 	var prev []byte
 	for i, tt := range testCases {
+		i, tt := i, tt
 		name := tt.name
 		if i > 0 {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)

@@ -170,6 +170,6 @@ func doUnescape(r io.Reader) ([]byte, error) {
 			}
 		}
 		escaped = false
-		out.WriteByte(in[0])
+		_ = out.WriteByte(in[0])
 	}
 }

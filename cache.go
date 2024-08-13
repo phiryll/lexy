@@ -20,7 +20,7 @@ func makeCache[K comparable, V any](compute func(K) V) cache[K, V] {
 	}
 	return cache[K, V]{
 		lock:    &sync.RWMutex{},
-		cached:  make(map[K]V),
+		cached:  map[K]V{},
 		compute: compute,
 	}
 }

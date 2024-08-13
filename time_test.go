@@ -65,6 +65,7 @@ func TestTime(t *testing.T) {
 	testCodecFail(t, codec, local)
 }
 
+//nolint:tparallel
 func TestTimeOrder(t *testing.T) {
 	t.Parallel()
 	// in order from west to east, expected sort order,
@@ -85,6 +86,7 @@ func TestTimeOrder(t *testing.T) {
 	posUTC7 := time.Date(2000, 1, 2, 3, 4, 5, 7, time.UTC)
 
 	var prev []byte
+	//nolint:paralleltest
 	for i, tt := range []struct {
 		string
 		time.Time
@@ -118,6 +120,7 @@ func TestTimeOrder(t *testing.T) {
 		{"pos UTC 7", posUTC7},
 		{"pos Berlin 7", posUTC7.In(locBerlin)},
 	} {
+		i := i
 		t.Run(tt.string, func(t *testing.T) {
 			buf := bytes.NewBuffer([]byte{})
 			err := lexy.Time().Write(buf, tt.Time)

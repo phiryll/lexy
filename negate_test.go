@@ -88,9 +88,9 @@ func TestNegateSlicePtrString(t *testing.T) {
 }
 
 type negateTest struct {
-	uint8  uint8
-	pInt16 *int16
-	string string
+	fUint8    uint8
+	fPtrInt16 *int16
+	fString   string
 }
 
 // Sort order is: uint8, neg(string), neg(pInt16).
@@ -122,13 +122,13 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 }
 
 func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
-	if err := lexy.Uint8().Write(w, value.uint8); err != nil {
+	if err := lexy.Uint8().Write(w, value.fUint8); err != nil {
 		return err
 	}
-	if err := negStringCodec.Write(w, value.string); err != nil {
+	if err := negStringCodec.Write(w, value.fString); err != nil {
 		return err
 	}
-	return negPtrIntCodec.Write(w, value.pInt16)
+	return negPtrIntCodec.Write(w, value.fPtrInt16)
 }
 
 func (n negateTestCodec) RequiresTerminator() bool {

@@ -49,7 +49,7 @@ func ExampleBool() {
 		panic(err)
 	}
 	buf.Reset()
-	if err := codec.Write(&buf, false); err != nil {
+	if err = codec.Write(&buf, false); err != nil {
 		panic(err)
 	}
 	second, err := codec.Read(&buf)
@@ -233,7 +233,7 @@ func ExampleString() {
 	}
 	fmt.Printf("%q\n", decoded)
 	buf.Reset()
-	if err := codec.Write(&buf, "Go rocks!"); err != nil {
+	if err = codec.Write(&buf, "Go rocks!"); err != nil {
 		panic(err)
 	}
 	decoded, err = codec.Read(&buf)
@@ -456,7 +456,7 @@ func ExampleEncode() {
 			panic(err)
 		}
 		buf.Reset()
-		if err := codec.Write(&buf, value); err != nil {
+		if err = codec.Write(&buf, value); err != nil {
 			panic(err)
 		}
 		fmt.Println(bytes.Equal(encoded, buf.Bytes()))
