@@ -1,6 +1,6 @@
 # lexy
 
-[![Build Status](https://github.com/phiryll/lexy/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/phiryll/lexy/actions/workflows/tests.yaml)
+[![Build Status](https://github.com/phiryll/lexy/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/phiryll/lexy/actions/workflows/test.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/phiryll/lexy)](https://goreportcard.com/report/github.com/phiryll/lexy)
 [![Go Reference](https://pkg.go.dev/badge/github.com/phiryll/lexy)](https://pkg.go.dev/github.com/phiryll/lexy)
 
