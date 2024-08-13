@@ -3,6 +3,7 @@ package lexy
 import (
 	"encoding/binary"
 	"io"
+	"math"
 )
 
 // Codecs for bool and fixed-length unsigned integral types.
@@ -116,15 +117,14 @@ func (uint64Codec) RequiresTerminator() bool {
 	return false
 }
 
-// intCodec is the Codec for fixed-length signed integral types.
-//
+// Codecs for fixed-length signed integral types.
 // These are:
 //   - int8
 //   - int16
 //   - int32
 //   - int64
 //
-// This encodes a value by flipping the sign bit and writing in big-endian order.
+// These encode a value by flipping the sign bit and writing in big-endian order.
 // That this works can be seen from the following signed int -> encoded table.
 //
 //	0x8000... -> 0x0000...  most negative
@@ -132,38 +132,87 @@ func (uint64Codec) RequiresTerminator() bool {
 //	0x0000... -> 0x8000...  0
 //	0x0000..1 -> 0x8000..1  1
 //	0x7FFF... -> 0xFFFF...  most positive
-type intCodec[T ~int8 | ~int16 | ~int32 | ~int64] struct {
-	signBit T
-}
+type (
+	intCodec   struct{}
+	int8Codec  struct{}
+	int16Codec struct{}
+	int32Codec struct{}
+	int64Codec struct{}
+)
 
-func (c intCodec[T]) Read(r io.Reader) (T, error) {
-	var value T
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		var zero T
-		return zero, err
-	}
-	return c.signBit ^ value, nil
-}
-
-func (c intCodec[T]) Write(w io.Writer, value T) error {
-	return binary.Write(w, binary.BigEndian, c.signBit^value)
-}
-
-func (c intCodec[T]) RequiresTerminator() bool {
-	return false
-}
-
-type asInt64Codec[T ~int] struct{}
-
-func (asInt64Codec[T]) Read(r io.Reader) (T, error) {
+func (intCodec) Read(r io.Reader) (int, error) {
 	value, err := stdInt64.Read(r)
-	return T(value), err
+	return int(value), err
 }
 
-func (asInt64Codec[T]) Write(w io.Writer, value T) error {
+func (intCodec) Write(w io.Writer, value int) error {
 	return stdInt64.Write(w, int64(value))
 }
 
-func (asInt64Codec[T]) RequiresTerminator() bool {
+func (intCodec) RequiresTerminator() bool {
+	return false
+}
+
+func (int8Codec) Read(r io.Reader) (int8, error) {
+	var value int8
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt8 ^ value, nil
+}
+
+func (int8Codec) Write(w io.Writer, value int8) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt8^value)
+}
+
+func (int8Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (int16Codec) Read(r io.Reader) (int16, error) {
+	var value int16
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt16 ^ value, nil
+}
+
+func (int16Codec) Write(w io.Writer, value int16) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt16^value)
+}
+
+func (int16Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (int32Codec) Read(r io.Reader) (int32, error) {
+	var value int32
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt32 ^ value, nil
+}
+
+func (int32Codec) Write(w io.Writer, value int32) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt32^value)
+}
+
+func (int32Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (int64Codec) Read(r io.Reader) (int64, error) {
+	var value int64
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt64 ^ value, nil
+}
+
+func (int64Codec) Write(w io.Writer, value int64) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt64^value)
+}
+
+func (int64Codec) RequiresTerminator() bool {
 	return false
 }

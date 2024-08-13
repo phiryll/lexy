@@ -2,7 +2,6 @@ package lexy
 
 import (
 	"io"
-	"math"
 )
 
 // Codecs for types with different underlying types.
@@ -38,23 +37,23 @@ func MakeUint64[T ~uint64]() Codec[T] { return castUint64[T]{} }
 
 // MakeInt returns a Codec for a type with an underlying type of int.
 // Other than the underlying type, this is the same as [Int].
-func MakeInt[T ~int]() Codec[T] { return asInt64Codec[T]{} }
+func MakeInt[T ~int]() Codec[T] { return castInt[T]{} }
 
 // MakeInt8 returns a Codec for a type with an underlying type of int8.
 // Other than the underlying type, this is the same as [Int8].
-func MakeInt8[T ~int8]() Codec[T] { return intCodec[T]{math.MinInt8} }
+func MakeInt8[T ~int8]() Codec[T] { return castInt8[T]{} }
 
 // MakeInt16 returns a Codec for a type with an underlying type of int16.
 // Other than the underlying type, this is the same as [Int16].
-func MakeInt16[T ~int16]() Codec[T] { return intCodec[T]{math.MinInt16} }
+func MakeInt16[T ~int16]() Codec[T] { return castInt16[T]{} }
 
 // MakeInt32 returns a Codec for a type with an underlying type of int32.
 // Other than the underlying type, this is the same as [Int32].
-func MakeInt32[T ~int32]() Codec[T] { return intCodec[T]{math.MinInt32} }
+func MakeInt32[T ~int32]() Codec[T] { return castInt32[T]{} }
 
 // MakeInt64 returns a Codec for a type with an underlying type of int64.
 // Other than the underlying type, this is the same as [Int64].
-func MakeInt64[T ~int64]() Codec[T] { return intCodec[T]{math.MinInt64} }
+func MakeInt64[T ~int64]() Codec[T] { return castInt64[T]{} }
 
 // MakeFloat32 returns a Codec for a type with an underlying type of float32.
 // Other than the underlying type, this is the same as [Float32].
@@ -116,6 +115,11 @@ type (
 	castUint16[T ~uint16]   struct{}
 	castUint32[T ~uint32]   struct{}
 	castUint64[T ~uint64]   struct{}
+	castInt[T ~int]         struct{}
+	castInt8[T ~int8]       struct{}
+	castInt16[T ~int16]     struct{}
+	castInt32[T ~int32]     struct{}
+	castInt64[T ~int64]     struct{}
 	castFloat32[T ~float32] struct{}
 	castFloat64[T ~float64] struct{}
 	castString[T ~string]   struct{}
@@ -197,6 +201,71 @@ func (castUint64[T]) Write(w io.Writer, value T) error {
 
 func (castUint64[T]) RequiresTerminator() bool {
 	return stdUint64.RequiresTerminator()
+}
+
+func (castInt[T]) Read(r io.Reader) (T, error) {
+	value, err := stdInt.Read(r)
+	return T(value), err
+}
+
+func (castInt[T]) Write(w io.Writer, value T) error {
+	return stdInt.Write(w, int(value))
+}
+
+func (castInt[T]) RequiresTerminator() bool {
+	return stdInt.RequiresTerminator()
+}
+
+func (castInt8[T]) Read(r io.Reader) (T, error) {
+	value, err := stdInt8.Read(r)
+	return T(value), err
+}
+
+func (castInt8[T]) Write(w io.Writer, value T) error {
+	return stdInt8.Write(w, int8(value))
+}
+
+func (castInt8[T]) RequiresTerminator() bool {
+	return stdInt8.RequiresTerminator()
+}
+
+func (castInt16[T]) Read(r io.Reader) (T, error) {
+	value, err := stdInt16.Read(r)
+	return T(value), err
+}
+
+func (castInt16[T]) Write(w io.Writer, value T) error {
+	return stdInt16.Write(w, int16(value))
+}
+
+func (castInt16[T]) RequiresTerminator() bool {
+	return stdInt16.RequiresTerminator()
+}
+
+func (castInt32[T]) Read(r io.Reader) (T, error) {
+	value, err := stdInt32.Read(r)
+	return T(value), err
+}
+
+func (castInt32[T]) Write(w io.Writer, value T) error {
+	return stdInt32.Write(w, int32(value))
+}
+
+func (castInt32[T]) RequiresTerminator() bool {
+	return stdInt32.RequiresTerminator()
+}
+
+func (castInt64[T]) Read(r io.Reader) (T, error) {
+	value, err := stdInt64.Read(r)
+	return T(value), err
+}
+
+func (castInt64[T]) Write(w io.Writer, value T) error {
+	return stdInt64.Write(w, int64(value))
+}
+
+func (castInt64[T]) RequiresTerminator() bool {
+	return stdInt64.RequiresTerminator()
 }
 
 func (castFloat32[T]) Read(r io.Reader) (T, error) {

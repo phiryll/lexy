@@ -57,7 +57,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"math/big"
 	"time"
 )
@@ -147,17 +146,17 @@ var (
 	stdUint16     Codec[uint16]             = uint16Codec{}
 	stdUint32     Codec[uint32]             = uint32Codec{}
 	stdUint64     Codec[uint64]             = uint64Codec{}
-	stdInt        Codec[int]                = asInt64Codec[int]{}
-	stdInt8       Codec[int8]               = intCodec[int8]{math.MinInt8}
-	stdInt16      Codec[int16]              = intCodec[int16]{math.MinInt16}
-	stdInt32      Codec[int32]              = intCodec[int32]{math.MinInt32}
-	stdInt64      Codec[int64]              = intCodec[int64]{math.MinInt64}
+	stdInt        Codec[int]                = intCodec{}
+	stdInt8       Codec[int8]               = int8Codec{}
+	stdInt16      Codec[int16]              = int16Codec{}
+	stdInt32      Codec[int32]              = int32Codec{}
+	stdInt64      Codec[int64]              = int64Codec{}
 	stdFloat32    Codec[float32]            = float32Codec{}
 	stdFloat64    Codec[float64]            = float64Codec{}
 	stdComplex64  Codec[complex64]          = complex64Codec{}
 	stdComplex128 Codec[complex128]         = complex128Codec{}
 	stdString     Codec[string]             = stringCodec{}
-	stdDuration   Codec[time.Duration]      = intCodec[time.Duration]{math.MinInt64}
+	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
 	stdTime       Codec[time.Time]          = timeCodec{}
 	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{true}
 	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
