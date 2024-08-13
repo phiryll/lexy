@@ -66,7 +66,7 @@ func MakeFloat64[T ~float64]() Codec[T] { return castFloat64[T]{} }
 
 // MakeString returns a Codec for a type with an underlying type of string.
 // Other than the underlying type, this is the same as [String].
-func MakeString[T ~string]() Codec[T] { return stringCodec[T]{} }
+func MakeString[T ~string]() Codec[T] { return castString[T]{} }
 
 // MakeBytes returns a NillableCodec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
@@ -137,4 +137,19 @@ func (castFloat64[T]) Write(w io.Writer, value T) error {
 
 func (castFloat64[T]) RequiresTerminator() bool {
 	return stdFloat64.RequiresTerminator()
+}
+
+type castString[T ~string] struct{}
+
+func (castString[T]) Read(r io.Reader) (T, error) {
+	value, err := stdString.Read(r)
+	return T(value), err
+}
+
+func (castString[T]) Write(w io.Writer, value T) error {
+	return stdString.Write(w, string(value))
+}
+
+func (castString[T]) RequiresTerminator() bool {
+	return stdString.RequiresTerminator()
 }

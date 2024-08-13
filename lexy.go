@@ -156,7 +156,7 @@ var (
 	stdFloat64    Codec[float64]            = float64Codec{}
 	stdComplex64  Codec[complex64]          = complex64Codec{}
 	stdComplex128 Codec[complex128]         = complex128Codec{}
-	stdString     Codec[string]             = stringCodec[string]{}
+	stdString     Codec[string]             = stringCodec{}
 	stdDuration   Codec[time.Duration]      = intCodec[time.Duration]{math.MinInt64}
 	stdTime       Codec[time.Time]          = timeCodec{}
 	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{true}
