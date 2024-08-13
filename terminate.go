@@ -170,6 +170,7 @@ func doUnescape(r io.Reader) ([]byte, error) {
 			}
 		}
 		escaped = false
+		// writes to a bytes.Buffer always return a nil error
 		_ = out.WriteByte(in[0])
 	}
 }
