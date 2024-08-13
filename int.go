@@ -17,7 +17,6 @@ import (
 // These encode a value in big-endian order.
 type (
 	boolCodec   struct{}
-	uintCodec   struct{}
 	uint8Codec  struct{}
 	uint16Codec struct{}
 	uint32Codec struct{}
@@ -37,19 +36,6 @@ func (boolCodec) Write(w io.Writer, value bool) error {
 }
 
 func (boolCodec) RequiresTerminator() bool {
-	return false
-}
-
-func (uintCodec) Read(r io.Reader) (uint, error) {
-	value, err := stdUint64.Read(r)
-	return uint(value), err
-}
-
-func (uintCodec) Write(w io.Writer, value uint) error {
-	return stdUint64.Write(w, uint64(value))
-}
-
-func (uintCodec) RequiresTerminator() bool {
 	return false
 }
 
@@ -133,25 +119,11 @@ func (uint64Codec) RequiresTerminator() bool {
 //	0x0000..1 -> 0x8000..1  1
 //	0x7FFF... -> 0xFFFF...  most positive
 type (
-	intCodec   struct{}
 	int8Codec  struct{}
 	int16Codec struct{}
 	int32Codec struct{}
 	int64Codec struct{}
 )
-
-func (intCodec) Read(r io.Reader) (int, error) {
-	value, err := stdInt64.Read(r)
-	return int(value), err
-}
-
-func (intCodec) Write(w io.Writer, value int) error {
-	return stdInt64.Write(w, int64(value))
-}
-
-func (intCodec) RequiresTerminator() bool {
-	return false
-}
 
 func (int8Codec) Read(r io.Reader) (int8, error) {
 	var value int8

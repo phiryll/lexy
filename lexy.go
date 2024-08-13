@@ -141,12 +141,12 @@ type NillableCodec[T any] interface {
 // There are corresponding exported functions for each of these.
 var (
 	stdBool       Codec[bool]               = boolCodec{}
-	stdUint       Codec[uint]               = uintCodec{}
+	stdUint       Codec[uint]               = castUint64[uint]{}
 	stdUint8      Codec[uint8]              = uint8Codec{}
 	stdUint16     Codec[uint16]             = uint16Codec{}
 	stdUint32     Codec[uint32]             = uint32Codec{}
 	stdUint64     Codec[uint64]             = uint64Codec{}
-	stdInt        Codec[int]                = intCodec{}
+	stdInt        Codec[int]                = castInt64[int]{}
 	stdInt8       Codec[int8]               = int8Codec{}
 	stdInt16      Codec[int16]              = int16Codec{}
 	stdInt32      Codec[int32]              = int32Codec{}

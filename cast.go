@@ -17,7 +17,7 @@ func MakeBool[T ~bool]() Codec[T] { return castBool[T]{} }
 
 // MakeUint returns a Codec for a type with an underlying type of uint.
 // Other than the underlying type, this is the same as [Uint].
-func MakeUint[T ~uint]() Codec[T] { return castUint[T]{} }
+func MakeUint[T ~uint]() Codec[T] { return castUint64[T]{} }
 
 // MakeUint8 returns a Codec for a type with an underlying type of uint8.
 // Other than the underlying type, this is the same as [Uint8].
@@ -37,7 +37,7 @@ func MakeUint64[T ~uint64]() Codec[T] { return castUint64[T]{} }
 
 // MakeInt returns a Codec for a type with an underlying type of int.
 // Other than the underlying type, this is the same as [Int].
-func MakeInt[T ~int]() Codec[T] { return castInt[T]{} }
+func MakeInt[T ~int]() Codec[T] { return castInt64[T]{} }
 
 // MakeInt8 returns a Codec for a type with an underlying type of int8.
 // Other than the underlying type, this is the same as [Int8].
@@ -109,20 +109,18 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 // but that's not possible in Go.
 
 type (
-	castBool[T ~bool]       struct{}
-	castUint[T ~uint]       struct{}
-	castUint8[T ~uint8]     struct{}
-	castUint16[T ~uint16]   struct{}
-	castUint32[T ~uint32]   struct{}
-	castUint64[T ~uint64]   struct{}
-	castInt[T ~int]         struct{}
-	castInt8[T ~int8]       struct{}
-	castInt16[T ~int16]     struct{}
-	castInt32[T ~int32]     struct{}
-	castInt64[T ~int64]     struct{}
-	castFloat32[T ~float32] struct{}
-	castFloat64[T ~float64] struct{}
-	castString[T ~string]   struct{}
+	castBool[T ~bool]             struct{}
+	castUint8[T ~uint8]           struct{}
+	castUint16[T ~uint16]         struct{}
+	castUint32[T ~uint32]         struct{}
+	castUint64[T ~uint64 | ~uint] struct{}
+	castInt8[T ~int8]             struct{}
+	castInt16[T ~int16]           struct{}
+	castInt32[T ~int32]           struct{}
+	castInt64[T ~int64 | ~int]    struct{}
+	castFloat32[T ~float32]       struct{}
+	castFloat64[T ~float64]       struct{}
+	castString[T ~string]         struct{}
 )
 
 func (castBool[T]) Read(r io.Reader) (T, error) {
@@ -136,19 +134,6 @@ func (castBool[T]) Write(w io.Writer, value T) error {
 
 func (castBool[T]) RequiresTerminator() bool {
 	return stdBool.RequiresTerminator()
-}
-
-func (castUint[T]) Read(r io.Reader) (T, error) {
-	value, err := stdUint.Read(r)
-	return T(value), err
-}
-
-func (castUint[T]) Write(w io.Writer, value T) error {
-	return stdUint.Write(w, uint(value))
-}
-
-func (castUint[T]) RequiresTerminator() bool {
-	return stdUint.RequiresTerminator()
 }
 
 func (castUint8[T]) Read(r io.Reader) (T, error) {
@@ -201,19 +186,6 @@ func (castUint64[T]) Write(w io.Writer, value T) error {
 
 func (castUint64[T]) RequiresTerminator() bool {
 	return stdUint64.RequiresTerminator()
-}
-
-func (castInt[T]) Read(r io.Reader) (T, error) {
-	value, err := stdInt.Read(r)
-	return T(value), err
-}
-
-func (castInt[T]) Write(w io.Writer, value T) error {
-	return stdInt.Write(w, int(value))
-}
-
-func (castInt[T]) RequiresTerminator() bool {
-	return stdInt.RequiresTerminator()
 }
 
 func (castInt8[T]) Read(r io.Reader) (T, error) {
