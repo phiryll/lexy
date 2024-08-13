@@ -152,8 +152,8 @@ var (
 	stdInt16Codec      Codec[int16]              = intCodec[int16]{math.MinInt16}
 	stdInt32Codec      Codec[int32]              = intCodec[int32]{math.MinInt32}
 	stdInt64Codec      Codec[int64]              = intCodec[int64]{math.MinInt64}
-	stdFloat32Codec    Codec[float32]            = float32Codec[float32]{}
-	stdFloat64Codec    Codec[float64]            = float64Codec[float64]{}
+	stdFloat32Codec    Codec[float32]            = float32Codec{}
+	stdFloat64Codec    Codec[float64]            = float64Codec{}
 	stdComplex64Codec  Codec[complex64]          = complex64Codec{}
 	stdComplex128Codec Codec[complex128]         = complex128Codec{}
 	stdStringCodec     Codec[string]             = stringCodec[string]{}
@@ -169,8 +169,12 @@ var (
 	stdTermBytesCodec    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytesCodec}
 )
 
-// Codec-returning functions that don't require specifying a type parameter to use,
-// because the compiler can infer them from the arguments, if any.
+// Empty returns a Codec that reads and writes no data.
+// [Codec.Read] returns the zero value of T.
+// Codec.Read and [Codec.Write] will never return an error, including [io.EOF].
+// This is useful for empty structs, which are often used as map values.
+// This Codec requires a terminator when used within an aggregate Codec.
+func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
 
 // Bool returns a Codec for the bool type.
 // The encoded order is false, then true.
@@ -372,109 +376,6 @@ func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
 		return codec
 	}
 	return terminatorCodec[T]{codec}
-}
-
-// Codec-returning functions that require specifying a type parameter to use.
-
-// Empty returns a Codec that reads and writes no data.
-// [Codec.Read] returns the zero value of T.
-// Codec.Read and [Codec.Write] will never return an error, including [io.EOF].
-// This is useful for empty structs, which are often used as map values.
-// This Codec requires a terminator when used within an aggregate Codec.
-func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
-
-// MakeBool returns a Codec for a type with an underlying type of bool.
-// Other than the underlying type, this is the same as [Bool].
-func MakeBool[T ~bool]() Codec[T] { return uintCodec[T]{} }
-
-// MakeUint returns a Codec for a type with an underlying type of uint.
-// Other than the underlying type, this is the same as [Uint].
-func MakeUint[T ~uint]() Codec[T] { return asUint64Codec[T]{} }
-
-// MakeUint8 returns a Codec for a type with an underlying type of uint8.
-// Other than the underlying type, this is the same as [Uint8].
-func MakeUint8[T ~uint8]() Codec[T] { return uintCodec[T]{} }
-
-// MakeUint16 returns a Codec for a type with an underlying type of uint16.
-// Other than the underlying type, this is the same as [Uint16].
-func MakeUint16[T ~uint16]() Codec[T] { return uintCodec[T]{} }
-
-// MakeUint32 returns a Codec for a type with an underlying type of uint32.
-// Other than the underlying type, this is the same as [Uint32].
-func MakeUint32[T ~uint32]() Codec[T] { return uintCodec[T]{} }
-
-// MakeUint64 returns a Codec for a type with an underlying type of uint64.
-// Other than the underlying type, this is the same as [Uint64].
-func MakeUint64[T ~uint64]() Codec[T] { return uintCodec[T]{} }
-
-// MakeInt returns a Codec for a type with an underlying type of int.
-// Other than the underlying type, this is the same as [Int].
-func MakeInt[T ~int]() Codec[T] { return asInt64Codec[T]{} }
-
-// MakeInt8 returns a Codec for a type with an underlying type of int8.
-// Other than the underlying type, this is the same as [Int8].
-func MakeInt8[T ~int8]() Codec[T] { return intCodec[T]{math.MinInt8} }
-
-// MakeInt16 returns a Codec for a type with an underlying type of int16.
-// Other than the underlying type, this is the same as [Int16].
-func MakeInt16[T ~int16]() Codec[T] { return intCodec[T]{math.MinInt16} }
-
-// MakeInt32 returns a Codec for a type with an underlying type of int32.
-// Other than the underlying type, this is the same as [Int32].
-func MakeInt32[T ~int32]() Codec[T] { return intCodec[T]{math.MinInt32} }
-
-// MakeInt64 returns a Codec for a type with an underlying type of int64.
-// Other than the underlying type, this is the same as [Int64].
-func MakeInt64[T ~int64]() Codec[T] { return intCodec[T]{math.MinInt64} }
-
-// MakeFloat32 returns a Codec for a type with an underlying type of float32.
-// Other than the underlying type, this is the same as [Float32].
-func MakeFloat32[T ~float32]() Codec[T] { return float32Codec[T]{} }
-
-// MakeFloat64 returns a Codec for a type with an underlying type of float64.
-// Other than the underlying type, this is the same as [Float64].
-func MakeFloat64[T ~float64]() Codec[T] { return float64Codec[T]{} }
-
-// MakeString returns a Codec for a type with an underlying type of string.
-// Other than the underlying type, this is the same as [String].
-func MakeString[T ~string]() Codec[T] { return stringCodec[T]{} }
-
-// MakeBytes returns a NillableCodec for a type with an underlying type of []byte, with nil slices ordered first.
-// Other than the underlying type, this is the same as [Bytes].
-func MakeBytes[S ~[]byte]() NillableCodec[S] { return bytesCodec[S]{true} }
-
-// MakePointerTo returns a NillableCodec for a type with an underlying type of *E, with nil pointers ordered first.
-// Other than the underlying type, this is the same as [PointerTo].
-func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return pointerCodec[P, E]{elemCodec, true}
-}
-
-// MakeSliceOf returns a NillableCodec for a type with an underlying type of []E, with nil slices ordered first.
-// Other than the underlying type, this is the same as [SliceOf].
-func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return sliceCodec[S, E]{TerminateIfNeeded(elemCodec), true}
-}
-
-// MakeMapOf returns a NillableCodec for a type with an underlying type of map[K]V, with nil maps ordered first.
-// Other than the underlying type, this is the same as [MapOf].
-func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
-	return mapCodec[M, K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
-		true,
-	}
 }
 
 // Functions to help in implementing new Codecs.
