@@ -161,7 +161,7 @@ var (
 	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{true}
 	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
 	stdBigRat     NillableCodec[*big.Rat]   = bigRatCodec{true}
-	stdBytes      NillableCodec[[]byte]     = bytesCodec[[]byte]{true}
+	stdBytes      NillableCodec[[]byte]     = bytesCodec{true}
 
 	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
 	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
