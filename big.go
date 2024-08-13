@@ -167,7 +167,7 @@ const (
 	posInf    int8 = +3
 )
 
-var modeCodec = uintCodec[big.RoundingMode]{}
+var modeCodec = castUint8[big.RoundingMode]{}
 
 func computeShift(exp, prec int32) int {
 	// (prec - exp) is a shift of significant bits to immediately left of the point.

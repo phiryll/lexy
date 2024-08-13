@@ -5,8 +5,7 @@ import (
 	"io"
 )
 
-// uintCodec is the Codec for bool and fixed-length unsigned integral types.
-//
+// Codecs for bool and fixed-length unsigned integral types.
 // These are:
 //   - bool
 //   - uint8
@@ -14,38 +13,106 @@ import (
 //   - uint32
 //   - uint64
 //
-// This encodes a value in big-endian order.
-type uintCodec[T ~bool | ~uint8 | ~uint16 | ~uint32 | ~uint64] struct{}
+// These encode a value in big-endian order.
+type (
+	boolCodec   struct{}
+	uintCodec   struct{}
+	uint8Codec  struct{}
+	uint16Codec struct{}
+	uint32Codec struct{}
+	uint64Codec struct{}
+)
 
-func (c uintCodec[T]) Read(r io.Reader) (T, error) {
-	var value T
+func (boolCodec) Read(r io.Reader) (bool, error) {
+	var value bool
 	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		var zero T
-		return zero, err
+		return false, err
 	}
 	return value, nil
 }
 
-func (c uintCodec[T]) Write(w io.Writer, value T) error {
+func (boolCodec) Write(w io.Writer, value bool) error {
 	return binary.Write(w, binary.BigEndian, value)
 }
 
-func (c uintCodec[T]) RequiresTerminator() bool {
+func (boolCodec) RequiresTerminator() bool {
 	return false
 }
 
-type asUint64Codec[T ~uint] struct{}
-
-func (c asUint64Codec[T]) Read(r io.Reader) (T, error) {
+func (uintCodec) Read(r io.Reader) (uint, error) {
 	value, err := stdUint64.Read(r)
-	return T(value), err
+	return uint(value), err
 }
 
-func (c asUint64Codec[T]) Write(w io.Writer, value T) error {
+func (uintCodec) Write(w io.Writer, value uint) error {
 	return stdUint64.Write(w, uint64(value))
 }
 
-func (c asUint64Codec[T]) RequiresTerminator() bool {
+func (uintCodec) RequiresTerminator() bool {
+	return false
+}
+
+func (uint8Codec) Read(r io.Reader) (uint8, error) {
+	var value uint8
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func (uint8Codec) Write(w io.Writer, value uint8) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
+func (uint8Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (uint16Codec) Read(r io.Reader) (uint16, error) {
+	var value uint16
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func (uint16Codec) Write(w io.Writer, value uint16) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
+func (uint16Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (uint32Codec) Read(r io.Reader) (uint32, error) {
+	var value uint32
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func (uint32Codec) Write(w io.Writer, value uint32) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
+func (uint32Codec) RequiresTerminator() bool {
+	return false
+}
+
+func (uint64Codec) Read(r io.Reader) (uint64, error) {
+	var value uint64
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func (uint64Codec) Write(w io.Writer, value uint64) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
+func (uint64Codec) RequiresTerminator() bool {
 	return false
 }
 
@@ -88,15 +155,15 @@ func (c intCodec[T]) RequiresTerminator() bool {
 
 type asInt64Codec[T ~int] struct{}
 
-func (c asInt64Codec[T]) Read(r io.Reader) (T, error) {
+func (asInt64Codec[T]) Read(r io.Reader) (T, error) {
 	value, err := stdInt64.Read(r)
 	return T(value), err
 }
 
-func (c asInt64Codec[T]) Write(w io.Writer, value T) error {
+func (asInt64Codec[T]) Write(w io.Writer, value T) error {
 	return stdInt64.Write(w, int64(value))
 }
 
-func (c asInt64Codec[T]) RequiresTerminator() bool {
+func (asInt64Codec[T]) RequiresTerminator() bool {
 	return false
 }

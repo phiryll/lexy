@@ -14,27 +14,27 @@ import (
 
 // MakeBool returns a Codec for a type with an underlying type of bool.
 // Other than the underlying type, this is the same as [Bool].
-func MakeBool[T ~bool]() Codec[T] { return uintCodec[T]{} }
+func MakeBool[T ~bool]() Codec[T] { return castBool[T]{} }
 
 // MakeUint returns a Codec for a type with an underlying type of uint.
 // Other than the underlying type, this is the same as [Uint].
-func MakeUint[T ~uint]() Codec[T] { return asUint64Codec[T]{} }
+func MakeUint[T ~uint]() Codec[T] { return castUint[T]{} }
 
 // MakeUint8 returns a Codec for a type with an underlying type of uint8.
 // Other than the underlying type, this is the same as [Uint8].
-func MakeUint8[T ~uint8]() Codec[T] { return uintCodec[T]{} }
+func MakeUint8[T ~uint8]() Codec[T] { return castUint8[T]{} }
 
 // MakeUint16 returns a Codec for a type with an underlying type of uint16.
 // Other than the underlying type, this is the same as [Uint16].
-func MakeUint16[T ~uint16]() Codec[T] { return uintCodec[T]{} }
+func MakeUint16[T ~uint16]() Codec[T] { return castUint16[T]{} }
 
 // MakeUint32 returns a Codec for a type with an underlying type of uint32.
 // Other than the underlying type, this is the same as [Uint32].
-func MakeUint32[T ~uint32]() Codec[T] { return uintCodec[T]{} }
+func MakeUint32[T ~uint32]() Codec[T] { return castUint32[T]{} }
 
 // MakeUint64 returns a Codec for a type with an underlying type of uint64.
 // Other than the underlying type, this is the same as [Uint64].
-func MakeUint64[T ~uint64]() Codec[T] { return uintCodec[T]{} }
+func MakeUint64[T ~uint64]() Codec[T] { return castUint64[T]{} }
 
 // MakeInt returns a Codec for a type with an underlying type of int.
 // Other than the underlying type, this is the same as [Int].
@@ -109,7 +109,95 @@ func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Co
 // It would be really nice to have just one castCodec[T ~U, U any],
 // but that's not possible in Go.
 
-type castFloat32[T ~float32] struct{}
+type (
+	castBool[T ~bool]       struct{}
+	castUint[T ~uint]       struct{}
+	castUint8[T ~uint8]     struct{}
+	castUint16[T ~uint16]   struct{}
+	castUint32[T ~uint32]   struct{}
+	castUint64[T ~uint64]   struct{}
+	castFloat32[T ~float32] struct{}
+	castFloat64[T ~float64] struct{}
+	castString[T ~string]   struct{}
+)
+
+func (castBool[T]) Read(r io.Reader) (T, error) {
+	value, err := stdBool.Read(r)
+	return T(value), err
+}
+
+func (castBool[T]) Write(w io.Writer, value T) error {
+	return stdBool.Write(w, bool(value))
+}
+
+func (castBool[T]) RequiresTerminator() bool {
+	return stdBool.RequiresTerminator()
+}
+
+func (castUint[T]) Read(r io.Reader) (T, error) {
+	value, err := stdUint.Read(r)
+	return T(value), err
+}
+
+func (castUint[T]) Write(w io.Writer, value T) error {
+	return stdUint.Write(w, uint(value))
+}
+
+func (castUint[T]) RequiresTerminator() bool {
+	return stdUint.RequiresTerminator()
+}
+
+func (castUint8[T]) Read(r io.Reader) (T, error) {
+	value, err := stdUint8.Read(r)
+	return T(value), err
+}
+
+func (castUint8[T]) Write(w io.Writer, value T) error {
+	return stdUint8.Write(w, uint8(value))
+}
+
+func (castUint8[T]) RequiresTerminator() bool {
+	return stdUint8.RequiresTerminator()
+}
+
+func (castUint16[T]) Read(r io.Reader) (T, error) {
+	value, err := stdUint16.Read(r)
+	return T(value), err
+}
+
+func (castUint16[T]) Write(w io.Writer, value T) error {
+	return stdUint16.Write(w, uint16(value))
+}
+
+func (castUint16[T]) RequiresTerminator() bool {
+	return stdUint16.RequiresTerminator()
+}
+
+func (castUint32[T]) Read(r io.Reader) (T, error) {
+	value, err := stdUint32.Read(r)
+	return T(value), err
+}
+
+func (castUint32[T]) Write(w io.Writer, value T) error {
+	return stdUint32.Write(w, uint32(value))
+}
+
+func (castUint32[T]) RequiresTerminator() bool {
+	return stdUint32.RequiresTerminator()
+}
+
+func (castUint64[T]) Read(r io.Reader) (T, error) {
+	value, err := stdUint64.Read(r)
+	return T(value), err
+}
+
+func (castUint64[T]) Write(w io.Writer, value T) error {
+	return stdUint64.Write(w, uint64(value))
+}
+
+func (castUint64[T]) RequiresTerminator() bool {
+	return stdUint64.RequiresTerminator()
+}
 
 func (castFloat32[T]) Read(r io.Reader) (T, error) {
 	value, err := stdFloat32.Read(r)
@@ -124,8 +212,6 @@ func (castFloat32[T]) RequiresTerminator() bool {
 	return stdFloat32.RequiresTerminator()
 }
 
-type castFloat64[T ~float64] struct{}
-
 func (castFloat64[T]) Read(r io.Reader) (T, error) {
 	value, err := stdFloat64.Read(r)
 	return T(value), err
@@ -138,8 +224,6 @@ func (castFloat64[T]) Write(w io.Writer, value T) error {
 func (castFloat64[T]) RequiresTerminator() bool {
 	return stdFloat64.RequiresTerminator()
 }
-
-type castString[T ~string] struct{}
 
 func (castString[T]) Read(r io.Reader) (T, error) {
 	value, err := stdString.Read(r)
