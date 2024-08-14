@@ -342,7 +342,17 @@ func SliceOf[E any](elemCodec Codec[E]) NillableCodec[[]E] {
 // The encoded order for non-nil maps is empty maps first, with all other maps randomly ordered after.
 // This Codec requires a terminator when used within an aggregate Codec.
 func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[map[K]V] {
-	return MakeMapOf[map[K]V](keyCodec, valueCodec)
+	if keyCodec == nil {
+		panic("keyCodec must be non-nil")
+	}
+	if valueCodec == nil {
+		panic("valueCodec must be non-nil")
+	}
+	return mapCodec[K, V]{
+		TerminateIfNeeded(keyCodec),
+		TerminateIfNeeded(valueCodec),
+		true,
+	}
 }
 
 // Negate returns a Codec reversing the encoded order of codec.

@@ -86,17 +86,7 @@ func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
 // MakeMapOf returns a NillableCodec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, this is the same as [MapOf].
 func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
-	return mapCodec[M, K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
-		true,
-	}
+	return castMap[M, K, V]{MapOf(keyCodec, valueCodec)}
 }
 
 // It would be really nice to have just one castCodec[T ~U, U any],
@@ -123,6 +113,9 @@ type (
 	}
 	castSlice[S ~[]E, E any] struct {
 		codec NillableCodec[[]E]
+	}
+	castMap[M ~map[K]V, K comparable, V any] struct {
+		codec NillableCodec[map[K]V]
 	}
 )
 
@@ -328,4 +321,20 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 
 func (c castSlice[S, E]) NilsLast() NillableCodec[S] {
 	return castSlice[S, E]{c.codec.NilsLast()}
+}
+
+func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
+	return c.codec.Read(r)
+}
+
+func (c castMap[M, K, V]) Write(w io.Writer, value M) error {
+	return c.codec.Write(w, value)
+}
+
+func (c castMap[M, K, V]) RequiresTerminator() bool {
+	return c.codec.RequiresTerminator()
+}
+
+func (c castMap[M, K, V]) NilsLast() NillableCodec[M] {
+	return castMap[M, K, V]{c.codec.NilsLast()}
 }
