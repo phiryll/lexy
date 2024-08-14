@@ -44,7 +44,7 @@ func (c negateCodec[T]) Write(w io.Writer, value T) error {
 	return c.codec.Write(negateWriter{w}, value)
 }
 
-func (c negateCodec[T]) RequiresTerminator() bool {
+func (negateCodec[T]) RequiresTerminator() bool {
 	return false
 }
 

@@ -36,7 +36,7 @@ func formatOffset(seconds int32) string {
 	return fmt.Sprintf("%c%02d:%02d:%02d", sign, hours, minutes%60, seconds%60)
 }
 
-func (c timeCodec) Read(r io.Reader) (time.Time, error) {
+func (timeCodec) Read(r io.Reader) (time.Time, error) {
 	var zero time.Time
 	seconds, err := stdInt64.Read(r)
 	if err != nil {
@@ -54,7 +54,7 @@ func (c timeCodec) Read(r io.Reader) (time.Time, error) {
 	return time.Unix(seconds, int64(nanos)).In(loc), nil
 }
 
-func (c timeCodec) Write(w io.Writer, value time.Time) error {
+func (timeCodec) Write(w io.Writer, value time.Time) error {
 	utc := value.UTC()
 	seconds := utc.Unix()     // int64 seconds since epoch
 	nanos := utc.Nanosecond() // int nanoseconds within second (9 decimal digits, cast to int32)
@@ -69,6 +69,6 @@ func (c timeCodec) Write(w io.Writer, value time.Time) error {
 	return stdInt32.Write(w, int32(offset))
 }
 
-func (c timeCodec) RequiresTerminator() bool {
+func (timeCodec) RequiresTerminator() bool {
 	return false
 }

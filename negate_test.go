@@ -104,7 +104,7 @@ var (
 	negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
 )
 
-func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
+func (negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
 	u8, err := lexy.Uint8().Read(r)
 	if err != nil {
@@ -121,7 +121,7 @@ func (n negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	return negateTest{u8, pInt, s}, nil
 }
 
-func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
+func (negateTestCodec) Write(w io.Writer, value negateTest) error {
 	if err := lexy.Uint8().Write(w, value.fUint8); err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (n negateTestCodec) Write(w io.Writer, value negateTest) error {
 	return negPtrIntCodec.Write(w, value.fPtrInt16)
 }
 
-func (n negateTestCodec) RequiresTerminator() bool {
+func (negateTestCodec) RequiresTerminator() bool {
 	return false
 }
 

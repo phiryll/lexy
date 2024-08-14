@@ -17,7 +17,7 @@ import (
 // Collation is locale-dependent. Any ordering could be incorrect in another locale.
 type stringCodec struct{}
 
-func (c stringCodec) Read(r io.Reader) (string, error) {
+func (stringCodec) Read(r io.Reader) (string, error) {
 	var buf strings.Builder
 	// io.Copy will not return io.EOF
 	_, err := io.Copy(&buf, r)
@@ -27,11 +27,11 @@ func (c stringCodec) Read(r io.Reader) (string, error) {
 	return buf.String(), nil
 }
 
-func (c stringCodec) Write(w io.Writer, value string) error {
+func (stringCodec) Write(w io.Writer, value string) error {
 	_, err := io.WriteString(w, value)
 	return err
 }
 
-func (c stringCodec) RequiresTerminator() bool {
+func (stringCodec) RequiresTerminator() bool {
 	return true
 }

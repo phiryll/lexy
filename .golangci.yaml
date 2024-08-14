@@ -80,21 +80,6 @@ issues:
         - revive
       text: "add-constant"
 
-    # Run some linter only for test files by excluding its issues for everything else.
-    # - path-except: _test\.go
-    #   linters:
-    #     - forbidigo
-
-    # Exclude some `staticcheck` messages.
-    # - linters:
-    #     - staticcheck
-    #   text: "SA9003:"
-
-    # Exclude `lll` issues for long lines with `go:generate`.
-    # - linters:
-    #     - lll
-    #   source: "^//go:generate "
-
 linters:
   # Enable all available linters.
   # Default: false
@@ -408,8 +393,6 @@ linters-settings:
       - name: file-header           # not using file headers
         disabled: true
       - name: max-public-structs    # don't know how to limit to one file
-        disabled: true
-      - name: unused-receiver       # should probably fix these, there are a lot
         disabled: true
 
       - name: enforce-map-style

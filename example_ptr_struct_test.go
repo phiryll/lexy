@@ -27,7 +27,7 @@ var (
 
 type ptrToBigStructCodec struct{}
 
-func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
+func (ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	if done, err := lexy.ReadPrefix(r); done {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (c ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
 	return &BigStruct{name /* , other fields ... */}, nil
 }
 
-func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
+func (ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	// done is true if there was an error, or if value is nil,
 	// in which case a prefix denoting "nil" has already been written.
 	if done, err := lexy.WritePrefix(w, value == nil, true); done {
@@ -52,13 +52,13 @@ func (c ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
 	return nil
 }
 
-func (c ptrToBigStructCodec) RequiresTerminator() bool {
+func (ptrToBigStructCodec) RequiresTerminator() bool {
 	return false
 }
 
 type containterCodec struct{}
 
-func (c containterCodec) Read(r io.Reader) (Container, error) {
+func (containterCodec) Read(r io.Reader) (Container, error) {
 	var zero Container
 	big, err := PtrToBigStructCodec.Read(r)
 	if err != nil {
@@ -68,7 +68,7 @@ func (c containterCodec) Read(r io.Reader) (Container, error) {
 	return Container{big /* , other fields ... */}, nil
 }
 
-func (c containterCodec) Write(w io.Writer, value Container) error {
+func (containterCodec) Write(w io.Writer, value Container) error {
 	if err := PtrToBigStructCodec.Write(w, value.big); err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (c containterCodec) Write(w io.Writer, value Container) error {
 	return nil
 }
 
-func (c containterCodec) RequiresTerminator() bool {
+func (containterCodec) RequiresTerminator() bool {
 	return false
 }
 
