@@ -296,7 +296,7 @@ func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
 }
 
 func (c castPointer[P, E]) Write(w io.Writer, value P) error {
-	return c.codec.Write(w, value)
+	return c.codec.Write(w, (*E)(value))
 }
 
 func (c castPointer[P, E]) RequiresTerminator() bool {
@@ -312,7 +312,7 @@ func (c castSlice[S, E]) Read(r io.Reader) (S, error) {
 }
 
 func (c castSlice[S, E]) Write(w io.Writer, value S) error {
-	return c.codec.Write(w, value)
+	return c.codec.Write(w, []E(value))
 }
 
 func (c castSlice[S, E]) RequiresTerminator() bool {
@@ -328,7 +328,7 @@ func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
 }
 
 func (c castMap[M, K, V]) Write(w io.Writer, value M) error {
-	return c.codec.Write(w, value)
+	return c.codec.Write(w, map[K]V(value))
 }
 
 func (c castMap[M, K, V]) RequiresTerminator() bool {
