@@ -137,22 +137,38 @@ type NillableCodec[T any] interface {
 	NilsLast() NillableCodec[T]
 }
 
+// TempCodec is temporary.
+type TempCodec[T any] interface {
+	Codec[T]
+
+	Append(buf []byte, value T) []byte
+	Put(buf []byte, value T) int
+	Get(buf []byte) (T, int)
+	MaxSize() int
+}
+
+// TempNillableCodec is temporary.
+type TempNillableCodec[T any] interface {
+	TempCodec[T]
+	NillableCodec[T]
+}
+
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBool       Codec[bool]               = boolCodec{}
+	stdBool       TempCodec[bool]           = boolCodec{}
 	stdUint       Codec[uint]               = castUint64[uint]{}
-	stdUint8      Codec[uint8]              = uint8Codec{}
-	stdUint16     Codec[uint16]             = uint16Codec{}
-	stdUint32     Codec[uint32]             = uint32Codec{}
-	stdUint64     Codec[uint64]             = uint64Codec{}
+	stdUint8      TempCodec[uint8]          = uint8Codec{}
+	stdUint16     TempCodec[uint16]         = uint16Codec{}
+	stdUint32     TempCodec[uint32]         = uint32Codec{}
+	stdUint64     TempCodec[uint64]         = uint64Codec{}
 	stdInt        Codec[int]                = castInt64[int]{}
-	stdInt8       Codec[int8]               = int8Codec{}
-	stdInt16      Codec[int16]              = int16Codec{}
-	stdInt32      Codec[int32]              = int32Codec{}
-	stdInt64      Codec[int64]              = int64Codec{}
-	stdFloat32    Codec[float32]            = float32Codec{}
-	stdFloat64    Codec[float64]            = float64Codec{}
+	stdInt8       TempCodec[int8]           = int8Codec{}
+	stdInt16      TempCodec[int16]          = int16Codec{}
+	stdInt32      TempCodec[int32]          = int32Codec{}
+	stdInt64      TempCodec[int64]          = int64Codec{}
+	stdFloat32    TempCodec[float32]        = float32Codec{}
+	stdFloat64    TempCodec[float64]        = float64Codec{}
 	stdComplex64  Codec[complex64]          = complex64Codec{}
 	stdComplex128 Codec[complex128]         = complex128Codec{}
 	stdString     Codec[string]             = stringCodec{}
