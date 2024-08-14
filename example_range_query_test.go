@@ -66,7 +66,7 @@ var (
 
 type KeyCodec struct{}
 
-func (c KeyCodec) Read(r io.Reader) (UserKey, error) {
+func (KeyCodec) Read(r io.Reader) (UserKey, error) {
 	var zero UserKey
 	cost, err := costCodec.Read(r)
 	if err != nil {
@@ -79,14 +79,14 @@ func (c KeyCodec) Read(r io.Reader) (UserKey, error) {
 	return UserKey{words, cost}, nil
 }
 
-func (c KeyCodec) Write(w io.Writer, key UserKey) error {
+func (KeyCodec) Write(w io.Writer, key UserKey) error {
 	if err := costCodec.Write(w, key.cost); err != nil {
 		return err
 	}
 	return wordsCodec.Write(w, key.words)
 }
 
-func (c KeyCodec) RequiresTerminator() bool {
+func (KeyCodec) RequiresTerminator() bool {
 	return false
 }
 

@@ -135,7 +135,7 @@ var (
 	_ io.Writer = &boundedWriter{0, 0, nil}
 )
 
-func (w failWriter) Write(_ []byte) (int, error) {
+func (failWriter) Write(_ []byte) (int, error) {
 	return 0, errWrite
 }
 

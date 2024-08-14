@@ -29,7 +29,7 @@ type bigIntCodec struct {
 	nilsFirst bool
 }
 
-func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
+func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
@@ -80,11 +80,11 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 	return err
 }
 
-func (c bigIntCodec) RequiresTerminator() bool {
+func (bigIntCodec) RequiresTerminator() bool {
 	return false
 }
 
-func (c bigIntCodec) NilsLast() NillableCodec[*big.Int] {
+func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
 	return bigIntCodec{false}
 }
 
@@ -185,7 +185,7 @@ func computeShift(exp, prec int32) int {
 }
 
 //nolint:funlen
-func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
+func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
@@ -314,11 +314,11 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	return modeCodec.Write(w, mode)
 }
 
-func (c bigFloatCodec) RequiresTerminator() bool {
+func (bigFloatCodec) RequiresTerminator() bool {
 	return true
 }
 
-func (c bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
+func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
 	return bigFloatCodec{false}
 }
 
@@ -336,7 +336,7 @@ type bigRatCodec struct {
 	nilsFirst bool
 }
 
-func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
+func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
@@ -362,10 +362,10 @@ func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	return stdBigInt.Write(w, value.Denom())
 }
 
-func (c bigRatCodec) RequiresTerminator() bool {
+func (bigRatCodec) RequiresTerminator() bool {
 	return false
 }
 
-func (c bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
+func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
 	return bigRatCodec{false}
 }

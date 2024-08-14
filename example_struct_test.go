@@ -35,7 +35,7 @@ var (
 //   - tags
 type someStructCodec struct{}
 
-func (c someStructCodec) Read(r io.Reader) (SomeStruct, error) {
+func (someStructCodec) Read(r io.Reader) (SomeStruct, error) {
 	var zero SomeStruct
 	size, err := lexy.Int32().Read(r)
 	if err != nil {
@@ -52,7 +52,7 @@ func (c someStructCodec) Read(r io.Reader) (SomeStruct, error) {
 	return SomeStruct{size, score, tags}, nil
 }
 
-func (c someStructCodec) Write(w io.Writer, value SomeStruct) error {
+func (someStructCodec) Write(w io.Writer, value SomeStruct) error {
 	if err := lexy.Int32().Write(w, value.size); err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (c someStructCodec) Write(w io.Writer, value SomeStruct) error {
 	return tagsCodec.Write(w, value.tags)
 }
 
-func (c someStructCodec) RequiresTerminator() bool {
+func (someStructCodec) RequiresTerminator() bool {
 	return false
 }
 
@@ -123,7 +123,7 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 // assuming their delegate Codecs are safe for concurrent use
 // (the argument Codecs used to construct slice and map Codecs, e.g.).
 //
-//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
+//	func (fooCodec) Read(r io.Reader) (Foo, error) {
 //	    var zero Foo
 //	    first, err := firstCodec.Read(r)
 //	    if err != nil {
@@ -141,7 +141,7 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //	    return Foo{first, second, ..., nth}, nil
 //	}
 //
-//	func (c fooCodec) Write(w io.Writer, value Foo) error {
+//	func (fooCodec) Write(w io.Writer, value Foo) error {
 //	    if err := firstCodec.Write(w, value.first); err != nil {
 //	        return err
 //	    }
@@ -152,7 +152,7 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //	    return nthCodec.Write(w, value.nth)
 //	}
 //
-//	func (c fooCodec) RequiresTerminator() bool {
+//	func (fooCodec) RequiresTerminator() bool {
 //	    return false
 //	}
 //

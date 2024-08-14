@@ -88,7 +88,7 @@ func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
 	return nil
 }
 
-func (c terminatorCodec[T]) RequiresTerminator() bool {
+func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
 }
 

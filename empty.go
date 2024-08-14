@@ -9,15 +9,15 @@ import "io"
 // This is useful for empty structs, which are often used as map values.
 type emptyCodec[T any] struct{}
 
-func (c emptyCodec[T]) Read(_ io.Reader) (T, error) {
+func (emptyCodec[T]) Read(_ io.Reader) (T, error) {
 	var zero T
 	return zero, nil
 }
 
-func (c emptyCodec[T]) Write(_ io.Writer, _ T) error {
+func (emptyCodec[T]) Write(_ io.Writer, _ T) error {
 	return nil
 }
 
-func (c emptyCodec[T]) RequiresTerminator() bool {
+func (emptyCodec[T]) RequiresTerminator() bool {
 	return true
 }

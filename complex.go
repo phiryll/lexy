@@ -9,7 +9,7 @@ import (
 // The encoded order is real part first, imaginary part second.
 type complex64Codec struct{}
 
-func (c complex64Codec) Read(r io.Reader) (complex64, error) {
+func (complex64Codec) Read(r io.Reader) (complex64, error) {
 	realPart, err := stdFloat32.Read(r)
 	if err != nil {
 		return 0, err
@@ -21,14 +21,14 @@ func (c complex64Codec) Read(r io.Reader) (complex64, error) {
 	return complex(realPart, imagPart), nil
 }
 
-func (c complex64Codec) Write(w io.Writer, value complex64) error {
+func (complex64Codec) Write(w io.Writer, value complex64) error {
 	if err := stdFloat32.Write(w, real(value)); err != nil {
 		return err
 	}
 	return stdFloat32.Write(w, imag(value))
 }
 
-func (c complex64Codec) RequiresTerminator() bool {
+func (complex64Codec) RequiresTerminator() bool {
 	return false
 }
 
@@ -37,7 +37,7 @@ func (c complex64Codec) RequiresTerminator() bool {
 // The encoded order is real part first, imaginary part second.
 type complex128Codec struct{}
 
-func (c complex128Codec) Read(r io.Reader) (complex128, error) {
+func (complex128Codec) Read(r io.Reader) (complex128, error) {
 	realPart, err := stdFloat64.Read(r)
 	if err != nil {
 		return 0, err
@@ -49,13 +49,13 @@ func (c complex128Codec) Read(r io.Reader) (complex128, error) {
 	return complex(realPart, imagPart), nil
 }
 
-func (c complex128Codec) Write(w io.Writer, value complex128) error {
+func (complex128Codec) Write(w io.Writer, value complex128) error {
 	if err := stdFloat64.Write(w, real(value)); err != nil {
 		return err
 	}
 	return stdFloat64.Write(w, imag(value))
 }
 
-func (c complex128Codec) RequiresTerminator() bool {
+func (complex128Codec) RequiresTerminator() bool {
 	return false
 }

@@ -102,21 +102,21 @@ var (
 
 type float32Converter struct{}
 
-func (c float32Converter) To(f float32) uint32   { return math.Float32bits(f) }
-func (c float32Converter) From(u uint32) float32 { return math.Float32frombits(u) }
-func (c float32Converter) Cmp(a, b float32) int  { return cmpFloats(math.Float32bits, a, b) }
+func (float32Converter) To(f float32) uint32   { return math.Float32bits(f) }
+func (float32Converter) From(u uint32) float32 { return math.Float32frombits(u) }
+func (float32Converter) Cmp(a, b float32) int  { return cmpFloats(math.Float32bits, a, b) }
 
 type float64Converter struct{}
 
-func (c float64Converter) To(f float64) uint64   { return math.Float64bits(f) }
-func (c float64Converter) From(u uint64) float64 { return math.Float64frombits(u) }
-func (c float64Converter) Cmp(a, b float64) int  { return cmpFloats(math.Float64bits, a, b) }
+func (float64Converter) To(f float64) uint64   { return math.Float64bits(f) }
+func (float64Converter) From(u uint64) float64 { return math.Float64frombits(u) }
+func (float64Converter) Cmp(a, b float64) int  { return cmpFloats(math.Float64bits, a, b) }
 
 type negFloat32Converter struct{}
 
-func (c negFloat32Converter) To(f float32) uint32   { return f32Conv.To(negativeFloat32(f)) }
-func (c negFloat32Converter) From(u uint32) float32 { return negativeFloat32(f32Conv.From(u)) }
-func (c negFloat32Converter) Cmp(a, b float32) int  { return f32Conv.Cmp(b, a) }
+func (negFloat32Converter) To(f float32) uint32   { return f32Conv.To(negativeFloat32(f)) }
+func (negFloat32Converter) From(u uint32) float32 { return negativeFloat32(f32Conv.From(u)) }
+func (negFloat32Converter) Cmp(a, b float32) int  { return f32Conv.Cmp(b, a) }
 
 // Functions to add seed values to the fuzzer.
 
