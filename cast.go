@@ -80,10 +80,7 @@ func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
 // MakeSliceOf returns a NillableCodec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, this is the same as [SliceOf].
 func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return sliceCodec[S, E]{TerminateIfNeeded(elemCodec), true}
+	return castSlice[S, E]{SliceOf(elemCodec)}
 }
 
 // MakeMapOf returns a NillableCodec for a type with an underlying type of map[K]V, with nil maps ordered first.
@@ -123,6 +120,9 @@ type (
 	}
 	castPointer[P ~*E, E any] struct {
 		codec NillableCodec[*E]
+	}
+	castSlice[S ~[]E, E any] struct {
+		codec NillableCodec[[]E]
 	}
 )
 
@@ -283,12 +283,11 @@ func (castString[T]) RequiresTerminator() bool {
 }
 
 func (c castBytes[T]) Read(r io.Reader) (T, error) {
-	value, err := c.codec.Read(r)
-	return T(value), err
+	return c.codec.Read(r)
 }
 
 func (c castBytes[T]) Write(w io.Writer, value T) error {
-	return c.codec.Write(w, []byte(value))
+	return c.codec.Write(w, value)
 }
 
 func (c castBytes[T]) RequiresTerminator() bool {
@@ -300,8 +299,7 @@ func (c castBytes[T]) NilsLast() NillableCodec[T] {
 }
 
 func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
-	value, err := c.codec.Read(r)
-	return value, err
+	return c.codec.Read(r)
 }
 
 func (c castPointer[P, E]) Write(w io.Writer, value P) error {
@@ -314,4 +312,20 @@ func (c castPointer[P, E]) RequiresTerminator() bool {
 
 func (c castPointer[P, E]) NilsLast() NillableCodec[P] {
 	return castPointer[P, E]{c.codec.NilsLast()}
+}
+
+func (c castSlice[S, E]) Read(r io.Reader) (S, error) {
+	return c.codec.Read(r)
+}
+
+func (c castSlice[S, E]) Write(w io.Writer, value S) error {
+	return c.codec.Write(w, value)
+}
+
+func (c castSlice[S, E]) RequiresTerminator() bool {
+	return c.codec.RequiresTerminator()
+}
+
+func (c castSlice[S, E]) NilsLast() NillableCodec[S] {
+	return castSlice[S, E]{c.codec.NilsLast()}
 }

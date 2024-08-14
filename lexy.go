@@ -332,7 +332,10 @@ func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.
 func SliceOf[E any](elemCodec Codec[E]) NillableCodec[[]E] {
-	return MakeSliceOf[[]E](elemCodec)
+	if elemCodec == nil {
+		panic("elemCodec must be non-nil")
+	}
+	return sliceCodec[E]{TerminateIfNeeded(elemCodec), true}
 }
 
 // MapOf returns a NillableCodec for the map[K]V type, with nil maps ordered first.
