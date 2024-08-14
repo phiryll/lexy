@@ -322,7 +322,10 @@ func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 // The encoded order of non-nil values is the same as is produced by elemCodec.
 // This Codec requires a terminator when used within an aggregate Codec if elemCodec does.
 func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
-	return MakePointerTo[*E](elemCodec)
+	if elemCodec == nil {
+		panic("elemCodec must be non-nil")
+	}
+	return pointerCodec[E]{elemCodec, true}
 }
 
 // SliceOf returns a NillableCodec for the []E type, with nil slices ordered first.

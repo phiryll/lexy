@@ -74,10 +74,7 @@ func MakeBytes[S ~[]byte]() NillableCodec[S] { return castBytes[S]{stdBytes} }
 // MakePointerTo returns a NillableCodec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, this is the same as [PointerTo].
 func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
-	return pointerCodec[P, E]{elemCodec, true}
+	return castPointer[P, E]{PointerTo(elemCodec)}
 }
 
 // MakeSliceOf returns a NillableCodec for a type with an underlying type of []E, with nil slices ordered first.
@@ -123,6 +120,9 @@ type (
 	castString[T ~string]         struct{}
 	castBytes[T ~[]byte]          struct {
 		codec NillableCodec[[]byte]
+	}
+	castPointer[P ~*E, E any] struct {
+		codec NillableCodec[*E]
 	}
 )
 
@@ -297,4 +297,21 @@ func (c castBytes[T]) RequiresTerminator() bool {
 
 func (c castBytes[T]) NilsLast() NillableCodec[T] {
 	return castBytes[T]{c.codec.NilsLast()}
+}
+
+func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
+	value, err := c.codec.Read(r)
+	return value, err
+}
+
+func (c castPointer[P, E]) Write(w io.Writer, value P) error {
+	return c.codec.Write(w, value)
+}
+
+func (c castPointer[P, E]) RequiresTerminator() bool {
+	return c.codec.RequiresTerminator()
+}
+
+func (c castPointer[P, E]) NilsLast() NillableCodec[P] {
+	return castPointer[P, E]{c.codec.NilsLast()}
 }
