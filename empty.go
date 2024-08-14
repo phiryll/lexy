@@ -18,6 +18,23 @@ func (emptyCodec[T]) Write(_ io.Writer, _ T) error {
 	return nil
 }
 
+func (emptyCodec[T]) Append(buf []byte, _ T) []byte {
+	return buf
+}
+
+func (emptyCodec[T]) Put(_ []byte, _ T) int {
+	return 0
+}
+
+func (emptyCodec[T]) Get(_ []byte) (T, int) {
+	var zero T
+	return zero, 0
+}
+
+func (emptyCodec[T]) MaxSize() int {
+	return 0
+}
+
 func (emptyCodec[T]) RequiresTerminator() bool {
 	return true
 }
