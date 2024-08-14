@@ -12,17 +12,17 @@ import (
 // - if non-nil, prefixNonNil, encoded key, encoded value, encoded key, ...
 //
 // Encoded keys and values are escaped and termninated if their respective Codecs require it.
-type mapCodec[M ~map[K]V, K comparable, V any] struct {
+type mapCodec[K comparable, V any] struct {
 	keyCodec   Codec[K]
 	valueCodec Codec[V]
 	nilsFirst  bool
 }
 
-func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
+func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	m := make(M)
+	m := map[K]V{}
 	for {
 		key, err := c.keyCodec.Read(r)
 		if errors.Is(err, io.EOF) {
@@ -39,7 +39,7 @@ func (c mapCodec[M, K, V]) Read(r io.Reader) (M, error) {
 	}
 }
 
-func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
+func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
@@ -54,10 +54,10 @@ func (c mapCodec[M, K, V]) Write(w io.Writer, value M) error {
 	return nil
 }
 
-func (c mapCodec[M, K, V]) RequiresTerminator() bool {
+func (mapCodec[K, V]) RequiresTerminator() bool {
 	return true
 }
 
-func (c mapCodec[M, K, V]) NilsLast() NillableCodec[M] {
-	return mapCodec[M, K, V]{c.keyCodec, c.valueCodec, false}
+func (c mapCodec[K, V]) NilsLast() NillableCodec[map[K]V] {
+	return mapCodec[K, V]{c.keyCodec, c.valueCodec, false}
 }

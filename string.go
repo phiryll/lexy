@@ -15,23 +15,23 @@ import (
 // For an encoded UTF-8 string, the order is the same as the lexicographical order of the Unicode code points.
 // However, even this is not intuitive. For example, 'Z' < 'a'.
 // Collation is locale-dependent. Any ordering could be incorrect in another locale.
-type stringCodec[T ~string] struct{}
+type stringCodec struct{}
 
-func (c stringCodec[T]) Read(r io.Reader) (T, error) {
+func (c stringCodec) Read(r io.Reader) (string, error) {
 	var buf strings.Builder
 	// io.Copy will not return io.EOF
 	_, err := io.Copy(&buf, r)
 	if err != nil {
-		return T(""), err
+		return "", err
 	}
-	return T(buf.String()), nil
+	return buf.String(), nil
 }
 
-func (c stringCodec[T]) Write(w io.Writer, value T) error {
-	_, err := io.WriteString(w, string(value))
+func (c stringCodec) Write(w io.Writer, value string) error {
+	_, err := io.WriteString(w, value)
 	return err
 }
 
-func (c stringCodec[T]) RequiresTerminator() bool {
+func (c stringCodec) RequiresTerminator() bool {
 	return true
 }

@@ -34,7 +34,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		return nil, err
 	}
 	neg := false
-	size, err := stdInt64Codec.Read(r)
+	size, err := stdInt64.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -70,7 +70,7 @@ func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
 		size = -size
 		neg = true
 	}
-	if err := stdInt64Codec.Write(w, int64(size)); err != nil {
+	if err := stdInt64.Write(w, int64(size)); err != nil {
 		return err
 	}
 	if neg {
@@ -167,7 +167,7 @@ const (
 	posInf    int8 = +3
 )
 
-var modeCodec = uintCodec[big.RoundingMode]{}
+var modeCodec = castUint8[big.RoundingMode]{}
 
 func computeShift(exp, prec int32) int {
 	// (prec - exp) is a shift of significant bits to immediately left of the point.
@@ -189,7 +189,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	kind, err := stdInt8Codec.Read(r)
+	kind, err := stdInt8.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -210,7 +210,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 		mantReader = negateReader{r}
 	}
 
-	exp, err := stdInt32Codec.Read(r)
+	exp, err := stdInt32.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -218,7 +218,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
-	prec, err := stdInt32Codec.Read(r)
+	prec, err := stdInt32.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -277,7 +277,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	case !signbit:
 		kind = posFinite
 	}
-	if err := stdInt8Codec.Write(w, kind); err != nil {
+	if err := stdInt8.Write(w, kind); err != nil {
 		return err
 	}
 	if isInf || isZero {
@@ -292,7 +292,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		mantWriter = negateWriter{w}
 	}
 
-	if err := stdInt32Codec.Write(w, exp); err != nil {
+	if err := stdInt32.Write(w, exp); err != nil {
 		return err
 	}
 
@@ -308,7 +308,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		return err
 	}
 
-	if err := stdInt32Codec.Write(w, prec); err != nil {
+	if err := stdInt32.Write(w, prec); err != nil {
 		return err
 	}
 	return modeCodec.Write(w, mode)
@@ -340,11 +340,11 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	num, err := stdBigIntCodec.Read(r)
+	num, err := stdBigInt.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
-	denom, err := stdBigIntCodec.Read(r)
+	denom, err := stdBigInt.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
@@ -356,10 +356,10 @@ func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
-	if err := stdBigIntCodec.Write(w, value.Num()); err != nil {
+	if err := stdBigInt.Write(w, value.Num()); err != nil {
 		return err
 	}
-	return stdBigIntCodec.Write(w, value.Denom())
+	return stdBigInt.Write(w, value.Denom())
 }
 
 func (c bigRatCodec) RequiresTerminator() bool {

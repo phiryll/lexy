@@ -12,16 +12,16 @@ import (
 // - if non-nil, prefixNonNil followed by its encoded elements
 //
 // Encoded elements are escaped and termninated if elemCodec requires it.
-type sliceCodec[S ~[]E, E any] struct {
+type sliceCodec[E any] struct {
 	elemCodec Codec[E]
 	nilsFirst bool
 }
 
-func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
+func (c sliceCodec[E]) Read(r io.Reader) ([]E, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
 	}
-	values := S{}
+	values := []E{}
 	for {
 		value, err := c.elemCodec.Read(r)
 		if errors.Is(err, io.EOF) {
@@ -34,7 +34,7 @@ func (c sliceCodec[S, E]) Read(r io.Reader) (S, error) {
 	}
 }
 
-func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
+func (c sliceCodec[E]) Write(w io.Writer, value []E) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
 		return err
 	}
@@ -46,10 +46,10 @@ func (c sliceCodec[S, E]) Write(w io.Writer, value S) error {
 	return nil
 }
 
-func (c sliceCodec[S, E]) RequiresTerminator() bool {
+func (sliceCodec[E]) RequiresTerminator() bool {
 	return true
 }
 
-func (c sliceCodec[S, E]) NilsLast() NillableCodec[S] {
-	return sliceCodec[S, E]{c.elemCodec, false}
+func (c sliceCodec[E]) NilsLast() NillableCodec[[]E] {
+	return sliceCodec[E]{c.elemCodec, false}
 }

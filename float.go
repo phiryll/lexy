@@ -6,15 +6,9 @@ import (
 	"math"
 )
 
-const (
-	highBit32 uint32 = 0x80_00_00_00
-	allBits32 uint32 = 0xFF_FF_FF_FF
-	highBit64 uint64 = 0x80_00_00_00_00_00_00_00
-	allBits64 uint64 = 0xFF_FF_FF_FF_FF_FF_FF_FF
-)
-
-// float32Codec is the Codec for float32.
+// Codecs for float32 and float64 types.
 //
+// No distinction is made between quiet and signaling NaNs.
 // The order of the encoded values is:
 //
 //	-NaN
@@ -28,8 +22,6 @@ const (
 //	+Infinity
 //	+NaN
 //
-// No distinction is made between quiet and signaling NaNs.
-//
 // The rest of this comment contains details about IEEE 754 and how this encoding works.
 // Feel free to skip it!
 //
@@ -37,7 +29,7 @@ const (
 //
 //	+/-1 * mantissa * 2^exponent
 //
-// where the binary format, from high bit to low, is:
+// where the binary format for 32 bit floats, from high bit to low, is:
 //
 //	sign - 1 bit
 //	    0 := positive, 1 := negative
@@ -53,37 +45,53 @@ const (
 //	mantissa - 23 bits
 //	    see above for interpretation
 //
+// The IEEE 754 format for float64 differs slightly, but is otherwise analogous.
+//
+//	sign - 1 bit
+//	exponent - 11 bits
+//	mantissa - 52 bits
+//
 // IEEE 754 defines ordering in a way that is inconsistent with Codec's semantics:
 //   - -0.0 and +0.0 are equal
 //   - NaN is not comparable to anything, even another NaN
 //   - There are many bit patterns for NaN
 //
-// These will all by encoded by this Codec, and will be comparable in that representation.
+// These will all by encoded by these Codecs, and will be comparable in that representation.
 // Every NaN bit pattern will be encoded differently, and will therefore be unequal and comparable.
 //
-// By design, a float32's bits interpreted as a signed-magnitude int
+// By design, a float's bits interpreted as a signed-magnitude int
 // (not the normal 2's complement int) will result in the right ordering.
 // To give the correct unsigned binary lexicographical ordering, we need to:
 //
 //	flip the high bit if the sign bit is 0
 //	flip all the bits if the sign bit is 1
-type float32Codec[T ~float32] struct{}
+type (
+	float32Codec struct{}
+	float64Codec struct{}
+)
 
-func (c float32Codec[T]) Read(r io.Reader) (T, error) {
+const (
+	highBit32 uint32 = 0x80_00_00_00
+	allBits32 uint32 = 0xFF_FF_FF_FF
+	highBit64 uint64 = 0x80_00_00_00_00_00_00_00
+	allBits64 uint64 = 0xFF_FF_FF_FF_FF_FF_FF_FF
+)
+
+func (float32Codec) Read(r io.Reader) (float32, error) {
 	var bits uint32
 	if err := binary.Read(r, binary.BigEndian, &bits); err != nil {
-		return T(0.0), err
+		return 0.0, err
 	}
 	if bits&highBit32 == 0 {
 		bits ^= allBits32
 	} else {
 		bits ^= highBit32
 	}
-	return T(math.Float32frombits(bits)), nil
+	return math.Float32frombits(bits), nil
 }
 
-func (c float32Codec[T]) Write(w io.Writer, value T) error {
-	bits := math.Float32bits(float32(value))
+func (float32Codec) Write(w io.Writer, value float32) error {
+	bits := math.Float32bits(value)
 	if bits&highBit32 == 0 {
 		bits ^= highBit32
 	} else {
@@ -92,34 +100,25 @@ func (c float32Codec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, bits)
 }
 
-func (c float32Codec[T]) RequiresTerminator() bool {
+func (float32Codec) RequiresTerminator() bool {
 	return false
 }
 
-// float64Codec is the Codec for float64, and has the same general behavior as Float32Codec.
-//
-// The IEEE 754 format differs slightly, but is otherwise analogous.
-//
-//	sign - 1 bit
-//	exponent - 11 bits
-//	mantissa - 52 bits
-type float64Codec[T ~float64] struct{}
-
-func (c float64Codec[T]) Read(r io.Reader) (T, error) {
+func (float64Codec) Read(r io.Reader) (float64, error) {
 	var bits uint64
 	if err := binary.Read(r, binary.BigEndian, &bits); err != nil {
-		return T(0.0), err
+		return 0.0, err
 	}
 	if bits&highBit64 == 0 {
 		bits ^= allBits64
 	} else {
 		bits ^= highBit64
 	}
-	return T(math.Float64frombits(bits)), nil
+	return math.Float64frombits(bits), nil
 }
 
-func (c float64Codec[T]) Write(w io.Writer, value T) error {
-	bits := math.Float64bits(float64(value))
+func (float64Codec) Write(w io.Writer, value float64) error {
+	bits := math.Float64bits(value)
 	if bits&highBit64 == 0 {
 		bits ^= highBit64
 	} else {
@@ -128,6 +127,6 @@ func (c float64Codec[T]) Write(w io.Writer, value T) error {
 	return binary.Write(w, binary.BigEndian, bits)
 }
 
-func (c float64Codec[T]) RequiresTerminator() bool {
+func (float64Codec) RequiresTerminator() bool {
 	return false
 }
