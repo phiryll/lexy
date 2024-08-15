@@ -29,6 +29,28 @@ type bigIntCodec struct {
 	nilsFirst bool
 }
 
+func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	neg := false
+	sign := value.Sign()
+	b := value.Bytes()
+	size := len(b)
+	if sign < 0 {
+		size = -size
+		neg = true
+	}
+	if err := stdInt64.Write(w, int64(size)); err != nil {
+		return err
+	}
+	if neg {
+		w = negateWriter{w}
+	}
+	_, err := w.Write(b)
+	return err
+}
+
 func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -56,28 +78,6 @@ func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		value.Neg(&value)
 	}
 	return &value, nil
-}
-
-func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	neg := false
-	sign := value.Sign()
-	b := value.Bytes()
-	size := len(b)
-	if sign < 0 {
-		size = -size
-		neg = true
-	}
-	if err := stdInt64.Write(w, int64(size)); err != nil {
-		return err
-	}
-	if neg {
-		w = negateWriter{w}
-	}
-	_, err := w.Write(b)
-	return err
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
@@ -184,68 +184,6 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
-//nolint:funlen
-func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if done, err := ReadPrefix(r); done {
-		return nil, err
-	}
-	kind, err := stdInt8.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	signbit := kind < 0
-	if kind == negInf || kind == posInf {
-		var value big.Float
-		return value.SetInf(signbit), nil
-	}
-	if kind == negZero || kind == posZero {
-		var value big.Float
-		if signbit {
-			value.Neg(&value)
-		}
-		return &value, nil
-	}
-	mantReader := r
-	if signbit {
-		mantReader = negateReader{r}
-	}
-
-	exp, err := stdInt32.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	mantBytes, err := doUnescape(mantReader)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	prec, err := stdInt32.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	mode, err := modeCodec.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-
-	if signbit {
-		exp = -exp
-		prec = -prec
-	}
-	shift := computeShift(exp, prec)
-
-	var mantInt big.Int
-	var value big.Float
-	mantInt.SetBytes(mantBytes)
-	value.SetInt(&mantInt)
-	value.SetMantExp(&value, -shift)
-	value.SetPrec(uint(prec))
-	value.SetMode(mode)
-	if signbit {
-		value.Neg(&value)
-	}
-	return &value, nil
-}
-
 //nolint:cyclop,funlen
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
@@ -314,6 +252,68 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	return modeCodec.Write(w, mode)
 }
 
+//nolint:funlen
+func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
+	if done, err := ReadPrefix(r); done {
+		return nil, err
+	}
+	kind, err := stdInt8.Read(r)
+	if err != nil {
+		return nil, UnexpectedIfEOF(err)
+	}
+	signbit := kind < 0
+	if kind == negInf || kind == posInf {
+		var value big.Float
+		return value.SetInf(signbit), nil
+	}
+	if kind == negZero || kind == posZero {
+		var value big.Float
+		if signbit {
+			value.Neg(&value)
+		}
+		return &value, nil
+	}
+	mantReader := r
+	if signbit {
+		mantReader = negateReader{r}
+	}
+
+	exp, err := stdInt32.Read(r)
+	if err != nil {
+		return nil, UnexpectedIfEOF(err)
+	}
+	mantBytes, err := doUnescape(mantReader)
+	if err != nil {
+		return nil, UnexpectedIfEOF(err)
+	}
+	prec, err := stdInt32.Read(r)
+	if err != nil {
+		return nil, UnexpectedIfEOF(err)
+	}
+	mode, err := modeCodec.Read(r)
+	if err != nil {
+		return nil, UnexpectedIfEOF(err)
+	}
+
+	if signbit {
+		exp = -exp
+		prec = -prec
+	}
+	shift := computeShift(exp, prec)
+
+	var mantInt big.Int
+	var value big.Float
+	mantInt.SetBytes(mantBytes)
+	value.SetInt(&mantInt)
+	value.SetMantExp(&value, -shift)
+	value.SetPrec(uint(prec))
+	value.SetMode(mode)
+	if signbit {
+		value.Neg(&value)
+	}
+	return &value, nil
+}
+
 func (bigFloatCodec) RequiresTerminator() bool {
 	return true
 }
@@ -336,6 +336,16 @@ type bigRatCodec struct {
 	nilsFirst bool
 }
 
+func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	if err := stdBigInt.Write(w, value.Num()); err != nil {
+		return err
+	}
+	return stdBigInt.Write(w, value.Denom())
+}
+
 func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -350,16 +360,6 @@ func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	}
 	var value big.Rat
 	return value.SetFrac(num, denom), nil
-}
-
-func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	if err := stdBigInt.Write(w, value.Num()); err != nil {
-		return err
-	}
-	return stdBigInt.Write(w, value.Denom())
 }
 
 func (bigRatCodec) RequiresTerminator() bool {
