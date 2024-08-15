@@ -17,6 +17,27 @@ import (
 // Collation is locale-dependent. Any ordering could be incorrect in another locale.
 type stringCodec struct{}
 
+func (stringCodec) Append(buf []byte, value string) []byte {
+	return append(buf, value...)
+}
+
+func (stringCodec) Put(buf []byte, value string) int {
+	if len(buf) < len(value) {
+		panic("buffer is too small")
+	}
+	copy(buf, value)
+	return len(value)
+}
+
+func (stringCodec) Write(w io.Writer, value string) error {
+	_, err := io.WriteString(w, value)
+	return err
+}
+
+func (stringCodec) Get(buf []byte) (string, int) {
+	return string(buf), len(buf)
+}
+
 func (stringCodec) Read(r io.Reader) (string, error) {
 	var buf strings.Builder
 	// io.Copy will not return io.EOF
@@ -27,9 +48,8 @@ func (stringCodec) Read(r io.Reader) (string, error) {
 	return buf.String(), nil
 }
 
-func (stringCodec) Write(w io.Writer, value string) error {
-	_, err := io.WriteString(w, value)
-	return err
+func (stringCodec) MaxSize() int {
+	return -1
 }
 
 func (stringCodec) RequiresTerminator() bool {
