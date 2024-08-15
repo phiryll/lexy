@@ -30,18 +30,6 @@ const (
 	uint64Size = 8
 )
 
-func (boolCodec) Read(r io.Reader) (bool, error) {
-	var value bool
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return false, err
-	}
-	return value, nil
-}
-
-func (boolCodec) Write(w io.Writer, value bool) error {
-	return binary.Write(w, binary.BigEndian, value)
-}
-
 func (boolCodec) Append(buf []byte, value bool) []byte {
 	if value {
 		return append(buf, 1)
@@ -58,8 +46,20 @@ func (boolCodec) Put(buf []byte, value bool) int {
 	return uint8Size
 }
 
+func (boolCodec) Write(w io.Writer, value bool) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
 func (boolCodec) Get(buf []byte) (bool, int) {
 	return buf[0] != 0, uint8Size
+}
+
+func (boolCodec) Read(r io.Reader) (bool, error) {
+	var value bool
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return false, err
+	}
+	return value, nil
 }
 
 func (boolCodec) MaxSize() int {
@@ -68,18 +68,6 @@ func (boolCodec) MaxSize() int {
 
 func (boolCodec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint8Codec) Read(r io.Reader) (uint8, error) {
-	var value uint8
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return value, nil
-}
-
-func (uint8Codec) Write(w io.Writer, value uint8) error {
-	return binary.Write(w, binary.BigEndian, value)
 }
 
 func (uint8Codec) Append(buf []byte, value uint8) []byte {
@@ -91,8 +79,20 @@ func (uint8Codec) Put(buf []byte, value uint8) int {
 	return uint8Size
 }
 
+func (uint8Codec) Write(w io.Writer, value uint8) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
 func (uint8Codec) Get(buf []byte) (uint8, int) {
 	return buf[0], uint8Size
+}
+
+func (uint8Codec) Read(r io.Reader) (uint8, error) {
+	var value uint8
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
 }
 
 func (uint8Codec) MaxSize() int {
@@ -101,18 +101,6 @@ func (uint8Codec) MaxSize() int {
 
 func (uint8Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint16Codec) Read(r io.Reader) (uint16, error) {
-	var value uint16
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return value, nil
-}
-
-func (uint16Codec) Write(w io.Writer, value uint16) error {
-	return binary.Write(w, binary.BigEndian, value)
 }
 
 func (uint16Codec) Append(buf []byte, value uint16) []byte {
@@ -124,8 +112,20 @@ func (uint16Codec) Put(buf []byte, value uint16) int {
 	return uint16Size
 }
 
+func (uint16Codec) Write(w io.Writer, value uint16) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
 func (uint16Codec) Get(buf []byte) (uint16, int) {
 	return binary.BigEndian.Uint16(buf), uint16Size
+}
+
+func (uint16Codec) Read(r io.Reader) (uint16, error) {
+	var value uint16
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
 }
 
 func (uint16Codec) MaxSize() int {
@@ -134,18 +134,6 @@ func (uint16Codec) MaxSize() int {
 
 func (uint16Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint32Codec) Read(r io.Reader) (uint32, error) {
-	var value uint32
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return value, nil
-}
-
-func (uint32Codec) Write(w io.Writer, value uint32) error {
-	return binary.Write(w, binary.BigEndian, value)
 }
 
 func (uint32Codec) Append(buf []byte, value uint32) []byte {
@@ -157,8 +145,20 @@ func (uint32Codec) Put(buf []byte, value uint32) int {
 	return uint32Size
 }
 
+func (uint32Codec) Write(w io.Writer, value uint32) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
 func (uint32Codec) Get(buf []byte) (uint32, int) {
 	return binary.BigEndian.Uint32(buf), uint32Size
+}
+
+func (uint32Codec) Read(r io.Reader) (uint32, error) {
+	var value uint32
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
 }
 
 func (uint32Codec) MaxSize() int {
@@ -167,18 +167,6 @@ func (uint32Codec) MaxSize() int {
 
 func (uint32Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint64Codec) Read(r io.Reader) (uint64, error) {
-	var value uint64
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return value, nil
-}
-
-func (uint64Codec) Write(w io.Writer, value uint64) error {
-	return binary.Write(w, binary.BigEndian, value)
 }
 
 func (uint64Codec) Append(buf []byte, value uint64) []byte {
@@ -190,8 +178,20 @@ func (uint64Codec) Put(buf []byte, value uint64) int {
 	return uint64Size
 }
 
+func (uint64Codec) Write(w io.Writer, value uint64) error {
+	return binary.Write(w, binary.BigEndian, value)
+}
+
 func (uint64Codec) Get(buf []byte) (uint64, int) {
 	return binary.BigEndian.Uint64(buf), uint64Size
+}
+
+func (uint64Codec) Read(r io.Reader) (uint64, error) {
+	var value uint64
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
 }
 
 func (uint64Codec) MaxSize() int {
@@ -224,18 +224,6 @@ type (
 	int64Codec struct{}
 )
 
-func (int8Codec) Read(r io.Reader) (int8, error) {
-	var value int8
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return math.MinInt8 ^ value, nil
-}
-
-func (int8Codec) Write(w io.Writer, value int8) error {
-	return binary.Write(w, binary.BigEndian, math.MinInt8^value)
-}
-
 func (int8Codec) Append(buf []byte, value int8) []byte {
 	return append(buf, uint8(math.MinInt8^value))
 }
@@ -245,8 +233,20 @@ func (int8Codec) Put(buf []byte, value int8) int {
 	return uint8Size
 }
 
+func (int8Codec) Write(w io.Writer, value int8) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt8^value)
+}
+
 func (int8Codec) Get(buf []byte) (int8, int) {
 	return math.MinInt8 ^ int8(buf[0]), uint8Size
+}
+
+func (int8Codec) Read(r io.Reader) (int8, error) {
+	var value int8
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt8 ^ value, nil
 }
 
 func (int8Codec) MaxSize() int {
@@ -255,18 +255,6 @@ func (int8Codec) MaxSize() int {
 
 func (int8Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (int16Codec) Read(r io.Reader) (int16, error) {
-	var value int16
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return math.MinInt16 ^ value, nil
-}
-
-func (int16Codec) Write(w io.Writer, value int16) error {
-	return binary.Write(w, binary.BigEndian, math.MinInt16^value)
 }
 
 func (int16Codec) Append(buf []byte, value int16) []byte {
@@ -278,8 +266,20 @@ func (int16Codec) Put(buf []byte, value int16) int {
 	return uint16Size
 }
 
+func (int16Codec) Write(w io.Writer, value int16) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt16^value)
+}
+
 func (int16Codec) Get(buf []byte) (int16, int) {
 	return math.MinInt16 ^ int16(binary.BigEndian.Uint16(buf)), uint16Size
+}
+
+func (int16Codec) Read(r io.Reader) (int16, error) {
+	var value int16
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt16 ^ value, nil
 }
 
 func (int16Codec) MaxSize() int {
@@ -288,18 +288,6 @@ func (int16Codec) MaxSize() int {
 
 func (int16Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (int32Codec) Read(r io.Reader) (int32, error) {
-	var value int32
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return math.MinInt32 ^ value, nil
-}
-
-func (int32Codec) Write(w io.Writer, value int32) error {
-	return binary.Write(w, binary.BigEndian, math.MinInt32^value)
 }
 
 func (int32Codec) Append(buf []byte, value int32) []byte {
@@ -311,8 +299,20 @@ func (int32Codec) Put(buf []byte, value int32) int {
 	return uint32Size
 }
 
+func (int32Codec) Write(w io.Writer, value int32) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt32^value)
+}
+
 func (int32Codec) Get(buf []byte) (int32, int) {
 	return math.MinInt32 ^ int32(binary.BigEndian.Uint32(buf)), uint32Size
+}
+
+func (int32Codec) Read(r io.Reader) (int32, error) {
+	var value int32
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt32 ^ value, nil
 }
 
 func (int32Codec) MaxSize() int {
@@ -321,18 +321,6 @@ func (int32Codec) MaxSize() int {
 
 func (int32Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (int64Codec) Read(r io.Reader) (int64, error) {
-	var value int64
-	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
-		return 0, err
-	}
-	return math.MinInt64 ^ value, nil
-}
-
-func (int64Codec) Write(w io.Writer, value int64) error {
-	return binary.Write(w, binary.BigEndian, math.MinInt64^value)
 }
 
 func (int64Codec) Append(buf []byte, value int64) []byte {
@@ -344,8 +332,20 @@ func (int64Codec) Put(buf []byte, value int64) int {
 	return uint64Size
 }
 
+func (int64Codec) Write(w io.Writer, value int64) error {
+	return binary.Write(w, binary.BigEndian, math.MinInt64^value)
+}
+
 func (int64Codec) Get(buf []byte) (int64, int) {
 	return math.MinInt64 ^ int64(binary.BigEndian.Uint64(buf)), uint64Size
+}
+
+func (int64Codec) Read(r io.Reader) (int64, error) {
+	var value int64
+	if err := binary.Read(r, binary.BigEndian, &value); err != nil {
+		return 0, err
+	}
+	return math.MinInt64 ^ value, nil
 }
 
 func (int64Codec) MaxSize() int {
