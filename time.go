@@ -22,7 +22,7 @@ import (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-const timeSize = uint64Size + uint32Size + uint32Size
+const timeSize = sizeUint64 + sizeUint32 + sizeUint32
 
 var formatCache = makeCache(formatOffset)
 
@@ -78,8 +78,8 @@ func (timeCodec) Write(w io.Writer, value time.Time) error {
 
 func (timeCodec) Get(buf []byte) (time.Time, int) {
 	seconds, _ := stdInt64.Get(buf)
-	nanos, _ := stdUint32.Get(buf[uint64Size:])
-	offset, _ := stdInt32.Get(buf[uint64Size+uint32Size:])
+	nanos, _ := stdUint32.Get(buf[sizeUint64:])
+	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
 	return buildTime(seconds, nanos, offset), timeSize
 }
 

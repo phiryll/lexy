@@ -48,7 +48,7 @@ func (complex64Codec) Read(r io.Reader) (complex64, error) {
 
 func (complex64Codec) MaxSize() int {
 	//nolint:mnd
-	return 2 * uint32Size
+	return 2 * sizeUint32
 }
 
 func (complex64Codec) RequiresTerminator() bool {
@@ -93,7 +93,7 @@ func (complex128Codec) Read(r io.Reader) (complex128, error) {
 
 func (complex128Codec) MaxSize() int {
 	//nolint:mnd
-	return 2 * uint64Size
+	return 2 * sizeUint64
 }
 
 func (complex128Codec) RequiresTerminator() bool {

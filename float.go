@@ -132,7 +132,7 @@ func (float32Codec) Read(r io.Reader) (float32, error) {
 }
 
 func (float32Codec) MaxSize() int {
-	return uint32Size
+	return sizeUint32
 }
 
 func (float32Codec) RequiresTerminator() bool {
@@ -165,7 +165,7 @@ func (float64Codec) Read(r io.Reader) (float64, error) {
 }
 
 func (float64Codec) MaxSize() int {
-	return uint64Size
+	return sizeUint64
 }
 
 func (float64Codec) RequiresTerminator() bool {
