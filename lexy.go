@@ -403,16 +403,6 @@ func UnexpectedIfEOF(err error) error {
 	return err
 }
 
-// Prefixes to use for encodings for types whose instances can be nil.
-// The values were chosen so that prefixNilFirst < prefixNonNil < prefixNilLast,
-// and neither the prefixes nor their complements need to be escaped.
-const (
-	// Room for more between prefixNonNil and prefixNilLast if needed.
-	prefixNilFirst byte = 0x02
-	prefixNonNil   byte = 0x03
-	prefixNilLast  byte = 0xFD
-)
-
 // Convenience byte slices.
 var (
 	pNilFirst = []byte{prefixNilFirst}
