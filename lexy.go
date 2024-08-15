@@ -169,8 +169,8 @@ var (
 	stdInt64      TempCodec[int64]          = int64Codec{}
 	stdFloat32    TempCodec[float32]        = float32Codec{}
 	stdFloat64    TempCodec[float64]        = float64Codec{}
-	stdComplex64  Codec[complex64]          = complex64Codec{}
-	stdComplex128 Codec[complex128]         = complex128Codec{}
+	stdComplex64  TempCodec[complex64]      = complex64Codec{}
+	stdComplex128 TempCodec[complex128]     = complex128Codec{}
 	stdString     Codec[string]             = stringCodec{}
 	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
 	stdTime       Codec[time.Time]          = timeCodec{}
