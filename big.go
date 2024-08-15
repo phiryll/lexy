@@ -239,7 +239,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	tmp.SetMantExp(&tmp, shift)
 	mantInt, acc := tmp.Int(nil)
 	if acc != big.Exact {
-		panic("unexpected failure while encoding big.Float")
+		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
 	if _, err := doEscape(mantWriter, mantBytes); err != nil {

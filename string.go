@@ -22,9 +22,7 @@ func (stringCodec) Append(buf []byte, value string) []byte {
 }
 
 func (stringCodec) Put(buf []byte, value string) int {
-	if len(buf) < len(value) {
-		panic("buffer is too small")
-	}
+	checkBufferSize(buf, len(value))
 	copy(buf, value)
 	return len(value)
 }

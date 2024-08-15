@@ -55,7 +55,6 @@ package lexy
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"time"
@@ -338,9 +337,7 @@ func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 // The encoded order of non-nil values is the same as is produced by elemCodec.
 // This Codec requires a terminator when used within an aggregate Codec if elemCodec does.
 func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
+	elemCodec.RequiresTerminator() // force panic if nil
 	return pointerCodec[E]{elemCodec, true}
 }
 
@@ -348,9 +345,6 @@ func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.
 func SliceOf[E any](elemCodec Codec[E]) NillableCodec[[]E] {
-	if elemCodec == nil {
-		panic("elemCodec must be non-nil")
-	}
 	return sliceCodec[E]{TerminateIfNeeded(elemCodec), true}
 }
 
@@ -358,12 +352,6 @@ func SliceOf[E any](elemCodec Codec[E]) NillableCodec[[]E] {
 // The encoded order for non-nil maps is empty maps first, with all other maps randomly ordered after.
 // This Codec requires a terminator when used within an aggregate Codec.
 func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[map[K]V] {
-	if keyCodec == nil {
-		panic("keyCodec must be non-nil")
-	}
-	if valueCodec == nil {
-		panic("valueCodec must be non-nil")
-	}
 	return mapCodec[K, V]{
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
@@ -374,11 +362,9 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Nillable
 // Negate returns a Codec reversing the encoded order of codec.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Negate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
 	// Negate must escape and terminate its delegate whether it requires it or not,
 	// but shouldn't wrap if the delegate is already a terminatorCodec.
+	// This will also attempt to wrap a nil Codec, causing Terminate() to panic.
 	if _, ok := codec.(terminatorCodec[T]); !ok {
 		codec = Terminate(codec)
 	}
@@ -390,18 +376,13 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 // whether or not it normally requires it.
 // Most of the time, [TerminateIfNeeded] should be used instead.
 func Terminate[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
+	codec.RequiresTerminator() // force panic if nil
 	return terminatorCodec[T]{codec}
 }
 
 // TerminateIfNeeded returns a Codec that escapes and terminates the encodings produced by codec,
 // if [Codec.RequiresTerminator] returns true for codec. Otherwise it returns codec.
 func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	if codec == nil {
-		panic("codec must be non-nil")
-	}
 	// This also covers the case if codec is a terminator.
 	if !codec.RequiresTerminator() {
 		return codec
@@ -515,8 +496,7 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 	case prefixNonNil:
 		return false, nil
 	default:
-		//nolint:err113
-		return true, fmt.Errorf("unexpected prefix %X", prefix[0])
+		return true, unknownPrefixError{prefix[0]}
 	}
 }
 
