@@ -439,6 +439,44 @@ var (
 	pNilLast  = []byte{prefixNilLast}
 )
 
+// WritePrefix is used to write the initial nil/non-nil prefix byte to w by Codecs
+// that encode types whose instances can be nil.
+// The prefix written depends on the values of isNil and nilsFirst.
+// Invoking WritePrefix should be the first action taken by [Codec.Write] for these Codecs,
+// since it allows an early return if value is nil.
+// This is a typical usage:
+//
+//	func (c someCodecType) Write(w io.Writer, value T) error {
+//	    if done, err := lexy.WritePrefix(w, value == nil, true); done {
+//	        return err
+//	    }
+//	    // encode and write the non-nil value
+//	}
+//
+// WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
+// in which case the caller still needs to write the non-nil value to w.
+//
+// If WritePrefix returns done == true, then the caller is done writing the value to w
+// regardless of the returned error value.
+// Either there was an error, or there was no error and the nil prefix was successfully written.
+//
+//nolint:nonamedreturns
+func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
+	var prefix []byte
+	switch {
+	case !isNil:
+		prefix = pNonNil
+	case nilsFirst:
+		prefix = pNilFirst
+	default:
+		prefix = pNilLast
+	}
+	if _, err := w.Write(prefix); err != nil {
+		return true, err
+	}
+	return isNil, nil
+}
+
 // ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
 // that encode types whose instances can be nil.
 // Invoking ReadPrefix should the first action taken by [Codec.Read] for these Codecs,
@@ -480,44 +518,6 @@ func ReadPrefix(r io.Reader) (done bool, err error) {
 		//nolint:err113
 		return true, fmt.Errorf("unexpected prefix %X", prefix[0])
 	}
-}
-
-// WritePrefix is used to write the initial nil/non-nil prefix byte to w by Codecs
-// that encode types whose instances can be nil.
-// The prefix written depends on the values of isNil and nilsFirst.
-// Invoking WritePrefix should be the first action taken by [Codec.Write] for these Codecs,
-// since it allows an early return if value is nil.
-// This is a typical usage:
-//
-//	func (c someCodecType) Write(w io.Writer, value T) error {
-//	    if done, err := lexy.WritePrefix(w, value == nil, true); done {
-//	        return err
-//	    }
-//	    // encode and write the non-nil value
-//	}
-//
-// WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
-// in which case the caller still needs to write the non-nil value to w.
-//
-// If WritePrefix returns done == true, then the caller is done writing the value to w
-// regardless of the returned error value.
-// Either there was an error, or there was no error and the nil prefix was successfully written.
-//
-//nolint:nonamedreturns
-func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
-	var prefix []byte
-	switch {
-	case !isNil:
-		prefix = pNonNil
-	case nilsFirst:
-		prefix = pNilFirst
-	default:
-		prefix = pNilLast
-	}
-	if _, err := w.Write(prefix); err != nil {
-		return true, err
-	}
-	return isNil, nil
 }
 
 // Convenience functions.
