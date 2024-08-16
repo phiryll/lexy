@@ -11,14 +11,13 @@ type (
 )
 
 func (complex64Codec) Append(buf []byte, value complex64) []byte {
-	return stdFloat32.Append(
-		stdFloat32.Append(buf, real(value)),
-		imag(value))
+	buf = stdFloat32.Append(buf, real(value))
+	return stdFloat32.Append(buf, imag(value))
 }
 
 func (complex64Codec) Put(buf []byte, value complex64) int {
 	n := stdFloat32.Put(buf, real(value))
-	return n + stdFloat32.Put(buf, imag(value))
+	return n + stdFloat32.Put(buf[n:], imag(value))
 }
 
 func (complex64Codec) Write(w io.Writer, value complex64) error {
@@ -56,14 +55,13 @@ func (complex64Codec) RequiresTerminator() bool {
 }
 
 func (complex128Codec) Append(buf []byte, value complex128) []byte {
-	return stdFloat64.Append(
-		stdFloat64.Append(buf, real(value)),
-		imag(value))
+	buf = stdFloat64.Append(buf, real(value))
+	return stdFloat64.Append(buf, imag(value))
 }
 
 func (complex128Codec) Put(buf []byte, value complex128) int {
 	n := stdFloat64.Put(buf, real(value))
-	return n + stdFloat64.Put(buf, imag(value))
+	return n + stdFloat64.Put(buf[n:], imag(value))
 }
 
 func (complex128Codec) Write(w io.Writer, value complex128) error {
