@@ -22,9 +22,7 @@ func (stringCodec) Append(buf []byte, value string) []byte {
 }
 
 func (stringCodec) Put(buf []byte, value string) int {
-	checkBufferSize(buf, len(value))
-	copy(buf, value)
-	return len(value)
+	return mustCopy(buf, []byte(value))
 }
 
 func (stringCodec) Write(w io.Writer, value string) error {

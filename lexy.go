@@ -518,6 +518,22 @@ func Decode[T any](codec Codec[T], data []byte) (T, error) {
 
 // Helper functions used by implementations.
 
+// mustNonNil panics with a nilError with the given name if x is nil.
+// The best way to panic if something is nil is to use it,
+// use this function only if that isn't possible.
+func mustNonNil(x any, name string) {
+	if x == nil {
+		panic(nilError{name})
+	}
+}
+
+// mustCopy is like the built-in copy(dst, src),
+// except that it panics if dst is not large enough to hold all of src.
+func mustCopy(dst, src []byte) int {
+	_ = dst[len(src)-1]
+	return copy(dst, src)
+}
+
 // extend adds n bytes to buf, returning the resulting slice
 // and the index into the slice where the bytes were added.
 // Implementations of Codec.Append can use this to delegate to Codec.Put.

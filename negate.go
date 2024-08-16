@@ -48,11 +48,12 @@ func (negateCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-// Negate negates b, in the sense of lexicographical ordering.
-func negate(b []byte) {
-	for i := range b {
-		b[i] ^= 0xFF
+// Negate negates buf, in the sense of lexicographical ordering, returning buf.
+func negate(buf []byte) []byte {
+	for i := range buf {
+		buf[i] ^= 0xFF
 	}
+	return buf
 }
 
 var (
@@ -82,8 +83,5 @@ type negateWriter struct {
 }
 
 func (w negateWriter) Write(p []byte) (int, error) {
-	//nolint:gocritic
-	b := append(p[:0:0], p...)
-	negate(b)
-	return w.Writer.Write(b)
+	return w.Writer.Write(negate(append([]byte(nil), p...)))
 }

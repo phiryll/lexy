@@ -48,7 +48,7 @@ func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 
 func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 	n := sizeBigInt(value)
-	checkBufferSize(buf, n)
+	_ = buf[n-1] // bounds check
 	if c.prefix.Put(buf, value == nil) {
 		return 1
 	}
@@ -82,16 +82,14 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	buf = buf[1:]
 	size, n := stdInt64.Get(buf)
 	buf = buf[n:]
+	buf = buf[:size]
 	var value big.Int
 	if size < 0 {
 		size = -size
-		b := make([]byte, size)
-		copy(b, buf[:size])
-		negate(b)
-		value.SetBytes(b)
+		value.SetBytes(negate(append([]byte(nil), buf...)))
 		value.Neg(&value)
 	} else {
-		value.SetBytes(buf[:size])
+		value.SetBytes(buf)
 	}
 	return &value, 1 + n + int(size)
 }
@@ -116,8 +114,7 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	}
 	var value big.Int
 	if neg {
-		negate(b)
-		value.SetBytes(b)
+		value.SetBytes(negate(b))
 		value.Neg(&value)
 	} else {
 		value.SetBytes(b)
