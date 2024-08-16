@@ -80,7 +80,7 @@ type Prefix interface {
 	// Read reads a prefix byte from r.
 	// This is a typical usage:
 	//
-	//	func (c fooType) Read(r io.Reader) (Foo, error) {
+	//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
 	//	    if done, err := c.prefix.Read(r); done {
 	//	        return nil, err
 	//	    }

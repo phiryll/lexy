@@ -418,7 +418,7 @@ var (
 // since it allows an early return if value is nil.
 // This is a typical usage:
 //
-//	func (c someCodecType) Write(w io.Writer, value T) error {
+//	func (c fooType) Write(w io.Writer, value Foo) error {
 //	    if done, err := lexy.WritePrefix(w, value == nil, true); done {
 //	        return err
 //	    }
@@ -455,7 +455,7 @@ func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
 // since it allows an early return if the decoded value is nil.
 // This is a typical usage:
 //
-//	func (c someCodecType) Read(r io.Reader) (T, error) {
+//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
 //	    if done, err := lexy.ReadPrefix(r); done {
 //	        return nil, err
 //	    }
