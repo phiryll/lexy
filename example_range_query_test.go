@@ -66,6 +66,13 @@ var (
 
 type KeyCodec struct{}
 
+func (KeyCodec) Write(w io.Writer, key UserKey) error {
+	if err := costCodec.Write(w, key.cost); err != nil {
+		return err
+	}
+	return wordsCodec.Write(w, key.words)
+}
+
 func (KeyCodec) Read(r io.Reader) (UserKey, error) {
 	var zero UserKey
 	cost, err := costCodec.Read(r)
@@ -77,13 +84,6 @@ func (KeyCodec) Read(r io.Reader) (UserKey, error) {
 		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return UserKey{words, cost}, nil
-}
-
-func (KeyCodec) Write(w io.Writer, key UserKey) error {
-	if err := costCodec.Write(w, key.cost); err != nil {
-		return err
-	}
-	return wordsCodec.Write(w, key.words)
 }
 
 func (KeyCodec) RequiresTerminator() bool {

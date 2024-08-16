@@ -36,10 +36,6 @@ var (
 
 type previousCodec struct{}
 
-func (previousCodec) Read(_ io.Reader) (schemaPrevious, error) {
-	panic("unused in this example")
-}
-
 func (previousCodec) Write(w io.Writer, value schemaPrevious) error {
 	if err := nameCodec.Write(w, "count"); err != nil {
 		return err
@@ -59,6 +55,10 @@ func (previousCodec) Write(w io.Writer, value schemaPrevious) error {
 	return nameCodec.Write(w, value.name)
 }
 
+func (previousCodec) Read(_ io.Reader) (schemaPrevious, error) {
+	panic("unused in this example")
+}
+
 // Returns true because struct Codecs storing field name/value pairs
 // to handle previous versions must be tolerant of missing fields.
 // This Codec is essentially a map.
@@ -69,6 +69,10 @@ func (previousCodec) RequiresTerminator() bool {
 // Other than handling the field changes, this Codec could change the sort order.
 // Because Read reads field names first, it is tolerant of field reorderings.
 type schemaCodec struct{}
+
+func (schemaCodec) Write(_ io.Writer, _ schema) error {
+	panic("unused in this example")
+}
 
 func (schemaCodec) Read(r io.Reader) (schema, error) {
 	var zero, value schema
@@ -113,10 +117,6 @@ func (schemaCodec) Read(r io.Reader) (schema, error) {
 			panic(fmt.Sprintf("unrecognized field name %q", field))
 		}
 	}
-}
-
-func (schemaCodec) Write(_ io.Writer, _ schema) error {
-	panic("unused in this example")
 }
 
 // Returns true because struct Codecs storing field name/value pairs

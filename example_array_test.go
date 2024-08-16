@@ -13,6 +13,15 @@ type Quaternion [4]float64
 
 type quaternionCodec struct{}
 
+func (quaternionCodec) Write(w io.Writer, value Quaternion) error {
+	for i := range value {
+		if err := lexy.Float64().Write(w, value[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (quaternionCodec) Read(r io.Reader) (Quaternion, error) {
 	var zero, value Quaternion
 	for i := range value {
@@ -26,15 +35,6 @@ func (quaternionCodec) Read(r io.Reader) (Quaternion, error) {
 		value[i] = elem
 	}
 	return value, nil
-}
-
-func (quaternionCodec) Write(w io.Writer, value Quaternion) error {
-	for i := range value {
-		if err := lexy.Float64().Write(w, value[i]); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (quaternionCodec) RequiresTerminator() bool {

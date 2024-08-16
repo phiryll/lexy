@@ -35,6 +35,16 @@ var (
 //   - tags
 type someStructCodec struct{}
 
+func (someStructCodec) Write(w io.Writer, value SomeStruct) error {
+	if err := lexy.Int32().Write(w, value.size); err != nil {
+		return err
+	}
+	if err := negScoreCodec.Write(w, value.score); err != nil {
+		return err
+	}
+	return tagsCodec.Write(w, value.tags)
+}
+
 func (someStructCodec) Read(r io.Reader) (SomeStruct, error) {
 	var zero SomeStruct
 	size, err := lexy.Int32().Read(r)
@@ -50,16 +60,6 @@ func (someStructCodec) Read(r io.Reader) (SomeStruct, error) {
 		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return SomeStruct{size, score, tags}, nil
-}
-
-func (someStructCodec) Write(w io.Writer, value SomeStruct) error {
-	if err := lexy.Int32().Write(w, value.size); err != nil {
-		return err
-	}
-	if err := negScoreCodec.Write(w, value.score); err != nil {
-		return err
-	}
-	return tagsCodec.Write(w, value.tags)
 }
 
 func (someStructCodec) RequiresTerminator() bool {
@@ -123,6 +123,17 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 // assuming their delegate Codecs are safe for concurrent use
 // (the argument Codecs used to construct slice and map Codecs, e.g.).
 //
+//	func (fooCodec) Write(w io.Writer, value Foo) error {
+//	    if err := firstCodec.Write(w, value.first); err != nil {
+//	        return err
+//	    }
+//	    if err := secondCodec.Write(w, value.second); err != nil {
+//	        return err
+//	    }
+//	    // ...
+//	    return nthCodec.Write(w, value.nth)
+//	}
+//
 //	func (fooCodec) Read(r io.Reader) (Foo, error) {
 //	    var zero Foo
 //	    first, err := firstCodec.Read(r)
@@ -139,17 +150,6 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //	        return zero, lexy.UnexpectedIfEOF(err)
 //	    }
 //	    return Foo{first, second, ..., nth}, nil
-//	}
-//
-//	func (fooCodec) Write(w io.Writer, value Foo) error {
-//	    if err := firstCodec.Write(w, value.first); err != nil {
-//	        return err
-//	    }
-//	    if err := secondCodec.Write(w, value.second); err != nil {
-//	        return err
-//	    }
-//	    // ...
-//	    return nthCodec.Write(w, value.nth)
 //	}
 //
 //	func (fooCodec) RequiresTerminator() bool {
