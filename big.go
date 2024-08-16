@@ -26,46 +26,87 @@ import (
 // The effect is that longer numbers will be ordered closer to +/-infinity.
 // This works because bigInt.Bytes() will never have a leading zero byte.
 type bigIntCodec struct {
-	nilsFirst bool
+	prefix Prefix
+}
+
+// sizeBigInt returns how many bytes the encoding for value will take.
+func sizeBigInt(value *big.Int) int {
+	if value == nil {
+		return 1
+	}
+	return 1 +
+		stdInt64.MaxSize() +
+		((value.BitLen() + 7) / 8)
+}
+
+func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
+	buf, i := extend(buf, sizeBigInt(value))
+	c.Put(buf[i:], value)
+	return buf
+}
+
+func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
+	n := sizeBigInt(value)
+	checkBufferSize(buf, n)
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	sign := value.Sign()
+	k := 1 + stdInt64.MaxSize() // number of bytes used by prefix and the size
+	size := n - k               // number of bytes used by the big.Int's value
+	value.FillBytes(buf[k:n])
+	if sign < 0 {
+		negate(buf[k:n])
+		size = -size
+	}
+	stdInt64.Put(buf[1:], int64(size))
+	return n
 }
 
 func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	neg := false
-	sign := value.Sign()
-	b := value.Bytes()
-	size := len(b)
-	if sign < 0 {
-		size = -size
-		neg = true
-	}
-	if err := stdInt64.Write(w, int64(size)); err != nil {
-		return err
-	}
-	if neg {
-		w = negateWriter{w}
-	}
-	_, err := w.Write(b)
+	// The encoded bytes can't be written directly to w without
+	// creating a temporary buffer holding most of them anyway,
+	// so we might as well just reuse Append.
+	_, err := w.Write(c.Append(nil, value))
 	return err
 }
 
-func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
+	// It's not efficient for Get and Read to share code,
+	// because Read can negate its buffer directly if the value is negative,
+	// while Get must make a copy first.
+	if c.prefix.Get(buf) {
+		return nil, 1
+	}
+	buf = buf[1:]
+	size, n := stdInt64.Get(buf)
+	buf = buf[n:]
+	var value big.Int
+	if size < 0 {
+		size = -size
+		b := make([]byte, size)
+		copy(b, buf[:size])
+		negate(b)
+		value.SetBytes(b)
+		value.Neg(&value)
+	} else {
+		value.SetBytes(buf[:size])
+	}
+	return &value, 1 + n + int(size)
+}
+
+func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
-	neg := false
 	size, err := stdInt64.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
+	neg := false
 	if size < 0 {
 		neg = true
 		size = -size
-		// r is only used to read the value bits at this point,
-		// so we can reassign it safely.
-		r = negateReader{r}
 	}
 	b := make([]byte, size)
 	_, err = io.ReadFull(r, b)
@@ -73,11 +114,18 @@ func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Int
-	value.SetBytes(b)
 	if neg {
+		negate(b)
+		value.SetBytes(b)
 		value.Neg(&value)
+	} else {
+		value.SetBytes(b)
 	}
 	return &value, nil
+}
+
+func (bigIntCodec) MaxSize() int {
+	return -1
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
@@ -85,7 +133,7 @@ func (bigIntCodec) RequiresTerminator() bool {
 }
 
 func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
-	return bigIntCodec{false}
+	return bigIntCodec{PrefixNilsLast}
 }
 
 // bigFloatCodec is the Codec for *big.Float values.
@@ -242,6 +290,7 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
+	// order needs to be escape the bytes and *then* negate them if needed
 	if _, err := doEscape(mantWriter, mantBytes); err != nil {
 		return err
 	}

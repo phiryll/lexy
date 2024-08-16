@@ -142,6 +142,7 @@ type TempCodec[T any] interface {
 
 	Append(buf []byte, value T) []byte
 	Put(buf []byte, value T) int
+	// Get will not modify buf.
 	Get(buf []byte) (T, int)
 	MaxSize() int
 }
@@ -173,10 +174,10 @@ var (
 	stdString     TempCodec[string]         = stringCodec{}
 	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
 	stdTime       TempCodec[time.Time]      = timeCodec{}
-	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{true}
 	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
 	stdBigRat     NillableCodec[*big.Rat]   = bigRatCodec{true}
 	stdBytes      NillableCodec[[]byte]     = bytesCodec{true}
+	stdBigInt     TempNillableCodec[*big.Int]   = bigIntCodec{PrefixNilsFirst}
 
 	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
 	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
@@ -513,4 +514,14 @@ func Encode[T any](codec Codec[T], value T) ([]byte, error) {
 // Use [Codec.Read] when decoding multiple values from the same byte stream.
 func Decode[T any](codec Codec[T], data []byte) (T, error) {
 	return codec.Read(bytes.NewReader(data))
+}
+
+// Helper functions used by implementations.
+
+// extend adds n bytes to buf, returning the resulting slice
+// and the index into the slice where the bytes were added.
+// Implementations of Codec.Append can use this to delegate to Codec.Put.
+func extend(buf []byte, n int) ([]byte, int) {
+	prevLen := len(buf)
+	return append(buf, make([]byte, n)...), prevLen
 }
