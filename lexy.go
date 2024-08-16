@@ -68,6 +68,18 @@ import (
 //
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
+	// Write encodes value and writes the encoded bytes to w.
+	//
+	// If instances of type T can be nil,
+	// implementations of Write should invoke [WritePrefix] as the first step,
+	// and Read should invoke [ReadPrefix].
+	//
+	// Write may repeatedly write small amounts of data to w,
+	// so using a buffered io.Writer is recommended if appropriate.
+	// Implementions of Write should not wrap w in a buffered io.Writer,
+	// but if they do, the buffered io.Writer must be flushed before returning from Write.
+	Write(w io.Writer, value T) error
+
 	// Read reads from r and decodes a value of type T.
 	//
 	// Read will read from r until either it has all the data it needs, or EOF is reached.
@@ -89,18 +101,6 @@ type Codec[T any] interface {
 	// Implementations of Read should never wrap r in a buffered io.Reader,
 	// because doing so could consume excess data from r and corrupt following reads.
 	Read(r io.Reader) (T, error)
-
-	// Write encodes value and writes the encoded bytes to w.
-	//
-	// If instances of type T can be nil,
-	// implementations of Write should invoke [WritePrefix] as the first step,
-	// and Read should invoke [ReadPrefix].
-	//
-	// Write may repeatedly write small amounts of data to w,
-	// so using a buffered io.Writer is recommended if appropriate.
-	// Implementions of Write should not wrap w in a buffered io.Writer,
-	// but if they do, the buffered io.Writer must be flushed before returning from Write.
-	Write(w io.Writer, value T) error
 
 	// RequiresTerminator returns whether data written by this Codec requires a terminator and escaping
 	// when more data may be written to the same stream following the data written by this Codec.

@@ -64,14 +64,6 @@ func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 	return n
 }
 
-func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	// The encoded bytes can't be written directly to w without
-	// creating a temporary buffer holding most of them anyway,
-	// so we might as well just reuse Append.
-	_, err := w.Write(c.Append(nil, value))
-	return err
-}
-
 func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	// It's not efficient for Get and Read to share code,
 	// because Read can negate its buffer directly if the value is negative,
@@ -92,6 +84,14 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 		value.SetBytes(buf)
 	}
 	return &value, 1 + n + int(size)
+}
+
+func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
+	// The encoded bytes can't be written directly to w without
+	// creating a temporary buffer holding most of them anyway,
+	// so we might as well just reuse Append.
+	_, err := w.Write(c.Append(nil, value))
+	return err
 }
 
 func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
@@ -122,12 +122,12 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 	return &value, nil
 }
 
-func (bigIntCodec) MaxSize() int {
-	return -1
-}
-
 func (bigIntCodec) RequiresTerminator() bool {
 	return false
+}
+
+func (bigIntCodec) MaxSize() int {
+	return -1
 }
 
 func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
@@ -401,16 +401,6 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
 	return n + stdBigInt.Put(buf[n:], value.Denom())
 }
 
-func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
-	}
-	if err := stdBigInt.Write(w, value.Num()); err != nil {
-		return err
-	}
-	return stdBigInt.Write(w, value.Denom())
-}
-
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
 	if c.prefix.Get(buf) {
 		return nil, 1
@@ -419,6 +409,16 @@ func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
 	denom, nDenom := stdBigInt.Get(buf[1+nNum:])
 	var value big.Rat
 	return value.SetFrac(num, denom), 1 + nNum + nDenom
+}
+
+func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
+	if done, err := c.prefix.Write(w, value == nil); done {
+		return err
+	}
+	if err := stdBigInt.Write(w, value.Num()); err != nil {
+		return err
+	}
+	return stdBigInt.Write(w, value.Denom())
 }
 
 func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
@@ -437,12 +437,12 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	return value.SetFrac(num, denom), nil
 }
 
-func (bigRatCodec) MaxSize() int {
-	return -1
-}
-
 func (bigRatCodec) RequiresTerminator() bool {
 	return false
+}
+
+func (bigRatCodec) MaxSize() int {
+	return -1
 }
 
 func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {

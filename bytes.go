@@ -14,6 +14,14 @@ type bytesCodec struct {
 	nilsFirst bool
 }
 
+func (c bytesCodec) Write(w io.Writer, value []byte) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	_, err := w.Write(value)
+	return err
+}
+
 func (bytesCodec) Read(r io.Reader) ([]byte, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -25,14 +33,6 @@ func (bytesCodec) Read(r io.Reader) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-func (c bytesCodec) Write(w io.Writer, value []byte) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	_, err := w.Write(value)
-	return err
 }
 
 func (bytesCodec) RequiresTerminator() bool {
