@@ -175,9 +175,9 @@ var (
 	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
 	stdTime       TempCodec[time.Time]      = timeCodec{}
 	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
-	stdBigRat     NillableCodec[*big.Rat]   = bigRatCodec{true}
 	stdBytes      NillableCodec[[]byte]     = bytesCodec{true}
 	stdBigInt     TempNillableCodec[*big.Int]   = bigIntCodec{PrefixNilsFirst}
+	stdBigRat     TempNillableCodec[*big.Rat]   = bigRatCodec{PrefixNilsFirst}
 
 	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
 	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}

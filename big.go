@@ -34,6 +34,7 @@ func sizeBigInt(value *big.Int) int {
 	if value == nil {
 		return 1
 	}
+	//nolint:mnd
 	return 1 +
 		stdInt64.MaxSize() +
 		((value.BitLen() + 7) / 8)
@@ -382,11 +383,29 @@ func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
-	nilsFirst bool
+	prefix Prefix
+}
+
+func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	newBuf = stdBigInt.Append(newBuf, value.Num())
+	return stdBigInt.Append(newBuf, value.Denom())
+}
+
+func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	n := 1
+	n += stdBigInt.Put(buf[n:], value.Num())
+	return n + stdBigInt.Put(buf[n:], value.Denom())
 }
 
 func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+	if done, err := c.prefix.Write(w, value == nil); done {
 		return err
 	}
 	if err := stdBigInt.Write(w, value.Num()); err != nil {
@@ -395,8 +414,18 @@ func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
 	return stdBigInt.Write(w, value.Denom())
 }
 
-func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
+	if c.prefix.Get(buf) {
+		return nil, 1
+	}
+	num, nNum := stdBigInt.Get(buf[1:])
+	denom, nDenom := stdBigInt.Get(buf[1+nNum:])
+	var value big.Rat
+	return value.SetFrac(num, denom), 1 + nNum + nDenom
+}
+
+func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	num, err := stdBigInt.Read(r)
@@ -411,10 +440,14 @@ func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	return value.SetFrac(num, denom), nil
 }
 
+func (bigRatCodec) MaxSize() int {
+	return -1
+}
+
 func (bigRatCodec) RequiresTerminator() bool {
 	return false
 }
 
 func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
-	return bigRatCodec{false}
+	return bigRatCodec{PrefixNilsLast}
 }
