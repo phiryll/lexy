@@ -93,16 +93,26 @@ type negateTest struct {
 	fString   string
 }
 
-// Sort order is: uint8, neg(string), neg(pInt16).
-// Putting the negated varying length field in the middle is intentional.
-type negateTestCodec struct{}
-
 var (
 	negPtrIntCodec = lexy.Negate(toCodec(lexy.PointerTo(lexy.Int16())))
 	negStringCodec = lexy.Negate(lexy.String())
 
 	negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
 )
+
+// Sort order is: uint8, neg(string), neg(pInt16).
+// Putting the negated varying length field in the middle is intentional.
+type negateTestCodec struct{}
+
+func (negateTestCodec) Write(w io.Writer, value negateTest) error {
+	if err := lexy.Uint8().Write(w, value.fUint8); err != nil {
+		return err
+	}
+	if err := negStringCodec.Write(w, value.fString); err != nil {
+		return err
+	}
+	return negPtrIntCodec.Write(w, value.fPtrInt16)
+}
 
 func (negateTestCodec) Read(r io.Reader) (negateTest, error) {
 	var zero negateTest
@@ -119,16 +129,6 @@ func (negateTestCodec) Read(r io.Reader) (negateTest, error) {
 		return zero, lexy.UnexpectedIfEOF(err)
 	}
 	return negateTest{u8, pInt, s}, nil
-}
-
-func (negateTestCodec) Write(w io.Writer, value negateTest) error {
-	if err := lexy.Uint8().Write(w, value.fUint8); err != nil {
-		return err
-	}
-	if err := negStringCodec.Write(w, value.fString); err != nil {
-		return err
-	}
-	return negPtrIntCodec.Write(w, value.fPtrInt16)
 }
 
 func (negateTestCodec) RequiresTerminator() bool {
