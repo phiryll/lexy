@@ -114,13 +114,13 @@ func (float32Codec) Put(buf []byte, value float32) int {
 	return stdUint32.Put(buf, float32ToBits(value))
 }
 
-func (float32Codec) Write(w io.Writer, value float32) error {
-	return stdUint32.Write(w, float32ToBits(value))
-}
-
 func (float32Codec) Get(buf []byte) (float32, int) {
 	bits, n := stdUint32.Get(buf)
 	return float32FromBits(bits), n
+}
+
+func (float32Codec) Write(w io.Writer, value float32) error {
+	return stdUint32.Write(w, float32ToBits(value))
 }
 
 func (float32Codec) Read(r io.Reader) (float32, error) {
@@ -131,12 +131,12 @@ func (float32Codec) Read(r io.Reader) (float32, error) {
 	return float32FromBits(bits), nil
 }
 
-func (float32Codec) MaxSize() int {
-	return sizeUint32
-}
-
 func (float32Codec) RequiresTerminator() bool {
 	return false
+}
+
+func (float32Codec) MaxSize() int {
+	return sizeUint32
 }
 
 func (float64Codec) Append(buf []byte, value float64) []byte {
@@ -147,13 +147,13 @@ func (float64Codec) Put(buf []byte, value float64) int {
 	return stdUint64.Put(buf, float64ToBits(value))
 }
 
-func (float64Codec) Write(w io.Writer, value float64) error {
-	return stdUint64.Write(w, float64ToBits(value))
-}
-
 func (float64Codec) Get(buf []byte) (float64, int) {
 	bits, n := stdUint64.Get(buf)
 	return float64FromBits(bits), n
+}
+
+func (float64Codec) Write(w io.Writer, value float64) error {
+	return stdUint64.Write(w, float64ToBits(value))
 }
 
 func (float64Codec) Read(r io.Reader) (float64, error) {
@@ -164,10 +164,10 @@ func (float64Codec) Read(r io.Reader) (float64, error) {
 	return float64FromBits(bits), nil
 }
 
-func (float64Codec) MaxSize() int {
-	return sizeUint64
-}
-
 func (float64Codec) RequiresTerminator() bool {
 	return false
+}
+
+func (float64Codec) MaxSize() int {
+	return sizeUint64
 }
