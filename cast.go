@@ -119,17 +119,21 @@ type (
 	}
 )
 
+func (castBool[T]) Write(w io.Writer, value T) error {
+	return stdBool.Write(w, bool(value))
+}
+
 func (castBool[T]) Read(r io.Reader) (T, error) {
 	value, err := stdBool.Read(r)
 	return T(value), err
 }
 
-func (castBool[T]) Write(w io.Writer, value T) error {
-	return stdBool.Write(w, bool(value))
-}
-
 func (castBool[T]) RequiresTerminator() bool {
 	return stdBool.RequiresTerminator()
+}
+
+func (castUint8[T]) Write(w io.Writer, value T) error {
+	return stdUint8.Write(w, uint8(value))
 }
 
 func (castUint8[T]) Read(r io.Reader) (T, error) {
@@ -137,12 +141,12 @@ func (castUint8[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castUint8[T]) Write(w io.Writer, value T) error {
-	return stdUint8.Write(w, uint8(value))
-}
-
 func (castUint8[T]) RequiresTerminator() bool {
 	return stdUint8.RequiresTerminator()
+}
+
+func (castUint16[T]) Write(w io.Writer, value T) error {
+	return stdUint16.Write(w, uint16(value))
 }
 
 func (castUint16[T]) Read(r io.Reader) (T, error) {
@@ -150,12 +154,12 @@ func (castUint16[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castUint16[T]) Write(w io.Writer, value T) error {
-	return stdUint16.Write(w, uint16(value))
-}
-
 func (castUint16[T]) RequiresTerminator() bool {
 	return stdUint16.RequiresTerminator()
+}
+
+func (castUint32[T]) Write(w io.Writer, value T) error {
+	return stdUint32.Write(w, uint32(value))
 }
 
 func (castUint32[T]) Read(r io.Reader) (T, error) {
@@ -163,12 +167,12 @@ func (castUint32[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castUint32[T]) Write(w io.Writer, value T) error {
-	return stdUint32.Write(w, uint32(value))
-}
-
 func (castUint32[T]) RequiresTerminator() bool {
 	return stdUint32.RequiresTerminator()
+}
+
+func (castUint64[T]) Write(w io.Writer, value T) error {
+	return stdUint64.Write(w, uint64(value))
 }
 
 func (castUint64[T]) Read(r io.Reader) (T, error) {
@@ -176,12 +180,12 @@ func (castUint64[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castUint64[T]) Write(w io.Writer, value T) error {
-	return stdUint64.Write(w, uint64(value))
-}
-
 func (castUint64[T]) RequiresTerminator() bool {
 	return stdUint64.RequiresTerminator()
+}
+
+func (castInt8[T]) Write(w io.Writer, value T) error {
+	return stdInt8.Write(w, int8(value))
 }
 
 func (castInt8[T]) Read(r io.Reader) (T, error) {
@@ -189,12 +193,12 @@ func (castInt8[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castInt8[T]) Write(w io.Writer, value T) error {
-	return stdInt8.Write(w, int8(value))
-}
-
 func (castInt8[T]) RequiresTerminator() bool {
 	return stdInt8.RequiresTerminator()
+}
+
+func (castInt16[T]) Write(w io.Writer, value T) error {
+	return stdInt16.Write(w, int16(value))
 }
 
 func (castInt16[T]) Read(r io.Reader) (T, error) {
@@ -202,12 +206,12 @@ func (castInt16[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castInt16[T]) Write(w io.Writer, value T) error {
-	return stdInt16.Write(w, int16(value))
-}
-
 func (castInt16[T]) RequiresTerminator() bool {
 	return stdInt16.RequiresTerminator()
+}
+
+func (castInt32[T]) Write(w io.Writer, value T) error {
+	return stdInt32.Write(w, int32(value))
 }
 
 func (castInt32[T]) Read(r io.Reader) (T, error) {
@@ -215,12 +219,12 @@ func (castInt32[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castInt32[T]) Write(w io.Writer, value T) error {
-	return stdInt32.Write(w, int32(value))
-}
-
 func (castInt32[T]) RequiresTerminator() bool {
 	return stdInt32.RequiresTerminator()
+}
+
+func (castInt64[T]) Write(w io.Writer, value T) error {
+	return stdInt64.Write(w, int64(value))
 }
 
 func (castInt64[T]) Read(r io.Reader) (T, error) {
@@ -228,12 +232,12 @@ func (castInt64[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castInt64[T]) Write(w io.Writer, value T) error {
-	return stdInt64.Write(w, int64(value))
-}
-
 func (castInt64[T]) RequiresTerminator() bool {
 	return stdInt64.RequiresTerminator()
+}
+
+func (castFloat32[T]) Write(w io.Writer, value T) error {
+	return stdFloat32.Write(w, float32(value))
 }
 
 func (castFloat32[T]) Read(r io.Reader) (T, error) {
@@ -241,12 +245,12 @@ func (castFloat32[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castFloat32[T]) Write(w io.Writer, value T) error {
-	return stdFloat32.Write(w, float32(value))
-}
-
 func (castFloat32[T]) RequiresTerminator() bool {
 	return stdFloat32.RequiresTerminator()
+}
+
+func (castFloat64[T]) Write(w io.Writer, value T) error {
+	return stdFloat64.Write(w, float64(value))
 }
 
 func (castFloat64[T]) Read(r io.Reader) (T, error) {
@@ -254,12 +258,12 @@ func (castFloat64[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castFloat64[T]) Write(w io.Writer, value T) error {
-	return stdFloat64.Write(w, float64(value))
-}
-
 func (castFloat64[T]) RequiresTerminator() bool {
 	return stdFloat64.RequiresTerminator()
+}
+
+func (castString[T]) Write(w io.Writer, value T) error {
+	return stdString.Write(w, string(value))
 }
 
 func (castString[T]) Read(r io.Reader) (T, error) {
@@ -267,20 +271,16 @@ func (castString[T]) Read(r io.Reader) (T, error) {
 	return T(value), err
 }
 
-func (castString[T]) Write(w io.Writer, value T) error {
-	return stdString.Write(w, string(value))
-}
-
 func (castString[T]) RequiresTerminator() bool {
 	return stdString.RequiresTerminator()
 }
 
-func (c castBytes[T]) Read(r io.Reader) (T, error) {
-	return c.codec.Read(r)
-}
-
 func (c castBytes[T]) Write(w io.Writer, value T) error {
 	return c.codec.Write(w, value)
+}
+
+func (c castBytes[T]) Read(r io.Reader) (T, error) {
+	return c.codec.Read(r)
 }
 
 func (c castBytes[T]) RequiresTerminator() bool {
@@ -291,12 +291,12 @@ func (c castBytes[T]) NilsLast() NillableCodec[T] {
 	return castBytes[T]{c.codec.NilsLast()}
 }
 
-func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
-	return c.codec.Read(r)
-}
-
 func (c castPointer[P, E]) Write(w io.Writer, value P) error {
 	return c.codec.Write(w, (*E)(value))
+}
+
+func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
+	return c.codec.Read(r)
 }
 
 func (c castPointer[P, E]) RequiresTerminator() bool {
@@ -307,12 +307,12 @@ func (c castPointer[P, E]) NilsLast() NillableCodec[P] {
 	return castPointer[P, E]{c.codec.NilsLast()}
 }
 
-func (c castSlice[S, E]) Read(r io.Reader) (S, error) {
-	return c.codec.Read(r)
-}
-
 func (c castSlice[S, E]) Write(w io.Writer, value S) error {
 	return c.codec.Write(w, []E(value))
+}
+
+func (c castSlice[S, E]) Read(r io.Reader) (S, error) {
+	return c.codec.Read(r)
 }
 
 func (c castSlice[S, E]) RequiresTerminator() bool {
@@ -323,12 +323,12 @@ func (c castSlice[S, E]) NilsLast() NillableCodec[S] {
 	return castSlice[S, E]{c.codec.NilsLast()}
 }
 
-func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
-	return c.codec.Read(r)
-}
-
 func (c castMap[M, K, V]) Write(w io.Writer, value M) error {
 	return c.codec.Write(w, map[K]V(value))
+}
+
+func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
+	return c.codec.Read(r)
 }
 
 func (c castMap[M, K, V]) RequiresTerminator() bool {
