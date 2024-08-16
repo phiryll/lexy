@@ -156,28 +156,28 @@ type TempNillableCodec[T any] interface {
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBool       TempCodec[bool]           = boolCodec{}
-	stdUint       Codec[uint]               = castUint64[uint]{}
-	stdUint8      TempCodec[uint8]          = uint8Codec{}
-	stdUint16     TempCodec[uint16]         = uint16Codec{}
-	stdUint32     TempCodec[uint32]         = uint32Codec{}
-	stdUint64     TempCodec[uint64]         = uint64Codec{}
-	stdInt        Codec[int]                = castInt64[int]{}
-	stdInt8       TempCodec[int8]           = int8Codec{}
-	stdInt16      TempCodec[int16]          = int16Codec{}
-	stdInt32      TempCodec[int32]          = int32Codec{}
-	stdInt64      TempCodec[int64]          = int64Codec{}
-	stdFloat32    TempCodec[float32]        = float32Codec{}
-	stdFloat64    TempCodec[float64]        = float64Codec{}
-	stdComplex64  TempCodec[complex64]      = complex64Codec{}
-	stdComplex128 TempCodec[complex128]     = complex128Codec{}
-	stdString     TempCodec[string]         = stringCodec{}
-	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
-	stdTime       TempCodec[time.Time]      = timeCodec{}
-	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{true}
-	stdBytes      NillableCodec[[]byte]     = bytesCodec{true}
-	stdBigInt     TempNillableCodec[*big.Int]   = bigIntCodec{PrefixNilsFirst}
-	stdBigRat     TempNillableCodec[*big.Rat]   = bigRatCodec{PrefixNilsFirst}
+	stdBool       TempCodec[bool]             = boolCodec{}
+	stdUint       Codec[uint]                 = castUint64[uint]{}
+	stdUint8      TempCodec[uint8]            = uint8Codec{}
+	stdUint16     TempCodec[uint16]           = uint16Codec{}
+	stdUint32     TempCodec[uint32]           = uint32Codec{}
+	stdUint64     TempCodec[uint64]           = uint64Codec{}
+	stdInt        Codec[int]                  = castInt64[int]{}
+	stdInt8       TempCodec[int8]             = int8Codec{}
+	stdInt16      TempCodec[int16]            = int16Codec{}
+	stdInt32      TempCodec[int32]            = int32Codec{}
+	stdInt64      TempCodec[int64]            = int64Codec{}
+	stdFloat32    TempCodec[float32]          = float32Codec{}
+	stdFloat64    TempCodec[float64]          = float64Codec{}
+	stdComplex64  TempCodec[complex64]        = complex64Codec{}
+	stdComplex128 TempCodec[complex128]       = complex128Codec{}
+	stdString     TempCodec[string]           = stringCodec{}
+	stdDuration   Codec[time.Duration]        = castInt64[time.Duration]{}
+	stdTime       TempCodec[time.Time]        = timeCodec{}
+	stdBigFloat   NillableCodec[*big.Float]   = bigFloatCodec{true}
+	stdBytes      NillableCodec[[]byte]       = bytesCodec{true}
+	stdBigInt     TempNillableCodec[*big.Int] = bigIntCodec{PrefixNilsFirst}
+	stdBigRat     TempNillableCodec[*big.Rat] = bigRatCodec{PrefixNilsFirst}
 
 	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
 	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
