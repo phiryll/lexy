@@ -25,13 +25,13 @@ func (stringCodec) Put(buf []byte, value string) int {
 	return mustCopy(buf, []byte(value))
 }
 
+func (stringCodec) Get(buf []byte) (string, int) {
+	return string(buf), len(buf)
+}
+
 func (stringCodec) Write(w io.Writer, value string) error {
 	_, err := io.WriteString(w, value)
 	return err
-}
-
-func (stringCodec) Get(buf []byte) (string, int) {
-	return string(buf), len(buf)
 }
 
 func (stringCodec) Read(r io.Reader) (string, error) {
@@ -44,10 +44,10 @@ func (stringCodec) Read(r io.Reader) (string, error) {
 	return buf.String(), nil
 }
 
-func (stringCodec) MaxSize() int {
-	return -1
-}
-
 func (stringCodec) RequiresTerminator() bool {
 	return true
+}
+
+func (stringCodec) MaxSize() int {
+	return -1
 }

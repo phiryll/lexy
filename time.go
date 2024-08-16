@@ -65,6 +65,13 @@ func (timeCodec) Put(buf []byte, value time.Time) int {
 	return n + stdInt32.Put(buf, offset)
 }
 
+func (timeCodec) Get(buf []byte) (time.Time, int) {
+	seconds, _ := stdInt64.Get(buf)
+	nanos, _ := stdUint32.Get(buf[sizeUint64:])
+	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
+	return buildTime(seconds, nanos, offset), timeSize
+}
+
 func (timeCodec) Write(w io.Writer, value time.Time) error {
 	seconds, nanos, offset := splitTime(value)
 	if err := stdInt64.Write(w, seconds); err != nil {
@@ -74,13 +81,6 @@ func (timeCodec) Write(w io.Writer, value time.Time) error {
 		return err
 	}
 	return stdInt32.Write(w, offset)
-}
-
-func (timeCodec) Get(buf []byte) (time.Time, int) {
-	seconds, _ := stdInt64.Get(buf)
-	nanos, _ := stdUint32.Get(buf[sizeUint64:])
-	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
-	return buildTime(seconds, nanos, offset), timeSize
 }
 
 func (timeCodec) Read(r io.Reader) (time.Time, error) {
@@ -100,10 +100,10 @@ func (timeCodec) Read(r io.Reader) (time.Time, error) {
 	return buildTime(seconds, nanos, offset), nil
 }
 
-func (timeCodec) MaxSize() int {
-	return timeSize
-}
-
 func (timeCodec) RequiresTerminator() bool {
 	return false
+}
+
+func (timeCodec) MaxSize() int {
+	return timeSize
 }

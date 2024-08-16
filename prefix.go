@@ -55,17 +55,6 @@ type Prefix interface {
 	//	}
 	Put(buf []byte, isNil bool) (done bool)
 
-	// Write writes a prefix byte to w.
-	// This is a typical usage:
-	//
-	//	func (c fooCodec) Write(w io.Writer, value Foo) error {
-	//	    if done, err := c.prefix.Write(w, value == nil); done {
-	//	        return err
-	//	    }
-	//	    // encode and write the non-nil value to w
-	//	}
-	Write(w io.Writer, isNil bool) (done bool, err error)
-
 	// Get decodes a prefix byte from buf[0].
 	// This is a typical usage:
 	//
@@ -76,6 +65,17 @@ type Prefix interface {
 	//	    // decode and return a non-nil value from buf[1:]
 	//	}
 	Get(buf []byte) (done bool)
+
+	// Write writes a prefix byte to w.
+	// This is a typical usage:
+	//
+	//	func (c fooCodec) Write(w io.Writer, value Foo) error {
+	//	    if done, err := c.prefix.Write(w, value == nil); done {
+	//	        return err
+	//	    }
+	//	    // encode and write the non-nil value to w
+	//	}
+	Write(w io.Writer, isNil bool) (done bool, err error)
 
 	// Read reads a prefix byte from r.
 	// This is a typical usage:
@@ -145,19 +145,19 @@ func (prefixNilsFirst) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (prefixNilsFirst) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{prefixFor(isNil, true)}); err != nil {
-		return true, err
-	}
-	return isNil, nil
-}
-
 func (prefixNilsFirst) Get(buf []byte) bool {
 	done, err := eval(buf[0], true)
 	if err != nil {
 		panic(err)
 	}
 	return done
+}
+
+func (prefixNilsFirst) Write(w io.Writer, isNil bool) (bool, error) {
+	if _, err := w.Write([]byte{prefixFor(isNil, true)}); err != nil {
+		return true, err
+	}
+	return isNil, nil
 }
 
 func (prefixNilsFirst) Read(r io.Reader) (bool, error) {
@@ -178,19 +178,19 @@ func (prefixNilsLast) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (prefixNilsLast) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{prefixFor(isNil, false)}); err != nil {
-		return true, err
-	}
-	return isNil, nil
-}
-
 func (prefixNilsLast) Get(buf []byte) bool {
 	done, err := eval(buf[0], false)
 	if err != nil {
 		panic(err)
 	}
 	return done
+}
+
+func (prefixNilsLast) Write(w io.Writer, isNil bool) (bool, error) {
+	if _, err := w.Write([]byte{prefixFor(isNil, false)}); err != nil {
+		return true, err
+	}
+	return isNil, nil
 }
 
 func (prefixNilsLast) Read(r io.Reader) (bool, error) {
