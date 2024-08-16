@@ -36,12 +36,12 @@ type negateCodec[T any] struct {
 	codec Codec[T]
 }
 
-func (c negateCodec[T]) Read(r io.Reader) (T, error) {
-	return c.codec.Read(negateReader{r})
-}
-
 func (c negateCodec[T]) Write(w io.Writer, value T) error {
 	return c.codec.Write(negateWriter{w}, value)
+}
+
+func (c negateCodec[T]) Read(r io.Reader) (T, error) {
+	return c.codec.Read(negateReader{r})
 }
 
 func (negateCodec[T]) RequiresTerminator() bool {
@@ -57,21 +57,9 @@ func negate(buf []byte) []byte {
 }
 
 var (
-	_ io.Reader = negateReader{nil}
 	_ io.Writer = negateWriter{nil}
+	_ io.Reader = negateReader{nil}
 )
-
-// negateReader is an io.Reader which flips all the bits,
-// negating in the sense in the sense of lexicographical ordering.
-type negateReader struct {
-	io.Reader
-}
-
-func (r negateReader) Read(p []byte) (int, error) {
-	n, err := r.Reader.Read(p)
-	negate(p[:n])
-	return n, err
-}
 
 // negateWriter is an io.Writer which flips all the bits,
 // negating in the sense in the sense of lexicographical ordering.
@@ -84,4 +72,16 @@ type negateWriter struct {
 
 func (w negateWriter) Write(p []byte) (int, error) {
 	return w.Writer.Write(negate(append([]byte(nil), p...)))
+}
+
+// negateReader is an io.Reader which flips all the bits,
+// negating in the sense in the sense of lexicographical ordering.
+type negateReader struct {
+	io.Reader
+}
+
+func (r negateReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	negate(p[:n])
+	return n, err
 }

@@ -13,6 +13,13 @@ type pointerCodec[E any] struct {
 	nilsFirst bool
 }
 
+func (c pointerCodec[E]) Write(w io.Writer, value *E) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	return c.elemCodec.Write(w, *value)
+}
+
 func (c pointerCodec[E]) Read(r io.Reader) (*E, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -22,13 +29,6 @@ func (c pointerCodec[E]) Read(r io.Reader) (*E, error) {
 		return nil, UnexpectedIfEOF(err)
 	}
 	return &value, nil
-}
-
-func (c pointerCodec[E]) Write(w io.Writer, value *E) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	return c.elemCodec.Write(w, *value)
 }
 
 func (c pointerCodec[E]) RequiresTerminator() bool {

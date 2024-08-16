@@ -17,6 +17,18 @@ type sliceCodec[E any] struct {
 	nilsFirst bool
 }
 
+func (c sliceCodec[E]) Write(w io.Writer, value []E) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	for _, elem := range value {
+		if err := c.elemCodec.Write(w, elem); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c sliceCodec[E]) Read(r io.Reader) ([]E, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -32,18 +44,6 @@ func (c sliceCodec[E]) Read(r io.Reader) ([]E, error) {
 		}
 		values = append(values, value)
 	}
-}
-
-func (c sliceCodec[E]) Write(w io.Writer, value []E) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	for _, elem := range value {
-		if err := c.elemCodec.Write(w, elem); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (sliceCodec[E]) RequiresTerminator() bool {

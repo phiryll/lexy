@@ -18,6 +18,21 @@ type mapCodec[K comparable, V any] struct {
 	nilsFirst  bool
 }
 
+func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
+	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+		return err
+	}
+	for k, v := range value {
+		if err := c.keyCodec.Write(w, k); err != nil {
+			return err
+		}
+		if err := c.valueCodec.Write(w, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 	if done, err := ReadPrefix(r); done {
 		return nil, err
@@ -37,21 +52,6 @@ func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 		}
 		m[key] = value
 	}
-}
-
-func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	for k, v := range value {
-		if err := c.keyCodec.Write(w, k); err != nil {
-			return err
-		}
-		if err := c.valueCodec.Write(w, v); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (mapCodec[K, V]) RequiresTerminator() bool {
