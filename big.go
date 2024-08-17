@@ -29,43 +29,28 @@ type bigIntCodec struct {
 	prefix Prefix
 }
 
-// sizeBigInt returns how many bytes the encoding for value will take.
-func sizeBigInt(value *big.Int) int {
-	if value == nil {
-		return 1
-	}
-	//nolint:mnd
-	return 1 + // nil/non-nil prefix
-		sizeUint64 + // number of following bytes
-		((value.BitLen() + 7) / 8) // following bytes
-}
-
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
-	buf, i := extend(buf, sizeBigInt(value))
-	c.Put(buf[i:], value)
-	return buf
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	sign := value.Sign()
+	b := value.Bytes()
+	size := int64(len(b))
+	if sign < 0 {
+		newBuf = stdInt64.Append(newBuf, -size)
+		negate(b)
+	} else {
+		newBuf = stdInt64.Append(newBuf, size)
+	}
+	return append(newBuf, b...)
 }
 
 func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
-	n := sizeBigInt(value)
-	_ = buf[n-1] // bounds check
-	if c.prefix.Put(buf, value == nil) {
-		return 1
-	}
-	buf = buf[1:]
-	sizeValue := int64(n - 1 - sizeUint64)
-	sign := value.Sign()
-	if sign < 0 {
-		stdInt64.Put(buf, -sizeValue)
-	} else {
-		stdInt64.Put(buf, sizeValue)
-	}
-	buf = buf[sizeUint64:]
-	value.FillBytes(buf)
-	if sign < 0 {
-		negate(buf)
-	}
-	return n
+	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
+	// but it clears the entire buffer.
+	// So it makes sense here to use Append.
+	return mustCopy(buf, c.Append(nil, value))
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {

@@ -141,6 +141,7 @@ type TempCodec[T any] interface {
 	Codec[T]
 
 	Append(buf []byte, value T) []byte
+	// Does not modify buf beyond what is necessary.
 	Put(buf []byte, value T) int
 	// Get will not modify buf.
 	Get(buf []byte) (T, int)
@@ -528,6 +529,7 @@ func mustNonNil(x any, name string) {
 
 // mustCopy is like the built-in copy(dst, src),
 // except that it panics if dst is not large enough to hold all of src.
+// mustCopy returns the number of bytes copied, which is len(src).
 func mustCopy(dst, src []byte) int {
 	_ = dst[len(src)-1]
 	return copy(dst, src)
