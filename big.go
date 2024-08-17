@@ -63,14 +63,13 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	buf = buf[1:]
 	size, n := stdInt64.Get(buf)
 	buf = buf[n:]
-	buf = buf[:size]
 	var value big.Int
 	if size < 0 {
 		size = -size
-		value.SetBytes(negate(append([]byte(nil), buf...)))
+		value.SetBytes(negate(append([]byte(nil), buf[:size]...)))
 		value.Neg(&value)
 	} else {
-		value.SetBytes(buf)
+		value.SetBytes(buf[:size])
 	}
 	return &value, 1 + n + int(size)
 }
