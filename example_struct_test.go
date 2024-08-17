@@ -96,17 +96,19 @@ func (s sortableEncodings) Len() int           { return len(s.b) }
 func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
 func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
+// TODO: Update docs here, more examples!
+//
 // ExampleStruct shows how to define a typical user-defined Codec.
 // The rules of thumb are:
 //   - The order in which encoded data is written defines the Codec's ordering.
 //     Read data in the same order it was written, using the same Codecs.
 //     The schema change example has an exception to this.
-//   - Use [lexy.ReadPrefix] and [lexy.WritePrefix] if the value can be nil.
+//   - Use [lexy.PrefixNilsFirst] or [lexy.PrefixNilsLast] if the value can be nil.
 //   - Return the type's zero value and [io.EOF] from Read
 //     only if no bytes were read and EOF was reached.
 //     In the fooCodec example in this comment below,
 //     note that the first element read does not use [lexy.UnexpectedIfEOF].
-//   - If the value can be nil, lexy.ReadPrefix is the first element read,
+//   - If the value can be nil, lexy.Prefix.Read is the first element read,
 //     and the next element read after that should use lexy.UnexpectedIfEOF.
 //   - Use [lexy.TerminateIfNeeded] when an element's Codec might require it.
 //     See [tagsCodec] in this example for a typical usage.

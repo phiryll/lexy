@@ -48,7 +48,6 @@ These are convenience functions using a []byte instead of an [io.Reader] or [io.
 
 These functions are used when creating custom Codecs.
   - [UnexpectedIfEOF]
-  - [ReadPrefix], [WritePrefix]
 */
 package lexy
 
@@ -63,16 +62,32 @@ import (
 // Codec defines a binary encoding for values of type T.
 // Most of the Codec implementations provided by this package preserve the type's natural ordering,
 // but nothing requires that behavior.
-// The Read and Write methods should be lossless inverse operations.
-// Exceptions to either of these behaviors should be clearly documented.
+// Encoding methods (Append, Put, and Write) must produce exactly the same encoded bytes.
+// Decoding methods (Get and Read) must be able to read and decode exactly the same encoded bytes.
+// Encoding and decoding should be lossless inverse operations.
+// Exceptions to any of these behaviors should be clearly documented.
+//
+// If instances of type T can be nil,
+// implementations should invoke the appropriate method of [PrefixNilsFirst] or [PrefixNilsLast]
+// as the first step of encoding or decoding method implementations.
+// See the [Prefix] docs for example usage idioms.
 //
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
+	// Append encodes value and appends the encoded bytes to buf, returning the updated buffer.
+	Append(buf []byte, value T) []byte
+
+	// Put encodes value into buf and returns the number of bytes written.
+	// Put will panic if buf is too small, and still may have written some data to buf.
+	// Put will write only the bytes that encode value.
+	Put(buf []byte, value T) int
+
+	// Get decodes a value of type T from buf and returns that value and the number of bytes read.
+	// Get will panic if a value of type T cannot be successfully decoded from buf.
+	// Get will not modify buf.
+	Get(buf []byte) (T, int)
+
 	// Write encodes value and writes the encoded bytes to w.
-	//
-	// If instances of type T can be nil,
-	// implementations of Write should invoke [WritePrefix] as the first step,
-	// and Read should invoke [ReadPrefix].
 	//
 	// Write may repeatedly write small amounts of data to w,
 	// so using a buffered io.Writer is recommended if appropriate.
@@ -83,14 +98,11 @@ type Codec[T any] interface {
 	// Read reads from r and decodes a value of type T.
 	//
 	// Read will read from r until either it has all the data it needs, or EOF is reached.
+	// Read will never read more bytes than necessary.
 	// If the returned error is non-nil, including [io.EOF], the returned value should be discarded.
 	// Read will only return io.EOF if r returned io.EOF and no bytes were read.
 	// Read will return [io.ErrUnexpectedEOF] if r returned io.EOF and a complete value was not successfully read.
 	// Implementations of Read should never knowingly return an incomplete value.
-	//
-	// If instances of type T can be nil,
-	// implementations of Read should invoke [ReadPrefix] as the first step,
-	// and Write should invoke [WritePrefix].
 	//
 	// [io.Reader.Read] is permitted to return only immediately available data instead of waiting for more.
 	// This may cause an error, or it may silently return incomplete data, depending on this Codec's implementation.
@@ -103,10 +115,10 @@ type Codec[T any] interface {
 	Read(r io.Reader) (T, error)
 
 	// RequiresTerminator returns whether data written by this Codec requires a terminator and escaping
-	// when more data may be written to the same stream following the data written by this Codec.
+	// when more data may be written following the data written by this Codec.
 	// This is true if either
-	//   - Read may not know when to stop reading the data written by Write (strings, maps, some pointers, ...), or
-	//   - Write could encode zero bytes for some value (strings, [Empty], ...).
+	//   - Decoding methods may not know when to stop reading encoded data (strings, maps, some pointers, ...), or
+	//   - Encoding methods could encode zero bytes for some value (strings, [Empty], ...).
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
 	// and more data could be written following the data written by this Codec.
@@ -136,48 +148,31 @@ type NillableCodec[T any] interface {
 	NilsLast() NillableCodec[T]
 }
 
-// TempCodec is temporary.
-type TempCodec[T any] interface {
-	Codec[T]
-
-	Append(buf []byte, value T) []byte
-	// Does not modify buf beyond what is necessary.
-	Put(buf []byte, value T) int
-	// Get will not modify buf.
-	Get(buf []byte) (T, int)
-}
-
-// TempNillableCodec is temporary.
-type TempNillableCodec[T any] interface {
-	TempCodec[T]
-	NillableCodec[T]
-}
-
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBool       TempCodec[bool]             = boolCodec{}
-	stdUint       Codec[uint]                 = castUint64[uint]{}
-	stdUint8      TempCodec[uint8]            = uint8Codec{}
-	stdUint16     TempCodec[uint16]           = uint16Codec{}
-	stdUint32     TempCodec[uint32]           = uint32Codec{}
-	stdUint64     TempCodec[uint64]           = uint64Codec{}
-	stdInt        Codec[int]                  = castInt64[int]{}
-	stdInt8       TempCodec[int8]             = int8Codec{}
-	stdInt16      TempCodec[int16]            = int16Codec{}
-	stdInt32      TempCodec[int32]            = int32Codec{}
-	stdInt64      TempCodec[int64]            = int64Codec{}
-	stdFloat32    TempCodec[float32]          = float32Codec{}
-	stdFloat64    TempCodec[float64]          = float64Codec{}
-	stdComplex64  TempCodec[complex64]        = complex64Codec{}
-	stdComplex128 TempCodec[complex128]       = complex128Codec{}
-	stdString     TempCodec[string]           = stringCodec{}
-	stdDuration   Codec[time.Duration]        = castInt64[time.Duration]{}
-	stdTime       TempCodec[time.Time]        = timeCodec{}
-	stdBigFloat   NillableCodec[*big.Float]   = bigFloatCodec{true}
-	stdBytes      NillableCodec[[]byte]       = bytesCodec{true}
-	stdBigInt     TempNillableCodec[*big.Int] = bigIntCodec{PrefixNilsFirst}
-	stdBigRat     TempNillableCodec[*big.Rat] = bigRatCodec{PrefixNilsFirst}
+	stdBool       Codec[bool]               = boolCodec{}
+	stdUint       Codec[uint]               = castUint64[uint]{}
+	stdUint8      Codec[uint8]              = uint8Codec{}
+	stdUint16     Codec[uint16]             = uint16Codec{}
+	stdUint32     Codec[uint32]             = uint32Codec{}
+	stdUint64     Codec[uint64]             = uint64Codec{}
+	stdInt        Codec[int]                = castInt64[int]{}
+	stdInt8       Codec[int8]               = int8Codec{}
+	stdInt16      Codec[int16]              = int16Codec{}
+	stdInt32      Codec[int32]              = int32Codec{}
+	stdInt64      Codec[int64]              = int64Codec{}
+	stdFloat32    Codec[float32]            = float32Codec{}
+	stdFloat64    Codec[float64]            = float64Codec{}
+	stdComplex64  Codec[complex64]          = complex64Codec{}
+	stdComplex128 Codec[complex128]         = complex128Codec{}
+	stdString     Codec[string]             = stringCodec{}
+	stdDuration   Codec[time.Duration]      = castInt64[time.Duration]{}
+	stdTime       Codec[time.Time]          = timeCodec{}
+	stdBigFloat   NillableCodec[*big.Float] = bigFloatCodec{PrefixNilsFirst}
+	stdBigInt     NillableCodec[*big.Int]   = bigIntCodec{PrefixNilsFirst}
+	stdBigRat     NillableCodec[*big.Rat]   = bigRatCodec{PrefixNilsFirst}
+	stdBytes      NillableCodec[[]byte]     = bytesCodec{PrefixNilsFirst}
 
 	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
 	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
@@ -339,14 +334,14 @@ func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 // This Codec requires a terminator when used within an aggregate Codec if elemCodec does.
 func PointerTo[E any](elemCodec Codec[E]) NillableCodec[*E] {
 	elemCodec.RequiresTerminator() // force panic if nil
-	return pointerCodec[E]{elemCodec, true}
+	return pointerCodec[E]{elemCodec, PrefixNilsFirst}
 }
 
 // SliceOf returns a NillableCodec for the []E type, with nil slices ordered first.
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.
 func SliceOf[E any](elemCodec Codec[E]) NillableCodec[[]E] {
-	return sliceCodec[E]{TerminateIfNeeded(elemCodec), true}
+	return sliceCodec[E]{TerminateIfNeeded(elemCodec), PrefixNilsFirst}
 }
 
 // MapOf returns a NillableCodec for the map[K]V type, with nil maps ordered first.
@@ -356,7 +351,7 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Nillable
 	return mapCodec[K, V]{
 		TerminateIfNeeded(keyCodec),
 		TerminateIfNeeded(valueCodec),
-		true,
+		PrefixNilsFirst,
 	}
 }
 
@@ -404,91 +399,58 @@ func UnexpectedIfEOF(err error) error {
 	return err
 }
 
-// Convenience byte slices.
-var (
-	pNilFirst = []byte{prefixNilFirst}
-	pNonNil   = []byte{prefixNonNil}
-	pNilLast  = []byte{prefixNilLast}
-)
+// TODO:
+//
+// Make a function accepting 3 functions (Write,Read,RequiresTerminator)
+// and returning a Codec with Append/Put/Get depending on Write/Read.
+//
+// Make a similar function going the other way.
+// Put can depend on Append, but not the other way around.
+//
+// Not functions, types: BytesCodec and StreamCodec...?
+// Would have to rename existing bytesCodec.
+// Not sure how Nillable... would fit in.
 
-// WritePrefix is used to write the initial nil/non-nil prefix byte to w by Codecs
-// that encode types whose instances can be nil.
-// The prefix written depends on the values of isNil and nilsFirst.
-// Invoking WritePrefix should be the first action taken by [Codec.Write] for these Codecs,
-// since it allows an early return if value is nil.
+// AppendUsingWrite is a function used to implement [Codec.Append] by delegating to [Codec.Write],
+// perhaps sub-optimally.
 // This is a typical usage:
 //
-//	func (c fooType) Write(w io.Writer, value Foo) error {
-//	    if done, err := lexy.WritePrefix(w, value == nil, true); done {
-//	        return err
-//	    }
-//	    // encode and write the non-nil value
+//	func (c fooCodec) Append(buf []byte, value Foo) []byte {
+//	    return lexy.AppendUsingWrite[Foo](c, buf, value)
 //	}
-//
-// WritePrefix returns done == false only if isNil is false and there was no error writing the prefix,
-// in which case the caller still needs to write the non-nil value to w.
-//
-// If WritePrefix returns done == true, then the caller is done writing the value to w
-// regardless of the returned error value.
-// Either there was an error, or there was no error and the nil prefix was successfully written.
-//
-//nolint:nonamedreturns
-func WritePrefix(w io.Writer, isNil, nilsFirst bool) (done bool, err error) {
-	var prefix []byte
-	switch {
-	case !isNil:
-		prefix = pNonNil
-	case nilsFirst:
-		prefix = pNilFirst
-	default:
-		prefix = pNilLast
+func AppendUsingWrite[T any](codec Codec[T], buf []byte, value T) []byte {
+	b := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
+	if err := codec.Write(b, value); err != nil {
+		panic(err)
 	}
-	if _, err := w.Write(prefix); err != nil {
-		return true, err
-	}
-	return isNil, nil
+	return append(buf, b.Bytes()...)
 }
 
-// ReadPrefix is used to read the initial nil/non-nil prefix byte from r by Codecs
-// that encode types whose instances can be nil.
-// Invoking ReadPrefix should the first action taken by [Codec.Read] for these Codecs,
-// since it allows an early return if the decoded value is nil.
+// PutUsingAppend is a function used to implement [Codec.Put] by delegating to [Codec.Append],
+// perhaps sub-optimally.
 // This is a typical usage:
 //
-//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
-//	    if done, err := lexy.ReadPrefix(r); done {
-//	        return nil, err
-//	    }
-//	    // read, decode, and return a non-nil value
+//	func (c fooCodec) Put(buf []byte, value Foo) int {
+//	    return lexy.PutUsingAppend[Foo](c, buf, value)
 //	}
+func PutUsingAppend[T any](codec Codec[T], buf []byte, value T) int {
+	return mustCopy(buf, codec.Append(nil, value))
+}
+
+// GetUsingRead is a function used to implement [Codec.Get] by delegating to [Codec.Read],
+// perhaps sub-optimally.
+// This is a typical usage:
 //
-// ReadPrefix returns done == false only if a non-nil value still needs to be read and decoded,
-// and there was no error reading the prefix.
-//
-// If ReadPrefix returns done == true, then the caller is done reading this value
-// regardless of the returned error value.
-// Either there was an error, or there was no error and the nil prefix was read.
-//
-// ReadPrefix will return [io.EOF] only if no bytes were read and [io.Reader.Read] returned io.EOF.
-// ReadPrefix will not return an error if a prefix was successfully read and io.Reader.Read returned io.EOF,
-// because the read of the prefix was successful.
-// Any subsequent read from r should properly return 0 bytes read and io.EOF.
-//
-//nolint:nonamedreturns
-func ReadPrefix(r io.Reader) (done bool, err error) {
-	prefix := []byte{0}
-	_, err = io.ReadFull(r, prefix)
+//	func (c fooCodec) Get(buf []byte) (Foo, int)
+//	    return lexy.GetUsingRead[Foo](c, buf)
+//	}
+func GetUsingRead[T any](codec Codec[T], buf []byte) (T, int) {
+	r := bytes.NewReader(buf)
+	value, err := codec.Read(r)
 	if err != nil {
-		return true, err
+		panic(err)
 	}
-	switch prefix[0] {
-	case prefixNilFirst, prefixNilLast:
-		return true, nil
-	case prefixNonNil:
-		return false, nil
-	default:
-		return true, unknownPrefixError{prefix[0]}
-	}
+	return value, len(buf) - r.Len()
 }
 
 // Convenience functions.
@@ -533,12 +495,4 @@ func mustNonNil(x any, name string) {
 func mustCopy(dst, src []byte) int {
 	_ = dst[len(src)-1]
 	return copy(dst, src)
-}
-
-// extend adds n bytes to buf, returning the resulting slice
-// and the index into the slice where the bytes were added.
-// Implementations of Codec.Append can use this to delegate to Codec.Put.
-func extend(buf []byte, n int) ([]byte, int) {
-	prevLen := len(buf)
-	return append(buf, make([]byte, n)...), prevLen
 }

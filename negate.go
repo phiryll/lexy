@@ -36,6 +36,18 @@ type negateCodec[T any] struct {
 	codec Codec[T]
 }
 
+func (c negateCodec[T]) Append(buf []byte, value T) []byte {
+	return AppendUsingWrite[T](c, buf, value)
+}
+
+func (c negateCodec[T]) Put(buf []byte, value T) int {
+	return PutUsingAppend[T](c, buf, value)
+}
+
+func (c negateCodec[T]) Get(buf []byte) (T, int) {
+	return GetUsingRead[T](c, buf)
+}
+
 func (c negateCodec[T]) Write(w io.Writer, value T) error {
 	return c.codec.Write(negateWriter{w}, value)
 }

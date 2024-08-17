@@ -56,6 +56,7 @@ type Prefix interface {
 	Put(buf []byte, isNil bool) (done bool)
 
 	// Get decodes a prefix byte from buf[0].
+	// Get will not modify buf.
 	// This is a typical usage:
 	//
 	//	func (c fooCodec) Get(buf []byte) (Foo, int)
@@ -86,6 +87,11 @@ type Prefix interface {
 	//	    }
 	//	    // read, decode, and return a non-nil value from r
 	//	}
+	//
+	// Read will return [io.EOF] only if no bytes were read and [io.Reader.Read] returned io.EOF.
+	// Read will not return an error if a prefix was successfully read and io.Reader.Read returned io.EOF,
+	// because the read of the prefix was successful.
+	// Any subsequent read from r should properly return 0 bytes read and io.EOF in this case.
 	Read(r io.Reader) (done bool, err error)
 }
 

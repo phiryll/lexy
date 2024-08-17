@@ -183,7 +183,7 @@ func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
 //		negate precision first if Float is negative
 //	write uint8 rounding mode
 type bigFloatCodec struct {
-	nilsFirst bool
+	prefix Prefix
 }
 
 // The second byte written in the *big.Float encoding after the initial prefixNonNil byte if non-nil.
@@ -215,9 +215,21 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
+func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
+	return AppendUsingWrite[*big.Float](c, buf, value)
+}
+
+func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
+	return PutUsingAppend[*big.Float](c, buf, value)
+}
+
+func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
+	return GetUsingRead[*big.Float](c, buf)
+}
+
 //nolint:cyclop,funlen
 func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+	if done, err := c.prefix.Write(w, value == nil); done {
 		return err
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
@@ -285,8 +297,8 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 }
 
 //nolint:funlen
-func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	kind, err := stdInt8.Read(r)
@@ -351,7 +363,7 @@ func (bigFloatCodec) RequiresTerminator() bool {
 }
 
 func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
-	return bigFloatCodec{false}
+	return bigFloatCodec{PrefixNilsLast}
 }
 
 // bigRatCodec is the Codec for *big.Rat values.

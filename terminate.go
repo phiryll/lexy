@@ -60,6 +60,18 @@ var (
 	escEsc  = []byte{escape, escape}
 )
 
+func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
+	return AppendUsingWrite[T](c, buf, value)
+}
+
+func (c terminatorCodec[T]) Put(buf []byte, value T) int {
+	return PutUsingAppend[T](c, buf, value)
+}
+
+func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
+	return GetUsingRead[T](c, buf)
+}
+
 func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
 	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
 	if err := c.codec.Write(buf, value); err != nil {

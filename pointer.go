@@ -10,18 +10,30 @@ import (
 //   - if non-nil, prefixNonNil followed by its encoded referent
 type pointerCodec[E any] struct {
 	elemCodec Codec[E]
-	nilsFirst bool
+	prefix    Prefix
+}
+
+func (c pointerCodec[E]) Append(buf []byte, value *E) []byte {
+	return AppendUsingWrite[*E](c, buf, value)
+}
+
+func (c pointerCodec[E]) Put(buf []byte, value *E) int {
+	return PutUsingAppend[*E](c, buf, value)
+}
+
+func (c pointerCodec[E]) Get(buf []byte) (*E, int) {
+	return GetUsingRead[*E](c, buf)
 }
 
 func (c pointerCodec[E]) Write(w io.Writer, value *E) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
+	if done, err := c.prefix.Write(w, value == nil); done {
 		return err
 	}
 	return c.elemCodec.Write(w, *value)
 }
 
 func (c pointerCodec[E]) Read(r io.Reader) (*E, error) {
-	if done, err := ReadPrefix(r); done {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	value, err := c.elemCodec.Read(r)
@@ -36,5 +48,5 @@ func (c pointerCodec[E]) RequiresTerminator() bool {
 }
 
 func (c pointerCodec[E]) NilsLast() NillableCodec[*E] {
-	return pointerCodec[E]{c.elemCodec, false}
+	return pointerCodec[E]{c.elemCodec, PrefixNilsLast}
 }
