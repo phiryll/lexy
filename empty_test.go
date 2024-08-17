@@ -73,7 +73,7 @@ func TestMapValueEmpty(t *testing.T) {
 			term,
 		}},
 	})
-	testCodecRoundTrip(t, valueEmptyCodec, []testCase[mValue]{
+	testRoundTrip(t, valueEmptyCodec, []testCase[mValue]{
 		{"non-trivial", mValue{
 			1:   empty,
 			167: empty,

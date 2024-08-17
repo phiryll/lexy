@@ -12,7 +12,7 @@ import (
 func TestNegateInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
-	testCodecRoundTrip(t, codec, []testCase[int32]{
+	testRoundTrip(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, nil},
 		{"-1", -1, nil},
 		{"0", 0, nil},
@@ -43,7 +43,7 @@ func TestNegateLength(t *testing.T) {
 func TestNegatePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.PointerTo(lexy.String())))
-	testCodecRoundTrip(t, codec, []testCase[*string]{
+	testRoundTrip(t, codec, []testCase[*string]{
 		{"nil", nil, nil},
 		{"*empty", ptr(""), nil},
 		{"*abc", ptr("abc"), nil},
@@ -63,7 +63,7 @@ func TestNegatePtrString(t *testing.T) {
 func TestNegateSlicePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.String())))))
-	testCodecRoundTrip(t, codec, []testCase[[]*string]{
+	testRoundTrip(t, codec, []testCase[[]*string]{
 		{"nil", nil, nil},
 		{"[]", []*string{}, nil},
 		{"[nil]", []*string{nil}, nil},
@@ -154,7 +154,7 @@ func TestNegateComplex(t *testing.T) {
 		i16 := int16(x)
 		return &i16
 	}
-	testCodecRoundTrip(t, negTestCodec, []testCase[negateTest]{
+	testRoundTrip(t, negTestCodec, []testCase[negateTest]{
 		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, nil},
 		{"{5, nil, \"\"}", negateTest{5, nil, ""}, nil},
 	})

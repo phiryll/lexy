@@ -229,7 +229,7 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 // This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
 //
 //nolint:thelper
-func testCodecRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+func testRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
