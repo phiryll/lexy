@@ -72,6 +72,7 @@ import (
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
 	// Append encodes value and appends the encoded bytes to buf, returning the updated buffer.
+	// If buf is nil and no bytes are appended, Append may return nil.
 	Append(buf []byte, value T) []byte
 
 	// Put encodes value into buf and returns the number of bytes written.
