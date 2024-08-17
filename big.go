@@ -64,11 +64,16 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	size, n := stdInt64.Get(buf)
 	buf = buf[n:]
 	var value big.Int
+	if size == 0 {
+		return &value, 1 + n
+	}
 	if size < 0 {
 		size = -size
+		_ = buf[size-1]
 		value.SetBytes(negate(append([]byte(nil), buf[:size]...)))
 		value.Neg(&value)
 	} else {
+		_ = buf[size-1]
 		value.SetBytes(buf[:size])
 	}
 	return &value, 1 + n + int(size)
