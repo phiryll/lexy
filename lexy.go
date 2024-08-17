@@ -468,6 +468,9 @@ func mustNonNil(x any, name string) {
 // except that it panics if dst is not large enough to hold all of src.
 // mustCopy returns the number of bytes copied, which is len(src).
 func mustCopy(dst, src []byte) int {
+	if len(src) == 0 {
+		return 0
+	}
 	_ = dst[len(src)-1]
 	return copy(dst, src)
 }
