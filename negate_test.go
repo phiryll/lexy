@@ -104,16 +104,16 @@ var (
 // Putting the negated varying length field in the middle is intentional.
 type negateTestCodec struct{}
 
-func (negateTestCodec) Append(_ []byte, _ negateTest) []byte {
-	panic("unused in this test")
+func (c negateTestCodec) Append(buf []byte, value negateTest) []byte {
+	return lexy.AppendUsingWrite[negateTest](c, buf, value)
 }
 
-func (negateTestCodec) Put(_ []byte, _ negateTest) int {
-	panic("unused in this test")
+func (c negateTestCodec) Put(buf []byte, value negateTest) int {
+	return lexy.PutUsingAppend[negateTest](c, buf, value)
 }
 
-func (negateTestCodec) Get(_ []byte) (negateTest, int) {
-	panic("unused in this test")
+func (c negateTestCodec) Get(buf []byte) (negateTest, int) {
+	return lexy.GetUsingRead[negateTest](c, buf)
 }
 
 func (negateTestCodec) Write(w io.Writer, value negateTest) error {

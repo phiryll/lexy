@@ -43,9 +43,6 @@ These Codec-returning functions require specifying a type parameter when invoked
   - [MakeBytes]
   - [MakePointerTo], [MakeSliceOf], [MakeMapOf]
 
-These are convenience functions using a []byte instead of an [io.Reader] or [io.Writer].
-  - [Encode], [Decode]
-
 These functions are used when creating custom Codecs.
   - [UnexpectedIfEOF]
 */
@@ -453,32 +450,10 @@ func GetUsingRead[T any](codec Codec[T], buf []byte) (T, int) {
 	return value, len(buf) - r.Len()
 }
 
-// Convenience functions.
+// Helper functions used by implementations.
 
 // The default size when allocating a buffer, chosen because it should fit in a cache line.
 const defaultBufSize = 64
-
-// Encode returns value encoded using codec as a []byte.
-//
-// This is a convenience function.
-// Use [Codec.Write] when encoding multiple values to the same byte stream.
-func Encode[T any](codec Codec[T], value T) ([]byte, error) {
-	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-	if err := codec.Write(buf, value); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// Decode returns a value decoded from data using codec.
-//
-// This is a convenience function.
-// Use [Codec.Read] when decoding multiple values from the same byte stream.
-func Decode[T any](codec Codec[T], data []byte) (T, error) {
-	return codec.Read(bytes.NewReader(data))
-}
-
-// Helper functions used by implementations.
 
 // mustNonNil panics with a nilError with the given name if x is nil.
 // The best way to panic if something is nil is to use it,

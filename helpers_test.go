@@ -21,11 +21,7 @@ func ptr[T any](value T) *T {
 
 func encoderFor[T any](codec lexy.Codec[T]) func(value T) []byte {
 	return func(value T) []byte {
-		data, err := lexy.Encode(codec, value)
-		if err != nil {
-			panic(err)
-		}
-		return data
+		return codec.Append(nil, value)
 	}
 }
 
