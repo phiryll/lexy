@@ -62,6 +62,20 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	})
 }
 
+// Calculates and sets testCase.data for each of the tests using codec.Append, and then calls testCodec.
+// This is useful when the encoded value is difficult to calculate by hand.
+//
+//nolint:thelper
+func testCodecMakeData[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	newTests := make([]testCase[T], len(tests))
+	for i, tt := range tests {
+		test := tt
+		test.data = codec.Append(nil, tt.value)
+		newTests[i] = test
+	}
+	testCodec(t, codec, newTests)
+}
+
 //nolint:thelper
 func testCodecAppend[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("append nil", func(t *testing.T) {
@@ -226,7 +240,7 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 
 // Tests input == output, where input => Append/Put/Write => Get/Read => output.
 // Does not use testCase.data.
-// This is useful when the encoded bytes are indeterminate (unordered maps and structs, e.g.).
+// This is useful when the encoded bytes are indeterminate (unordered maps, e.g.).
 //
 //nolint:thelper
 func testRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
