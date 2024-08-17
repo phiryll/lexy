@@ -53,7 +53,7 @@ const (
 //
 //nolint:thelper
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	t.Run("testCodec", func(t *testing.T) {
+	t.Run("test codec", func(t *testing.T) {
 		testCodecAppend(t, codec, tests)
 		testCodecPut(t, codec, tests)
 		testCodecGet(t, codec, tests)
@@ -64,7 +64,7 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 
 //nolint:thelper
 func testCodecAppend[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	t.Run("append-nil", func(t *testing.T) {
+	t.Run("append nil", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
@@ -78,7 +78,7 @@ func testCodecAppend[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[
 			})
 		}
 	})
-	t.Run("append-existing", func(t *testing.T) {
+	t.Run("append existing", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
@@ -108,7 +108,7 @@ func testCodecPut[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T])
 			})
 		}
 	})
-	t.Run("put-short-buf", func(t *testing.T) {
+	t.Run("put short buf", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
@@ -144,7 +144,7 @@ func testCodecGet[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T])
 			})
 		}
 	})
-	t.Run("get-short-buf", func(t *testing.T) {
+	t.Run("get short buf", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
@@ -199,7 +199,7 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 			})
 		}
 	})
-	t.Run("read-short-buf", func(t *testing.T) {
+	t.Run("read short buf", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
