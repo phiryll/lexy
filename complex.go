@@ -49,11 +49,6 @@ func (complex64Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (complex64Codec) MaxSize() int {
-	//nolint:mnd
-	return 2 * sizeUint32
-}
-
 func (complex128Codec) Append(buf []byte, value complex128) []byte {
 	buf = stdFloat64.Append(buf, real(value))
 	return stdFloat64.Append(buf, imag(value))
@@ -91,9 +86,4 @@ func (complex128Codec) Read(r io.Reader) (complex128, error) {
 
 func (complex128Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (complex128Codec) MaxSize() int {
-	//nolint:mnd
-	return 2 * sizeUint64
 }

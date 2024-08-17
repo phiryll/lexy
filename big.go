@@ -35,9 +35,9 @@ func sizeBigInt(value *big.Int) int {
 		return 1
 	}
 	//nolint:mnd
-	return 1 +
-		stdInt64.MaxSize() +
-		((value.BitLen() + 7) / 8)
+	return 1 + // nil/non-nil prefix
+		sizeUint64 + // number of following bytes
+		((value.BitLen() + 7) / 8) // following bytes
 }
 
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
@@ -52,15 +52,19 @@ func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 	if c.prefix.Put(buf, value == nil) {
 		return 1
 	}
+	buf = buf[1:]
+	sizeValue := int64(n - 1 - sizeUint64)
 	sign := value.Sign()
-	k := 1 + stdInt64.MaxSize() // number of bytes used by prefix and the size
-	size := n - k               // number of bytes used by the big.Int's value
-	value.FillBytes(buf[k:n])
 	if sign < 0 {
-		negate(buf[k:n])
-		size = -size
+		stdInt64.Put(buf, -sizeValue)
+	} else {
+		stdInt64.Put(buf, sizeValue)
 	}
-	stdInt64.Put(buf[1:], int64(size))
+	buf = buf[sizeUint64:]
+	value.FillBytes(buf)
+	if sign < 0 {
+		negate(buf)
+	}
 	return n
 }
 
@@ -124,10 +128,6 @@ func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 
 func (bigIntCodec) RequiresTerminator() bool {
 	return false
-}
-
-func (bigIntCodec) MaxSize() int {
-	return -1
 }
 
 func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
@@ -439,10 +439,6 @@ func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 
 func (bigRatCodec) RequiresTerminator() bool {
 	return false
-}
-
-func (bigRatCodec) MaxSize() int {
-	return -1
 }
 
 func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {

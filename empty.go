@@ -34,7 +34,3 @@ func (emptyCodec[T]) Read(_ io.Reader) (T, error) {
 func (emptyCodec[T]) RequiresTerminator() bool {
 	return true
 }
-
-func (emptyCodec[T]) MaxSize() int {
-	return 0
-}

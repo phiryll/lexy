@@ -103,7 +103,3 @@ func (timeCodec) Read(r io.Reader) (time.Time, error) {
 func (timeCodec) RequiresTerminator() bool {
 	return false
 }
-
-func (timeCodec) MaxSize() int {
-	return timeSize
-}

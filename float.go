@@ -135,10 +135,6 @@ func (float32Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (float32Codec) MaxSize() int {
-	return sizeUint32
-}
-
 func (float64Codec) Append(buf []byte, value float64) []byte {
 	return stdUint64.Append(buf, float64ToBits(value))
 }
@@ -166,8 +162,4 @@ func (float64Codec) Read(r io.Reader) (float64, error) {
 
 func (float64Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (float64Codec) MaxSize() int {
-	return sizeUint64
 }

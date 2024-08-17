@@ -144,7 +144,6 @@ type TempCodec[T any] interface {
 	Put(buf []byte, value T) int
 	// Get will not modify buf.
 	Get(buf []byte) (T, int)
-	MaxSize() int
 }
 
 // TempNillableCodec is temporary.

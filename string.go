@@ -47,7 +47,3 @@ func (stringCodec) Read(r io.Reader) (string, error) {
 func (stringCodec) RequiresTerminator() bool {
 	return true
 }
-
-func (stringCodec) MaxSize() int {
-	return -1
-}

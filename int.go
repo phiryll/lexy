@@ -66,10 +66,6 @@ func (boolCodec) RequiresTerminator() bool {
 	return false
 }
 
-func (boolCodec) MaxSize() int {
-	return sizeUint8
-}
-
 func (uint8Codec) Append(buf []byte, value uint8) []byte {
 	return append(buf, value)
 }
@@ -97,10 +93,6 @@ func (uint8Codec) Read(r io.Reader) (uint8, error) {
 
 func (uint8Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint8Codec) MaxSize() int {
-	return sizeUint8
 }
 
 func (uint16Codec) Append(buf []byte, value uint16) []byte {
@@ -132,10 +124,6 @@ func (uint16Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (uint16Codec) MaxSize() int {
-	return sizeUint16
-}
-
 func (uint32Codec) Append(buf []byte, value uint32) []byte {
 	return binary.BigEndian.AppendUint32(buf, value)
 }
@@ -165,10 +153,6 @@ func (uint32Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (uint32Codec) MaxSize() int {
-	return sizeUint32
-}
-
 func (uint64Codec) Append(buf []byte, value uint64) []byte {
 	return binary.BigEndian.AppendUint64(buf, value)
 }
@@ -196,10 +180,6 @@ func (uint64Codec) Read(r io.Reader) (uint64, error) {
 
 func (uint64Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (uint64Codec) MaxSize() int {
-	return sizeUint64
 }
 
 // Codecs for fixed-length signed integral types.
@@ -253,10 +233,6 @@ func (int8Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (int8Codec) MaxSize() int {
-	return sizeUint8
-}
-
 func (int16Codec) Append(buf []byte, value int16) []byte {
 	return binary.BigEndian.AppendUint16(buf, uint16(math.MinInt16^value))
 }
@@ -284,10 +260,6 @@ func (int16Codec) Read(r io.Reader) (int16, error) {
 
 func (int16Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (int16Codec) MaxSize() int {
-	return sizeUint16
 }
 
 func (int32Codec) Append(buf []byte, value int32) []byte {
@@ -319,10 +291,6 @@ func (int32Codec) RequiresTerminator() bool {
 	return false
 }
 
-func (int32Codec) MaxSize() int {
-	return sizeUint32
-}
-
 func (int64Codec) Append(buf []byte, value int64) []byte {
 	return binary.BigEndian.AppendUint64(buf, uint64(math.MinInt64^value))
 }
@@ -350,8 +318,4 @@ func (int64Codec) Read(r io.Reader) (int64, error) {
 
 func (int64Codec) RequiresTerminator() bool {
 	return false
-}
-
-func (int64Codec) MaxSize() int {
-	return sizeUint64
 }
