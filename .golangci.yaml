@@ -89,7 +89,7 @@ linters:
   # https://golangci-lint.run/usage/linters/#disabled-by-default
   disable:
     # causes problems if golangci-lint is compiled with a different version of go
-    # - typecheck
+    - typecheck
     # not needed/wanted in this project
     - execinquery       # SQL not used
     - ginkgolinter      # not using this testing framework
