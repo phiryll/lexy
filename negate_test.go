@@ -9,15 +9,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	negTerm      = ^term      // 0xFF
+	negEsc       = ^esc       // 0xFE
+	negPNilFirst = ^pNilFirst // 0xFD
+	negPNonNil   = ^pNonNil   // 0xFC
+	negPNilLast  = ^pNilLast  // 0x02
+)
+
+// Assumes no 0s or 1s in the string that would need to be escaped.
+func negString(s string) []byte {
+	buf := make([]byte, len(s))
+	for i, ch := range s {
+		buf[i] = ^byte(ch)
+	}
+	return buf
+}
+
 func TestNegateInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
-	testRoundTrip(t, codec, []testCase[int32]{
-		{"min", math.MinInt32, nil},
-		{"-1", -1, nil},
-		{"0", 0, nil},
-		{"+1", 1, nil},
-		{"max", math.MaxInt32, nil},
+	testCodec(t, codec, []testCase[int32]{
+		{"min", math.MinInt32, []byte{negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negTerm}},
+		{"-1", -1, []byte{0x80, 0x00, 0x00, 0x00, negTerm}},
+		{"0", 0, []byte{0x7F, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negTerm}},
+		{"+1", 1, []byte{0x7F, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFE, negTerm}},
+		{"max", math.MaxInt32, []byte{0x00, 0x00, 0x00, 0x00, negTerm}},
 	})
 
 	encode := encoderFor(codec)
@@ -43,11 +60,17 @@ func TestNegateLength(t *testing.T) {
 func TestNegatePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.PointerTo(lexy.String())))
-	testRoundTrip(t, codec, []testCase[*string]{
-		{"nil", nil, nil},
-		{"*empty", ptr(""), nil},
-		{"*abc", ptr("abc"), nil},
-		{"*def", ptr("def"), nil},
+	testCodec(t, codec, []testCase[*string]{
+		{"nil", nil, []byte{negPNilFirst, negTerm}},
+		{"*empty", ptr(""), []byte{negPNonNil, negTerm}},
+		{"*abc", ptr("abc"), concat(
+			[]byte{negPNonNil},
+			negString("abc"),
+			[]byte{negTerm})},
+		{"*def", ptr("def"), concat(
+			[]byte{negPNonNil},
+			negString("def"),
+			[]byte{negTerm})},
 	})
 
 	encode := encoderFor(codec)
@@ -63,12 +86,25 @@ func TestNegatePtrString(t *testing.T) {
 func TestNegateSlicePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.String())))))
-	testRoundTrip(t, codec, []testCase[[]*string]{
-		{"nil", nil, nil},
-		{"[]", []*string{}, nil},
-		{"[nil]", []*string{nil}, nil},
-		{"*a", []*string{ptr("a")}, nil},
-		{"*a, nil, *\"\", *xyz", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, nil},
+	// neg([]*string)
+	// negate and slice codecs are escaping and terminating.
+	testCodec(t, codec, []testCase[[]*string]{
+		{"nil", nil, []byte{negPNilFirst, negTerm}},
+		{"[]", []*string{}, []byte{negPNonNil, negTerm}},
+		{"[nil]", []*string{nil}, []byte{negPNonNil, negPNilFirst, negEsc, negTerm, negTerm}},
+		{"[*a]", []*string{ptr("a")}, concat(
+			[]byte{negPNonNil},
+			// esc(*a) by slice     => [non-nil, a, term]
+			// ^(esc(..)) by negate => ^([non-nil, a, esc, term] ... term)
+			[]byte{negPNonNil}, negString("a"), []byte{negEsc, negTerm},
+			[]byte{negTerm})},
+		{"[*a, nil, *\"\", *xyz]", []*string{ptr("a"), nil, ptr(""), ptr("xyz")}, concat(
+			[]byte{negPNonNil},
+			[]byte{negPNonNil}, negString("a"), []byte{negEsc, negTerm},
+			[]byte{negPNilFirst, negEsc, negTerm},
+			[]byte{negPNonNil}, negString(""), []byte{negEsc, negTerm},
+			[]byte{negPNonNil}, negString("xyz"), []byte{negEsc, negTerm},
+			[]byte{negTerm})},
 	})
 
 	encode := encoderFor(codec)
@@ -154,9 +190,17 @@ func TestNegateComplex(t *testing.T) {
 		i16 := int16(x)
 		return &i16
 	}
-	testRoundTrip(t, negTestCodec, []testCase[negateTest]{
-		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, nil},
-		{"{5, nil, \"\"}", negateTest{5, nil, ""}, nil},
+	testCodec(t, negTestCodec, []testCase[negateTest]{
+		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, concat(
+			[]byte{0x05},
+			negString("def"), []byte{negTerm},
+			[]byte{negPNonNil, ^byte(0x80), ^byte(0x64), negTerm},
+		)},
+		{"{5, nil, \"\"}", negateTest{5, nil, ""}, []byte{
+			0x05,
+			negTerm,
+			negPNilFirst, negTerm,
+		}},
 	})
 
 	assert.IsIncreasing(t, [][]byte{

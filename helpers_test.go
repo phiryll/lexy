@@ -29,6 +29,14 @@ func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] {
 	return codec
 }
 
+func concat(slices ...[]byte) []byte {
+	var result []byte
+	for _, s := range slices {
+		result = append(result, s...)
+	}
+	return result
+}
+
 type testCase[T any] struct {
 	name  string
 	value T
