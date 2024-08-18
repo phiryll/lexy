@@ -106,9 +106,11 @@ func testCodecAppend[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[
 			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
 				t.Parallel()
-				buf := make([]byte, 10)
+				header := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+				buf := append([]byte{}, header...)
 				buf = codec.Append(buf, tt.value)
-				assert.Equal(t, tt.data, buf[10:])
+				assert.Equal(t, header, buf[:len(header)])
+				assert.Equal(t, tt.data, buf[len(header):])
 			})
 		}
 	})
@@ -232,39 +234,199 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 					return
 				}
 				// Should either err, or get the wrong value back.
-				//nolint:errcheck
-				defer func() { recover() }()
 				r := bytes.NewReader(tt.data[:size-1])
 				got, err := codec.Read(r)
-				if err == nil {
-					assert.Equal(t, 0, r.Len())
-					assert.IsType(t, tt.value, got)
-					assert.NotEqual(t, tt.value, got)
+				if err != nil {
+					// TODO: add this back in and track down the bad ones
+					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
+					return
 				}
+				assert.Equal(t, 0, r.Len())
+				assert.IsType(t, tt.value, got)
+				assert.NotEqual(t, tt.value, got)
 			})
 		}
 	})
 }
 
-// Tests input == output, where input => Append/Put/Write => Get/Read => output.
-// Does not use testCase.data.
-// This is useful when the encoded bytes are indeterminate (unordered maps, e.g.).
+// This tests Codecs whose encodings vary for the same input.
+// Maps are the only current use case, because of their random iteration order.
+// This function does not use testCase.data for this reason.
+//
+// Tests:
+// - input == output, where input => Append/Put/Write => Get/Read => output
+// - len(Append/Put/Write) are all equal
+// - Get/Put panic when given a buffer that is 1 byte too short, or return incorrect values.
+// - Read errs when given a stream that is 1 byte too short, or returns incorrect values.
 //
 //nolint:thelper
-func testRoundTrip[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-			require.NoError(t, err)
-			assert.IsType(t, tt.value, got)
-			assert.Equal(t, tt.value, got)
-		})
+func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	bufCodec := bufferCodec[T]{codec}
+	t.Run("round trip", func(t *testing.T) {
+		t.Parallel()
+		for _, tt := range tests {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+				testRoundTripBuf(t, bufCodec, tt.value, "append nil", bufCodec.AppendNil(t, tt.value))
+				testRoundTripBuf(t, bufCodec, tt.value, "append existing", bufCodec.AppendExisting(t, tt.value))
+				testRoundTripBuf(t, bufCodec, tt.value, "put", bufCodec.Put(t, tt.value))
+				testRoundTripBuf(t, bufCodec, tt.value, "write", bufCodec.Write(t, tt.value))
+			})
+		}
+	})
+	t.Run("short buf", func(t *testing.T) {
+		t.Parallel()
+		for _, tt := range tests {
+			tt := tt
+			t.Run(tt.name+"-put", func(t *testing.T) {
+				t.Parallel()
+				bufCodec.PutShortBuf(t, tt.value)
+			})
+			t.Run(tt.name+"-get", func(t *testing.T) {
+				t.Parallel()
+				buf := codec.Append(nil, tt.value)
+				size := len(buf)
+				if size == 0 {
+					return
+				}
+				got, panicked := bufCodec.GetShortBuf(t, buf)
+				if !panicked {
+					assert.IsType(t, tt.value, got)
+					assert.NotEqual(t, tt.value, got)
+				}
+			})
+			t.Run(tt.name+"-read", func(t *testing.T) {
+				t.Parallel()
+				buf := codec.Append(nil, tt.value)
+				size := len(buf)
+				if size == 0 {
+					return
+				}
+				got, err := bufCodec.ReadShortBuf(t, buf)
+				if err != nil {
+					// TODO: add this back in and track down the bad ones
+					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
+					return
+				}
+				assert.IsType(t, tt.value, got)
+				assert.NotEqual(t, tt.value, got)
+			})
+		}
+	})
+}
+
+// A testing wrapper for Codec that deals only in []buf,
+// and which tests some assertions while processing.
+type bufferCodec[T any] struct {
+	codec lexy.Codec[T]
+}
+
+func (c bufferCodec[T]) AppendNil(_ *testing.T, value T) []byte {
+	return c.codec.Append(nil, value)
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) AppendExisting(t *testing.T, value T) []byte {
+	size := len(c.codec.Append(nil, value))
+	header := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	buf := append([]byte{}, header...)
+	buf = c.codec.Append(buf, value)
+	assert.Equal(t, header, buf[:len(header)])
+	assert.Equal(t, size, len(buf)-len(header))
+	return buf[len(header):]
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) Put(t *testing.T, value T) []byte {
+	size := len(c.codec.Append(nil, value))
+	buf := make([]byte, size)
+	putSize := c.codec.Put(buf, value)
+	assert.Equal(t, size, putSize)
+	return buf
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) PutShortBuf(t *testing.T, value T) {
+	size := len(c.codec.Append(nil, value))
+	if size == 0 {
+		return
 	}
+	// allocate more than enough space,
+	// but limit the size of the sub-slice passed in.
+	buf := make([]byte, size+10000)
+	assert.Panics(t, func() {
+		c.codec.Put(buf[:size-1], value)
+	})
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) Write(t *testing.T, value T) []byte {
+	size := len(c.codec.Append(nil, value))
+	buf := bytes.NewBuffer([]byte{})
+	err := c.codec.Write(buf, value)
+	require.NoError(t, err)
+	assert.Equal(t, size, buf.Len())
+	return buf.Bytes()
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) Get(t *testing.T, buf []byte) T {
+	got, gotSize := c.codec.Get(buf)
+	assert.Equal(t, len(buf), gotSize)
+	return got
+}
+
+//nolint:thelper,nonamedreturns
+func (c bufferCodec[T]) GetShortBuf(t *testing.T, buf []byte) (_ T, panicked bool) {
+	// Should either panic, or read one fewer byte and get the wrong value back.
+	defer func() {
+		//nolint:errcheck
+		recover()
+		panicked = true
+	}()
+	size := len(buf)
+	got, gotSize := c.codec.Get(buf[:size-1])
+	assert.Equal(t, size-1, gotSize, "read too much data")
+	return got, false
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) Read(t *testing.T, buf []byte) T {
+	r := bytes.NewReader(buf)
+	got, err := c.codec.Read(r)
+	require.NoError(t, err)
+	assert.Equal(t, 0, r.Len())
+	return got
+}
+
+//nolint:thelper
+func (c bufferCodec[T]) ReadShortBuf(t *testing.T, buf []byte) (T, error) {
+	size := len(buf)
+	r := bytes.NewReader(buf[:size-1])
+	got, err := c.codec.Read(r)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	assert.Equal(t, 0, r.Len())
+	return got, nil
+}
+
+//nolint:thelper
+func testRoundTripBuf[T any](t *testing.T, bufCodec bufferCodec[T], value T, name string, buf []byte) {
+	t.Run(name+"-get", func(t *testing.T) {
+		t.Parallel()
+		got := bufCodec.Get(t, append([]byte{}, buf...))
+		assert.IsType(t, value, got)
+		assert.Equal(t, value, got)
+	})
+	t.Run(name+"-read", func(t *testing.T) {
+		t.Parallel()
+		got := bufCodec.Read(t, append([]byte{}, buf...))
+		assert.IsType(t, value, got)
+		assert.Equal(t, value, got)
+	})
 }
 
 var (
