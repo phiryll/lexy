@@ -237,6 +237,7 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 				r := bytes.NewReader(tt.data[:size-1])
 				got, err := codec.Read(r)
 				if err != nil {
+					//nolint:godox
 					// TODO: add this back in and track down the bad ones
 					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
 					return
@@ -305,6 +306,7 @@ func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase
 				}
 				got, err := bufCodec.ReadShortBuf(t, buf)
 				if err != nil {
+					//nolint:godox
 					// TODO: add this back in and track down the bad ones
 					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
 					return

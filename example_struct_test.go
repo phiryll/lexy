@@ -96,8 +96,9 @@ func (s sortableEncodings) Len() int           { return len(s.b) }
 func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
 func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
+//nolint:godox
 // TODO: Update docs here, more examples!
-//
+
 // ExampleStruct shows how to define a typical user-defined Codec.
 // The rules of thumb are:
 //   - The order in which encoded data is written defines the Codec's ordering.

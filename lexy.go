@@ -397,15 +397,8 @@ func UnexpectedIfEOF(err error) error {
 	return err
 }
 
-// TODO:
-//
-// Make a function accepting 3 functions (Write,Read,RequiresTerminator)
-// and returning a Codec with Append/Put/Get depending on Write/Read.
-//
-// Make a similar function going the other way.
-// Put can depend on Append, but not the other way around.
-//
-// Not functions, types: BytesCodec and StreamCodec...?
+//nolint:godox
+// TODO: Not functions, types: BytesCodec and StreamCodec...?
 // Would have to rename existing bytesCodec.
 // Not sure how Nillable... would fit in.
 
