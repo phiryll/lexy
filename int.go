@@ -95,8 +95,13 @@ func (uint8Codec) RequiresTerminator() bool {
 	return false
 }
 
+//nolint:mnd
 func (uint16Codec) Append(buf []byte, value uint16) []byte {
-	return binary.BigEndian.AppendUint16(buf, value)
+	// return binary.BigEndian.AppendUint16(buf, value)
+	return append(buf,
+		byte(value>>8),
+		byte(value),
+	)
 }
 
 func (uint16Codec) Put(buf []byte, value uint16) int {
@@ -124,8 +129,15 @@ func (uint16Codec) RequiresTerminator() bool {
 	return false
 }
 
+//nolint:mnd
 func (uint32Codec) Append(buf []byte, value uint32) []byte {
-	return binary.BigEndian.AppendUint32(buf, value)
+	// return binary.BigEndian.AppendUint32(buf, value)
+	return append(buf,
+		byte(value>>24),
+		byte(value>>16),
+		byte(value>>8),
+		byte(value),
+	)
 }
 
 func (uint32Codec) Put(buf []byte, value uint32) int {
@@ -153,8 +165,19 @@ func (uint32Codec) RequiresTerminator() bool {
 	return false
 }
 
+//nolint:mnd
 func (uint64Codec) Append(buf []byte, value uint64) []byte {
-	return binary.BigEndian.AppendUint64(buf, value)
+	// return binary.BigEndian.AppendUint64(buf, value)
+	return append(buf,
+		byte(value>>56),
+		byte(value>>48),
+		byte(value>>40),
+		byte(value>>32),
+		byte(value>>24),
+		byte(value>>16),
+		byte(value>>8),
+		byte(value),
+	)
 }
 
 func (uint64Codec) Put(buf []byte, value uint64) int {
@@ -234,7 +257,8 @@ func (int8Codec) RequiresTerminator() bool {
 }
 
 func (int16Codec) Append(buf []byte, value int16) []byte {
-	return binary.BigEndian.AppendUint16(buf, uint16(math.MinInt16^value))
+	// return binary.BigEndian.AppendUint16(buf, uint16(math.MinInt16^value))
+	return stdUint16.Append(buf, uint16(math.MinInt16^value))
 }
 
 func (int16Codec) Put(buf []byte, value int16) int {
@@ -263,7 +287,8 @@ func (int16Codec) RequiresTerminator() bool {
 }
 
 func (int32Codec) Append(buf []byte, value int32) []byte {
-	return binary.BigEndian.AppendUint32(buf, uint32(math.MinInt32^value))
+	// return binary.BigEndian.AppendUint32(buf, uint32(math.MinInt32^value))
+	return stdUint32.Append(buf, uint32(math.MinInt32^value))
 }
 
 func (int32Codec) Put(buf []byte, value int32) int {
@@ -292,7 +317,8 @@ func (int32Codec) RequiresTerminator() bool {
 }
 
 func (int64Codec) Append(buf []byte, value int64) []byte {
-	return binary.BigEndian.AppendUint64(buf, uint64(math.MinInt64^value))
+	// return binary.BigEndian.AppendUint64(buf, uint64(math.MinInt64^value))
+	return stdUint64.Append(buf, uint64(math.MinInt64^value))
 }
 
 func (int64Codec) Put(buf []byte, value int64) int {
