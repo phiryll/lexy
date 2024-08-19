@@ -25,6 +25,13 @@ func encoderFor[T any](codec lexy.Codec[T]) func(value T) []byte {
 	}
 }
 
+func errorForEOF(bytesRead int) error {
+	if bytesRead == 0 {
+		return io.EOF
+	}
+	return io.ErrUnexpectedEOF
+}
+
 func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] {
 	return codec
 }
@@ -237,9 +244,7 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 				r := bytes.NewReader(tt.data[:size-1])
 				got, err := codec.Read(r)
 				if err != nil {
-					//nolint:godox
-					// TODO: add this back in and track down the bad ones
-					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
+					assert.ErrorIs(t, err, errorForEOF(size-1))
 					return
 				}
 				assert.Equal(t, 0, r.Len())
@@ -306,9 +311,7 @@ func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase
 				}
 				got, err := bufCodec.ReadShortBuf(t, buf)
 				if err != nil {
-					//nolint:godox
-					// TODO: add this back in and track down the bad ones
-					// assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
+					assert.ErrorIs(t, err, errorForEOF(size-1))
 					return
 				}
 				assert.IsType(t, tt.value, got)
