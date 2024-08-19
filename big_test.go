@@ -24,8 +24,9 @@ func concatNonNil(slices ...[]byte) []byte {
 
 func TestBigInt(t *testing.T) {
 	t.Parallel()
+	codec := toCodec(lexy.BigInt())
 	encodeSize := encoderFor(lexy.Int64())
-	testCodec(t, toCodec(lexy.BigInt()), []testCase[*big.Int]{
+	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"-257", big.NewInt(-257), concatNonNil(encodeSize(-2),
 			[]byte{0xFE, 0xFE})},
@@ -55,10 +56,10 @@ func TestBigInt(t *testing.T) {
 			[]byte{0x01, 0x01})},
 	})
 
-	testCodecMakeData(t, toCodec(lexy.BigInt()), []testCase[*big.Int]{
+	testCodec(t, codec, fillTestData(codec, []testCase[*big.Int]{
 		{"big positive", newBigInt("1234567890123456789012345678901234567890"), nil},
 		{"big negative", newBigInt("-1234567890123456789012345678901234567890"), nil},
-	})
+	}))
 }
 
 func TestBigIntOrdering(t *testing.T) {
@@ -143,7 +144,8 @@ func TestBigFloat(t *testing.T) {
 		"12345678901234567890123456789012345678901234567890", 10)
 	complexTiny.SetPrec(complexTiny.MinPrec())
 
-	testCodecMakeData(t, toCodec(lexy.BigFloat()), []testCase[*big.Float]{
+	codec := toCodec(lexy.BigFloat())
+	testCodec(t, codec, fillTestData(codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
 		{"seven(3)", newBigFloat(7.0, 0, 3), nil},
@@ -168,7 +170,7 @@ func TestBigFloat(t *testing.T) {
 		{"complex whole", &complexWhole, nil},
 		{"complex mixed", &complexMixed, nil},
 		{"complex tiny", &complexTiny, nil},
-	})
+	}))
 }
 
 //nolint:funlen
@@ -263,15 +265,16 @@ func newBigRat(num, denom string) *big.Rat {
 
 func TestBigRat(t *testing.T) {
 	t.Parallel()
+	codec := toCodec(lexy.BigRat())
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
-	testCodecMakeData(t, toCodec(lexy.BigRat()), []testCase[*big.Rat]{
+	testCodec(t, codec, fillTestData(codec, []testCase[*big.Rat]{
 		{"-1/3", newBigRat("-1", "3"), nil},
 		{"0/123", newBigRat("0", "123"), nil},
 		{"5432/42", newBigRat("5432", "42"), nil},
-	})
+	}))
 
-	encode := encoderFor(toCodec(lexy.BigRat()))
+	encode := encoderFor(codec)
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(newBigRat("-1", "1")),

@@ -44,10 +44,65 @@ func concat(slices ...[]byte) []byte {
 	return result
 }
 
+func makeBigBuf(size int) []byte {
+	buf := make([]byte, size+100)
+	for i := range buf {
+		buf[i] = 37
+	}
+	return buf
+}
+
+func checkBigBuf(t *testing.T, buf []byte, size int) {
+	for i := range buf[size:] {
+		k := size + i
+		assert.Equal(t, byte(37), buf[k], "buf[%d] = %d written to buffer", k, buf[k])
+	}
+}
+
 type testCase[T any] struct {
 	name  string
 	value T
 	data  []byte
+}
+
+// Returns new test cases with each testCase.data set to codec.Append(nil, testCase.value).
+// This is useful when the encoded value is difficult to calculate by hand.
+func fillTestData[T any](codec lexy.Codec[T], tests []testCase[T]) []testCase[T] {
+	newTests := make([]testCase[T], len(tests))
+	for i, tt := range tests {
+		test := tt
+		test.data = codec.Append(nil, tt.value)
+		newTests[i] = test
+	}
+	return newTests
+}
+
+// The same as iotest.TruncateWriter, except it's not silent.
+type boundedWriter struct {
+	w io.Writer
+	n int
+}
+
+func (t *boundedWriter) Write(p []byte) (int, error) {
+	if t.n <= 0 {
+		return 0, errWrite
+	}
+	// real write
+	n := len(p)
+	var over bool
+	if n > t.n {
+		n = int(t.n)
+		over = true
+	}
+	n, err := t.w.Write(p[0:n])
+	t.n -= n
+	if err == nil {
+		n = len(p)
+	}
+	if over && err != nil {
+		return n, errWrite
+	}
+	return n, err
 }
 
 // Just to make the test cases terser.
@@ -59,6 +114,421 @@ const (
 	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
+//nolint:thelper
+func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	testerCodec[T]{codec, false}.test(t, tests)
+}
+
+//nolint:thelper
+func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	testerCodec[T]{codec, true}.test(t, tests)
+}
+
+// A testing wrapper for Codec that deals only in []buf at the API level.
+type testerCodec[T any] struct {
+	codec   lexy.Codec[T]
+	varying bool
+}
+
+// The output of one Append/Put/Write method.
+type output struct {
+	name string
+	buf  []byte
+}
+
+//nolint:thelper
+func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			// TODO: check to see that Get/Read did not change the buffer they were given.
+			var outputs []output
+			// Test Append/Put/Write.
+			outputs = append(outputs, c.testAppendNil(t, tt))
+			outputs = append(outputs, c.testAppendExisting(t, tt))
+			outputs = append(outputs, c.testPut(t, tt))
+			outputs = append(outputs, c.testPutLongBuf(t, tt))
+			outputs = append(outputs, c.testWrite(t, tt))
+
+			// Test Get/Read
+			// referenceBuf := c.codec.Append(nil, tt.value)
+			//
+			// if not varying, already tested buf == tt.data
+			// because it's nice to be in the same t.Run(name)
+
+			// Test buffers that are too short by 1 byte.
+			c.testPutShortBuf(t, tt)
+			c.testWriteShortBuf(t, tt)
+			c.testWriteTruncatedBuf(t, tt)
+		})
+	}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testAppendNil(t *testing.T, tt testCase[T]) output {
+	var buf []byte
+	t.Run("append nil", func(t *testing.T) {
+		t.Parallel()
+		buf = c.codec.Append(nil, tt.value)
+		if buf == nil {
+			buf = []byte{}
+		}
+		if !c.varying {
+			assert.Equal(t, tt.data, buf)
+		}
+	})
+	return output{"append nil", buf}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testAppendExisting(t *testing.T, tt testCase[T]) output {
+	var buf []byte
+	t.Run("append existing", func(t *testing.T) {
+		t.Parallel()
+		header := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		buf = append(buf, header...)
+		buf = c.codec.Append(buf, tt.value)
+		assert.Equal(t, header, buf[:len(header)])
+		buf = buf[len(header):]
+		if !c.varying {
+			assert.Equal(t, tt.data, buf)
+		} else {
+			size := len(c.codec.Append(nil, tt.value))
+			assert.Equal(t, size, len(buf))
+		}
+	})
+	return output{"append existing", buf}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testPut(t *testing.T, tt testCase[T]) output {
+	var buf []byte
+	t.Run("put", func(t *testing.T) {
+		t.Parallel()
+		size := len(c.codec.Append(nil, tt.value))
+		buf = make([]byte, size)
+		putSize := c.codec.Put(buf, tt.value)
+		assert.Equal(t, size, putSize)
+		if !c.varying {
+			assert.Equal(t, tt.data, buf)
+		}
+	})
+	return output{"put", buf}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testPutLongBuf(t *testing.T, tt testCase[T]) output {
+	var buf []byte
+	t.Run("put long buf", func(t *testing.T) {
+		t.Parallel()
+		size := len(c.codec.Append(nil, tt.value))
+		buf = makeBigBuf(size)
+		putSize := c.codec.Put(buf, tt.value)
+		assert.Equal(t, size, putSize)
+		checkBigBuf(t, buf, size)
+		buf = buf[:putSize]
+		if !c.varying {
+			assert.Equal(t, tt.data, buf)
+		}
+	})
+	return output{"put long buf", buf}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testPutShortBuf(t *testing.T, tt testCase[T]) {
+	t.Run("put short buf", func(t *testing.T) {
+		t.Parallel()
+		size := len(c.codec.Append(nil, tt.value))
+		if size == 0 {
+			return
+		}
+		buf := makeBigBuf(size)
+		assert.Panics(t, func() {
+			c.codec.Put(buf[:size-1], tt.value)
+		})
+	})
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testWrite(t *testing.T, tt testCase[T]) output {
+	buf := bytes.NewBuffer([]byte{})
+	t.Run("write", func(t *testing.T) {
+		t.Parallel()
+		err := c.codec.Write(buf, tt.value)
+		require.NoError(t, err)
+		if !c.varying {
+			assert.Equal(t, tt.data, buf.Bytes())
+		} else {
+			size := len(c.codec.Append(nil, tt.value))
+			assert.Equal(t, size, buf.Len())
+		}
+	})
+	return output{"write", buf.Bytes()}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testWriteShortBuf(t *testing.T, tt testCase[T]) {
+	t.Run("write short buf", func(t *testing.T) {
+		t.Parallel()
+		t.Skip("Write does not yet fail properly on noisy truncation.")
+		size := len(c.codec.Append(nil, tt.value))
+		if size == 0 {
+			return
+		}
+		buf := bytes.NewBuffer([]byte{})
+		w := boundedWriter{buf, size - 1}
+		err := c.codec.Write(&w, tt.value)
+		require.Error(t, err)
+	})
+}
+
+//nolint:thelper
+func (c testerCodec[T]) testWriteTruncatedBuf(t *testing.T, tt testCase[T]) {
+	t.Run("write truncated buf", func(t *testing.T) {
+		t.Parallel()
+		t.Skip("Write does not yet fail properly on silent truncation.")
+		size := len(c.codec.Append(nil, tt.value))
+		if size == 0 {
+			return
+		}
+		buf := bytes.NewBuffer([]byte{})
+		err := c.codec.Write(iotest.TruncateWriter(buf, int64(size-1)), tt.value)
+		require.Error(t, err)
+	})
+}
+
+/*
+	Top level testing functions, need to name these differently from others!
+
+	testCodec( testing.T, codec, []testCase )
+	  t.Run("test codec")
+		append/put/get/write/read( testing.T, codec, []testCase )
+		  t.Run("append nil")
+		    for range tests { t.Run(tt.name) ... }
+		  t.Run("append existing")
+		  ...
+
+	testCodecMakeData( testing.T, codec, []testCase )
+	  newTest := []testCase with codec.Append(nil, tt.value)
+	  testCodec(t, codec, newTests)
+
+	Tests are VERY similar, can we figure out a better way
+	to share this code? Maybe bufCodec bool to say which tests to do?
+	testVaryingCodec( testing.T, codec, []testCase )
+	  bufCodec := bufferCodec{codec}
+	  t.Run("round trip")
+		for range tests
+		  t.Run(tt.name)
+			for buf := range bufCodec.AppendNil/AppendExisting/Put/Write(t, tt.value)
+			  testRoundTripBuf(t, bufCodec, tt.value, buf.Name, buf)
+				t.Run(buf.Name+"-get")
+				  test bufCodec.Get(buf) == tt.value, and type
+				t.Run(buf.Name+"-read")
+				  test bufCodec.Read(buf) == tt.value, and type
+	  t.Run("short buff")
+		for range tests
+		  t.Run(tt.name+"-put")
+			bufCodec.PutShortBuf(t, tt.value)
+			  panics w/ -1 byte
+		  t.Run(tt.name+"-get")
+			bufCodec.GetShortBuf(t, tt.value)
+			  panics w/ -1 byte // maybe just return a custom error instead?
+			  OR got size-1 and wrong value
+		  t.Run(tt.name+"-read")
+			bufCodec.ReadShortBuf(t, tt.value)
+			  errors with EOF or ErrUnexpectedEOF
+			  OR got size-1 and wrong value
+
+	testCodecFail( testing.T, codec, nonEmpty T )
+	  t.Run("fail read") // does NOT use nonEmpty
+		fails with r.Read() always returning an unknown error
+		!!! NOT DOING THIS YET !!! Should *always* test no bytes read and EOF
+		Not sure there's a reason to do this with read-short-buf testing
+	  t.Run("fail write")
+		w.Write fails wrinting nonEmpty with always failing Writer
+		Replace this with writing to len(Append() - 1)
+		exception when len(Append()) == 0
+*/
+
+/*
+	New Structure
+
+	testCodec/CodecVarying(t, codec, tests)
+		bufCodec := ... normal/varying - changes which tests run
+			OR maybe these methods differ?
+		checkCodecMethods(t, bufCodec{...}, tests)
+
+	checkCodecMethods(t, bufCodec, tests)
+		// no t.Run("test_codec", ...)
+		//   rely on test case names to distinguish normal/varying
+		for tt := range tests
+			t.Run(tt.name)
+				// testCodec requires
+				//   append/put/write(tt.value) == tt.data, size
+				//   get/read(tt.data) == tt.value, exaust tt.data
+				// testVarying (aka map) requires
+				//   all pairs (vs having tt.data)
+				//   buf := append nil/append existing/put/write(tt.value)
+				//   get/read(buf) == tt.value
+				//
+				// Below documents what is common vs. distinct
+				// Maybe just different bufferCodec implementations?
+				// basic := just one "written value", test vs. Get/Read
+				// varying: three written values, test vs. Get/Read
+				//
+				// !!! TEST THAT BUF IS NOT MODIFIED !!!
+				// Could create anew whenever used, but then it's hard to test
+				// that it's not modified.
+				t.Run("append nil")
+					basic:
+						assert Append(nil, tt.value) == tt.data
+					varying:
+						buf := Append(nil, value)
+						get:
+							t.Run("=> get")
+								got := bufCodec.Get(copy buf)
+									got, gotSize := Get(buf)
+									assert gotSize == len(buf)
+									return got
+								assert got == tt.value, and assert type
+						read:
+							t.Run("=> read")
+								got := bufCodec.Read(copy buf)
+									r := bytes.Reader(buf)
+									got := Read(r)
+									assert no error
+									assert r.Len() == 0
+									return got
+								assert got == t.value, and assert type
+				t.Run("append existing")
+					basic:
+						assert Append(header, tt.value) == [header, tt.data]
+					varying:
+						size := len(Append(nil, tt.value))
+						buf := [header]
+						buf := Append(buf, tt.value)
+						assert header == buf[:header]
+						assert size == len(buf) - len(header)
+						buf = buf[header:]
+						REPEAT get: and read: are the same
+				t.Run("put")
+					basic:
+						size = len(Append(nil, tt.value))
+						buf := [:size]
+						assert Put(buf, tt.value) == size
+						assert buf == tt.data
+					varying:
+						size := len(Append(nil, tt.value))
+						buf := [:size]
+						assert size == Put(buf, tt.value)
+						REPEAT get: and read: are the same
+				t.Run("put short buf")
+					basic:
+						size = len(Append(nil, tt.value))
+						skip if size == 0
+						buf := [:size+10000]
+						Put(buf[:size-1], tt.value)
+							assert panics
+					varying:
+						size = len(Append(nil, tt.value))
+						skip if size == 0
+						buf := [:size+10000]
+						Put(buf[:size-1], tt.value)
+							assert panics
+				t.Run("get")
+					basic:
+						got, gotSize := Get(tt.data)
+						assert gotSize == len(tt.data)
+						assert got == tt.value, and assert type
+					varying: NOT run separately, part of get/read: subtests
+						got, gotSize := Get(buf)
+						assert gotSize == len(buf)
+						return got
+						AFTER RETURN
+						assert got == tt.value, and assert type
+				!!! NOT DOING THIS YET !!! - separate test
+					Should *always* test no bytes get and "EOF"
+				t.Run("get short buf")
+					basic:
+						size := len(tt.data)
+						skip if size == 0
+						got, gotSize := Get(tt.data[:size-1])
+							assert panics
+							OR assert gotSize == size-1
+								AND assert got != tt.value
+					varying:
+						buf := Append(nil, tt.value)
+						size := len(buf)
+						skip if size == 0
+						got, gotSize := Get(buf[:size-1])
+							assert panics
+							OR assert gotSize == size-1
+								AND assert got != tt.value
+								AND assert types ==
+				t.Run("write")
+					basic:
+						buf := bytes.Buffer
+						Write(buf, tt.value)
+						assert no error
+						assert buf == tt.data
+					varying:
+						size := len(Append(nil, tt.value))
+						buf := bytes.Buffer
+						Write(buf, tt.value)
+						assert no error
+						assert size == buf.Len()
+						REPEAT get: and read: are the same
+				t.Run("write short buf")
+					basic:
+						size := len(Append(nil, tt.value))
+						// internal buf is larger, but len=size-1
+						writer := limitWriter(size-1)
+						maybe iotest.TruncateWriter?
+							OR two tests, writer silent and other errs
+						Write(write, tt.Value)
+						assert error (what kind?)
+					varying: TODO
+				t.Run("read")
+					basic:
+						r := bytes.Reader(tt.data)
+						got := Read(r)
+						assert no error
+						assert r.Len() == 0
+						assert got == tt.value, and assert type
+					varying: NOT run separately, part of get/read: subtests
+						r := bytes.Reader(buf)
+						got := Read(r)
+						assert no error
+						assert r.Len() == 0
+						AFTER RETURN
+						assert got == tt.value, and assert type
+				!!! NOT DOING THIS YET !!! - separate test
+					Should *always* test no bytes read and EOF
+				t.Run("read short buf")
+					basic:
+						size := len(tt.data)
+						skip if size == 0
+						r := bytes.Reader(tt.data[:size-1])
+						got := Read(r)
+						if error
+							assert EOF (size == 1) or unexpected EOF
+						else
+							assert r.Len() == 0
+							assert got != tt.value, and assert types ==
+					varying:
+						buf := Append(nil, tt.value)
+						size := len(buf)
+						skip if size == 0
+						r := bytes.Reader(buf[:size-1])
+						got, err := Read(r)
+						if err
+							assert EOF (size == 1) or unexpected EOF
+						else
+							assert r.Len() == 0
+							assert got != tt.value, and assert types ==
+*/
+
 // Tests:
 // - Append/Put/Write(testCase.value) == testCase.data
 // - Get/Read(testCase.data) == testCase.value
@@ -67,96 +537,10 @@ const (
 // - Read errs when given a stream that is 1 byte too short, or returns incorrect values.
 //
 //nolint:thelper
-func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+func testFooCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	t.Run("test codec", func(t *testing.T) {
-		testCodecAppend(t, codec, tests)
-		testCodecPut(t, codec, tests)
 		testCodecGet(t, codec, tests)
-		testCodecWrite(t, codec, tests)
 		testCodecRead(t, codec, tests)
-	})
-}
-
-// Calculates and sets testCase.data for each of the tests using codec.Append, and then calls testCodec.
-// This is useful when the encoded value is difficult to calculate by hand.
-//
-//nolint:thelper
-func testCodecMakeData[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	newTests := make([]testCase[T], len(tests))
-	for i, tt := range tests {
-		test := tt
-		test.data = codec.Append(nil, tt.value)
-		newTests[i] = test
-	}
-	testCodec(t, codec, newTests)
-}
-
-//nolint:thelper
-func testCodecAppend[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	t.Run("append nil", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				buf := codec.Append(nil, tt.value)
-				if buf == nil {
-					buf = []byte{}
-				}
-				assert.Equal(t, tt.data, buf)
-			})
-		}
-	})
-	t.Run("append existing", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				header := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-				buf := append([]byte{}, header...)
-				buf = codec.Append(buf, tt.value)
-				assert.Equal(t, header, buf[:len(header)])
-				assert.Equal(t, tt.data, buf[len(header):])
-			})
-		}
-	})
-}
-
-//nolint:thelper
-func testCodecPut[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	t.Run("put", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				size := len(codec.Append(nil, tt.value))
-				buf := make([]byte, size)
-				putSize := codec.Put(buf, tt.value)
-				assert.Equal(t, size, putSize)
-				assert.Equal(t, tt.data, buf)
-			})
-		}
-	})
-	t.Run("put short buf", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				size := len(codec.Append(nil, tt.value))
-				if size == 0 {
-					return
-				}
-				// allocate more than enough space,
-				// but limit the size of the sub-slice passed in.
-				buf := make([]byte, size+10000)
-				assert.Panics(t, func() {
-					codec.Put(buf[:size-1], tt.value)
-				})
-			})
-		}
 	})
 }
 
@@ -191,23 +575,6 @@ func testCodecGet[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T])
 				got, gotSize := codec.Get(tt.data[:size-1])
 				assert.Equal(t, size-1, gotSize, "read too much data")
 				assert.NotEqual(t, tt.value, got, "read value without full data")
-			})
-		}
-	})
-}
-
-//nolint:thelper
-func testCodecWrite[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
-	t.Run("write", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				buf := bytes.NewBuffer([]byte{}) // don't let buf.Bytes() return nil
-				err := codec.Write(buf, tt.value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.data, buf.Bytes())
 			})
 		}
 	})
@@ -266,29 +633,12 @@ func testCodecRead[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]
 // - Read errs when given a stream that is 1 byte too short, or returns incorrect values.
 //
 //nolint:thelper
-func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+func testFooVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	bufCodec := bufferCodec[T]{codec}
-	t.Run("round trip", func(t *testing.T) {
-		t.Parallel()
-		for _, tt := range tests {
-			tt := tt
-			t.Run(tt.name, func(t *testing.T) {
-				t.Parallel()
-				testRoundTripBuf(t, bufCodec, tt.value, "append nil", bufCodec.AppendNil(t, tt.value))
-				testRoundTripBuf(t, bufCodec, tt.value, "append existing", bufCodec.AppendExisting(t, tt.value))
-				testRoundTripBuf(t, bufCodec, tt.value, "put", bufCodec.Put(t, tt.value))
-				testRoundTripBuf(t, bufCodec, tt.value, "write", bufCodec.Write(t, tt.value))
-			})
-		}
-	})
 	t.Run("short buf", func(t *testing.T) {
 		t.Parallel()
 		for _, tt := range tests {
 			tt := tt
-			t.Run(tt.name+"-put", func(t *testing.T) {
-				t.Parallel()
-				bufCodec.PutShortBuf(t, tt.value)
-			})
 			t.Run(tt.name+"-get", func(t *testing.T) {
 				t.Parallel()
 				buf := codec.Append(nil, tt.value)
@@ -321,58 +671,26 @@ func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase
 	})
 }
 
+//nolint:thelper
+func testRoundTripBuf[T any](t *testing.T, bufCodec bufferCodec[T], value T, name string, buf []byte) {
+	t.Run(name+"-get", func(t *testing.T) {
+		t.Parallel()
+		got := bufCodec.Get(t, append([]byte{}, buf...))
+		assert.IsType(t, value, got)
+		assert.Equal(t, value, got)
+	})
+	t.Run(name+"-read", func(t *testing.T) {
+		t.Parallel()
+		got := bufCodec.Read(t, append([]byte{}, buf...))
+		assert.IsType(t, value, got)
+		assert.Equal(t, value, got)
+	})
+}
+
 // A testing wrapper for Codec that deals only in []buf,
 // and which tests some assertions while processing.
 type bufferCodec[T any] struct {
 	codec lexy.Codec[T]
-}
-
-func (c bufferCodec[T]) AppendNil(_ *testing.T, value T) []byte {
-	return c.codec.Append(nil, value)
-}
-
-//nolint:thelper
-func (c bufferCodec[T]) AppendExisting(t *testing.T, value T) []byte {
-	size := len(c.codec.Append(nil, value))
-	header := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-	buf := append([]byte{}, header...)
-	buf = c.codec.Append(buf, value)
-	assert.Equal(t, header, buf[:len(header)])
-	assert.Equal(t, size, len(buf)-len(header))
-	return buf[len(header):]
-}
-
-//nolint:thelper
-func (c bufferCodec[T]) Put(t *testing.T, value T) []byte {
-	size := len(c.codec.Append(nil, value))
-	buf := make([]byte, size)
-	putSize := c.codec.Put(buf, value)
-	assert.Equal(t, size, putSize)
-	return buf
-}
-
-//nolint:thelper
-func (c bufferCodec[T]) PutShortBuf(t *testing.T, value T) {
-	size := len(c.codec.Append(nil, value))
-	if size == 0 {
-		return
-	}
-	// allocate more than enough space,
-	// but limit the size of the sub-slice passed in.
-	buf := make([]byte, size+10000)
-	assert.Panics(t, func() {
-		c.codec.Put(buf[:size-1], value)
-	})
-}
-
-//nolint:thelper
-func (c bufferCodec[T]) Write(t *testing.T, value T) []byte {
-	size := len(c.codec.Append(nil, value))
-	buf := bytes.NewBuffer([]byte{})
-	err := c.codec.Write(buf, value)
-	require.NoError(t, err)
-	assert.Equal(t, size, buf.Len())
-	return buf.Bytes()
 }
 
 //nolint:thelper
@@ -418,22 +736,6 @@ func (c bufferCodec[T]) ReadShortBuf(t *testing.T, buf []byte) (T, error) {
 	return got, nil
 }
 
-//nolint:thelper
-func testRoundTripBuf[T any](t *testing.T, bufCodec bufferCodec[T], value T, name string, buf []byte) {
-	t.Run(name+"-get", func(t *testing.T) {
-		t.Parallel()
-		got := bufCodec.Get(t, append([]byte{}, buf...))
-		assert.IsType(t, value, got)
-		assert.Equal(t, value, got)
-	})
-	t.Run(name+"-read", func(t *testing.T) {
-		t.Parallel()
-		got := bufCodec.Read(t, append([]byte{}, buf...))
-		assert.IsType(t, value, got)
-		assert.Equal(t, value, got)
-	})
-}
-
 var (
 	errRead  = errors.New("failed to read")
 	errWrite = errors.New("failed to write")
@@ -458,31 +760,8 @@ func testCodecFail[T any](t *testing.T, codec lexy.Codec[T], nonEmpty T) {
 
 type failWriter struct{}
 
-type boundedWriter struct {
-	count, limit int
-	data         []byte
-}
-
-var (
-	_ io.Writer = failWriter{}
-	_ io.Writer = &boundedWriter{0, 0, nil}
-)
+var _ io.Writer = failWriter{}
 
 func (failWriter) Write(_ []byte) (int, error) {
 	return 0, errWrite
-}
-
-// Return number of bytes written from p.
-func (w *boundedWriter) Write(p []byte) (int, error) {
-	remaining := w.limit - w.count
-	numToWrite := len(p)
-	if numToWrite > remaining {
-		numToWrite = remaining
-	}
-	w.data = append(w.data, p[:numToWrite]...)
-	w.count += numToWrite
-	if len(p) > remaining {
-		return numToWrite, io.EOF
-	}
-	return numToWrite, nil
 }
