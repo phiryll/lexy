@@ -14,7 +14,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        go: ['1.19', stable]
+        # Currently having linter issues with 1.23.0,
+        # so it's safest to limit this version as well.
+        go: ['1.19', '1.22.6']
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
