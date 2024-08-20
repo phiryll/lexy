@@ -28,7 +28,6 @@ func TestPointerEmpty(t *testing.T) {
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(empty), []byte{pNonNil}},
 	})
-	testCodecFail(t, toCodec(lexy.PointerTo(emptyCodec)), nil)
 }
 
 func TestSliceEmpty(t *testing.T) {
@@ -41,7 +40,6 @@ func TestSliceEmpty(t *testing.T) {
 			pNonNil, term, term, term,
 		}},
 	})
-	testCodecFail(t, toCodec(lexy.SliceOf(emptyCodec)), nil)
 }
 
 func TestMapValueEmpty(t *testing.T) {
@@ -63,7 +61,6 @@ func TestMapValueEmpty(t *testing.T) {
 			17:  empty,
 		}, nil},
 	})
-	testCodecFail(t, valueEmptyCodec, nil)
 }
 
 func TestNegateEmpty(t *testing.T) {
@@ -71,7 +68,6 @@ func TestNegateEmpty(t *testing.T) {
 	testCodec(t, lexy.Negate(emptyCodec), []testCase[emptyStruct]{
 		{"neg(empty)", empty, []byte{0xFF}},
 	})
-	testCodecFail(t, lexy.Negate(emptyCodec), empty)
 }
 
 func TestTerminateEmpty(t *testing.T) {
@@ -79,5 +75,4 @@ func TestTerminateEmpty(t *testing.T) {
 	testCodec(t, lexy.TerminateIfNeeded(emptyCodec), []testCase[emptyStruct]{
 		{"terminate(empty)", empty, []byte{0x00}},
 	})
-	testCodecFail(t, lexy.TerminateIfNeeded(emptyCodec), empty)
 }

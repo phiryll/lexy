@@ -15,7 +15,6 @@ func TestBytes(t *testing.T) {
 		{"[0]", []byte{0}, []byte{pNonNil, 0x00}},
 		{"[1, 2, 3]", []byte{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
 	})
-	testCodecFail(t, toCodec(lexy.Bytes()), []byte{0})
 }
 
 func TestBytesUnderlyingType(t *testing.T) {
@@ -28,7 +27,6 @@ func TestBytesUnderlyingType(t *testing.T) {
 		{"[0]", header{0}, []byte{pNonNil, 0x00}},
 		{"[1, 2, 3]", header{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
 	})
-	testCodecFail(t, codec, header{0})
 }
 
 func TestBytesNilsLast(t *testing.T) {

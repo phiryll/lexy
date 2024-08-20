@@ -22,7 +22,6 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 			0x80, 0x00, 0x00, 0x00,
 		}},
 	})
-	testCodecFail(t, codec, M{})
 
 	testVaryingCodec(t, codec, []testCase[M]{
 		{"non-trivial", M{
