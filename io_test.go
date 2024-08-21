@@ -24,22 +24,22 @@ type boundedWriter struct {
 	remaining int
 }
 
-func (t *boundedWriter) Write(p []byte) (int, error) {
-	if t.remaining <= 0 {
+func (b *boundedWriter) Write(p []byte) (int, error) {
+	if b.remaining <= 0 {
 		return 0, errWrite
 	}
 	// real write
 	n := len(p)
-	if n > t.remaining {
-		n = t.remaining
+	if n > b.remaining {
+		n = b.remaining
 	}
-	n, err := t.w.Write(p[0:n])
-	t.remaining -= n
+	n, err := b.w.Write(p[0:n])
+	b.remaining -= n
 	if err != nil {
 		// some other error, return it
 		return n, err
 	}
-	if n < len(p) && t.remaining == 0 {
+	if n < len(p) && b.remaining == 0 {
 		return n, errWrite
 	}
 	return n, nil
