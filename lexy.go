@@ -81,7 +81,13 @@ type Codec[T any] interface {
 	Put(buf []byte, value T) int
 
 	// Get decodes a value of type T from buf and returns that value and the number of bytes read.
-	// Get will panic if a value of type T cannot be successfully decoded from buf.
+	// If buf is empty and this Codec could encode zero bytes for some value, Get will return that value.
+	// If buf is empty and this Codec cannot encode zero bytes for any value,
+	// Get will return the zero value of T and a byte count < 0.
+	// This is analogous to the conditions under which Read returns [io.EOF].
+	// Checking the returned byte count is the only way to distinguish reading the zero value of T
+	// from having reached the []byte equivalent of EOF.
+	// Get will panic if a value of type T cannot be successfully decoded from a non-empty buf.
 	// Get will not modify buf.
 	Get(buf []byte) (T, int)
 
@@ -438,6 +444,9 @@ func PutUsingAppend[T any](codec Codec[T], buf []byte, value T) int {
 func GetUsingRead[T any](codec Codec[T], buf []byte) (T, int) {
 	r := bytes.NewReader(buf)
 	value, err := codec.Read(r)
+	if errors.Is(err, io.EOF) {
+		return value, -1
+	}
 	if err != nil {
 		panic(err)
 	}

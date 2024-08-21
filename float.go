@@ -115,6 +115,9 @@ func (float32Codec) Put(buf []byte, value float32) int {
 }
 
 func (float32Codec) Get(buf []byte) (float32, int) {
+	if len(buf) == 0 {
+		return 0.0, -1
+	}
 	bits, n := stdUint32.Get(buf)
 	return float32FromBits(bits), n
 }
@@ -144,6 +147,9 @@ func (float64Codec) Put(buf []byte, value float64) int {
 }
 
 func (float64Codec) Get(buf []byte) (float64, int) {
+	if len(buf) == 0 {
+		return 0.0, -1
+	}
 	bits, n := stdUint64.Get(buf)
 	return float64FromBits(bits), n
 }

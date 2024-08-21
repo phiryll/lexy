@@ -331,7 +331,8 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get short buf", func(t *testing.T) {
 		size := len(buf)
-		if size == 0 {
+		if size <= 1 {
+			// shortening 1 to 0 results in a special case
 			return
 		}
 		// Should either panic, or read one fewer byte and get the wrong value back.

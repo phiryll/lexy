@@ -54,6 +54,9 @@ func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
+	if len(buf) == 0 {
+		return nil, -1
+	}
 	// It's not efficient for Get and Read to share code,
 	// because Read can negate its buffer directly if the value is negative,
 	// while Get must make a copy first.
@@ -403,6 +406,9 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
+	if len(buf) == 0 {
+		return nil, -1
+	}
 	if c.prefix.Get(buf) {
 		return nil, 1
 	}

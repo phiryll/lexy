@@ -47,6 +47,9 @@ func (boolCodec) Put(buf []byte, value bool) int {
 }
 
 func (boolCodec) Get(buf []byte) (bool, int) {
+	if len(buf) == 0 {
+		return false, -1
+	}
 	return buf[0] != 0, sizeUint8
 }
 
@@ -76,6 +79,9 @@ func (uint8Codec) Put(buf []byte, value uint8) int {
 }
 
 func (uint8Codec) Get(buf []byte) (uint8, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return buf[0], sizeUint8
 }
 
@@ -105,6 +111,9 @@ func (uint16Codec) Put(buf []byte, value uint16) int {
 }
 
 func (uint16Codec) Get(buf []byte) (uint16, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return binary.BigEndian.Uint16(buf), sizeUint16
 }
 
@@ -134,6 +143,9 @@ func (uint32Codec) Put(buf []byte, value uint32) int {
 }
 
 func (uint32Codec) Get(buf []byte) (uint32, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return binary.BigEndian.Uint32(buf), sizeUint32
 }
 
@@ -163,6 +175,9 @@ func (uint64Codec) Put(buf []byte, value uint64) int {
 }
 
 func (uint64Codec) Get(buf []byte) (uint64, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return binary.BigEndian.Uint64(buf), sizeUint64
 }
 
@@ -214,6 +229,9 @@ func (int8Codec) Put(buf []byte, value int8) int {
 }
 
 func (int8Codec) Get(buf []byte) (int8, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return math.MinInt8 ^ int8(buf[0]), sizeUint8
 }
 
@@ -243,6 +261,9 @@ func (int16Codec) Put(buf []byte, value int16) int {
 }
 
 func (int16Codec) Get(buf []byte) (int16, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return math.MinInt16 ^ int16(binary.BigEndian.Uint16(buf)), sizeUint16
 }
 
@@ -272,6 +293,9 @@ func (int32Codec) Put(buf []byte, value int32) int {
 }
 
 func (int32Codec) Get(buf []byte) (int32, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return math.MinInt32 ^ int32(binary.BigEndian.Uint32(buf)), sizeUint32
 }
 
@@ -301,6 +325,9 @@ func (int64Codec) Put(buf []byte, value int64) int {
 }
 
 func (int64Codec) Get(buf []byte) (int64, int) {
+	if len(buf) == 0 {
+		return 0, -1
+	}
 	return math.MinInt64 ^ int64(binary.BigEndian.Uint64(buf)), sizeUint64
 }
 

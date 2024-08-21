@@ -21,6 +21,9 @@ func (complex64Codec) Put(buf []byte, value complex64) int {
 }
 
 func (complex64Codec) Get(buf []byte) (complex64, int) {
+	if len(buf) == 0 {
+		return complex(0.0, 0.0), -1
+	}
 	realPart, n1 := stdFloat32.Get(buf)
 	imagPart, n2 := stdFloat32.Get(buf[n1:])
 	return complex(realPart, imagPart), n1 + n2
@@ -60,6 +63,9 @@ func (complex128Codec) Put(buf []byte, value complex128) int {
 }
 
 func (complex128Codec) Get(buf []byte) (complex128, int) {
+	if len(buf) == 0 {
+		return complex(0.0, 0.0), -1
+	}
 	realPart, n1 := stdFloat64.Get(buf)
 	imagPart, n2 := stdFloat64.Get(buf[n1:])
 	return complex(realPart, imagPart), n1 + n2

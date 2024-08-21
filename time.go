@@ -66,6 +66,10 @@ func (timeCodec) Put(buf []byte, value time.Time) int {
 }
 
 func (timeCodec) Get(buf []byte) (time.Time, int) {
+	if len(buf) == 0 {
+		var zero time.Time
+		return zero, -1
+	}
 	seconds, _ := stdInt64.Get(buf)
 	nanos, _ := stdUint32.Get(buf[sizeUint64:])
 	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
