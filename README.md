@@ -21,17 +21,29 @@ The primary interface in lexy is `Codec`, with this definition (details in Go do
 
 ```go
 type Codec[T any] interface {
-    // Read reads from r and decodes a value of type T.
-    Read(r io.Reader) (T, error)
+    // Append encodes value and appends the encoded bytes to buf,
+    // returning the updated buffer.
+    Append(buf []byte, value T) []byte
+
+    // Put encodes value into buf,
+    // returning the number of bytes written.
+    Put(buf []byte, value T) int
+
+    // Get decodes a value of type T from buf,
+    // returning the value and the number of bytes read.
+    Get(buf []byte) (T, int)
 
     // Write encodes value and writes the encoded bytes to w.
     Write(w io.Writer, value T) error
 
-    // RequiresTerminator must return true if Read may not know
-    // when to stop reading the data encoded by Write,
-    // or if Write could encode zero bytes for some value.
-    // This is the case for unbounded types like strings, slices,
-    // and maps, as well as empty struct types.
+    // Read reads from r and decodes a value of type T.
+    Read(r io.Reader) (T, error)
+
+    // RequiresTerminator returns whether encoded values require
+    // a terminator and escaping if more data is written following
+    // the encoded value. This is the case for unbounded types
+    // like strings and slices, as well as types whose encodings
+    // can be zero bytes.
     RequiresTerminator() bool
 }
 ```
@@ -46,15 +58,16 @@ type Value struct {
 }
 
 // keyCodec is safe for concurrent use.
-var keyCodec = lexy.MakeSliceOf[Key](lexy.MakeString[Word]())
-
 // The terser functions lexy.SliceOf and lexy.String can be used
 // if the types involved are the same as their underlying types,
 // string and []string in this case. That would look like this:
 //
-// var keyCodec = lexy.SliceOf(lexy.String())
+//   var keyCodec = lexy.SliceOf(lexy.String())
+//
+var keyCodec = lexy.MakeSliceOf[Key](lexy.MakeString[Word]())
 
-// lexy could be used here, but it's overkill if ordered Values aren't needed.
+// lexy could be used here,
+// but may be overkill if ordered Values aren't needed.
 func EncodeValue(v *Value) ([]byte, error) { /* ... */ }
 func DecodeValue(b []byte) (*Value, error) { /* ... */ }
 
@@ -64,10 +77,11 @@ type KeyValueDB struct {
 }
 
 func (db *KeyValueDB) Put(key Key, value *Value) error {
-    keyBytes, err := lexy.Encode(keyCodec, key)
-    if err != nil {
-        return err
-    }
+    // If keyCodec could encode zero bytes, this might be preferable
+    //
+    //   keyBytes := keyCodec.Append([]byte{}, key)
+    //
+    keyBytes := keyCodec.Append(nil, key)
     valueBytes, err := EncodeValue(value)
     if err != nil {
         return err
@@ -76,10 +90,7 @@ func (db *KeyValueDB) Put(key Key, value *Value) error {
 }
 
 func (db *KeyValueDB) Get(key Key) (*Value, error) {
-    keyBytes, err := lexy.Encode(keyCodec, key)
-    if err != nil {
-        return nil, err
-    }
+    keyBytes := keyCodec.Append(nil, key)
     valueBytes, err := db.providerDB.Get(keyBytes)
     if err != nil {
         return nil, err
@@ -96,8 +107,8 @@ A custom `Codec` handling multiple types could be created, but it is not recomme
 and it would still require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Different `Codecs` will generally not produce encodings with consistent orderings with respect to each other.
-For example, `Encode(Int8(), 1)` will produce an encoding
-that is lexicographically greater than the encoding produced by `Encode(Uint8(), 100)`.
+For example, `Int8().Append(nil, 1)` will produce an encoding
+that is lexicographically greater than the encoding produced by `Uint8().Append(nil, 100)`.
 
 The `Codecs` provided by lexy can encode `nil` to be less than or greater than
 the encodings for non-`nil` values, for types that allow `nil` values.
@@ -125,8 +136,11 @@ or whose natural ordering cannot be preserved while being encoded at full precis
 * `complex64`, `complex128`
 * `*math.big.Rat`
 
-Lexy provides a `Codec` for types with no value except the zero value,
-useful for the value types of maps used as sets.
+Lexy provides these additional `Codecs`.
+
+* A `Codec` for types with no value except the zero value, useful for the value types of maps used as sets.
+* A `Codec` which reverses the lexicographical ordering of another `Codec`.
+* A `Codec` which terminates and escapes the encodings of another `Codec`.
 
 Lexy does not does not provide `Codecs` for the following types, but custom `Codecs` are easy to create.
 See the Go docs for examples.

@@ -45,6 +45,7 @@ These Codec-returning functions require specifying a type parameter when invoked
 
 These functions are used when creating custom Codecs.
   - [UnexpectedIfEOF]
+  - [AppendUsingWrite], [PutUsingAppend], [GetUsingRead]
 */
 package lexy
 
@@ -72,15 +73,18 @@ import (
 // All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 type Codec[T any] interface {
 	// Append encodes value and appends the encoded bytes to buf, returning the updated buffer.
+	//
 	// If buf is nil and no bytes are appended, Append may return nil.
 	Append(buf []byte, value T) []byte
 
-	// Put encodes value into buf and returns the number of bytes written.
+	// Put encodes value into buf, returning the number of bytes written.
+	//
 	// Put will panic if buf is too small, and still may have written some data to buf.
 	// Put will write only the bytes that encode value.
 	Put(buf []byte, value T) int
 
-	// Get decodes a value of type T from buf and returns that value and the number of bytes read.
+	// Get decodes a value of type T from buf, returning the value and the number of bytes read.
+	//
 	// If buf is empty and this Codec could encode zero bytes for some value, Get will return that value.
 	// If buf is empty and this Codec cannot encode zero bytes for any value,
 	// Get will return the zero value of T and a byte count < 0.
@@ -118,16 +122,17 @@ type Codec[T any] interface {
 	// because doing so could consume excess data from r and corrupt following reads.
 	Read(r io.Reader) (T, error)
 
-	// RequiresTerminator returns whether data written by this Codec requires a terminator and escaping
-	// when more data may be written following the data written by this Codec.
-	// This is true if either
-	//   - Decoding methods may not know when to stop reading encoded data (strings, maps, some pointers, ...), or
-	//   - Encoding methods could encode zero bytes for some value (strings, [Empty], ...).
+	// RequiresTerminator returns whether encoded values require a terminator and escaping
+	// if more data is written following the encoded value.
+	// This is the case for unbounded types like strings and slices,
+	// as well as types whose encodings can be zero bytes.
+	// Types whose encodings are always a fixed size, like integers and floats,
+	// never require a terminator and escaping.
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
 	// and more data could be written following the data written by this Codec.
-	// This is optional because terminating and escaping is unnecessary if this Codec should read until EOF,
-	// and only the caller knows this.
+	// This is optional because terminating and escaping is unnecessary
+	// if the use of this Codec should read until EOF or the end of the buffer.
 	//
 	// The Codec returned by [PointerTo] is unusual in that it only requires a terminator
 	// if its referent Codec requires one.
