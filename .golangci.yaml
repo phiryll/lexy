@@ -375,6 +375,8 @@ linters-settings:
       # disabling these instead of what they duplicate because the top-level linters can use nolint
       - name: add-constant          # duplicated by mnd
         disabled: true
+      - name: bare-return           # duplicated by nakedret
+        disabled: true
       - name: cognitive-complexity  # duplicated by gocognit
         disabled: true
       - name: cyclomatic            # duplicated by cyclop

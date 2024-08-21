@@ -149,12 +149,12 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 			c.writeShortBuf(t, tt)
 
 			// Test Append/Put/Write.
-			var outputs []output
-			outputs = append(outputs, c.appendNil(t, tt))
-			outputs = append(outputs, c.appendExisting(t, tt))
-			outputs = append(outputs, c.put(t, tt))
-			outputs = append(outputs, c.putLongBuf(t, tt))
-			outputs = append(outputs, c.write(t, tt))
+			outputs := append([]output{},
+				c.appendNil(t, tt),
+				c.appendExisting(t, tt),
+				c.put(t, tt),
+				c.putLongBuf(t, tt),
+				c.write(t, tt))
 			t.Logf("Outputs: %v", outputs)
 
 			// Test Get/Read
@@ -179,7 +179,7 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	}
 }
 
-//nolint:thelper
+//nolint:thelper,revive
 func (c testerCodec[T]) getEmpty(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		var zero T
@@ -251,7 +251,7 @@ func (c testerCodec[T]) appendExisting(t *testing.T, tt testCase[T]) output {
 			assert.Equal(t, tt.data, buf)
 		} else {
 			size := len(c.codec.Append(nil, tt.value))
-			assert.Equal(t, size, len(buf))
+			assert.Len(t, buf, size)
 		}
 	})
 	return output{"append existing", buf}
@@ -346,7 +346,7 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 		got, gotSize := c.codec.Get(workingBuf)
 		var expected T
 		if gotSize == -1 {
-			assert.Equal(t, 0, len(buf))
+			assert.Empty(t, buf)
 		} else {
 			expected = tt.value
 			assert.Equal(t, len(buf), gotSize)
@@ -357,7 +357,7 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	})
 }
 
-//nolint:thelper
+//nolint:thelper,revive
 func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get short buf", func(t *testing.T) {
@@ -369,6 +369,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		// Should either panic, or read one fewer byte and get the wrong value back.
 		var got T
 		var gotSize int
+		//nolint:nonamedreturns
 		panicked := func() (panicked bool) {
 			panicked = false
 			defer func() {
@@ -377,6 +378,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 				}
 			}()
 			got, gotSize = c.codec.Get(workingBuf[:size-1])
+			//nolint:nakedret
 			return
 		}()
 		if !panicked {

@@ -46,6 +46,7 @@ func (t *boundedWriter) Write(p []byte) (int, error) {
 }
 
 func TestBoundedWriter(t *testing.T) {
+	t.Parallel()
 	// no failure if below the limit
 	buf := bytes.NewBuffer([]byte{})
 	w := boundedWriter{buf, 10}
