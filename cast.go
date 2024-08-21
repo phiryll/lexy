@@ -67,25 +67,25 @@ func MakeFloat64[T ~float64]() Codec[T] { return castFloat64[T]{} }
 // Other than the underlying type, this is the same as [String].
 func MakeString[T ~string]() Codec[T] { return castString[T]{} }
 
-// MakeBytes returns a NillableCodec for a type with an underlying type of []byte, with nil slices ordered first.
+// MakeBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
-func MakeBytes[S ~[]byte]() NillableCodec[S] { return castBytes[S]{stdBytes} }
+func MakeBytes[S ~[]byte]() Codec[S] { return castBytes[S]{stdBytes} }
 
-// MakePointerTo returns a NillableCodec for a type with an underlying type of *E, with nil pointers ordered first.
+// MakePointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, this is the same as [PointerTo].
-func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) NillableCodec[P] {
+func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	return castPointer[P, E]{PointerTo(elemCodec)}
 }
 
-// MakeSliceOf returns a NillableCodec for a type with an underlying type of []E, with nil slices ordered first.
+// MakeSliceOf returns a Codec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, this is the same as [SliceOf].
-func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) NillableCodec[S] {
+func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	return castSlice[S, E]{SliceOf(elemCodec)}
 }
 
-// MakeMapOf returns a NillableCodec for a type with an underlying type of map[K]V, with nil maps ordered first.
+// MakeMapOf returns a Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, this is the same as [MapOf].
-func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) NillableCodec[M] {
+func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	return castMap[M, K, V]{MapOf(keyCodec, valueCodec)}
 }
 
@@ -106,16 +106,16 @@ type (
 	castFloat64[T ~float64]       struct{}
 	castString[T ~string]         struct{}
 	castBytes[T ~[]byte]          struct {
-		codec NillableCodec[[]byte]
+		codec Codec[[]byte]
 	}
 	castPointer[P ~*E, E any] struct {
-		codec NillableCodec[*E]
+		codec Codec[*E]
 	}
 	castSlice[S ~[]E, E any] struct {
-		codec NillableCodec[[]E]
+		codec Codec[[]E]
 	}
 	castMap[M ~map[K]V, K comparable, V any] struct {
-		codec NillableCodec[map[K]V]
+		codec Codec[map[K]V]
 	}
 )
 
@@ -443,10 +443,6 @@ func (c castBytes[T]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
 }
 
-func (c castBytes[T]) NilsLast() NillableCodec[T] {
-	return castBytes[T]{c.codec.NilsLast()}
-}
-
 func (c castPointer[P, E]) Append(buf []byte, value P) []byte {
 	return AppendUsingWrite[P](c, buf, value)
 }
@@ -469,10 +465,6 @@ func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
 
 func (c castPointer[P, E]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
-}
-
-func (c castPointer[P, E]) NilsLast() NillableCodec[P] {
-	return castPointer[P, E]{c.codec.NilsLast()}
 }
 
 func (c castSlice[S, E]) Append(buf []byte, value S) []byte {
@@ -499,10 +491,6 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
 }
 
-func (c castSlice[S, E]) NilsLast() NillableCodec[S] {
-	return castSlice[S, E]{c.codec.NilsLast()}
-}
-
 func (c castMap[M, K, V]) Append(buf []byte, value M) []byte {
 	return AppendUsingWrite[M](c, buf, value)
 }
@@ -525,8 +513,4 @@ func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
 
 func (c castMap[M, K, V]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
-}
-
-func (c castMap[M, K, V]) NilsLast() NillableCodec[M] {
-	return castMap[M, K, V]{c.codec.NilsLast()}
 }

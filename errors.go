@@ -26,3 +26,11 @@ type nilError struct {
 func (e nilError) Error() string {
 	return e.name + " must be non-nil"
 }
+
+type badTypeError struct {
+	value any
+}
+
+func (e badTypeError) Error() string {
+	return fmt.Sprintf("bad type %T", e.value)
+}

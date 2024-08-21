@@ -122,7 +122,8 @@ func (bigIntCodec) RequiresTerminator() bool {
 	return false
 }
 
-func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
+//lint:ignore U1000 this is actually used
+func (bigIntCodec) nilsLast() Codec[*big.Int] {
 	return bigIntCodec{PrefixNilsLast}
 }
 
@@ -369,7 +370,8 @@ func (bigFloatCodec) RequiresTerminator() bool {
 	return true
 }
 
-func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
+//lint:ignore U1000 this is actually used
+func (bigFloatCodec) nilsLast() Codec[*big.Float] {
 	return bigFloatCodec{PrefixNilsLast}
 }
 
@@ -448,6 +450,7 @@ func (bigRatCodec) RequiresTerminator() bool {
 	return false
 }
 
-func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
+//lint:ignore U1000 this is actually used
+func (bigRatCodec) nilsLast() Codec[*big.Rat] {
 	return bigRatCodec{PrefixNilsLast}
 }

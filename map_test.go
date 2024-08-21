@@ -51,19 +51,19 @@ func dePointerMap(m map[*string]*string) map[string]string {
 
 func TestMapInt(t *testing.T) {
 	t.Parallel()
-	testBasicMap(t, toCodec(lexy.MapOf(lexy.String(), lexy.Int32())))
+	testBasicMap(t, lexy.MapOf(lexy.String(), lexy.Int32()))
 }
 
 type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
 	t.Parallel()
-	testBasicMap(t, toCodec(lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32())))
+	testBasicMap(t, lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32()))
 }
 
 func TestMapSlice(t *testing.T) {
 	t.Parallel()
-	codec := toCodec(lexy.MapOf(lexy.String(), toCodec(lexy.SliceOf(lexy.String()))))
+	codec := lexy.MapOf(lexy.String(), lexy.SliceOf(lexy.String()))
 	testVaryingCodec(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -87,7 +87,7 @@ func TestMapPointerPointer(t *testing.T) {
 	t.Parallel()
 	// Unfortunately, comparing pointers does not compare what they're pointing to.
 	// Instead, we'll dump the referents into a new map and compare that.
-	pointerCodec := toCodec(lexy.PointerTo(lexy.String()))
+	pointerCodec := lexy.PointerTo(lexy.String())
 	codec := lexy.MapOf(pointerCodec, pointerCodec)
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
@@ -123,8 +123,8 @@ func TestMapPointerPointer(t *testing.T) {
 func TestMapNilsLast(t *testing.T) {
 	t.Parallel()
 	// Maps are randomly ordered, so we can only test nil/non-nil.
-	encodeFirst := encoderFor(toCodec(lexy.MapOf(lexy.String(), lexy.Int32())))
-	encodeLast := encoderFor(toCodec(lexy.MapOf(lexy.String(), lexy.Int32()).NilsLast()))
+	encodeFirst := encoderFor(lexy.MapOf(lexy.String(), lexy.Int32()))
+	encodeLast := encoderFor(lexy.NilsLast(lexy.MapOf(lexy.String(), lexy.Int32())))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(map[string]int32{}),

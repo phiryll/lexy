@@ -47,6 +47,7 @@ func (c pointerCodec[E]) RequiresTerminator() bool {
 	return c.elemCodec.RequiresTerminator()
 }
 
-func (c pointerCodec[E]) NilsLast() NillableCodec[*E] {
+//lint:ignore U1000 this is actually used
+func (c pointerCodec[E]) nilsLast() Codec[*E] {
 	return pointerCodec[E]{c.elemCodec, PrefixNilsLast}
 }

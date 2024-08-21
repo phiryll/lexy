@@ -70,6 +70,7 @@ func (mapCodec[K, V]) RequiresTerminator() bool {
 	return true
 }
 
-func (c mapCodec[K, V]) NilsLast() NillableCodec[map[K]V] {
+//lint:ignore U1000 this is actually used
+func (c mapCodec[K, V]) nilsLast() Codec[map[K]V] {
 	return mapCodec[K, V]{c.keyCodec, c.valueCodec, PrefixNilsLast}
 }

@@ -24,7 +24,7 @@ func concatNonNil(slices ...[]byte) []byte {
 
 func TestBigInt(t *testing.T) {
 	t.Parallel()
-	codec := toCodec(lexy.BigInt())
+	codec := lexy.BigInt()
 	encodeSize := encoderFor(lexy.Int64())
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
@@ -64,7 +64,7 @@ func TestBigInt(t *testing.T) {
 
 func TestBigIntOrdering(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(toCodec(lexy.BigInt()))
+	encode := encoderFor(lexy.BigInt())
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(newBigInt("-12345")),
@@ -87,8 +87,8 @@ func TestBigIntOrdering(t *testing.T) {
 
 func TestBigIntNilsLast(t *testing.T) {
 	t.Parallel()
-	encodeFirst := encoderFor(toCodec(lexy.BigInt()))
-	encodeLast := encoderFor(toCodec(lexy.BigInt().NilsLast()))
+	encodeFirst := encoderFor(lexy.BigInt())
+	encodeLast := encoderFor(lexy.NilsLast(lexy.BigInt()))
 	assert.IsIncreasing(t, [][]byte{
 		encodeFirst(nil),
 		encodeFirst(newBigInt("-12345")),
@@ -144,7 +144,7 @@ func TestBigFloat(t *testing.T) {
 		"12345678901234567890123456789012345678901234567890", 10)
 	complexTiny.SetPrec(complexTiny.MinPrec())
 
-	codec := toCodec(lexy.BigFloat())
+	codec := lexy.BigFloat()
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
@@ -185,7 +185,7 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
-	encode := encoderFor(toCodec(lexy.BigFloat()))
+	encode := encoderFor(lexy.BigFloat())
 	assert.IsIncreasing(t, [][]byte{
 		encode(nil),
 		encode(&negInf),
@@ -265,7 +265,7 @@ func newBigRat(num, denom string) *big.Rat {
 
 func TestBigRat(t *testing.T) {
 	t.Parallel()
-	codec := toCodec(lexy.BigRat())
+	codec := lexy.BigRat()
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Rat]{

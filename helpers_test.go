@@ -42,10 +42,6 @@ func errorForEOF(bytesRead int) error {
 	return io.ErrUnexpectedEOF
 }
 
-func toCodec[T any](codec lexy.NillableCodec[T]) lexy.Codec[T] {
-	return codec
-}
-
 func concat(slices ...[]byte) []byte {
 	var result []byte
 	for _, s := range slices {
