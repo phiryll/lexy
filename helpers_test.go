@@ -1,11 +1,11 @@
 package lexy_test
 
-// This file contains things that help in writing Codec tests,
-// it doesn't have any tests itself.
+// This file contains things that help in writing Codec tests.
+// There are no top-level tests here, but the bulk of
+// the Codec-testing code is in testerCodec's methods.
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"reflect"
 	"testing"
@@ -14,6 +14,15 @@ import (
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+// Just to make the test cases terser.
+const (
+	term      byte = lexy.TestingTerminator
+	esc       byte = lexy.TestingEscape
+	pNilFirst byte = lexy.TestingPrefixNilFirst
+	pNonNil   byte = lexy.TestingPrefixNonNil
+	pNilLast  byte = lexy.TestingPrefixNilLast
 )
 
 func ptr[T any](value T) *T {
@@ -62,45 +71,6 @@ func fillTestData[T any](codec lexy.Codec[T], tests []testCase[T]) []testCase[T]
 	}
 	return newTests
 }
-
-var errWrite = errors.New("failed to write")
-
-// The same as iotest.TruncateWriter, except it's not silent.
-type boundedWriter struct {
-	w io.Writer
-	n int
-}
-
-func (t *boundedWriter) Write(p []byte) (int, error) {
-	if t.n <= 0 {
-		return 0, errWrite
-	}
-	// real write
-	n := len(p)
-	var over bool
-	if n > t.n {
-		n = int(t.n)
-		over = true
-	}
-	n, err := t.w.Write(p[0:n])
-	t.n -= n
-	if err == nil {
-		n = len(p)
-	}
-	if over && err != nil {
-		return n, errWrite
-	}
-	return n, err
-}
-
-// Just to make the test cases terser.
-const (
-	term      byte = lexy.TestingTerminator
-	esc       byte = lexy.TestingEscape
-	pNilFirst byte = lexy.TestingPrefixNilFirst
-	pNonNil   byte = lexy.TestingPrefixNonNil
-	pNilLast  byte = lexy.TestingPrefixNilLast
-)
 
 // testCodec tests:
 //
@@ -163,11 +133,24 @@ type output struct {
 
 //nolint:thelper
 func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
+	// TODO: test Get/Read of zero bytes and EOF
+	// and zero bytes with not EOF (should not be unexpected EOF)
+	// Test
+	// - Get of zero bytes returns -1 if Append
+	// - -1/EOF
+	// - ErrUnexpectedEOF
+	// - other error
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			t.Logf("Test case: %v", tt)
+
+			// Test Put/Write to destinations that are too short by 1 byte.
+			c.putShortBuf(t, tt)
+			c.writeShortBuf(t, tt)
+			c.writeSilentError(t, tt)
 
 			// Test Append/Put/Write.
 			var outputs []output
@@ -177,14 +160,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 			outputs = append(outputs, c.putLongBuf(t, tt))
 			outputs = append(outputs, c.write(t, tt))
 			t.Logf("Outputs: %v", outputs)
-
-			// TODO: test Get/Read of zero bytes and EOF
-			// TODO: test Read with failing io.Reader
-
-			// Test Put/Write to destinations that are too short by 1 byte.
-			c.putShortBuf(t, tt)
-			c.writeShortBuf(t, tt)
-			c.writeSilentError(t, tt)
 
 			// Test Get/Read
 			if c.isConsistent {
@@ -313,7 +288,6 @@ func (c testerCodec[T]) write(t *testing.T, tt testCase[T]) output {
 //nolint:thelper
 func (c testerCodec[T]) writeShortBuf(t *testing.T, tt testCase[T]) {
 	t.Run("write short buf", func(t *testing.T) {
-		t.Skip("TODO: Write does not yet fail properly on noisy truncation.")
 		size := len(c.codec.Append(nil, tt.value))
 		if size == 0 {
 			return
