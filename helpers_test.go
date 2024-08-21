@@ -317,11 +317,16 @@ func (c testerCodec[T]) writeSilentError(t *testing.T, tt testCase[T]) {
 func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get", func(t *testing.T) {
-		t.Skip("TODO: Get needs zero-bytes and EOF functionality, return -1?")
 		got, gotSize := c.codec.Get(workingBuf)
-		assert.Equal(t, len(buf), gotSize)
-		assert.IsType(t, tt.value, got)
-		assert.Equal(t, tt.value, got)
+		var expected T
+		if gotSize == -1 {
+			assert.Equal(t, 0, len(buf))
+		} else {
+			expected = tt.value
+			assert.Equal(t, len(buf), gotSize)
+		}
+		assert.IsType(t, expected, got)
+		assert.Equal(t, expected, got)
 		assert.Equal(t, buf, workingBuf)
 	})
 }
