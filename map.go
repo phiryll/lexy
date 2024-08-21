@@ -15,11 +15,38 @@ import (
 type mapCodec[K comparable, V any] struct {
 	keyCodec   Codec[K]
 	valueCodec Codec[V]
-	nilsFirst  bool
+	prefix     Prefix
+}
+
+func (c mapCodec[K, V]) Append(buf []byte, value map[K]V) []byte {
+	return AppendUsingWrite[map[K]V](c, buf, value)
+}
+
+func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
+	return PutUsingAppend[map[K]V](c, buf, value)
+}
+
+func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, int) {
+	return GetUsingRead[map[K]V](c, buf)
+}
+
+func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
+	if done, err := c.prefix.Write(w, value == nil); done {
+		return err
+	}
+	for k, v := range value {
+		if err := c.keyCodec.Write(w, k); err != nil {
+			return err
+		}
+		if err := c.valueCodec.Write(w, v); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
-	if done, err := ReadPrefix(r); done {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	m := map[K]V{}
@@ -39,25 +66,10 @@ func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
 	}
 }
 
-func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	for k, v := range value {
-		if err := c.keyCodec.Write(w, k); err != nil {
-			return err
-		}
-		if err := c.valueCodec.Write(w, v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (mapCodec[K, V]) RequiresTerminator() bool {
 	return true
 }
 
 func (c mapCodec[K, V]) NilsLast() NillableCodec[map[K]V] {
-	return mapCodec[K, V]{c.keyCodec, c.valueCodec, false}
+	return mapCodec[K, V]{c.keyCodec, c.valueCodec, PrefixNilsLast}
 }

@@ -13,7 +13,8 @@ jobs:
   golangci:
     strategy:
       matrix:
-        go: ['1.18', stable]
+        # Currently having linter issues with 1.23.0.
+        go: ['1.19', '1.22.6']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

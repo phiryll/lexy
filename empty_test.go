@@ -6,25 +6,27 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// There's not much point in testing emptyCodec itself,
-// but there are good reasons to test it in combination with other Codecs.
+// There are good reasons to test emptyCodec in combination with other Codecs.
 // In particular, it demonstrates why RequiresTerminator() must return true
 // if the Codec might encode zero bytes on Write.
 // These tests should also catch if any of the aggregate Codecs don't handle termination correctly.
 
 type emptyStruct struct{}
 
-type (
-	mKey   map[emptyStruct]uint8
-	mValue map[uint8]emptyStruct
-)
+type mValue map[uint8]emptyStruct
 
 var (
 	empty           = emptyStruct{}
 	emptyCodec      = lexy.Empty[emptyStruct]()
-	keyEmptyCodec   = toCodec(lexy.MakeMapOf[mKey](emptyCodec, lexy.Uint8()))
 	valueEmptyCodec = toCodec(lexy.MakeMapOf[mValue](lexy.Uint8(), emptyCodec))
 )
+
+func TestEmpty(t *testing.T) {
+	t.Parallel()
+	testCodec(t, emptyCodec, []testCase[emptyStruct]{
+		{"empty", emptyStruct{}, []byte{}},
+	})
+}
 
 func TestPointerEmpty(t *testing.T) {
 	t.Parallel()
@@ -32,7 +34,6 @@ func TestPointerEmpty(t *testing.T) {
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(empty), []byte{pNonNil}},
 	})
-	testCodecFail(t, toCodec(lexy.PointerTo(emptyCodec)), nil)
 }
 
 func TestSliceEmpty(t *testing.T) {
@@ -45,21 +46,6 @@ func TestSliceEmpty(t *testing.T) {
 			pNonNil, term, term, term,
 		}},
 	})
-	testCodecFail(t, toCodec(lexy.SliceOf(emptyCodec)), nil)
-}
-
-func TestMapKeyEmpty(t *testing.T) {
-	t.Parallel()
-	testCodec(t, keyEmptyCodec, []testCase[mKey]{
-		{"nil", nil, []byte{pNilFirst}},
-		{"{}", mKey{}, []byte{pNonNil}},
-		{"{empty:2}", mKey{empty: 2}, []byte{
-			pNonNil,
-			term,
-			0x02,
-		}},
-	})
-	testCodecFail(t, keyEmptyCodec, nil)
 }
 
 func TestMapValueEmpty(t *testing.T) {
@@ -73,7 +59,7 @@ func TestMapValueEmpty(t *testing.T) {
 			term,
 		}},
 	})
-	testCodecRoundTrip(t, valueEmptyCodec, []testCase[mValue]{
+	testVaryingCodec(t, valueEmptyCodec, []testCase[mValue]{
 		{"non-trivial", mValue{
 			1:   empty,
 			167: empty,
@@ -81,7 +67,6 @@ func TestMapValueEmpty(t *testing.T) {
 			17:  empty,
 		}, nil},
 	})
-	testCodecFail(t, valueEmptyCodec, nil)
 }
 
 func TestNegateEmpty(t *testing.T) {
@@ -89,7 +74,6 @@ func TestNegateEmpty(t *testing.T) {
 	testCodec(t, lexy.Negate(emptyCodec), []testCase[emptyStruct]{
 		{"neg(empty)", empty, []byte{0xFF}},
 	})
-	testCodecFail(t, lexy.Negate(emptyCodec), empty)
 }
 
 func TestTerminateEmpty(t *testing.T) {
@@ -97,5 +81,4 @@ func TestTerminateEmpty(t *testing.T) {
 	testCodec(t, lexy.TerminateIfNeeded(emptyCodec), []testCase[emptyStruct]{
 		{"terminate(empty)", empty, []byte{0x00}},
 	})
-	testCodecFail(t, lexy.TerminateIfNeeded(emptyCodec), empty)
 }

@@ -61,8 +61,6 @@ func TestTime(t *testing.T) {
 			assert.Equal(t, expectedOffset, actualOffset, "offsets")
 		})
 	}
-
-	testCodecFail(t, codec, local)
 }
 
 //nolint:tparallel

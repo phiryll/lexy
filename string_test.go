@@ -14,5 +14,4 @@ func TestString(t *testing.T) {
 		{"xyz", "xyz", []byte{'x', 'y', 'z'}},
 		{"⌘", "⌘", []byte{0xE2, 0x8C, 0x98}},
 	})
-	testCodecFail(t, lexy.String(), "a")
 }

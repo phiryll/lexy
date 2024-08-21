@@ -89,7 +89,7 @@ linters:
   # https://golangci-lint.run/usage/linters/#disabled-by-default
   disable:
     # causes problems if golangci-lint is compiled with a different version of go
-    # - typecheck
+    - typecheck
     # not needed/wanted in this project
     - execinquery       # SQL not used
     - ginkgolinter      # not using this testing framework
@@ -203,8 +203,9 @@ linters-settings:
     # Which checks should be disabled; can't be combined with 'enabled-checks'.
     # Default: []
     disabled-checks:
-      - whyNoLint
       - commentedOutCode
+      - whyNoLint
+      - unnamedResult
 
     # Settings passed to gocritic.
     # The settings key is the name of a supported gocritic checker.
@@ -249,10 +250,6 @@ linters-settings:
         # Whether to skip (*x).method() calls where x is a pointer receiver.
         # Default: true
         skipRecvDeref: false
-      unnamedResult:
-        # Whether to check exported functions.
-        # Default: false
-        checkExported: true
 
   gofmt:
     # Apply the rewrite rules to the source before reformatting.
@@ -378,6 +375,8 @@ linters-settings:
       # disabling these instead of what they duplicate because the top-level linters can use nolint
       - name: add-constant          # duplicated by mnd
         disabled: true
+      - name: bare-return           # duplicated by nakedret
+        disabled: true
       - name: cognitive-complexity  # duplicated by gocognit
         disabled: true
       - name: cyclomatic            # duplicated by cyclop
@@ -391,6 +390,8 @@ linters-settings:
       - name: confusing-naming      # can't handle multiple implementations of an interface
         disabled: true
       - name: file-header           # not using file headers
+        disabled: true
+      - name: flag-parameter        # a method which writes a bool does this
         disabled: true
       - name: max-public-structs    # don't know how to limit to one file
         disabled: true

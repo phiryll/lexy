@@ -7,7 +7,6 @@ import (
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Seed values for different types.
@@ -142,10 +141,8 @@ func addUnorderedPairs[T any](f *testing.F, values ...T) {
 func valueTesterFor[T any](codec lexy.Codec[T]) func(*testing.T, T) {
 	//nolint:thelper
 	return func(t *testing.T, value T) {
-		b, err := lexy.Encode(codec, value)
-		require.NoError(t, err)
-		got, err := lexy.Decode(codec, b)
-		require.NoError(t, err)
+		b := codec.Append(nil, value)
+		got, _ := codec.Get(b)
 		assert.IsType(t, value, got)
 		assert.Equal(t, value, got)
 	}
@@ -197,10 +194,8 @@ func valueTesterForConv[T, U any](codec lexy.Codec[T], conv converter[T, U]) fun
 	//nolint:thelper
 	return func(t *testing.T, repr U) {
 		value := conv.From(repr)
-		b, err := lexy.Encode(codec, value)
-		require.NoError(t, err)
-		got, err := lexy.Decode(codec, b)
-		require.NoError(t, err)
+		b := codec.Append(nil, value)
+		got, _ := codec.Get(b)
 		assert.IsType(t, value, got)
 		assert.Equal(t, conv.To(value), conv.To(got), "values not equal: %#v, %#v", value, got)
 	}
@@ -311,10 +306,8 @@ func FuzzTerminateBytes(f *testing.F) {
 func pairTesterFor[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
 	//nolint:thelper
 	return func(t *testing.T, a, b T) {
-		aEncoded, err := lexy.Encode(codec, a)
-		require.NoError(t, err)
-		bEncoded, err := lexy.Encode(codec, b)
-		require.NoError(t, err)
+		aEncoded := codec.Append(nil, a)
+		bEncoded := codec.Append(nil, b)
 		assert.Equal(t, cmp(a, b), bytes.Compare(aEncoded, bEncoded),
 			"values not comparing correctly: %#v(%x), %#v(%x)", a, aEncoded, b, bEncoded)
 	}

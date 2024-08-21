@@ -123,8 +123,8 @@ func TestEscapeFail(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var w boundedWriter
-			w.limit = 6
+			buf := bytes.NewBuffer([]byte{})
+			w := boundedWriter{buf, 6}
 			count, err := lexy.TestingDoEscape(&w, tt.data)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -132,7 +132,7 @@ func TestEscapeFail(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			assert.Equal(t, tt.count, count, "bytes read from input")
-			assert.Equal(t, tt.escaped, w.data, "escaped bytes")
+			assert.Equal(t, tt.escaped, buf.Bytes(), "escaped bytes")
 		})
 	}
 }

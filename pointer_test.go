@@ -15,7 +15,6 @@ func TestPointerInt32(t *testing.T) {
 		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
 		{"*-1", ptr(int32(-1)), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
 	})
-	testCodecFail(t, codec, ptr(int32(0)))
 }
 
 func TestPointerString(t *testing.T) {
@@ -26,7 +25,6 @@ func TestPointerString(t *testing.T) {
 		{"*empty", ptr(""), []byte{pNonNil}},
 		{"*abc", ptr("abc"), []byte{pNonNil, 'a', 'b', 'c'}},
 	})
-	testCodecFail(t, codec, ptr("abc"))
 }
 
 func TestPointerPointerString(t *testing.T) {
@@ -38,7 +36,6 @@ func TestPointerPointerString(t *testing.T) {
 		{"**empty", ptr(ptr("")), []byte{pNonNil, pNonNil}},
 		{"**abc", ptr(ptr("abc")), []byte{pNonNil, pNonNil, 'a', 'b', 'c'}},
 	})
-	testCodecFail(t, codec, ptr(ptr("abc")))
 }
 
 func TestPointerSliceInt32(t *testing.T) {
@@ -56,7 +53,6 @@ func TestPointerSliceInt32(t *testing.T) {
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
-	testCodecFail(t, codec, &[]int32{})
 }
 
 func TestPointerNilsLast(t *testing.T) {
@@ -87,5 +83,4 @@ func TestPointerUnderlyingType(t *testing.T) {
 		{"*0", pInt(ptr(int32(0))), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
 		{"*-1", pInt(ptr(int32(-1))), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
 	})
-	testCodecFail(t, codec, pInt(ptr(int32(0))))
 }

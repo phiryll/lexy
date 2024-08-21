@@ -60,6 +60,29 @@ var (
 	escEsc  = []byte{escape, escape}
 )
 
+func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
+	return AppendUsingWrite[T](c, buf, value)
+}
+
+func (c terminatorCodec[T]) Put(buf []byte, value T) int {
+	return PutUsingAppend[T](c, buf, value)
+}
+
+func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
+	return GetUsingRead[T](c, buf)
+}
+
+func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
+	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
+	if err := c.codec.Write(buf, value); err != nil {
+		return err
+	}
+	if _, err := doEscape(w, buf.Bytes()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	var zero T
 	b, readErr := doUnescape(r)
@@ -75,17 +98,6 @@ func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 		return zero, UnexpectedIfEOF(codecErr)
 	}
 	return value, nil
-}
-
-func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
-	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-	if err := c.codec.Write(buf, value); err != nil {
-		return err
-	}
-	if _, err := doEscape(w, buf.Bytes()); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (terminatorCodec[T]) RequiresTerminator() bool {

@@ -26,24 +26,82 @@ import (
 // The effect is that longer numbers will be ordered closer to +/-infinity.
 // This works because bigInt.Bytes() will never have a leading zero byte.
 type bigIntCodec struct {
-	nilsFirst bool
+	prefix Prefix
 }
 
-func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	sign := value.Sign()
+	b := value.Bytes()
+	size := int64(len(b))
+	if sign < 0 {
+		newBuf = stdInt64.Append(newBuf, -size)
+		negate(b)
+	} else {
+		newBuf = stdInt64.Append(newBuf, size)
+	}
+	return append(newBuf, b...)
+}
+
+func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
+	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
+	// but it clears the entire buffer.
+	// So it makes sense here to use Append.
+	return mustCopy(buf, c.Append(nil, value))
+}
+
+func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
+	if len(buf) == 0 {
+		return nil, -1
+	}
+	// It's not efficient for Get and Read to share code,
+	// because Read can negate its buffer directly if the value is negative,
+	// while Get must make a copy first.
+	if c.prefix.Get(buf) {
+		return nil, 1
+	}
+	buf = buf[1:]
+	size, n := stdInt64.Get(buf)
+	buf = buf[n:]
+	var value big.Int
+	if size == 0 {
+		return &value, 1 + n
+	}
+	if size < 0 {
+		size = -size
+		_ = buf[size-1]
+		value.SetBytes(negate(append([]byte(nil), buf[:size]...)))
+		value.Neg(&value)
+	} else {
+		_ = buf[size-1]
+		value.SetBytes(buf[:size])
+	}
+	return &value, 1 + n + int(size)
+}
+
+func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
+	// The encoded bytes can't be written directly to w without
+	// creating a temporary buffer holding most of them anyway,
+	// so we might as well just reuse Append.
+	_, err := w.Write(c.Append(nil, value))
+	return err
+}
+
+func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
-	neg := false
 	size, err := stdInt64.Read(r)
 	if err != nil {
 		return nil, UnexpectedIfEOF(err)
 	}
+	neg := false
 	if size < 0 {
 		neg = true
 		size = -size
-		// r is only used to read the value bits at this point,
-		// so we can reassign it safely.
-		r = negateReader{r}
 	}
 	b := make([]byte, size)
 	_, err = io.ReadFull(r, b)
@@ -51,33 +109,13 @@ func (bigIntCodec) Read(r io.Reader) (*big.Int, error) {
 		return nil, UnexpectedIfEOF(err)
 	}
 	var value big.Int
-	value.SetBytes(b)
 	if neg {
+		value.SetBytes(negate(b))
 		value.Neg(&value)
+	} else {
+		value.SetBytes(b)
 	}
 	return &value, nil
-}
-
-func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	neg := false
-	sign := value.Sign()
-	b := value.Bytes()
-	size := len(b)
-	if sign < 0 {
-		size = -size
-		neg = true
-	}
-	if err := stdInt64.Write(w, int64(size)); err != nil {
-		return err
-	}
-	if neg {
-		w = negateWriter{w}
-	}
-	_, err := w.Write(b)
-	return err
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
@@ -85,7 +123,7 @@ func (bigIntCodec) RequiresTerminator() bool {
 }
 
 func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
-	return bigIntCodec{false}
+	return bigIntCodec{PrefixNilsLast}
 }
 
 // bigFloatCodec is the Codec for *big.Float values.
@@ -152,7 +190,7 @@ func (bigIntCodec) NilsLast() NillableCodec[*big.Int] {
 //		negate precision first if Float is negative
 //	write uint8 rounding mode
 type bigFloatCodec struct {
-	nilsFirst bool
+	prefix Prefix
 }
 
 // The second byte written in the *big.Float encoding after the initial prefixNonNil byte if non-nil.
@@ -184,9 +222,90 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
+func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
+	return AppendUsingWrite[*big.Float](c, buf, value)
+}
+
+func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
+	return PutUsingAppend[*big.Float](c, buf, value)
+}
+
+func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
+	return GetUsingRead[*big.Float](c, buf)
+}
+
+//nolint:cyclop,funlen
+func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
+	if done, err := c.prefix.Write(w, value == nil); done {
+		return err
+	}
+	// exp and prec are int and uint, but internally they're 32 bits
+	// use a signed prec here because we're doing possibly negative calculations with it
+	signbit := value.Signbit() // true if negative or negative zero
+	exp := int32(value.MantExp(nil))
+	prec := int32(value.Prec())
+	mode := value.Mode() // uint8
+	shift := computeShift(exp, prec)
+
+	isInf := value.IsInf()
+	isZero := prec == 0
+
+	var kind int8
+	switch {
+	case isInf && signbit:
+		kind = negInf
+	case isInf && !signbit:
+		kind = posInf
+	case isZero && signbit:
+		kind = negZero
+	case isZero && !signbit:
+		kind = posZero
+	case signbit:
+		kind = negFinite
+	case !signbit:
+		kind = posFinite
+	}
+	if err := stdInt8.Write(w, kind); err != nil {
+		return err
+	}
+	if isInf || isZero {
+		return nil
+	}
+
+	mantWriter := w
+	if signbit {
+		// These values are no longer being used except to write them.
+		exp = -exp
+		prec = -prec
+		mantWriter = negateWriter{w}
+	}
+
+	if err := stdInt32.Write(w, exp); err != nil {
+		return err
+	}
+
+	var tmp big.Float
+	tmp.Copy(value)
+	tmp.SetMantExp(&tmp, shift)
+	mantInt, acc := tmp.Int(nil)
+	if acc != big.Exact {
+		panic(errBigFloatEncoding)
+	}
+	mantBytes := mantInt.Bytes()
+	// order needs to be escape the bytes and *then* negate them if needed
+	if _, err := doEscape(mantWriter, mantBytes); err != nil {
+		return err
+	}
+
+	if err := stdInt32.Write(w, prec); err != nil {
+		return err
+	}
+	return modeCodec.Write(w, mode)
+}
+
 //nolint:funlen
-func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	kind, err := stdInt8.Read(r)
@@ -246,80 +365,12 @@ func (bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	return &value, nil
 }
 
-//nolint:cyclop,funlen
-func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	// exp and prec are int and uint, but internally they're 32 bits
-	// use a signed prec here because we're doing possibly negative calculations with it
-	signbit := value.Signbit() // true if negative or negative zero
-	exp := int32(value.MantExp(nil))
-	prec := int32(value.Prec())
-	mode := value.Mode() // uint8
-	shift := computeShift(exp, prec)
-
-	isInf := value.IsInf()
-	isZero := prec == 0
-
-	var kind int8
-	switch {
-	case isInf && signbit:
-		kind = negInf
-	case isInf && !signbit:
-		kind = posInf
-	case isZero && signbit:
-		kind = negZero
-	case isZero && !signbit:
-		kind = posZero
-	case signbit:
-		kind = negFinite
-	case !signbit:
-		kind = posFinite
-	}
-	if err := stdInt8.Write(w, kind); err != nil {
-		return err
-	}
-	if isInf || isZero {
-		return nil
-	}
-
-	mantWriter := w
-	if signbit {
-		// These values are no longer being used except to write them.
-		exp = -exp
-		prec = -prec
-		mantWriter = negateWriter{w}
-	}
-
-	if err := stdInt32.Write(w, exp); err != nil {
-		return err
-	}
-
-	var tmp big.Float
-	tmp.Copy(value)
-	tmp.SetMantExp(&tmp, shift)
-	mantInt, acc := tmp.Int(nil)
-	if acc != big.Exact {
-		panic("unexpected failure while encoding big.Float")
-	}
-	mantBytes := mantInt.Bytes()
-	if _, err := doEscape(mantWriter, mantBytes); err != nil {
-		return err
-	}
-
-	if err := stdInt32.Write(w, prec); err != nil {
-		return err
-	}
-	return modeCodec.Write(w, mode)
-}
-
 func (bigFloatCodec) RequiresTerminator() bool {
 	return true
 }
 
 func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
-	return bigFloatCodec{false}
+	return bigFloatCodec{PrefixNilsLast}
 }
 
 // bigRatCodec is the Codec for *big.Rat values.
@@ -333,11 +384,52 @@ func (bigFloatCodec) NilsLast() NillableCodec[*big.Float] {
 //	write the numerator with bigIntCodec
 //	write the denominator with bigIntCodec
 type bigRatCodec struct {
-	nilsFirst bool
+	prefix Prefix
 }
 
-func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if done, err := ReadPrefix(r); done {
+func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	newBuf = stdBigInt.Append(newBuf, value.Num())
+	return stdBigInt.Append(newBuf, value.Denom())
+}
+
+func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	n := 1
+	n += stdBigInt.Put(buf[n:], value.Num())
+	return n + stdBigInt.Put(buf[n:], value.Denom())
+}
+
+func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
+	if len(buf) == 0 {
+		return nil, -1
+	}
+	if c.prefix.Get(buf) {
+		return nil, 1
+	}
+	num, nNum := stdBigInt.Get(buf[1:])
+	denom, nDenom := stdBigInt.Get(buf[1+nNum:])
+	var value big.Rat
+	return value.SetFrac(num, denom), 1 + nNum + nDenom
+}
+
+func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
+	if done, err := c.prefix.Write(w, value == nil); done {
+		return err
+	}
+	if err := stdBigInt.Write(w, value.Num()); err != nil {
+		return err
+	}
+	return stdBigInt.Write(w, value.Denom())
+}
+
+func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
+	if done, err := c.prefix.Read(r); done {
 		return nil, err
 	}
 	num, err := stdBigInt.Read(r)
@@ -352,20 +444,10 @@ func (bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
 	return value.SetFrac(num, denom), nil
 }
 
-func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := WritePrefix(w, value == nil, c.nilsFirst); done {
-		return err
-	}
-	if err := stdBigInt.Write(w, value.Num()); err != nil {
-		return err
-	}
-	return stdBigInt.Write(w, value.Denom())
-}
-
 func (bigRatCodec) RequiresTerminator() bool {
 	return false
 }
 
 func (bigRatCodec) NilsLast() NillableCodec[*big.Rat] {
-	return bigRatCodec{false}
+	return bigRatCodec{PrefixNilsLast}
 }

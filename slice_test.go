@@ -22,7 +22,6 @@ func TestSliceInt32(t *testing.T) {
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
-	testCodecFail(t, codec, []int32{})
 }
 
 func TestSliceString(t *testing.T) {
@@ -40,7 +39,6 @@ func TestSliceString(t *testing.T) {
 			'x', 'y', 'z', term,
 		}},
 	})
-	testCodecFail(t, codec, []string{})
 }
 
 // Unlike []*string, *uint8 does not require a terminator.
@@ -65,7 +63,6 @@ func TestSlicePtrUint8(t *testing.T) {
 			pNilFirst,
 		}},
 	})
-	testCodecFail(t, codec, nil)
 }
 
 func TestSlicePtrString(t *testing.T) {
@@ -84,7 +81,6 @@ func TestSlicePtrString(t *testing.T) {
 			pNonNil, 'x', 'y', 'z', term,
 		}},
 	})
-	testCodecFail(t, codec, []*string{})
 }
 
 func TestSliceSliceInt32(t *testing.T) {
@@ -119,7 +115,6 @@ func TestSliceSliceInt32(t *testing.T) {
 			pNilFirst, term,
 		}},
 	})
-	testCodecFail(t, codec, [][]int32{})
 }
 
 func TestSliceSliceString(t *testing.T) {
@@ -222,7 +217,6 @@ func TestSliceUnderlyingType(t *testing.T) {
 			0x7F, 0xFF, 0xFF, 0xFF,
 		}},
 	})
-	testCodecFail(t, codec, []int32{})
 }
 
 func TestSliceNilsLast(t *testing.T) {

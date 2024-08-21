@@ -9,13 +9,26 @@ import "io"
 // This is useful for empty structs, which are often used as map values.
 type emptyCodec[T any] struct{}
 
-func (emptyCodec[T]) Read(_ io.Reader) (T, error) {
+func (emptyCodec[T]) Append(buf []byte, _ T) []byte {
+	return buf
+}
+
+func (emptyCodec[T]) Put(_ []byte, _ T) int {
+	return 0
+}
+
+func (emptyCodec[T]) Get(_ []byte) (T, int) {
 	var zero T
-	return zero, nil
+	return zero, 0
 }
 
 func (emptyCodec[T]) Write(_ io.Writer, _ T) error {
 	return nil
+}
+
+func (emptyCodec[T]) Read(_ io.Reader) (T, error) {
+	var zero T
+	return zero, nil
 }
 
 func (emptyCodec[T]) RequiresTerminator() bool {

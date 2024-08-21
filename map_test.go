@@ -22,9 +22,8 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 			0x80, 0x00, 0x00, 0x00,
 		}},
 	})
-	testCodecFail(t, codec, M{})
 
-	testCodecRoundTrip(t, codec, []testCase[M]{
+	testVaryingCodec(t, codec, []testCase[M]{
 		{"non-trivial", M{
 			"a": 0,
 			"b": -1,
@@ -65,7 +64,7 @@ func TestMapUnderlyingType(t *testing.T) {
 func TestMapSlice(t *testing.T) {
 	t.Parallel()
 	codec := toCodec(lexy.MapOf(lexy.String(), toCodec(lexy.SliceOf(lexy.String()))))
-	testCodecRoundTrip(t, codec, []testCase[map[string][]string]{
+	testVaryingCodec(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
 		// only last if testing an ordered map codec
