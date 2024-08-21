@@ -133,13 +133,10 @@ type output struct {
 
 //nolint:thelper
 func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
-	// TODO: test Get/Read of zero bytes and EOF
-	// and zero bytes with not EOF (should not be unexpected EOF)
-	// Test
-	// - Get of zero bytes returns -1 if Append
-	// - -1/EOF
-	// - ErrUnexpectedEOF
-	// - other error
+	// Test Get/Read behavior with empty or error inputs.
+	c.getEmpty(t)
+	c.readEmpty(t)
+	c.readError(t)
 
 	for _, tt := range tests {
 		tt := tt
@@ -181,6 +178,50 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 			}
 		})
 	}
+}
+
+//nolint:thelper
+func (c testerCodec[T]) getEmpty(t *testing.T) {
+	t.Run("get empty", func(t *testing.T) {
+		var zero T
+		got, gotSize := c.codec.Get([]byte{})
+		if gotSize != -1 {
+			assert.Equal(t, 0, gotSize)
+		}
+		// All Codecs in lexy can only return the zero value from zero bytes.
+		assert.IsType(t, zero, got)
+		assert.Equal(t, zero, got)
+	})
+}
+
+//nolint:thelper
+func (c testerCodec[T]) readEmpty(t *testing.T) {
+	t.Run("read empty", func(t *testing.T) {
+		var zero T
+		r := bytes.NewReader([]byte{})
+		got, err := c.codec.Read(r)
+		if err != nil {
+			assert.ErrorIs(t, err, io.EOF)
+		}
+		// All Codecs in lexy can only return the zero value from empty input.
+		assert.IsType(t, zero, got)
+		assert.Equal(t, zero, got)
+	})
+}
+
+//nolint:thelper
+func (c testerCodec[T]) readError(t *testing.T) {
+	t.Run("read error", func(t *testing.T) {
+		var zero T
+		r := iotest.ErrReader(errRead)
+		got, err := c.codec.Read(r)
+		// emptyCodec never errors, and there's no good way to not include it.
+		if err != nil {
+			assert.ErrorIs(t, err, errRead)
+		}
+		assert.IsType(t, zero, got)
+		assert.Equal(t, zero, got)
+	})
 }
 
 //nolint:thelper
@@ -301,7 +342,7 @@ func (c testerCodec[T]) writeShortBuf(t *testing.T, tt testCase[T]) {
 
 //nolint:thelper
 func (c testerCodec[T]) writeSilentError(t *testing.T, tt testCase[T]) {
-	t.Run("write truncated buf", func(t *testing.T) {
+	t.Run("write silent error", func(t *testing.T) {
 		t.Skip("TODO: Write does not yet fail properly on silent truncation.")
 		size := len(c.codec.Append(nil, tt.value))
 		if size == 0 {
@@ -354,10 +395,9 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 			return
 		}()
 		if !panicked {
-			// TODO: Need to handle zero bytes read case!
 			assert.Equal(t, size-1, gotSize, "got too much data")
 			assert.IsType(t, tt.value, got)
-			if !reflect.ValueOf(tt.value).IsZero() {
+			if !reflect.ValueOf(tt.value).IsZero() { // both might be randomly zero
 				assert.NotEqual(t, tt.value, got, "got value without full data")
 			}
 		}
@@ -392,11 +432,10 @@ func (c testerCodec[T]) readShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		got, err := c.codec.Read(r)
 		if err != nil {
 			assert.ErrorIs(t, err, errorForEOF(size-1))
-		} else {
-			assert.IsType(t, tt.value, got)
-			if !reflect.ValueOf(tt.value).IsZero() {
-				assert.NotEqual(t, tt.value, got, "got value without full data")
-			}
+		}
+		assert.IsType(t, tt.value, got)
+		if !reflect.ValueOf(tt.value).IsZero() { // both might be randomly zero
+			assert.NotEqual(t, tt.value, got, "got value without full data")
 		}
 		assert.Equal(t, 0, r.Len())
 		assert.Equal(t, buf, workingBuf)

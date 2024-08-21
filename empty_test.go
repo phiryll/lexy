@@ -6,8 +6,7 @@ import (
 	"github.com/phiryll/lexy"
 )
 
-// There's not much point in testing emptyCodec itself,
-// but there are good reasons to test it in combination with other Codecs.
+// There are good reasons to test emptyCodec in combination with other Codecs.
 // In particular, it demonstrates why RequiresTerminator() must return true
 // if the Codec might encode zero bytes on Write.
 // These tests should also catch if any of the aggregate Codecs don't handle termination correctly.
@@ -21,6 +20,13 @@ var (
 	emptyCodec      = lexy.Empty[emptyStruct]()
 	valueEmptyCodec = toCodec(lexy.MakeMapOf[mValue](lexy.Uint8(), emptyCodec))
 )
+
+func TestEmpty(t *testing.T) {
+	t.Parallel()
+	testCodec(t, emptyCodec, []testCase[emptyStruct]{
+		{"empty", emptyStruct{}, []byte{}},
+	})
+}
 
 func TestPointerEmpty(t *testing.T) {
 	t.Parallel()
