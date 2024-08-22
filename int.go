@@ -30,6 +30,7 @@ const (
 	sizeUint64 = 8
 )
 
+//nolint:revive
 func (boolCodec) Append(buf []byte, value bool) []byte {
 	if value {
 		return append(buf, 1)
@@ -37,6 +38,7 @@ func (boolCodec) Append(buf []byte, value bool) []byte {
 	return append(buf, 0)
 }
 
+//nolint:revive
 func (boolCodec) Put(buf []byte, value bool) int {
 	if value {
 		buf[0] = 1

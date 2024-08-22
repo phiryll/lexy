@@ -393,8 +393,6 @@ linters-settings:
         disabled: true
       - name: file-header           # not using file headers
         disabled: true
-      - name: flag-parameter        # a method which writes a bool does this
-        disabled: true
       - name: max-public-structs    # don't know how to limit to one file
         disabled: true
 
