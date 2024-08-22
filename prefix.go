@@ -97,6 +97,14 @@ type Prefix interface {
 	// because the read of the prefix was successful.
 	// Any subsequent read from r should properly return 0 bytes read and io.EOF in this case.
 	Read(r io.Reader) (done bool, err error)
+
+	// prefixFor returns which prefix byte to write.
+	// This method is used by Append, Put, and Write.
+	prefixFor(isNil bool) byte
+
+	// eval returns (done, err), as documented on Prefix, after having read prefix.
+	// This method is used by Get and Read.
+	eval(prefix byte) (bool, error)
 }
 
 var (
@@ -112,102 +120,110 @@ type (
 	prefixNilsLast  struct{}
 )
 
-// prefixFor returns which prefix byte to write.
-// This method is used by Append, Put, and Write.
-func prefixFor(isNil, nilsFirst bool) byte {
-	switch {
-	case !isNil:
-		return prefixNonNil
-	case nilsFirst:
+//nolint:revive
+func (prefixNilsFirst) prefixFor(isNil bool) byte {
+	if isNil {
 		return prefixNilFirst
-	default:
-		return prefixNilLast
 	}
+	return prefixNonNil
 }
 
-// eval returns (done, err), as documented on Prefix, after having read prefix.
-// This method is used by Get and Read.
-func eval(prefix byte, nilsFirst bool) (bool, error) {
+func (prefixNilsFirst) eval(prefix byte) (bool, error) {
 	switch prefix {
 	case prefixNonNil:
 		return false, nil
 	case prefixNilFirst:
-		if !nilsFirst {
-			return true, errUnexpectedNilsFirst
-		}
 		return true, nil
 	case prefixNilLast:
-		if nilsFirst {
-			return true, errUnexpectedNilsLast
-		}
-		return true, nil
+		return true, errUnexpectedNilsLast
 	default:
 		return true, unknownPrefixError{prefix}
 	}
 }
 
-func (prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
-	return isNil, append(buf, prefixFor(isNil, true))
+func (p prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
+	return isNil, append(buf, p.prefixFor(isNil))
 }
 
-func (prefixNilsFirst) Put(buf []byte, isNil bool) bool {
-	buf[0] = prefixFor(isNil, true)
+func (p prefixNilsFirst) Put(buf []byte, isNil bool) bool {
+	buf[0] = p.prefixFor(isNil)
 	return isNil
 }
 
-func (prefixNilsFirst) Get(buf []byte) bool {
-	done, err := eval(buf[0], true)
+func (p prefixNilsFirst) Get(buf []byte) bool {
+	done, err := p.eval(buf[0])
 	if err != nil {
 		panic(err)
 	}
 	return done
 }
 
-func (prefixNilsFirst) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{prefixFor(isNil, true)}); err != nil {
+func (p prefixNilsFirst) Write(w io.Writer, isNil bool) (bool, error) {
+	if _, err := w.Write([]byte{p.prefixFor(isNil)}); err != nil {
 		return true, err
 	}
 	return isNil, nil
 }
 
-func (prefixNilsFirst) Read(r io.Reader) (bool, error) {
+func (p prefixNilsFirst) Read(r io.Reader) (bool, error) {
 	prefix := []byte{0}
 	_, err := io.ReadFull(r, prefix)
 	if err != nil {
 		return true, err
 	}
-	return eval(prefix[0], true)
+	return p.eval(prefix[0])
 }
 
-func (prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
-	return isNil, append(buf, prefixFor(isNil, false))
+//nolint:revive
+func (prefixNilsLast) prefixFor(isNil bool) byte {
+	if isNil {
+		return prefixNilLast
+	}
+	return prefixNonNil
 }
 
-func (prefixNilsLast) Put(buf []byte, isNil bool) bool {
-	buf[0] = prefixFor(isNil, false)
+func (p prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
+	return isNil, append(buf, p.prefixFor(isNil))
+}
+
+func (p prefixNilsLast) Put(buf []byte, isNil bool) bool {
+	buf[0] = p.prefixFor(isNil)
 	return isNil
 }
 
-func (prefixNilsLast) Get(buf []byte) bool {
-	done, err := eval(buf[0], false)
+func (p prefixNilsLast) Get(buf []byte) bool {
+	done, err := p.eval(buf[0])
 	if err != nil {
 		panic(err)
 	}
 	return done
 }
 
-func (prefixNilsLast) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{prefixFor(isNil, false)}); err != nil {
+func (p prefixNilsLast) Write(w io.Writer, isNil bool) (bool, error) {
+	if _, err := w.Write([]byte{p.prefixFor(isNil)}); err != nil {
 		return true, err
 	}
 	return isNil, nil
 }
 
-func (prefixNilsLast) Read(r io.Reader) (bool, error) {
+func (p prefixNilsLast) Read(r io.Reader) (bool, error) {
 	prefix := []byte{0}
 	_, err := io.ReadFull(r, prefix)
 	if err != nil {
 		return true, err
 	}
-	return eval(prefix[0], false)
+	return p.eval(prefix[0])
+}
+
+func (prefixNilsLast) eval(prefix byte) (bool, error) {
+	switch prefix {
+	case prefixNonNil:
+		return false, nil
+	case prefixNilFirst:
+		return true, errUnexpectedNilsFirst
+	case prefixNilLast:
+		return true, nil
+	default:
+		return true, unknownPrefixError{prefix}
+	}
 }
