@@ -23,9 +23,8 @@ func (s SomeStruct) String() string {
 // All of these are safe for concurrent access.
 var (
 	// Score sorts high to low.
-	negScoreCodec = lexy.Negate(lexy.Float32())
-	// The type cast is only necessary when using Go versions prior to 1.21.
-	tagsCodec       = lexy.TerminateIfNeeded(lexy.Codec[[]string](lexy.SliceOf(lexy.String())))
+	negScoreCodec   = lexy.Negate(lexy.Float32())
+	tagsCodec       = lexy.TerminateIfNeeded(lexy.SliceOf(lexy.String()))
 	SomeStructCodec = someStructCodec{}
 )
 

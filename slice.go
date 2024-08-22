@@ -62,6 +62,7 @@ func (sliceCodec[E]) RequiresTerminator() bool {
 	return true
 }
 
-func (c sliceCodec[E]) NilsLast() NillableCodec[[]E] {
+//lint:ignore U1000 this is actually used
+func (c sliceCodec[E]) nilsLast() Codec[[]E] {
 	return sliceCodec[E]{c.elemCodec, PrefixNilsLast}
 }

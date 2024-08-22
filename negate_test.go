@@ -59,7 +59,7 @@ func TestNegateLength(t *testing.T) {
 
 func TestNegatePtrString(t *testing.T) {
 	t.Parallel()
-	codec := lexy.Negate(toCodec(lexy.PointerTo(lexy.String())))
+	codec := lexy.Negate(lexy.PointerTo(lexy.String()))
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{negPNilFirst, negTerm}},
 		{"*empty", ptr(""), []byte{negPNonNil, negTerm}},
@@ -85,7 +85,7 @@ func TestNegatePtrString(t *testing.T) {
 
 func TestNegateSlicePtrString(t *testing.T) {
 	t.Parallel()
-	codec := lexy.Negate(toCodec(lexy.SliceOf(toCodec(lexy.PointerTo(lexy.String())))))
+	codec := lexy.Negate(lexy.SliceOf(lexy.PointerTo(lexy.String())))
 	// neg([]*string)
 	// negate and slice codecs are escaping and terminating.
 	testCodec(t, codec, []testCase[[]*string]{
@@ -130,7 +130,7 @@ type negateTest struct {
 }
 
 var (
-	negPtrIntCodec = lexy.Negate(toCodec(lexy.PointerTo(lexy.Int16())))
+	negPtrIntCodec = lexy.Negate(lexy.PointerTo(lexy.Int16()))
 	negStringCodec = lexy.Negate(lexy.String())
 
 	negTestCodec lexy.Codec[negateTest] = negateTestCodec{}

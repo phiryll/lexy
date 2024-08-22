@@ -51,6 +51,7 @@ func (bytesCodec) RequiresTerminator() bool {
 	return true
 }
 
-func (bytesCodec) NilsLast() NillableCodec[[]byte] {
+//lint:ignore U1000 this is actually used
+func (bytesCodec) nilsLast() Codec[[]byte] {
 	return bytesCodec{PrefixNilsLast}
 }

@@ -387,6 +387,8 @@ linters-settings:
         disabled: true
 
       # disabled for other reasons
+      - name: comment-spacings      # configuration of this rule does not work, and gofmt should fix it anyway.
+        disabled: true
       - name: confusing-naming      # can't handle multiple implementations of an interface
         disabled: true
       - name: file-header           # not using file headers

@@ -21,7 +21,7 @@ const (
 // Each Prefix method is a helper for implementing the correspondingly named Codec method.
 // Invoking the Prefix method should be the first action taken by the Codec method,
 // since it allows an early return if the value is nil.
-// The one exception is Get, which should check for an empty argument buffer first.
+// The one exception is Get, which should check for an empty buffer argument first.
 // All methods process exactly one byte if they are successful.
 //
 // In addition to other return values, every Prefix method returns done,
