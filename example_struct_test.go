@@ -3,7 +3,6 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"math"
 	"sort"
 
@@ -34,31 +33,31 @@ var (
 //   - tags
 type someStructCodec struct{}
 
-func (someStructCodec) Write(w io.Writer, value SomeStruct) error {
-	if err := lexy.Int32().Write(w, value.size); err != nil {
-		return err
-	}
-	if err := negScoreCodec.Write(w, value.score); err != nil {
-		return err
-	}
-	return tagsCodec.Write(w, value.tags)
+func (someStructCodec) Append(buf []byte, value SomeStruct) []byte {
+	buf = lexy.Int32().Append(buf, value.size)
+	buf = negScoreCodec.Append(buf, value.score)
+	return tagsCodec.Append(buf, value.tags)
 }
 
-func (someStructCodec) Read(r io.Reader) (SomeStruct, error) {
+func (someStructCodec) Put(buf []byte, value SomeStruct) int {
+	n := lexy.Int32().Put(buf, value.size)
+	n += negScoreCodec.Put(buf[n:], value.score)
+	n += tagsCodec.Put(buf[n:], value.tags)
+	return n
+}
+
+func (someStructCodec) Get(buf []byte) (SomeStruct, int) {
 	var zero SomeStruct
-	size, err := lexy.Int32().Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	score, err := negScoreCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	tags, err := tagsCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	return SomeStruct{size, score, tags}, nil
+	size, n := lexy.Int32().Get(buf)
+	score, count := negScoreCodec.Get(buf[n:])
+	// TODO: error check
+	n += count
+	tags, count := tagsCodec.Get(buf[n:])
+	n += count
+	return SomeStruct{size, score, tags}, n
 }
 
 func (someStructCodec) RequiresTerminator() bool {
@@ -171,30 +170,20 @@ func Example_struct() {
 		{42, 37.54, nil},
 		{153, 37.54, []string{"d"}},
 	}
-	var buf bytes.Buffer
 
 	var encoded [][]byte
 	fmt.Println("Round Trip Equals:")
 	for _, value := range structs {
-		buf.Reset()
-		if err := SomeStructCodec.Write(&buf, value); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
-		decoded, err := SomeStructCodec.Read(&buf)
-		if err != nil {
-			panic(err)
-		}
+		buf := SomeStructCodec.Append(nil, value)
+		encoded = append(encoded, buf)
+		decoded, _ := SomeStructCodec.Get(buf)
 		fmt.Println(structsEqual(value, decoded))
 	}
 
 	sort.Sort(sortableEncodings{encoded})
 	fmt.Println("Sorted:")
-	for _, encoded := range encoded {
-		decoded, err := SomeStructCodec.Read(bytes.NewReader(encoded))
-		if err != nil {
-			panic(err)
-		}
+	for _, enc := range encoded {
+		decoded, _ := SomeStructCodec.Get(enc)
 		fmt.Println(decoded.String())
 	}
 

@@ -1,9 +1,6 @@
 package lexy
 
-import (
-	"errors"
-	"io"
-)
+import "io"
 
 // mapCodec is the unordered Codec for maps.
 // A map is encoded as:
@@ -19,48 +16,48 @@ type mapCodec[K comparable, V any] struct {
 }
 
 func (c mapCodec[K, V]) Append(buf []byte, value map[K]V) []byte {
-	return AppendUsingWrite[map[K]V](c, buf, value)
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	for k, v := range value {
+		newBuf = c.keyCodec.Append(newBuf, k)
+		newBuf = c.valueCodec.Append(newBuf, v)
+	}
+	return newBuf
 }
 
 func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
-	return PutUsingAppend[map[K]V](c, buf, value)
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	n := 1
+	for k, v := range value {
+		n += c.keyCodec.Put(buf[n:], k)
+		n += c.valueCodec.Put(buf[n:], v)
+	}
+	return n
 }
 
 func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, int) {
-	return GetUsingRead[map[K]V](c, buf)
-}
-
-func (c mapCodec[K, V]) Write(w io.Writer, value map[K]V) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	for k, v := range value {
-		if err := c.keyCodec.Write(w, k); err != nil {
-			return err
-		}
-		if err := c.valueCodec.Write(w, v); err != nil {
-			return err
-		}
+	if c.prefix.Get(buf) {
+		return nil, 1
 	}
-	return nil
-}
-
-func (c mapCodec[K, V]) Read(r io.Reader) (map[K]V, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
-	}
+	n := 1
 	m := map[K]V{}
 	for {
-		key, err := c.keyCodec.Read(r)
-		if errors.Is(err, io.EOF) {
-			return m, nil
+		key, count := c.keyCodec.Get(buf[n:])
+		if count < 0 {
+			return m, n
 		}
-		if err != nil {
-			return m, err
-		}
-		value, err := c.valueCodec.Read(r)
-		if err != nil {
-			return m, UnexpectedIfEOF(err)
+		n += count
+		value, count := c.valueCodec.Get(buf[n:])
+		n += count
+		if count < 0 {
+			panic(io.ErrUnexpectedEOF)
 		}
 		m[key] = value
 	}

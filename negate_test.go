@@ -1,7 +1,6 @@
 package lexy_test
 
 import (
-	"io"
 	"math"
 	"testing"
 
@@ -140,43 +139,30 @@ var (
 // Putting the negated varying length field in the middle is intentional.
 type negateTestCodec struct{}
 
-func (c negateTestCodec) Append(buf []byte, value negateTest) []byte {
-	return lexy.AppendUsingWrite[negateTest](c, buf, value)
+func (negateTestCodec) Append(buf []byte, value negateTest) []byte {
+	buf = lexy.Uint8().Append(buf, value.fUint8)
+	buf = negStringCodec.Append(buf, value.fString)
+	return negPtrIntCodec.Append(buf, value.fPtrInt16)
 }
 
-func (c negateTestCodec) Put(buf []byte, value negateTest) int {
-	return lexy.PutUsingAppend[negateTest](c, buf, value)
+func (negateTestCodec) Put(buf []byte, value negateTest) int {
+	n := lexy.Uint8().Put(buf, value.fUint8)
+	n += negStringCodec.Put(buf[n:], value.fString)
+	n += negPtrIntCodec.Put(buf[n:], value.fPtrInt16)
+	return n
 }
 
-func (c negateTestCodec) Get(buf []byte) (negateTest, int) {
-	return lexy.GetUsingRead[negateTest](c, buf)
-}
-
-func (negateTestCodec) Write(w io.Writer, value negateTest) error {
-	if err := lexy.Uint8().Write(w, value.fUint8); err != nil {
-		return err
-	}
-	if err := negStringCodec.Write(w, value.fString); err != nil {
-		return err
-	}
-	return negPtrIntCodec.Write(w, value.fPtrInt16)
-}
-
-func (negateTestCodec) Read(r io.Reader) (negateTest, error) {
+func (negateTestCodec) Get(buf []byte) (negateTest, int) {
 	var zero negateTest
-	u8, err := lexy.Uint8().Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	s, err := negStringCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	pInt, err := negPtrIntCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
-	}
-	return negateTest{u8, pInt, s}, nil
+	u8, n := lexy.Uint8().Get(buf)
+	s, count := negStringCodec.Get(buf[n:])
+	n += count
+	pInt, count := negPtrIntCodec.Get(buf[n:])
+	n += count
+	return negateTest{u8, pInt, s}, n
 }
 
 func (negateTestCodec) RequiresTerminator() bool {

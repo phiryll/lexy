@@ -1,13 +1,11 @@
 package lexy_test
 
 import (
-	"bytes"
 	"math"
 	"testing"
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 //nolint:thelper
@@ -110,11 +108,8 @@ func TestMapPointerPointer(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-			require.NoError(t, err)
+			buf := codec.Append(nil, tt.value)
+			got, _ := codec.Get(buf)
 			assert.Equal(t, dePointerMap(tt.value), dePointerMap(got))
 		})
 	}

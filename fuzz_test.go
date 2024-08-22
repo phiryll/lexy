@@ -2,7 +2,6 @@ package lexy_test
 
 import (
 	"bytes"
-	"io"
 	"math"
 	"testing"
 
@@ -185,15 +184,6 @@ func (c toUint32Codec) Get(buf []byte) (uint32, int) {
 	return math.Float32bits(value), n
 }
 
-func (c toUint32Codec) Write(w io.Writer, value uint32) error {
-	return c.codec.Write(w, math.Float32frombits(value))
-}
-
-func (c toUint32Codec) Read(r io.Reader) (uint32, error) {
-	value, err := c.codec.Read(r)
-	return math.Float32bits(value), err
-}
-
 func (toUint32Codec) RequiresTerminator() bool {
 	return false
 }
@@ -213,15 +203,6 @@ func (c toUint64Codec) Put(buf []byte, value uint64) int {
 func (c toUint64Codec) Get(buf []byte) (uint64, int) {
 	value, n := c.codec.Get(buf)
 	return math.Float64bits(value), n
-}
-
-func (c toUint64Codec) Write(w io.Writer, value uint64) error {
-	return c.codec.Write(w, math.Float64frombits(value))
-}
-
-func (c toUint64Codec) Read(r io.Reader) (uint64, error) {
-	value, err := c.codec.Read(r)
-	return math.Float64bits(value), err
 }
 
 func (toUint64Codec) RequiresTerminator() bool {

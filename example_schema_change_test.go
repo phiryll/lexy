@@ -1,8 +1,6 @@
 package lexy_test
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 
@@ -36,26 +34,20 @@ var (
 
 type previousCodec struct{}
 
-func (previousCodec) Write(w io.Writer, value schemaPrevious) error {
-	if err := nameCodec.Write(w, "count"); err != nil {
-		return err
-	}
-	if err := countCodec.Write(w, value.count); err != nil {
-		return err
-	}
-	if err := nameCodec.Write(w, "lastName"); err != nil {
-		return err
-	}
-	if err := nameCodec.Write(w, value.lastName); err != nil {
-		return err
-	}
-	if err := nameCodec.Write(w, "name"); err != nil {
-		return err
-	}
-	return nameCodec.Write(w, value.name)
+func (previousCodec) Append(buf []byte, value schemaPrevious) []byte {
+	buf = nameCodec.Append(buf, "count")
+	buf = countCodec.Append(buf, value.count)
+	buf = nameCodec.Append(buf, "lastName")
+	buf = nameCodec.Append(buf, value.lastName)
+	buf = nameCodec.Append(buf, "name")
+	return nameCodec.Append(buf, value.name)
 }
 
-func (previousCodec) Read(_ io.Reader) (schemaPrevious, error) {
+func (previousCodec) Put(_ []byte, _ schemaPrevious) int {
+	panic("unused in this example")
+}
+
+func (previousCodec) Get(_ []byte) (schemaPrevious, int) {
 	panic("unused in this example")
 }
 
@@ -70,47 +62,56 @@ func (previousCodec) RequiresTerminator() bool {
 // Because Read reads field names first, it is tolerant of field reorderings.
 type schemaCodec struct{}
 
-func (schemaCodec) Write(_ io.Writer, _ schema) error {
+func (schemaCodec) Append(_ []byte, _ schema) []byte {
 	panic("unused in this example")
 }
 
-func (schemaCodec) Read(r io.Reader) (schema, error) {
+func (schemaCodec) Put(_ []byte, _ schema) int {
+	panic("unused in this example")
+}
+
+func (schemaCodec) Get(buf []byte) (schema, int) {
 	var zero, value schema
+	if len(buf) == 0 {
+		return zero, -1
+	}
+	n := 0
 	for {
-		field, err := nameCodec.Read(r)
-		if errors.Is(err, io.EOF) {
-			// EOF at this point means we're done.
-			return value, nil
+		field, count := nameCodec.Get(buf[n:])
+		if count < 0 {
+			return value, n
 		}
-		if err != nil {
-			return zero, err
-		}
+		n += count
 		switch field {
 		case "name", "firstName":
 			// Field was renamed.
-			firstName, err := nameCodec.Read(r)
-			if err != nil {
-				return zero, lexy.UnexpectedIfEOF(err)
+			firstName, count := nameCodec.Get(buf[n:])
+			n += count
+			if count < 0 {
+				panic(io.ErrUnexpectedEOF)
 			}
 			value.firstName = firstName
 		case "middleName":
 			// Field was added.
-			middleName, err := nameCodec.Read(r)
-			if err != nil {
-				return zero, lexy.UnexpectedIfEOF(err)
+			middleName, count := nameCodec.Get(buf[n:])
+			n += count
+			if count < 0 {
+				panic(io.ErrUnexpectedEOF)
 			}
 			value.middleName = middleName
 		case "lastName":
-			lastName, err := nameCodec.Read(r)
-			if err != nil {
-				return zero, lexy.UnexpectedIfEOF(err)
+			lastName, count := nameCodec.Get(buf[n:])
+			n += count
+			if count < 0 {
+				panic(io.ErrUnexpectedEOF)
 			}
 			value.lastName = lastName
 		case "count":
 			// Field was removed, but we still need to read the value.
-			_, err := countCodec.Read(r)
-			if err != nil {
-				return zero, lexy.UnexpectedIfEOF(err)
+			_, count := countCodec.Get(buf[n:])
+			n += count
+			if count < 0 {
+				panic(io.ErrUnexpectedEOF)
 			}
 		default:
 			// We must stop, we don't know how to proceed.
@@ -155,20 +156,13 @@ func (schemaCodec) RequiresTerminator() bool {
 // with different orderings for the same type, nor with storing
 // the same data ordered in different ways in the same data store.
 func Example_schemaChange() {
-	var buf bytes.Buffer
 	for _, previous := range []schemaPrevious{
 		{"Alice", "Jones", 35},
 		{"", "Washington", 17},
 		{"Cathy", "Spencer", 23},
 	} {
-		buf.Reset()
-		if err := PreviousCodec.Write(&buf, previous); err != nil {
-			panic(err)
-		}
-		current, err := SchemaCodec.Read(&buf)
-		if err != nil {
-			panic(err)
-		}
+		buf := PreviousCodec.Append(nil, previous)
+		current, _ := SchemaCodec.Get(buf)
 		fmt.Println(previous.name == current.firstName &&
 			previous.lastName == current.lastName &&
 			current.middleName == "")

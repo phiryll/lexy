@@ -1,13 +1,8 @@
 package lexy
 
-import (
-	"bytes"
-	"io"
-)
-
 // bytesCodec is the Codec for []byte.
 //
-// Read will fully consume its argument io.Reader if the value is not nil.
+// Get will fully consume its argument buffer if the value is not nil.
 // []byte is slightly different than string because it can be nil.
 // This is more efficient than sliceCodec would be.
 type bytesCodec struct {
@@ -15,36 +10,25 @@ type bytesCodec struct {
 }
 
 func (c bytesCodec) Append(buf, value []byte) []byte {
-	return AppendUsingWrite[[]byte](c, buf, value)
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	return append(newBuf, value...)
 }
 
 func (c bytesCodec) Put(buf, value []byte) int {
-	return PutUsingAppend[[]byte](c, buf, value)
+	return mustCopy(buf, c.Append(nil, value))
 }
 
 func (c bytesCodec) Get(buf []byte) ([]byte, int) {
-	return GetUsingRead[[]byte](c, buf)
-}
-
-func (c bytesCodec) Write(w io.Writer, value []byte) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	_, err := w.Write(value)
-	return err
-}
-
-func (c bytesCodec) Read(r io.Reader) ([]byte, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
+	if c.prefix.Get(buf) {
+		return nil, 1
 	}
-	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-	// io.Copy will not return io.EOF
-	_, err := io.Copy(buf, r)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return append([]byte{}, buf[1:]...), len(buf)
 }
 
 func (bytesCodec) RequiresTerminator() bool {

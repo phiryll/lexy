@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // Codecs for types with different underlying types.
 // These merely delegate to the Codecs for the underlying types and cast.
 // Previous version of lexy had generic definitions for the Codecs with the logic.
@@ -120,24 +116,16 @@ type (
 )
 
 func (c castBool[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdBool.Append(buf, bool(value))
 }
 
 func (c castBool[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdBool.Put(buf, bool(value))
 }
 
 func (c castBool[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castBool[T]) Write(w io.Writer, value T) error {
-	return stdBool.Write(w, bool(value))
-}
-
-func (castBool[T]) Read(r io.Reader) (T, error) {
-	value, err := stdBool.Read(r)
-	return T(value), err
+	value, n := stdBool.Get(buf)
+	return T(value), n
 }
 
 func (castBool[T]) RequiresTerminator() bool {
@@ -145,24 +133,16 @@ func (castBool[T]) RequiresTerminator() bool {
 }
 
 func (c castUint8[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdUint8.Append(buf, uint8(value))
 }
 
 func (c castUint8[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdUint8.Put(buf, uint8(value))
 }
 
 func (c castUint8[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castUint8[T]) Write(w io.Writer, value T) error {
-	return stdUint8.Write(w, uint8(value))
-}
-
-func (castUint8[T]) Read(r io.Reader) (T, error) {
-	value, err := stdUint8.Read(r)
-	return T(value), err
+	value, n := stdUint8.Get(buf)
+	return T(value), n
 }
 
 func (castUint8[T]) RequiresTerminator() bool {
@@ -170,24 +150,16 @@ func (castUint8[T]) RequiresTerminator() bool {
 }
 
 func (c castUint16[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdUint16.Append(buf, uint16(value))
 }
 
 func (c castUint16[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdUint16.Put(buf, uint16(value))
 }
 
 func (c castUint16[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castUint16[T]) Write(w io.Writer, value T) error {
-	return stdUint16.Write(w, uint16(value))
-}
-
-func (castUint16[T]) Read(r io.Reader) (T, error) {
-	value, err := stdUint16.Read(r)
-	return T(value), err
+	value, n := stdUint16.Get(buf)
+	return T(value), n
 }
 
 func (castUint16[T]) RequiresTerminator() bool {
@@ -195,24 +167,16 @@ func (castUint16[T]) RequiresTerminator() bool {
 }
 
 func (c castUint32[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdUint32.Append(buf, uint32(value))
 }
 
 func (c castUint32[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdUint32.Put(buf, uint32(value))
 }
 
 func (c castUint32[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castUint32[T]) Write(w io.Writer, value T) error {
-	return stdUint32.Write(w, uint32(value))
-}
-
-func (castUint32[T]) Read(r io.Reader) (T, error) {
-	value, err := stdUint32.Read(r)
-	return T(value), err
+	value, n := stdUint32.Get(buf)
+	return T(value), n
 }
 
 func (castUint32[T]) RequiresTerminator() bool {
@@ -220,24 +184,16 @@ func (castUint32[T]) RequiresTerminator() bool {
 }
 
 func (c castUint64[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdUint64.Append(buf, uint64(value))
 }
 
 func (c castUint64[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdUint64.Put(buf, uint64(value))
 }
 
 func (c castUint64[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castUint64[T]) Write(w io.Writer, value T) error {
-	return stdUint64.Write(w, uint64(value))
-}
-
-func (castUint64[T]) Read(r io.Reader) (T, error) {
-	value, err := stdUint64.Read(r)
-	return T(value), err
+	value, n := stdUint64.Get(buf)
+	return T(value), n
 }
 
 func (castUint64[T]) RequiresTerminator() bool {
@@ -245,24 +201,16 @@ func (castUint64[T]) RequiresTerminator() bool {
 }
 
 func (c castInt8[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdInt8.Append(buf, int8(value))
 }
 
 func (c castInt8[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdInt8.Put(buf, int8(value))
 }
 
 func (c castInt8[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castInt8[T]) Write(w io.Writer, value T) error {
-	return stdInt8.Write(w, int8(value))
-}
-
-func (castInt8[T]) Read(r io.Reader) (T, error) {
-	value, err := stdInt8.Read(r)
-	return T(value), err
+	value, n := stdInt8.Get(buf)
+	return T(value), n
 }
 
 func (castInt8[T]) RequiresTerminator() bool {
@@ -270,24 +218,16 @@ func (castInt8[T]) RequiresTerminator() bool {
 }
 
 func (c castInt16[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdInt16.Append(buf, int16(value))
 }
 
 func (c castInt16[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdInt16.Put(buf, int16(value))
 }
 
 func (c castInt16[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castInt16[T]) Write(w io.Writer, value T) error {
-	return stdInt16.Write(w, int16(value))
-}
-
-func (castInt16[T]) Read(r io.Reader) (T, error) {
-	value, err := stdInt16.Read(r)
-	return T(value), err
+	value, n := stdInt16.Get(buf)
+	return T(value), n
 }
 
 func (castInt16[T]) RequiresTerminator() bool {
@@ -295,24 +235,16 @@ func (castInt16[T]) RequiresTerminator() bool {
 }
 
 func (c castInt32[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdInt32.Append(buf, int32(value))
 }
 
 func (c castInt32[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdInt32.Put(buf, int32(value))
 }
 
 func (c castInt32[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castInt32[T]) Write(w io.Writer, value T) error {
-	return stdInt32.Write(w, int32(value))
-}
-
-func (castInt32[T]) Read(r io.Reader) (T, error) {
-	value, err := stdInt32.Read(r)
-	return T(value), err
+	value, n := stdInt32.Get(buf)
+	return T(value), n
 }
 
 func (castInt32[T]) RequiresTerminator() bool {
@@ -320,24 +252,16 @@ func (castInt32[T]) RequiresTerminator() bool {
 }
 
 func (c castInt64[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdInt64.Append(buf, int64(value))
 }
 
 func (c castInt64[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdInt64.Put(buf, int64(value))
 }
 
 func (c castInt64[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castInt64[T]) Write(w io.Writer, value T) error {
-	return stdInt64.Write(w, int64(value))
-}
-
-func (castInt64[T]) Read(r io.Reader) (T, error) {
-	value, err := stdInt64.Read(r)
-	return T(value), err
+	value, n := stdInt64.Get(buf)
+	return T(value), n
 }
 
 func (castInt64[T]) RequiresTerminator() bool {
@@ -345,24 +269,16 @@ func (castInt64[T]) RequiresTerminator() bool {
 }
 
 func (c castFloat32[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdFloat32.Append(buf, float32(value))
 }
 
 func (c castFloat32[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdFloat32.Put(buf, float32(value))
 }
 
 func (c castFloat32[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castFloat32[T]) Write(w io.Writer, value T) error {
-	return stdFloat32.Write(w, float32(value))
-}
-
-func (castFloat32[T]) Read(r io.Reader) (T, error) {
-	value, err := stdFloat32.Read(r)
-	return T(value), err
+	value, n := stdFloat32.Get(buf)
+	return T(value), n
 }
 
 func (castFloat32[T]) RequiresTerminator() bool {
@@ -370,24 +286,16 @@ func (castFloat32[T]) RequiresTerminator() bool {
 }
 
 func (c castFloat64[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdFloat64.Append(buf, float64(value))
 }
 
 func (c castFloat64[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdFloat64.Put(buf, float64(value))
 }
 
 func (c castFloat64[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castFloat64[T]) Write(w io.Writer, value T) error {
-	return stdFloat64.Write(w, float64(value))
-}
-
-func (castFloat64[T]) Read(r io.Reader) (T, error) {
-	value, err := stdFloat64.Read(r)
-	return T(value), err
+	value, n := stdFloat64.Get(buf)
+	return T(value), n
 }
 
 func (castFloat64[T]) RequiresTerminator() bool {
@@ -395,24 +303,16 @@ func (castFloat64[T]) RequiresTerminator() bool {
 }
 
 func (c castString[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return stdString.Append(buf, string(value))
 }
 
 func (c castString[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return stdString.Put(buf, string(value))
 }
 
 func (c castString[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (castString[T]) Write(w io.Writer, value T) error {
-	return stdString.Write(w, string(value))
-}
-
-func (castString[T]) Read(r io.Reader) (T, error) {
-	value, err := stdString.Read(r)
-	return T(value), err
+	value, n := stdString.Get(buf)
+	return T(value), n
 }
 
 func (castString[T]) RequiresTerminator() bool {
@@ -420,23 +320,15 @@ func (castString[T]) RequiresTerminator() bool {
 }
 
 func (c castBytes[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return c.codec.Append(buf, (value))
 }
 
 func (c castBytes[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return c.codec.Put(buf, (value))
 }
 
 func (c castBytes[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (c castBytes[T]) Write(w io.Writer, value T) error {
-	return c.codec.Write(w, value)
-}
-
-func (c castBytes[T]) Read(r io.Reader) (T, error) {
-	return c.codec.Read(r)
+	return c.codec.Get(buf)
 }
 
 func (c castBytes[T]) RequiresTerminator() bool {
@@ -444,23 +336,15 @@ func (c castBytes[T]) RequiresTerminator() bool {
 }
 
 func (c castPointer[P, E]) Append(buf []byte, value P) []byte {
-	return AppendUsingWrite[P](c, buf, value)
+	return c.codec.Append(buf, (value))
 }
 
 func (c castPointer[P, E]) Put(buf []byte, value P) int {
-	return PutUsingAppend[P](c, buf, value)
+	return c.codec.Put(buf, (value))
 }
 
 func (c castPointer[P, E]) Get(buf []byte) (P, int) {
-	return GetUsingRead[P](c, buf)
-}
-
-func (c castPointer[P, E]) Write(w io.Writer, value P) error {
-	return c.codec.Write(w, (*E)(value))
-}
-
-func (c castPointer[P, E]) Read(r io.Reader) (P, error) {
-	return c.codec.Read(r)
+	return c.codec.Get(buf)
 }
 
 func (c castPointer[P, E]) RequiresTerminator() bool {
@@ -468,23 +352,15 @@ func (c castPointer[P, E]) RequiresTerminator() bool {
 }
 
 func (c castSlice[S, E]) Append(buf []byte, value S) []byte {
-	return AppendUsingWrite[S](c, buf, value)
+	return c.codec.Append(buf, (value))
 }
 
 func (c castSlice[S, E]) Put(buf []byte, value S) int {
-	return PutUsingAppend[S](c, buf, value)
+	return c.codec.Put(buf, (value))
 }
 
 func (c castSlice[S, E]) Get(buf []byte) (S, int) {
-	return GetUsingRead[S](c, buf)
-}
-
-func (c castSlice[S, E]) Write(w io.Writer, value S) error {
-	return c.codec.Write(w, []E(value))
-}
-
-func (c castSlice[S, E]) Read(r io.Reader) (S, error) {
-	return c.codec.Read(r)
+	return c.codec.Get(buf)
 }
 
 func (c castSlice[S, E]) RequiresTerminator() bool {
@@ -492,23 +368,15 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 }
 
 func (c castMap[M, K, V]) Append(buf []byte, value M) []byte {
-	return AppendUsingWrite[M](c, buf, value)
+	return c.codec.Append(buf, value)
 }
 
 func (c castMap[M, K, V]) Put(buf []byte, value M) int {
-	return PutUsingAppend[M](c, buf, value)
+	return c.codec.Put(buf, value)
 }
 
 func (c castMap[M, K, V]) Get(buf []byte) (M, int) {
-	return GetUsingRead[M](c, buf)
-}
-
-func (c castMap[M, K, V]) Write(w io.Writer, value M) error {
-	return c.codec.Write(w, map[K]V(value))
-}
-
-func (c castMap[M, K, V]) Read(r io.Reader) (M, error) {
-	return c.codec.Read(r)
+	return c.codec.Get(buf)
 }
 
 func (c castMap[M, K, V]) RequiresTerminator() bool {

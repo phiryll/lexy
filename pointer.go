@@ -14,33 +14,35 @@ type pointerCodec[E any] struct {
 }
 
 func (c pointerCodec[E]) Append(buf []byte, value *E) []byte {
-	return AppendUsingWrite[*E](c, buf, value)
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	return c.elemCodec.Append(newBuf, *value)
 }
 
 func (c pointerCodec[E]) Put(buf []byte, value *E) int {
-	return PutUsingAppend[*E](c, buf, value)
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	n := 1
+	return n + c.elemCodec.Put(buf[n:], *value)
 }
 
 func (c pointerCodec[E]) Get(buf []byte) (*E, int) {
-	return GetUsingRead[*E](c, buf)
-}
-
-func (c pointerCodec[E]) Write(w io.Writer, value *E) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	return c.elemCodec.Write(w, *value)
-}
-
-func (c pointerCodec[E]) Read(r io.Reader) (*E, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
+	if c.prefix.Get(buf) {
+		return nil, 1
 	}
-	value, err := c.elemCodec.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+	n := 1
+	value, count := c.elemCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	return &value, nil
+	return &value, n
 }
 
 func (c pointerCodec[E]) RequiresTerminator() bool {
