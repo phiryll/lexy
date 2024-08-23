@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // negateCodec negates codec, reversing the ordering of its encoding.
 //
 // Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
@@ -66,34 +62,4 @@ func negate(buf []byte) []byte {
 		buf[i] ^= 0xFF
 	}
 	return buf
-}
-
-var (
-	_ io.Writer = negateWriter{nil}
-	_ io.Reader = negateReader{nil}
-)
-
-// negateWriter is an io.Writer which flips all the bits,
-// negating in the sense in the sense of lexicographical ordering.
-// The argument []byte is cloned and the clone's bits are flipped,
-// because the delegate Writer is assumed to be more efficient writing the entire slice
-// than it would be writing multiple smaller slices to avoid the allocation.
-type negateWriter struct {
-	io.Writer
-}
-
-func (w negateWriter) Write(p []byte) (int, error) {
-	return w.Writer.Write(negate(append([]byte(nil), p...)))
-}
-
-// negateReader is an io.Reader which flips all the bits,
-// negating in the sense in the sense of lexicographical ordering.
-type negateReader struct {
-	io.Reader
-}
-
-func (r negateReader) Read(p []byte) (int, error) {
-	n, err := r.Reader.Read(p)
-	negate(p[:n])
-	return n, err
 }

@@ -50,8 +50,6 @@ These functions are used when creating custom Codecs.
 package lexy
 
 import (
-	"errors"
-	"io"
 	"math/big"
 	"time"
 )
@@ -373,59 +371,7 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 
 // Functions to help in implementing new Codecs.
 
-// UnexpectedIfEOF returns [io.ErrUnexpectedEOF] if err is [io.EOF], and returns err otherwise.
-//
-// This helps make [Codec.Read] implementations easier to read.
-// See the examples for usage patterns.
-func UnexpectedIfEOF(err error) error {
-	if errors.Is(err, io.EOF) {
-		return io.ErrUnexpectedEOF
-	}
-	return err
-}
-
-//nolint:godox
-// TODO: io adapters, use cases:
-//
-// I have a func(io.Writer, T) err, and I want Append/Put to use it.
-// Which means making a bytes.Buffer and io.Write to it.
-// This is easy enough to do by yourself.
-//
-// I want to write the encoding to an actual io.Writer. That's just this:
-//   _, err := w.Write(codec.Append([]byte{}, value))
-// The only disadvantage is creating the buffer instead of writing directly
-// to the stream. But this is only an issue if the buffer is very large,
-// which is unlikely for the use cases this is meant to address.
-//
-// I have a func(io.Reader) (T, error) and I want Get to use it. That's this:
-// 	 r := bytes.NewReader(buf)
-//   value, err := codec.Read(r)
-//   if errors.Is(err, io.EOF) {
-//       return value, -1
-//   }
-//   if err != nil {
-//       panic(err)
-//   }
-//   return value, len(buf) - r.Len()
-// We can define that helper function. Instead of delegating to Codec.Read,
-// it uses a func(io.Reader) (T, error)
-//
-// I want to read the encoding from an actual io.Reader.
-// This is the impossible case, you'd have to write your own.
-// But when would you want to do this without reading until EOF?
-// I don't think there's a use case for it.
-//
-
-// PutUsingAppend is a function used to implement [Codec.Put] by delegating to [Codec.Append],
-// perhaps sub-optimally.
-// This is a typical usage:
-//
-//	func (c fooCodec) Put(buf []byte, value Foo) int {
-//	    return lexy.PutUsingAppend[Foo](c, buf, value)
-//	}
-func PutUsingAppend[T any](codec Codec[T], buf []byte, value T) int {
-	return mustCopy(buf, codec.Append(nil, value))
-}
+// TODO: Add more after looking for pain points in examples.
 
 // Helper functions used by implementations.
 
