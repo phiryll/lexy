@@ -3,6 +3,7 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"math"
 	"sort"
 
@@ -52,11 +53,19 @@ func (someStructCodec) Get(buf []byte) (SomeStruct, int) {
 		return zero, -1
 	}
 	size, n := lexy.Int32().Get(buf)
+	if n < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	score, count := negScoreCodec.Get(buf[n:])
-	// TODO: error check
 	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	tags, count := tagsCodec.Get(buf[n:])
 	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	return SomeStruct{size, score, tags}, n
 }
 
