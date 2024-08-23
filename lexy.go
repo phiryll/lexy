@@ -42,10 +42,6 @@ These Codec-returning functions require specifying a type parameter when invoked
   - [MakeString]
   - [MakeBytes]
   - [MakePointerTo], [MakeSliceOf], [MakeMapOf]
-
-These functions are used when creating custom Codecs.
-  - [UnexpectedIfEOF]
-  - [PutUsingAppend]
 */
 package lexy
 
@@ -57,8 +53,8 @@ import (
 // Codec defines a binary encoding for values of type T.
 // Most of the Codec implementations provided by this package preserve the type's natural ordering,
 // but nothing requires that behavior.
-// Append and Put must produce exactly the same encoded bytes.
-// Get must be able to decode exactly the same encoded bytes.
+// Append and Put should produce the same encoded bytes.
+// Get must be able to decode encodings produced by Append and Put.
 // Encoding and decoding should be lossless inverse operations.
 // Exceptions to any of these behaviors are allowed, but should be clearly documented.
 //
@@ -138,14 +134,14 @@ var (
 	stdBigRat     Codec[*big.Rat]      = bigRatCodec{PrefixNilsFirst}
 	stdBytes      Codec[[]byte]        = bytesCodec{PrefixNilsFirst}
 
-	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
-	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
-	stdTermBytes    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytes}
+	stdTermString Codec[string] = terminatorCodec[string]{stdString}
+	stdTermBytes  Codec[[]byte] = terminatorCodec[[]byte]{stdBytes}
 )
 
-// Empty returns a Codec that reads and writes no data.
-// [Codec.Read] returns the zero value of T.
-// Codec.Read and [Codec.Write] will never return an error, including [io.EOF].
+// Empty returns a Codec that encodes instances of T to zero bytes.
+// Get returns the zero value of T.
+// No method of this Codec will ever fail.
+//
 // This is useful for empty structs, which are often used as map values.
 // This Codec requires a terminator when used within an aggregate Codec.
 func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
@@ -243,6 +239,8 @@ func String() Codec[string] { return stdString }
 
 // TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
+//
+// This is a convenience function, it returns the same Codec as [Terminate]([String]()).
 func TerminatedString() Codec[string] { return stdTermString }
 
 // Duration returns a Codec for the time.Duration type.
@@ -272,10 +270,6 @@ func BigInt() Codec[*big.Int] { return stdBigInt }
 // This Codec is lossy. It does not encode the value's [big.Accuracy].
 func BigFloat() Codec[*big.Float] { return stdBigFloat }
 
-// TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloat }
-
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
@@ -291,6 +285,8 @@ func Bytes() Codec[[]byte] { return stdBytes }
 
 // TerminatedBytes returns a Codec for the []byte type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
+//
+// This is a convenience function, it returns the same Codec as [Terminate]([Bytes]()).
 func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 
 // PointerTo returns a Codec for the *E type, with nil pointers ordered first.
