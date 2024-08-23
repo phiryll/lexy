@@ -115,15 +115,15 @@ type (
 	}
 )
 
-func (c castBool[T]) Append(buf []byte, value T) []byte {
+func (castBool[T]) Append(buf []byte, value T) []byte {
 	return stdBool.Append(buf, bool(value))
 }
 
-func (c castBool[T]) Put(buf []byte, value T) int {
+func (castBool[T]) Put(buf []byte, value T) int {
 	return stdBool.Put(buf, bool(value))
 }
 
-func (c castBool[T]) Get(buf []byte) (T, int) {
+func (castBool[T]) Get(buf []byte) (T, int) {
 	value, n := stdBool.Get(buf)
 	return T(value), n
 }
@@ -132,15 +132,15 @@ func (castBool[T]) RequiresTerminator() bool {
 	return stdBool.RequiresTerminator()
 }
 
-func (c castUint8[T]) Append(buf []byte, value T) []byte {
+func (castUint8[T]) Append(buf []byte, value T) []byte {
 	return stdUint8.Append(buf, uint8(value))
 }
 
-func (c castUint8[T]) Put(buf []byte, value T) int {
+func (castUint8[T]) Put(buf []byte, value T) int {
 	return stdUint8.Put(buf, uint8(value))
 }
 
-func (c castUint8[T]) Get(buf []byte) (T, int) {
+func (castUint8[T]) Get(buf []byte) (T, int) {
 	value, n := stdUint8.Get(buf)
 	return T(value), n
 }
@@ -149,15 +149,15 @@ func (castUint8[T]) RequiresTerminator() bool {
 	return stdUint8.RequiresTerminator()
 }
 
-func (c castUint16[T]) Append(buf []byte, value T) []byte {
+func (castUint16[T]) Append(buf []byte, value T) []byte {
 	return stdUint16.Append(buf, uint16(value))
 }
 
-func (c castUint16[T]) Put(buf []byte, value T) int {
+func (castUint16[T]) Put(buf []byte, value T) int {
 	return stdUint16.Put(buf, uint16(value))
 }
 
-func (c castUint16[T]) Get(buf []byte) (T, int) {
+func (castUint16[T]) Get(buf []byte) (T, int) {
 	value, n := stdUint16.Get(buf)
 	return T(value), n
 }
@@ -166,15 +166,15 @@ func (castUint16[T]) RequiresTerminator() bool {
 	return stdUint16.RequiresTerminator()
 }
 
-func (c castUint32[T]) Append(buf []byte, value T) []byte {
+func (castUint32[T]) Append(buf []byte, value T) []byte {
 	return stdUint32.Append(buf, uint32(value))
 }
 
-func (c castUint32[T]) Put(buf []byte, value T) int {
+func (castUint32[T]) Put(buf []byte, value T) int {
 	return stdUint32.Put(buf, uint32(value))
 }
 
-func (c castUint32[T]) Get(buf []byte) (T, int) {
+func (castUint32[T]) Get(buf []byte) (T, int) {
 	value, n := stdUint32.Get(buf)
 	return T(value), n
 }
@@ -183,15 +183,15 @@ func (castUint32[T]) RequiresTerminator() bool {
 	return stdUint32.RequiresTerminator()
 }
 
-func (c castUint64[T]) Append(buf []byte, value T) []byte {
+func (castUint64[T]) Append(buf []byte, value T) []byte {
 	return stdUint64.Append(buf, uint64(value))
 }
 
-func (c castUint64[T]) Put(buf []byte, value T) int {
+func (castUint64[T]) Put(buf []byte, value T) int {
 	return stdUint64.Put(buf, uint64(value))
 }
 
-func (c castUint64[T]) Get(buf []byte) (T, int) {
+func (castUint64[T]) Get(buf []byte) (T, int) {
 	value, n := stdUint64.Get(buf)
 	return T(value), n
 }
@@ -200,15 +200,15 @@ func (castUint64[T]) RequiresTerminator() bool {
 	return stdUint64.RequiresTerminator()
 }
 
-func (c castInt8[T]) Append(buf []byte, value T) []byte {
+func (castInt8[T]) Append(buf []byte, value T) []byte {
 	return stdInt8.Append(buf, int8(value))
 }
 
-func (c castInt8[T]) Put(buf []byte, value T) int {
+func (castInt8[T]) Put(buf []byte, value T) int {
 	return stdInt8.Put(buf, int8(value))
 }
 
-func (c castInt8[T]) Get(buf []byte) (T, int) {
+func (castInt8[T]) Get(buf []byte) (T, int) {
 	value, n := stdInt8.Get(buf)
 	return T(value), n
 }
@@ -217,15 +217,15 @@ func (castInt8[T]) RequiresTerminator() bool {
 	return stdInt8.RequiresTerminator()
 }
 
-func (c castInt16[T]) Append(buf []byte, value T) []byte {
+func (castInt16[T]) Append(buf []byte, value T) []byte {
 	return stdInt16.Append(buf, int16(value))
 }
 
-func (c castInt16[T]) Put(buf []byte, value T) int {
+func (castInt16[T]) Put(buf []byte, value T) int {
 	return stdInt16.Put(buf, int16(value))
 }
 
-func (c castInt16[T]) Get(buf []byte) (T, int) {
+func (castInt16[T]) Get(buf []byte) (T, int) {
 	value, n := stdInt16.Get(buf)
 	return T(value), n
 }
@@ -234,15 +234,15 @@ func (castInt16[T]) RequiresTerminator() bool {
 	return stdInt16.RequiresTerminator()
 }
 
-func (c castInt32[T]) Append(buf []byte, value T) []byte {
+func (castInt32[T]) Append(buf []byte, value T) []byte {
 	return stdInt32.Append(buf, int32(value))
 }
 
-func (c castInt32[T]) Put(buf []byte, value T) int {
+func (castInt32[T]) Put(buf []byte, value T) int {
 	return stdInt32.Put(buf, int32(value))
 }
 
-func (c castInt32[T]) Get(buf []byte) (T, int) {
+func (castInt32[T]) Get(buf []byte) (T, int) {
 	value, n := stdInt32.Get(buf)
 	return T(value), n
 }
@@ -251,15 +251,15 @@ func (castInt32[T]) RequiresTerminator() bool {
 	return stdInt32.RequiresTerminator()
 }
 
-func (c castInt64[T]) Append(buf []byte, value T) []byte {
+func (castInt64[T]) Append(buf []byte, value T) []byte {
 	return stdInt64.Append(buf, int64(value))
 }
 
-func (c castInt64[T]) Put(buf []byte, value T) int {
+func (castInt64[T]) Put(buf []byte, value T) int {
 	return stdInt64.Put(buf, int64(value))
 }
 
-func (c castInt64[T]) Get(buf []byte) (T, int) {
+func (castInt64[T]) Get(buf []byte) (T, int) {
 	value, n := stdInt64.Get(buf)
 	return T(value), n
 }
@@ -268,15 +268,15 @@ func (castInt64[T]) RequiresTerminator() bool {
 	return stdInt64.RequiresTerminator()
 }
 
-func (c castFloat32[T]) Append(buf []byte, value T) []byte {
+func (castFloat32[T]) Append(buf []byte, value T) []byte {
 	return stdFloat32.Append(buf, float32(value))
 }
 
-func (c castFloat32[T]) Put(buf []byte, value T) int {
+func (castFloat32[T]) Put(buf []byte, value T) int {
 	return stdFloat32.Put(buf, float32(value))
 }
 
-func (c castFloat32[T]) Get(buf []byte) (T, int) {
+func (castFloat32[T]) Get(buf []byte) (T, int) {
 	value, n := stdFloat32.Get(buf)
 	return T(value), n
 }
@@ -285,15 +285,15 @@ func (castFloat32[T]) RequiresTerminator() bool {
 	return stdFloat32.RequiresTerminator()
 }
 
-func (c castFloat64[T]) Append(buf []byte, value T) []byte {
+func (castFloat64[T]) Append(buf []byte, value T) []byte {
 	return stdFloat64.Append(buf, float64(value))
 }
 
-func (c castFloat64[T]) Put(buf []byte, value T) int {
+func (castFloat64[T]) Put(buf []byte, value T) int {
 	return stdFloat64.Put(buf, float64(value))
 }
 
-func (c castFloat64[T]) Get(buf []byte) (T, int) {
+func (castFloat64[T]) Get(buf []byte) (T, int) {
 	value, n := stdFloat64.Get(buf)
 	return T(value), n
 }
@@ -302,15 +302,15 @@ func (castFloat64[T]) RequiresTerminator() bool {
 	return stdFloat64.RequiresTerminator()
 }
 
-func (c castString[T]) Append(buf []byte, value T) []byte {
+func (castString[T]) Append(buf []byte, value T) []byte {
 	return stdString.Append(buf, string(value))
 }
 
-func (c castString[T]) Put(buf []byte, value T) int {
+func (castString[T]) Put(buf []byte, value T) int {
 	return stdString.Put(buf, string(value))
 }
 
-func (c castString[T]) Get(buf []byte) (T, int) {
+func (castString[T]) Get(buf []byte) (T, int) {
 	value, n := stdString.Get(buf)
 	return T(value), n
 }

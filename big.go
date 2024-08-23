@@ -184,6 +184,7 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
+//nolint:cyclop,funlen
 func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	done, newBuf := c.prefix.Append(buf, value == nil)
 	if done {
@@ -248,6 +249,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
 	return mustCopy(buf, c.Append(nil, value))
 }
 
+//nolint:cyclop,funlen
 func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
 	if len(buf) == 0 {
 		return nil, -1

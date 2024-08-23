@@ -47,18 +47,18 @@ var (
 
 type versionedCodec struct{}
 
-func (c versionedCodec) Append(buf []byte, value schemaVersion4) []byte {
+func (versionedCodec) Append(buf []byte, value schemaVersion4) []byte {
 	buf = lexy.Uint32().Append(buf, 4)
 	return SchemaVersion4Codec.Append(buf, value)
 }
 
-func (c versionedCodec) Put(buf []byte, value schemaVersion4) int {
+func (versionedCodec) Put(buf []byte, value schemaVersion4) int {
 	n := lexy.Uint32().Put(buf, 4)
 	n += SchemaVersion4Codec.Put(buf[n:], value)
 	return n
 }
 
-func (c versionedCodec) Get(buf []byte) (schemaVersion4, int) {
+func (versionedCodec) Get(buf []byte) (schemaVersion4, int) {
 	var zero schemaVersion4
 	if len(buf) == 0 {
 		return zero, -1
@@ -109,15 +109,15 @@ func (versionedCodec) RequiresTerminator() bool {
 
 type schemaVersion1Codec struct{}
 
-func (c schemaVersion1Codec) Append(buf []byte, value schemaVersion1) []byte {
+func (schemaVersion1Codec) Append(buf []byte, value schemaVersion1) []byte {
 	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
+func (schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
 	return NameCodec.Put(buf, value.name)
 }
 
-func (c schemaVersion1Codec) Get(buf []byte) (schemaVersion1, int) {
+func (schemaVersion1Codec) Get(buf []byte) (schemaVersion1, int) {
 	var zero schemaVersion1
 	if len(buf) == 0 {
 		return zero, -1
@@ -137,18 +137,18 @@ func (schemaVersion1Codec) RequiresTerminator() bool {
 
 type schemaVersion2Codec struct{}
 
-func (c schemaVersion2Codec) Append(buf []byte, value schemaVersion2) []byte {
+func (schemaVersion2Codec) Append(buf []byte, value schemaVersion2) []byte {
 	buf = NameCodec.Append(buf, value.lastName)
 	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
+func (schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
 	n := NameCodec.Put(buf, value.lastName)
 	n += NameCodec.Put(buf[n:], value.name)
 	return n
 }
 
-func (c schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
+func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
 	var zero schemaVersion2
 	if len(buf) == 0 {
 		return zero, -1
@@ -173,20 +173,20 @@ func (schemaVersion2Codec) RequiresTerminator() bool {
 
 type schemaVersion3Codec struct{}
 
-func (c schemaVersion3Codec) Append(buf []byte, value schemaVersion3) []byte {
+func (schemaVersion3Codec) Append(buf []byte, value schemaVersion3) []byte {
 	buf = CountCodec.Append(buf, value.count)
 	buf = NameCodec.Append(buf, value.lastName)
 	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
+func (schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
 	n := CountCodec.Put(buf, value.count)
 	n += NameCodec.Put(buf[n:], value.lastName)
 	n += NameCodec.Put(buf[n:], value.name)
 	return n
 }
 
-func (c schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
+func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
 	var zero schemaVersion3
 	if len(buf) == 0 {
 		return zero, -1
@@ -216,20 +216,20 @@ func (schemaVersion3Codec) RequiresTerminator() bool {
 
 type schemaVersion4Codec struct{}
 
-func (c schemaVersion4Codec) Append(buf []byte, value schemaVersion4) []byte {
+func (schemaVersion4Codec) Append(buf []byte, value schemaVersion4) []byte {
 	buf = NameCodec.Append(buf, value.lastName)
 	buf = NameCodec.Append(buf, value.firstName)
 	return NameCodec.Append(buf, value.middleName)
 }
 
-func (c schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
+func (schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
 	n := NameCodec.Put(buf, value.lastName)
 	n += NameCodec.Put(buf, value.firstName)
 	n += NameCodec.Put(buf, value.middleName)
 	return n
 }
 
-func (c schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
+func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
 	var zero schemaVersion4
 	if len(buf) == 0 {
 		return zero, -1

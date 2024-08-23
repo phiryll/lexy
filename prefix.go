@@ -102,7 +102,7 @@ func (p prefixNilsFirst) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (p prefixNilsFirst) Get(buf []byte) bool {
+func (prefixNilsFirst) Get(buf []byte) bool {
 	switch buf[0] {
 	case prefixNonNil:
 		return false
@@ -132,7 +132,7 @@ func (p prefixNilsLast) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (p prefixNilsLast) Get(buf []byte) bool {
+func (prefixNilsLast) Get(buf []byte) bool {
 	switch buf[0] {
 	case prefixNonNil:
 		return false
