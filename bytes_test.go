@@ -20,9 +20,9 @@ func TestBytes(t *testing.T) {
 func TestBytesUnderlyingType(t *testing.T) {
 	t.Parallel()
 	type header []byte
-	codec := lexy.MakeBytes[header]()
+	codec := lexy.NilsLast(lexy.MakeBytes[header]())
 	testCodec(t, codec, []testCase[header]{
-		{"nil", header(nil), []byte{pNilFirst}},
+		{"nil", header(nil), []byte{pNilLast}},
 		{"empty", header{}, []byte{pNonNil}},
 		{"[0]", header{0}, []byte{pNonNil, 0x00}},
 		{"[1, 2, 3]", header{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
