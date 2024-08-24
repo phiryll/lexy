@@ -15,7 +15,9 @@ type cache[K comparable, V any] struct {
 }
 
 func makeCache[K comparable, V any](compute func(K) V) cache[K, V] {
-	panicIfNil(compute, "compute function")
+	if compute == nil {
+		panic(ErrNil)
+	}
 	return cache[K, V]{
 		lock:    &sync.RWMutex{},
 		cached:  map[K]V{},
