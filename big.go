@@ -349,13 +349,18 @@ type bigRatCodec struct {
 	prefix Prefix
 }
 
+// A terminator is required to preserve the numerator-then-denominator ordering.
+// Otherwise a numerator's byte might be compared with a denominator's byte.
+// The denominator is also terminated because that allows bigRatCodec to not require a terminator.
+var termIntCodec = Terminate(BigInt())
+
 func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
 	done, newBuf := c.prefix.Append(buf, value == nil)
 	if done {
 		return newBuf
 	}
-	newBuf = stdBigInt.Append(newBuf, value.Num())
-	return stdBigInt.Append(newBuf, value.Denom())
+	newBuf = termIntCodec.Append(newBuf, value.Num())
+	return termIntCodec.Append(newBuf, value.Denom())
 }
 
 func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
@@ -363,8 +368,8 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
 		return 1
 	}
 	n := 1
-	n += stdBigInt.Put(buf[n:], value.Num())
-	return n + stdBigInt.Put(buf[n:], value.Denom())
+	n += termIntCodec.Put(buf[n:], value.Num())
+	return n + termIntCodec.Put(buf[n:], value.Denom())
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
@@ -374,8 +379,8 @@ func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
 	if c.prefix.Get(buf) {
 		return nil, 1
 	}
-	num, nNum := stdBigInt.Get(buf[1:])
-	denom, nDenom := stdBigInt.Get(buf[1+nNum:])
+	num, nNum := termIntCodec.Get(buf[1:])
+	denom, nDenom := termIntCodec.Get(buf[1+nNum:])
 	var value big.Rat
 	return value.SetFrac(num, denom), 1 + nNum + nDenom
 }
