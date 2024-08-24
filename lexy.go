@@ -97,13 +97,15 @@ type Codec[T any] interface {
 	// as well as types whose encodings can be zero bytes.
 	// Types whose encodings are always a fixed size, like integers and floats,
 	// never require a terminator and escaping.
+	// Types whose encodings have a variable size and are not ended by an unescaped terminator
+	// always require a terminator and escaping if more data is written following the encoded value.
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
 	// and more data could be written following the data written by this Codec.
 	// This is optional because terminating and escaping is unnecessary
-	// if the use of this Codec should decode entire buffer.
+	// if this Codec will decode the entire buffer given to Get.
 	//
-	// The Codec returned by [PointerTo] is unusual in that it only requires a terminator
+	// The Codec returned by [PointerTo] is a special case in that it only requires a terminator
 	// if its referent Codec requires one.
 	RequiresTerminator() bool
 }
