@@ -320,11 +320,11 @@ func (castString[T]) RequiresTerminator() bool {
 }
 
 func (c castBytes[T]) Append(buf []byte, value T) []byte {
-	return c.codec.Append(buf, (value))
+	return c.codec.Append(buf, []byte(value))
 }
 
 func (c castBytes[T]) Put(buf []byte, value T) int {
-	return c.codec.Put(buf, (value))
+	return c.codec.Put(buf, []byte(value))
 }
 
 func (c castBytes[T]) Get(buf []byte) (T, int) {
@@ -336,11 +336,11 @@ func (c castBytes[T]) RequiresTerminator() bool {
 }
 
 func (c castPointer[P, E]) Append(buf []byte, value P) []byte {
-	return c.codec.Append(buf, (value))
+	return c.codec.Append(buf, (*E)(value))
 }
 
 func (c castPointer[P, E]) Put(buf []byte, value P) int {
-	return c.codec.Put(buf, (value))
+	return c.codec.Put(buf, (*E)(value))
 }
 
 func (c castPointer[P, E]) Get(buf []byte) (P, int) {
@@ -352,11 +352,11 @@ func (c castPointer[P, E]) RequiresTerminator() bool {
 }
 
 func (c castSlice[S, E]) Append(buf []byte, value S) []byte {
-	return c.codec.Append(buf, (value))
+	return c.codec.Append(buf, []E(value))
 }
 
 func (c castSlice[S, E]) Put(buf []byte, value S) int {
-	return c.codec.Put(buf, (value))
+	return c.codec.Put(buf, []E(value))
 }
 
 func (c castSlice[S, E]) Get(buf []byte) (S, int) {
@@ -368,11 +368,11 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 }
 
 func (c castMap[M, K, V]) Append(buf []byte, value M) []byte {
-	return c.codec.Append(buf, value)
+	return c.codec.Append(buf, map[K]V(value))
 }
 
 func (c castMap[M, K, V]) Put(buf []byte, value M) int {
-	return c.codec.Put(buf, value)
+	return c.codec.Put(buf, map[K]V(value))
 }
 
 func (c castMap[M, K, V]) Get(buf []byte) (M, int) {
