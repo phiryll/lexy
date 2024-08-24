@@ -80,7 +80,7 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
-	return false
+	return true
 }
 
 //lint:ignore U1000 this is actually used

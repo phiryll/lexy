@@ -258,7 +258,7 @@ func Duration() Codec[time.Duration] { return stdDuration }
 func Time() Codec[time.Time] { return stdTime }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec requires a terminator when used within an aggregate Codec.
 func BigInt() Codec[*big.Int] { return stdBigInt }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
