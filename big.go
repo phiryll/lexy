@@ -50,7 +50,7 @@ func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
 	// but it clears the entire buffer.
 	// So it makes sense here to use Append.
-	return mustCopy(buf, c.Append(nil, value))
+	return copyAll(buf, c.Append(nil, value))
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
@@ -246,7 +246,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 }
 
 func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
-	return mustCopy(buf, c.Append(nil, value))
+	return copyAll(buf, c.Append(nil, value))
 }
 
 //nolint:cyclop,funlen

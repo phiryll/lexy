@@ -377,19 +377,19 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 // The default size when allocating a buffer, chosen because it should fit in a cache line.
 const defaultBufSize = 64
 
-// mustNonNil panics with a nilError with the given name if x is nil.
+// panicIfNil panics with a nilError with the given name if x is nil.
 // The best way to panic if something is nil is to use it,
 // use this function only if that isn't possible.
-func mustNonNil(x any, name string) {
+func panicIfNil(x any, name string) {
 	if x == nil {
 		panic(nilError{name})
 	}
 }
 
-// mustCopy is like the built-in copy(dst, src),
+// copyAll is like the built-in copy(dst, src),
 // except that it panics if dst is not large enough to hold all of src.
-// mustCopy returns the number of bytes copied, which is len(src).
-func mustCopy(dst, src []byte) int {
+// copyAll returns the number of bytes copied, which is len(src).
+func copyAll(dst, src []byte) int {
 	if len(src) == 0 {
 		return 0
 	}

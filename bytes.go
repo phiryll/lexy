@@ -18,7 +18,7 @@ func (c bytesCodec) Append(buf, value []byte) []byte {
 }
 
 func (c bytesCodec) Put(buf, value []byte) int {
-	return mustCopy(buf, c.Append(nil, value))
+	return copyAll(buf, c.Append(nil, value))
 }
 
 func (c bytesCodec) Get(buf []byte) ([]byte, int) {

@@ -55,7 +55,7 @@ func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) int {
-	return mustCopy(buf, c.Append(nil, value))
+	return copyAll(buf, c.Append(nil, value))
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
