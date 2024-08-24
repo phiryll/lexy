@@ -63,8 +63,10 @@ func (versionedCodec) Get(buf []byte) (schemaVersion4, int) {
 	if len(buf) == 0 {
 		return zero, -1
 	}
-	version, n := lexy.Uint32().Get(buf)
-	if n < 0 {
+	n := 0
+	version, count := lexy.Uint32().Get(buf)
+	n += count
+	if count < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
 	switch version {
@@ -153,8 +155,10 @@ func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
 	if len(buf) == 0 {
 		return zero, -1
 	}
-	lastName, n := NameCodec.Get(buf)
-	if n < 0 {
+	n := 0
+	lastName, count := NameCodec.Get(buf)
+	n += count
+	if count < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
 	name, count := NameCodec.Get(buf[n:])
@@ -191,18 +195,20 @@ func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
 	if len(buf) == 0 {
 		return zero, -1
 	}
-	count, n := CountCodec.Get(buf)
-	if n < 0 {
+	n := 0
+	count, byteCount := CountCodec.Get(buf)
+	n += byteCount
+	if byteCount < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
-	lastName, cnt := NameCodec.Get(buf[n:])
-	n += cnt
-	if cnt < 0 {
+	lastName, byteCount := NameCodec.Get(buf[n:])
+	n += byteCount
+	if byteCount < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
-	name, cnt := NameCodec.Get(buf[n:])
-	n += cnt
-	if cnt < 0 {
+	name, byteCount := NameCodec.Get(buf[n:])
+	n += byteCount
+	if byteCount < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
 	return schemaVersion3{name, lastName, count}, n
@@ -234,8 +240,10 @@ func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
 	if len(buf) == 0 {
 		return zero, -1
 	}
-	lastName, n := NameCodec.Get(buf)
-	if n < 0 {
+	n := 0
+	lastName, count := NameCodec.Get(buf)
+	n += count
+	if count < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
 	firstName, count := NameCodec.Get(buf[n:])

@@ -3,6 +3,7 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"math"
 
 	"github.com/phiryll/lexy"
@@ -37,6 +38,9 @@ func (quaternionCodec) Get(buf []byte) (Quaternion, int) {
 	n := 0
 	for i := range value {
 		elem, size := lexy.Float64().Get(buf[n:])
+		if size < 0 {
+			panic(io.ErrUnexpectedEOF)
+		}
 		value[i] = elem
 		n += size
 	}
@@ -48,9 +52,6 @@ func (quaternionCodec) RequiresTerminator() bool {
 }
 
 // ExampleArray shows how to define a Codec for an array type.
-// This particular example implements all Codec methods for completeness,
-// but this may not be necessary depending on your use case.
-// Unimplemented methods should panic.
 func Example_array() {
 	quats := []Quaternion{
 		{0.0, 3.4, 2.1, -1.5},
@@ -61,8 +62,8 @@ func Example_array() {
 		putBuf := make([]byte, 4*8)
 		quatCodec.Put(putBuf, quat)
 		fmt.Println(bytes.Equal(appendBuf, putBuf))
-		getDecoded, _ := quatCodec.Get(appendBuf)
-		fmt.Println(getDecoded)
+		decoded, _ := quatCodec.Get(appendBuf)
+		fmt.Println(decoded)
 	}
 	// Output:
 	// true

@@ -3,6 +3,7 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"sort"
 
 	"github.com/phiryll/lexy"
@@ -80,9 +81,17 @@ func (KeyCodec) Get(buf []byte) (UserKey, int) {
 		var zero UserKey
 		return zero, -1
 	}
-	cost, n := costCodec.Get(buf)
+	n := 0
+	cost, count := costCodec.Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	words, count := wordsCodec.Get(buf[n:])
 	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	return UserKey{words, cost}, n
 }
 

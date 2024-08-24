@@ -7,9 +7,8 @@ import (
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
-// Read only reads up to the first unescaped terminator byte,
-// which will have been previously written by Write.
-// This is the entire point of this Codec, to bound a Read that otherwise would not be bound.
+// Get only reads up to the first unescaped terminator byte (which it consumes but does not return),
+// which will have been previously written by Append or Put.
 type terminatorCodec[T any] struct {
 	codec Codec[T]
 }

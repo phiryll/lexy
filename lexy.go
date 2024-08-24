@@ -358,7 +358,7 @@ type nillableCodec[T any] interface {
 
 // NilsLast returns a Codec exactly like codec, but with nils ordered last.
 // NilsLast will panic if codec is not a pointer, slice, map, []byte, or *big.Int/Float/Rat Codec provided by lexy.
-// Codecs returned [Terminate], [TerminateIfNeeded], and [Negate] will cause NilsLast to panic,
+// Codecs returned by [Negate], [Terminate], and [TerminateIfNeeded] will cause NilsLast to panic,
 // regardless of the Codec they are wrapping.
 func NilsLast[T any](codec Codec[T]) Codec[T] {
 	if c, ok := codec.(nillableCodec[T]); ok {

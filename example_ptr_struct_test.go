@@ -2,6 +2,7 @@ package lexy_test
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/phiryll/lexy"
 )
@@ -30,8 +31,9 @@ func (ptrToBigStructCodec) Append(buf []byte, value *BigStruct) []byte {
 	if done {
 		return newBuf
 	}
+	newBuf = lexy.TerminatedString().Append(newBuf, value.name)
 	// Append other fields.
-	return lexy.TerminatedString().Append(newBuf, value.name)
+	return newBuf
 }
 
 func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
@@ -39,8 +41,8 @@ func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
 		return 1
 	}
 	n := 1
-	// Put other fields.
 	n += lexy.TerminatedString().Put(buf[n:], value.name)
+	// Put other fields.
 	return n
 }
 
@@ -54,6 +56,9 @@ func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, int) {
 	n := 1
 	name, count := lexy.TerminatedString().Get(buf[n:])
 	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
 	// Get other fields.
 	return &BigStruct{name /* , other fields ... */}, n
 }
@@ -82,6 +87,9 @@ func (containterCodec) Get(buf []byte) (Container, int) {
 	// Get other fields.
 	// someValue, count := someCodec.Get(buf[n:])
 	// n += count
+	// if count < 0 {
+	//     panic(io.ErrUnexpectedEOF)
+	// }
 	return Container{big /* , other fields ... */}, n
 }
 

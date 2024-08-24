@@ -52,8 +52,10 @@ func (someStructCodec) Get(buf []byte) (SomeStruct, int) {
 	if len(buf) == 0 {
 		return zero, -1
 	}
-	size, n := lexy.Int32().Get(buf)
-	if n < 0 {
+	n := 0
+	size, count := lexy.Int32().Get(buf)
+	n += count
+	if count < 0 {
 		panic(io.ErrUnexpectedEOF)
 	}
 	score, count := negScoreCodec.Get(buf[n:])
@@ -103,70 +105,23 @@ func (s sortableEncodings) Len() int           { return len(s.b) }
 func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
 func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
 
-//nolint:godox
-// TODO: Update docs here, more examples!
-
 // ExampleStruct shows how to define a typical user-defined Codec.
+// someStructCodec in this example demonstrates an idiomatic Codec definition.
+// The same pattern is used for non-struct types,
+// see the array example for one such use case.
+//
 // The rules of thumb are:
 //   - The order in which encoded data is written defines the Codec's ordering.
-//     Read data in the same order it was written, using the same Codecs.
+//     Get should read data in the same order it was written, using the same Codecs.
 //     The schema change example has an exception to this.
 //   - Use [lexy.PrefixNilsFirst] or [lexy.PrefixNilsLast] if the value can be nil.
-//   - Return the type's zero value and [io.EOF] from Read
-//     only if no bytes were read and EOF was reached.
-//     In the fooCodec example in this comment below,
-//     note that the first element read does not use [lexy.UnexpectedIfEOF].
-//   - If the value can be nil, lexy.Prefix.Read is the first element read,
-//     and the next element read after that should use lexy.UnexpectedIfEOF.
+//   - Return a negative byte count from Get only only if the buffer argument was empty
+//     and the Codec cannot encode zero bytes for some value.
 //   - Use [lexy.TerminateIfNeeded] when an element's Codec might require it.
 //     See [tagsCodec] in this example for a typical usage.
 //   - Return true from [lexy.Codec.RequiresTerminator] when appropriate,
 //     whether or not it's relevant at the moment.
 //     This allows the Codec to be safely used by others later.
-//
-// The pattern for a typical struct Codec implementation follows in this comment.
-// The same pattern is used for non-struct types,
-// see the array example for one such use case.
-// The first/second/.../nthCodecs in the example are not meant to imply
-// that each field needs its own Codec.
-// All the Codecs provided by lexy are safe for concurrent use and reusable,
-// assuming their delegate Codecs are safe for concurrent use
-// (the argument Codecs used to construct slice and map Codecs, e.g.).
-//
-//	func (fooCodec) Write(w io.Writer, value Foo) error {
-//	    if err := firstCodec.Write(w, value.first); err != nil {
-//	        return err
-//	    }
-//	    if err := secondCodec.Write(w, value.second); err != nil {
-//	        return err
-//	    }
-//	    // ...
-//	    return nthCodec.Write(w, value.nth)
-//	}
-//
-//	func (fooCodec) Read(r io.Reader) (Foo, error) {
-//	    var zero Foo
-//	    first, err := firstCodec.Read(r)
-//	    if err != nil {
-//	        return zero, err
-//	    }
-//	    second, err := secondCodec.Read(r)
-//	    if err != nil {
-//	        return zero, lexy.UnexpectedIfEOF(err)
-//	    }
-//	    // ...
-//	    nth, err := nthCodec.Read(r)
-//	    if err != nil {
-//	        return zero, lexy.UnexpectedIfEOF(err)
-//	    }
-//	    return Foo{first, second, ..., nth}, nil
-//	}
-//
-//	func (fooCodec) RequiresTerminator() bool {
-//	    return false
-//	}
-//
-// [someStructCodec] in this example code follows the same pattern.
 func Example_struct() {
 	structs := []SomeStruct{
 		{1, 5.0, nil},
@@ -184,9 +139,9 @@ func Example_struct() {
 	fmt.Println("Round Trip Equals:")
 	for _, value := range structs {
 		buf := SomeStructCodec.Append(nil, value)
-		encoded = append(encoded, buf)
 		decoded, _ := SomeStructCodec.Get(buf)
 		fmt.Println(structsEqual(value, decoded))
+		encoded = append(encoded, buf)
 	}
 
 	sort.Sort(sortableEncodings{encoded})

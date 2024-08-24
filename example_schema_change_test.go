@@ -58,8 +58,9 @@ func (previousCodec) RequiresTerminator() bool {
 	return true
 }
 
-// Other than handling the field changes, this Codec could change the sort order.
-// Because Read reads field names first, it is tolerant of field reorderings.
+// Other than handling the field changes, this Codec could change the sort order,
+// although writing back to the same database index would corrupt the its ordering.
+// Because Get reads field names first, it is tolerant of field reorderings.
 type schemaCodec struct{}
 
 func (schemaCodec) Append(_ []byte, _ schema) []byte {
@@ -149,7 +150,7 @@ func (schemaCodec) RequiresTerminator() bool {
 // Otherwise, it would be necessary to encode the field's type before its value,
 // because there's no way to know how to read the value otherwise,
 // and then the type would be the primary sort key for that field.
-// Encoding a value's type is discouraged.
+// Encoding a value's type is strongly discouraged.
 //
 // The sort order of encoded data cannot be changed.
 // However, there is nothing wrong with creating multiple Codecs
