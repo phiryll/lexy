@@ -2,6 +2,7 @@ package lexy
 
 import (
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -20,8 +21,6 @@ import (
 //	uint32 nanoseconds with the second
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
-
-const timeSize = sizeUint64 + sizeUint32 + sizeUint32
 
 var formatCache = makeCache(formatOffset)
 
@@ -61,7 +60,8 @@ func (timeCodec) Put(buf []byte, value time.Time) int {
 	seconds, nanos, offset := splitTime(value)
 	n := stdInt64.Put(buf, seconds)
 	n += stdUint32.Put(buf, nanos)
-	return n + stdInt32.Put(buf, offset)
+	n += stdInt32.Put(buf, offset)
+	return n
 }
 
 func (timeCodec) Get(buf []byte) (time.Time, int) {
@@ -69,10 +69,23 @@ func (timeCodec) Get(buf []byte) (time.Time, int) {
 		var zero time.Time
 		return zero, -1
 	}
-	seconds, _ := stdInt64.Get(buf)
-	nanos, _ := stdUint32.Get(buf[sizeUint64:])
-	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
-	return buildTime(seconds, nanos, offset), timeSize
+	n := 0
+	seconds, count := stdInt64.Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	nanos, count := stdUint32.Get(buf[sizeUint64:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	offset, count := stdInt32.Get(buf[sizeUint64+sizeUint32:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return buildTime(seconds, nanos, offset), n
 }
 
 func (timeCodec) RequiresTerminator() bool {
