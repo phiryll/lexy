@@ -42,17 +42,10 @@ These Codec-returning functions require specifying a type parameter when invoked
   - [MakeString]
   - [MakeBytes]
   - [MakePointerTo], [MakeSliceOf], [MakeMapOf]
-
-These functions are used when creating custom Codecs.
-  - [UnexpectedIfEOF]
-  - [AppendUsingWrite], [PutUsingAppend], [GetUsingRead]
 */
 package lexy
 
 import (
-	"bytes"
-	"errors"
-	"io"
 	"math/big"
 	"time"
 )
@@ -60,10 +53,10 @@ import (
 // Codec defines a binary encoding for values of type T.
 // Most of the Codec implementations provided by this package preserve the type's natural ordering,
 // but nothing requires that behavior.
-// Encoding methods (Append, Put, and Write) must produce exactly the same encoded bytes.
-// Decoding methods (Get and Read) must be able to read and decode exactly the same encoded bytes.
+// Append and Put should produce the same encoded bytes.
+// Get must be able to decode encodings produced by Append and Put.
 // Encoding and decoding should be lossless inverse operations.
-// Exceptions to any of these behaviors should be clearly documented.
+// Exceptions to any of these behaviors are allowed, but should be clearly documented.
 //
 // All Codecs provided by lexy will order nils first if instances of type T can be nil.
 // Invoking [NilsLast](codec) on a Codec will return a Codec which orders nils last,
@@ -89,42 +82,14 @@ type Codec[T any] interface {
 
 	// Get decodes a value of type T from buf, returning the value and the number of bytes read.
 	//
-	// If buf is empty and this Codec could encode zero bytes for some value, Get will return that value.
+	// If buf is empty and this Codec could encode zero bytes for some value,
+	// Get will return that value and 0 bytes read.
 	// If buf is empty and this Codec cannot encode zero bytes for any value,
 	// Get will return the zero value of T and a byte count < 0.
-	// This is analogous to the conditions under which Read returns [io.EOF].
-	// Checking the returned byte count is the only way to distinguish reading the zero value of T
-	// from having reached the []byte equivalent of EOF.
+	// Checking the returned byte count is the only way to distinguish these cases.
 	// Get will panic if a value of type T cannot be successfully decoded from a non-empty buf.
 	// Get will not modify buf.
 	Get(buf []byte) (T, int)
-
-	// Write encodes value and writes the encoded bytes to w.
-	//
-	// Write may repeatedly write small amounts of data to w,
-	// so using a buffered io.Writer is recommended if appropriate.
-	// Implementions of Write should not wrap w in a buffered io.Writer,
-	// but if they do, the buffered io.Writer must be flushed before returning from Write.
-	Write(w io.Writer, value T) error
-
-	// Read reads from r and decodes a value of type T.
-	//
-	// Read will read from r until either it has all the data it needs, or EOF is reached.
-	// Read will never read more bytes than necessary.
-	// If the returned error is non-nil, including [io.EOF], the returned value should be discarded.
-	// Read will only return io.EOF if r returned io.EOF and no bytes were read.
-	// Read will return [io.ErrUnexpectedEOF] if r returned io.EOF and a complete value was not successfully read.
-	// Implementations of Read should never knowingly return an incomplete value.
-	//
-	// [io.Reader.Read] is permitted to return only immediately available data instead of waiting for more.
-	// This may cause an error, or it may silently return incomplete data, depending on this Codec's implementation.
-	// Implementations can use functions such as [io.Copy] and [io.ReadFull] to help avoid this problem.
-	//
-	// Read may repeatedly read small amounts of data from r,
-	// so using a buffered io.Reader is recommended if appropriate.
-	// Implementations of Read should never wrap r in a buffered io.Reader,
-	// because doing so could consume excess data from r and corrupt following reads.
-	Read(r io.Reader) (T, error)
 
 	// RequiresTerminator returns whether encoded values require a terminator and escaping
 	// if more data is written following the encoded value.
@@ -132,13 +97,15 @@ type Codec[T any] interface {
 	// as well as types whose encodings can be zero bytes.
 	// Types whose encodings are always a fixed size, like integers and floats,
 	// never require a terminator and escaping.
+	// Types whose encodings have a variable size and are not ended by an unescaped terminator
+	// always require a terminator and escaping if more data is written following the encoded value.
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
 	// and more data could be written following the data written by this Codec.
 	// This is optional because terminating and escaping is unnecessary
-	// if the use of this Codec should read until EOF or the end of the buffer.
+	// if this Codec will decode the entire buffer given to Get.
 	//
-	// The Codec returned by [PointerTo] is unusual in that it only requires a terminator
+	// The Codec returned by [PointerTo] is a special case in that it only requires a terminator
 	// if its referent Codec requires one.
 	RequiresTerminator() bool
 }
@@ -169,14 +136,14 @@ var (
 	stdBigRat     Codec[*big.Rat]      = bigRatCodec{PrefixNilsFirst}
 	stdBytes      Codec[[]byte]        = bytesCodec{PrefixNilsFirst}
 
-	stdTermString   Codec[string]     = terminatorCodec[string]{stdString}
-	stdTermBigFloat Codec[*big.Float] = terminatorCodec[*big.Float]{stdBigFloat}
-	stdTermBytes    Codec[[]byte]     = terminatorCodec[[]byte]{stdBytes}
+	stdTermString Codec[string] = terminatorCodec[string]{stdString}
+	stdTermBytes  Codec[[]byte] = terminatorCodec[[]byte]{stdBytes}
 )
 
-// Empty returns a Codec that reads and writes no data.
-// [Codec.Read] returns the zero value of T.
-// Codec.Read and [Codec.Write] will never return an error, including [io.EOF].
+// Empty returns a Codec that encodes instances of T to zero bytes.
+// Get returns the zero value of T.
+// No method of this Codec will ever fail.
+//
 // This is useful for empty structs, which are often used as map values.
 // This Codec requires a terminator when used within an aggregate Codec.
 func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
@@ -274,6 +241,8 @@ func String() Codec[string] { return stdString }
 
 // TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
+//
+// This is a convenience function, it returns the same Codec as [Terminate]([String]()).
 func TerminatedString() Codec[string] { return stdTermString }
 
 // Duration returns a Codec for the time.Duration type.
@@ -291,7 +260,7 @@ func Duration() Codec[time.Duration] { return stdDuration }
 func Time() Codec[time.Time] { return stdTime }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec requires a terminator when used within an aggregate Codec.
 func BigInt() Codec[*big.Int] { return stdBigInt }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
@@ -302,10 +271,6 @@ func BigInt() Codec[*big.Int] { return stdBigInt }
 //
 // This Codec is lossy. It does not encode the value's [big.Accuracy].
 func BigFloat() Codec[*big.Float] { return stdBigFloat }
-
-// TerminatedBigFloat returns a Codec for the *big.Float type which escapes and terminates the encoded bytes.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func TerminatedBigFloat() Codec[*big.Float] { return stdTermBigFloat }
 
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
@@ -322,6 +287,8 @@ func Bytes() Codec[[]byte] { return stdBytes }
 
 // TerminatedBytes returns a Codec for the []byte type which escapes and terminates the encoded bytes.
 // This Codec does not require a terminator when used within an aggregate Codec.
+//
+// This is a convenience function, it returns the same Codec as [Terminate]([Bytes]()).
 func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 
 // PointerTo returns a Codec for the *E type, with nil pointers ordered first.
@@ -391,7 +358,7 @@ type nillableCodec[T any] interface {
 
 // NilsLast returns a Codec exactly like codec, but with nils ordered last.
 // NilsLast will panic if codec is not a pointer, slice, map, []byte, or *big.Int/Float/Rat Codec provided by lexy.
-// Codecs returned [Terminate], [TerminateIfNeeded], and [Negate] will cause NilsLast to panic,
+// Codecs returned by [Negate], [Terminate], and [TerminateIfNeeded] will cause NilsLast to panic,
 // regardless of the Codec they are wrapping.
 func NilsLast[T any](codec Codec[T]) Codec[T] {
 	if c, ok := codec.(nillableCodec[T]); ok {
@@ -402,65 +369,8 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 
 // Functions to help in implementing new Codecs.
 
-// UnexpectedIfEOF returns [io.ErrUnexpectedEOF] if err is [io.EOF], and returns err otherwise.
-//
-// This helps make [Codec.Read] implementations easier to read.
-// See the examples for usage patterns.
-func UnexpectedIfEOF(err error) error {
-	if errors.Is(err, io.EOF) {
-		return io.ErrUnexpectedEOF
-	}
-	return err
-}
-
 //nolint:godox
-// TODO: Not functions, types: BytesCodec and StreamCodec...?
-// Would have to rename existing bytesCodec.
-
-// AppendUsingWrite is a function used to implement [Codec.Append] by delegating to [Codec.Write],
-// perhaps sub-optimally.
-// This is a typical usage:
-//
-//	func (c fooCodec) Append(buf []byte, value Foo) []byte {
-//	    return lexy.AppendUsingWrite[Foo](c, buf, value)
-//	}
-func AppendUsingWrite[T any](codec Codec[T], buf []byte, value T) []byte {
-	b := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-	if err := codec.Write(b, value); err != nil {
-		panic(err)
-	}
-	return append(buf, b.Bytes()...)
-}
-
-// PutUsingAppend is a function used to implement [Codec.Put] by delegating to [Codec.Append],
-// perhaps sub-optimally.
-// This is a typical usage:
-//
-//	func (c fooCodec) Put(buf []byte, value Foo) int {
-//	    return lexy.PutUsingAppend[Foo](c, buf, value)
-//	}
-func PutUsingAppend[T any](codec Codec[T], buf []byte, value T) int {
-	return mustCopy(buf, codec.Append(nil, value))
-}
-
-// GetUsingRead is a function used to implement [Codec.Get] by delegating to [Codec.Read],
-// perhaps sub-optimally.
-// This is a typical usage:
-//
-//	func (c fooCodec) Get(buf []byte) (Foo, int)
-//	    return lexy.GetUsingRead[Foo](c, buf)
-//	}
-func GetUsingRead[T any](codec Codec[T], buf []byte) (T, int) {
-	r := bytes.NewReader(buf)
-	value, err := codec.Read(r)
-	if errors.Is(err, io.EOF) {
-		return value, -1
-	}
-	if err != nil {
-		panic(err)
-	}
-	return value, len(buf) - r.Len()
-}
+// TODO: Add more after looking for pain points in examples.
 
 // Helper functions used by implementations.
 

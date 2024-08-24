@@ -57,9 +57,6 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	if len(buf) == 0 {
 		return nil, -1
 	}
-	// It's not efficient for Get and Read to share code,
-	// because Read can negate its buffer directly if the value is negative,
-	// while Get must make a copy first.
 	if c.prefix.Get(buf) {
 		return nil, 1
 	}
@@ -82,44 +79,8 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 	return &value, 1 + n + int(size)
 }
 
-func (c bigIntCodec) Write(w io.Writer, value *big.Int) error {
-	// The encoded bytes can't be written directly to w without
-	// creating a temporary buffer holding most of them anyway,
-	// so we might as well just reuse Append.
-	_, err := w.Write(c.Append(nil, value))
-	return err
-}
-
-func (c bigIntCodec) Read(r io.Reader) (*big.Int, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
-	}
-	size, err := stdInt64.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	neg := false
-	if size < 0 {
-		neg = true
-		size = -size
-	}
-	b := make([]byte, size)
-	_, err = io.ReadFull(r, b)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	var value big.Int
-	if neg {
-		value.SetBytes(negate(b))
-		value.Neg(&value)
-	} else {
-		value.SetBytes(b)
-	}
-	return &value, nil
-}
-
 func (bigIntCodec) RequiresTerminator() bool {
-	return false
+	return true
 }
 
 //lint:ignore U1000 this is actually used
@@ -223,22 +184,11 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
-func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
-	return AppendUsingWrite[*big.Float](c, buf, value)
-}
-
-func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
-	return PutUsingAppend[*big.Float](c, buf, value)
-}
-
-func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
-	return GetUsingRead[*big.Float](c, buf)
-}
-
 //nolint:cyclop,funlen
-func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
+func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
 	// use a signed prec here because we're doing possibly negative calculations with it
@@ -266,24 +216,16 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 	case !signbit:
 		kind = posFinite
 	}
-	if err := stdInt8.Write(w, kind); err != nil {
-		return err
-	}
+	newBuf = stdInt8.Append(newBuf, kind)
 	if isInf || isZero {
-		return nil
+		return newBuf
 	}
-
-	mantWriter := w
 	if signbit {
 		// These values are no longer being used except to write them.
 		exp = -exp
 		prec = -prec
-		mantWriter = negateWriter{w}
 	}
-
-	if err := stdInt32.Write(w, exp); err != nil {
-		return err
-	}
+	newBuf = stdInt32.Append(newBuf, exp)
 
 	var tmp big.Float
 	tmp.Copy(value)
@@ -293,58 +235,76 @@ func (c bigFloatCodec) Write(w io.Writer, value *big.Float) error {
 		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
-	// order needs to be escape the bytes and *then* negate them if needed
-	if _, err := doEscape(mantWriter, mantBytes); err != nil {
-		return err
+	// Escape the bytes, then negate them if needed.
+	escaped := doEscape(mantBytes)
+	if signbit {
+		negate(escaped)
 	}
-
-	if err := stdInt32.Write(w, prec); err != nil {
-		return err
-	}
-	return modeCodec.Write(w, mode)
+	newBuf = append(newBuf, escaped...)
+	newBuf = stdInt32.Append(newBuf, prec)
+	return modeCodec.Append(newBuf, mode)
 }
 
-//nolint:funlen
-func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
+func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
+	return mustCopy(buf, c.Append(nil, value))
+}
+
+//nolint:cyclop,funlen
+func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	kind, err := stdInt8.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+	if c.prefix.Get(buf) {
+		return nil, 1
+	}
+	n := 1
+	kind, count := stdInt8.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
 	signbit := kind < 0
 	if kind == negInf || kind == posInf {
 		var value big.Float
-		return value.SetInf(signbit), nil
+		return value.SetInf(signbit), n
 	}
 	if kind == negZero || kind == posZero {
 		var value big.Float
 		if signbit {
 			value.Neg(&value)
 		}
-		return &value, nil
-	}
-	mantReader := r
-	if signbit {
-		mantReader = negateReader{r}
+		return &value, n
 	}
 
-	exp, err := stdInt32.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+	exp, count := stdInt32.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	mantBytes, err := doUnescape(mantReader)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+
+	var mantBytes []byte
+	// Negate the bytes if needed, then unescape.
+	if signbit {
+		// copy buf to negate it, unescape with that
+		tempBuf := append([]byte{}, buf[n:]...)
+		negate(tempBuf)
+		mantBytes, count = doUnescape(tempBuf)
+	} else {
+		mantBytes, count = doUnescape(buf[n:])
 	}
-	prec, err := stdInt32.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	mode, err := modeCodec.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
+	prec, count := stdInt32.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	mode, count := modeCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
 
 	if signbit {
@@ -363,7 +323,7 @@ func (c bigFloatCodec) Read(r io.Reader) (*big.Float, error) {
 	if signbit {
 		value.Neg(&value)
 	}
-	return &value, nil
+	return &value, n
 }
 
 func (bigFloatCodec) RequiresTerminator() bool {
@@ -389,13 +349,18 @@ type bigRatCodec struct {
 	prefix Prefix
 }
 
+// A terminator is required to preserve the numerator-then-denominator ordering.
+// Otherwise a numerator's byte might be compared with a denominator's byte.
+// The denominator is also terminated because that allows bigRatCodec to not require a terminator.
+var termIntCodec = Terminate(BigInt())
+
 func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
 	done, newBuf := c.prefix.Append(buf, value == nil)
 	if done {
 		return newBuf
 	}
-	newBuf = stdBigInt.Append(newBuf, value.Num())
-	return stdBigInt.Append(newBuf, value.Denom())
+	newBuf = termIntCodec.Append(newBuf, value.Num())
+	return termIntCodec.Append(newBuf, value.Denom())
 }
 
 func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
@@ -403,8 +368,8 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
 		return 1
 	}
 	n := 1
-	n += stdBigInt.Put(buf[n:], value.Num())
-	return n + stdBigInt.Put(buf[n:], value.Denom())
+	n += termIntCodec.Put(buf[n:], value.Num())
+	return n + termIntCodec.Put(buf[n:], value.Denom())
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
@@ -414,36 +379,10 @@ func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
 	if c.prefix.Get(buf) {
 		return nil, 1
 	}
-	num, nNum := stdBigInt.Get(buf[1:])
-	denom, nDenom := stdBigInt.Get(buf[1+nNum:])
+	num, nNum := termIntCodec.Get(buf[1:])
+	denom, nDenom := termIntCodec.Get(buf[1+nNum:])
 	var value big.Rat
 	return value.SetFrac(num, denom), 1 + nNum + nDenom
-}
-
-func (c bigRatCodec) Write(w io.Writer, value *big.Rat) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
-	}
-	if err := stdBigInt.Write(w, value.Num()); err != nil {
-		return err
-	}
-	return stdBigInt.Write(w, value.Denom())
-}
-
-func (c bigRatCodec) Read(r io.Reader) (*big.Rat, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
-	}
-	num, err := stdBigInt.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	denom, err := stdBigInt.Read(r)
-	if err != nil {
-		return nil, UnexpectedIfEOF(err)
-	}
-	var value big.Rat
-	return value.SetFrac(num, denom), nil
 }
 
 func (bigRatCodec) RequiresTerminator() bool {

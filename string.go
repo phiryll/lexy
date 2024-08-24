@@ -1,14 +1,9 @@
 package lexy
 
-import (
-	"io"
-	"strings"
-)
-
 // stringCodec is the Codec for strings.
 //
 // A string is encoded as its bytes.
-// Read will fully consume its argument io.Reader, and will not return io.EOF.
+// Get will fully consume its argument buffer, and will never return a negative byte count.
 //
 // The order of strings, and this encoding, may be surprising.
 // A string in Go is essentially an immutable []byte without text semantics.
@@ -27,21 +22,6 @@ func (stringCodec) Put(buf []byte, value string) int {
 
 func (stringCodec) Get(buf []byte) (string, int) {
 	return string(buf), len(buf)
-}
-
-func (stringCodec) Write(w io.Writer, value string) error {
-	_, err := io.WriteString(w, value)
-	return err
-}
-
-func (stringCodec) Read(r io.Reader) (string, error) {
-	var buf strings.Builder
-	// io.Copy will not return io.EOF
-	_, err := io.Copy(&buf, r)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
 }
 
 func (stringCodec) RequiresTerminator() bool {

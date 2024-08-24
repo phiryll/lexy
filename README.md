@@ -33,12 +33,6 @@ type Codec[T any] interface {
     // returning the value and the number of bytes read.
     Get(buf []byte) (T, int)
 
-    // Write encodes value and writes the encoded bytes to w.
-    Write(w io.Writer, value T) error
-
-    // Read reads from r and decodes a value of type T.
-    Read(r io.Reader) (T, error)
-
     // RequiresTerminator returns whether encoded values require
     // a terminator and escaping if more data is written following
     // the encoded value. This is the case for unbounded types

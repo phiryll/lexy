@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // negateCodec negates codec, reversing the ordering of its encoding.
 //
 // Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
@@ -37,23 +33,23 @@ type negateCodec[T any] struct {
 }
 
 func (c negateCodec[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	start := len(buf)
+	newBuf := c.codec.Append(buf, value)
+	negate(newBuf[start:])
+	return newBuf
 }
 
 func (c negateCodec[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	n := c.codec.Put(buf, value)
+	negate(buf[:n])
+	return n
 }
 
 func (c negateCodec[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (c negateCodec[T]) Write(w io.Writer, value T) error {
-	return c.codec.Write(negateWriter{w}, value)
-}
-
-func (c negateCodec[T]) Read(r io.Reader) (T, error) {
-	return c.codec.Read(negateReader{r})
+	// We don't know how much to Get, so we copy everything.
+	b := append([]byte{}, buf...)
+	negate(b)
+	return c.codec.Get(b)
 }
 
 func (negateCodec[T]) RequiresTerminator() bool {
@@ -66,34 +62,4 @@ func negate(buf []byte) []byte {
 		buf[i] ^= 0xFF
 	}
 	return buf
-}
-
-var (
-	_ io.Writer = negateWriter{nil}
-	_ io.Reader = negateReader{nil}
-)
-
-// negateWriter is an io.Writer which flips all the bits,
-// negating in the sense in the sense of lexicographical ordering.
-// The argument []byte is cloned and the clone's bits are flipped,
-// because the delegate Writer is assumed to be more efficient writing the entire slice
-// than it would be writing multiple smaller slices to avoid the allocation.
-type negateWriter struct {
-	io.Writer
-}
-
-func (w negateWriter) Write(p []byte) (int, error) {
-	return w.Writer.Write(negate(append([]byte(nil), p...)))
-}
-
-// negateReader is an io.Reader which flips all the bits,
-// negating in the sense in the sense of lexicographical ordering.
-type negateReader struct {
-	io.Reader
-}
-
-func (r negateReader) Read(p []byte) (int, error) {
-	n, err := r.Reader.Read(p)
-	negate(p[:n])
-	return n, err
 }

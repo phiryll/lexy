@@ -1,10 +1,5 @@
 package lexy
 
-import (
-	"errors"
-	"io"
-)
-
 // sliceCodec is the Codec for slices, using elemCodec to encode and decode its elements.
 // A slice is encoded as:
 //
@@ -18,42 +13,42 @@ type sliceCodec[E any] struct {
 }
 
 func (c sliceCodec[E]) Append(buf []byte, value []E) []byte {
-	return AppendUsingWrite[[]E](c, buf, value)
+	done, newBuf := c.prefix.Append(buf, value == nil)
+	if done {
+		return newBuf
+	}
+	for _, elem := range value {
+		newBuf = c.elemCodec.Append(newBuf, elem)
+	}
+	return newBuf
 }
 
 func (c sliceCodec[E]) Put(buf []byte, value []E) int {
-	return PutUsingAppend[[]E](c, buf, value)
+	if c.prefix.Put(buf, value == nil) {
+		return 1
+	}
+	n := 1
+	for _, elem := range value {
+		n += c.elemCodec.Put(buf[n:], elem)
+	}
+	return n
 }
 
 func (c sliceCodec[E]) Get(buf []byte) ([]E, int) {
-	return GetUsingRead[[]E](c, buf)
-}
-
-func (c sliceCodec[E]) Write(w io.Writer, value []E) error {
-	if done, err := c.prefix.Write(w, value == nil); done {
-		return err
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	for _, elem := range value {
-		if err := c.elemCodec.Write(w, elem); err != nil {
-			return err
-		}
+	if c.prefix.Get(buf) {
+		return nil, 1
 	}
-	return nil
-}
-
-func (c sliceCodec[E]) Read(r io.Reader) ([]E, error) {
-	if done, err := c.prefix.Read(r); done {
-		return nil, err
-	}
+	n := 1
 	values := []E{}
 	for {
-		value, err := c.elemCodec.Read(r)
-		if errors.Is(err, io.EOF) {
-			return values, nil
+		value, count := c.elemCodec.Get(buf[n:])
+		if count < 0 {
+			return values, n
 		}
-		if err != nil {
-			return values, err
-		}
+		n += count
 		values = append(values, value)
 	}
 }

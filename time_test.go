@@ -1,7 +1,6 @@
 package lexy_test
 
 import (
-	"bytes"
 	"testing"
 	"time"
 
@@ -47,15 +46,9 @@ func TestTime(t *testing.T) {
 			t.Parallel()
 			when := tt.Time
 			_, expectedOffset := when.Zone()
-
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, when)
-			require.NoError(t, err)
-
-			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-			require.NoError(t, err)
+			buf := codec.Append(nil, when)
+			got, _ := codec.Get(buf)
 			_, actualOffset := got.Zone()
-
 			// Can't use == because it doesn't work for time.Time
 			assert.True(t, when.Equal(got), "round trip")
 			assert.Equal(t, expectedOffset, actualOffset, "offsets")
@@ -120,10 +113,7 @@ func TestTimeOrder(t *testing.T) {
 	} {
 		i := i
 		t.Run(tt.string, func(t *testing.T) {
-			buf := bytes.NewBuffer([]byte{})
-			err := lexy.Time().Write(buf, tt.Time)
-			require.NoError(t, err)
-			current := buf.Bytes()
+			current := lexy.Time().Append(nil, tt.Time)
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}

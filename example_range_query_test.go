@@ -65,24 +65,34 @@ var (
 
 type KeyCodec struct{}
 
-func (KeyCodec) Write(w io.Writer, key UserKey) error {
-	if err := costCodec.Write(w, key.cost); err != nil {
-		return err
-	}
-	return wordsCodec.Write(w, key.words)
+func (KeyCodec) Append(buf []byte, key UserKey) []byte {
+	buf = costCodec.Append(buf, key.cost)
+	return wordsCodec.Append(buf, key.words)
 }
 
-func (KeyCodec) Read(r io.Reader) (UserKey, error) {
-	var zero UserKey
-	cost, err := costCodec.Read(r)
-	if err != nil {
-		return zero, err
+func (KeyCodec) Put(buf []byte, key UserKey) int {
+	n := costCodec.Put(buf, key.cost)
+	n += wordsCodec.Put(buf[n:], key.words)
+	return n
+}
+
+func (KeyCodec) Get(buf []byte) (UserKey, int) {
+	if len(buf) == 0 {
+		var zero UserKey
+		return zero, -1
 	}
-	words, err := wordsCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	n := 0
+	cost, count := costCodec.Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	return UserKey{words, cost}, nil
+	words, count := wordsCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return UserKey{words, cost}, n
 }
 
 func (KeyCodec) RequiresTerminator() bool {
@@ -112,35 +122,20 @@ type UserEntry struct {
 }
 
 func (db *UserDB) Put(key UserKey, value int) error {
-	var buf bytes.Buffer
-	if err := keyCodec.Write(&buf, key); err != nil {
-		return err
-	}
-	return db.realDB.Put(buf.Bytes(), value)
+	return db.realDB.Put(keyCodec.Append(nil, key), value)
 }
 
 // Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
-	var buf bytes.Buffer
-	if err := keyCodec.Write(&buf, begin); err != nil {
-		return nil, err
-	}
-	beginBytes := append([]byte{}, buf.Bytes()...)
-	buf.Reset()
-	if err := keyCodec.Write(&buf, end); err != nil {
-		return nil, err
-	}
-	endBytes := append([]byte{}, buf.Bytes()...)
+	beginBytes := keyCodec.Append(nil, begin)
+	endBytes := keyCodec.Append(nil, end)
 	dbEntries, err := db.realDB.Range(beginBytes, endBytes)
 	if err != nil {
 		return nil, err
 	}
 	userEntries := make([]UserEntry, len(dbEntries))
 	for i, dbEntry := range dbEntries {
-		userKey, err := keyCodec.Read(bytes.NewReader(dbEntry.Key))
-		if err != nil {
-			return nil, err
-		}
+		userKey, _ := keyCodec.Get(dbEntry.Key)
 		userEntries[i] = UserEntry{userKey, dbEntry.Value}
 	}
 	return userEntries, nil

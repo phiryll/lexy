@@ -8,7 +8,7 @@ import (
 
 // There are good reasons to test emptyCodec in combination with other Codecs.
 // In particular, it demonstrates why RequiresTerminator() must return true
-// if the Codec might encode zero bytes on Write.
+// if the Codec might encode zero bytes.
 // These tests should also catch if any of the aggregate Codecs don't handle termination correctly.
 
 type emptyStruct struct{}

@@ -1,13 +1,10 @@
 package lexy_test
 
 import (
-	"bytes"
-	"io"
 	"testing"
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestEscape(t *testing.T) {
@@ -57,82 +54,8 @@ func TestEscape(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			count, err := lexy.TestingDoEscape(buf, tt.data)
-			require.NoError(t, err)
-			assert.Equal(t, len(tt.data), count, "bytes read from input")
-			assert.Equal(t, tt.escaped, buf.Bytes(), "escaped bytes")
-		})
-	}
-}
-
-//nolint:funlen
-func TestEscapeFail(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		data    []byte
-		escaped []byte
-		count   int
-		wantErr bool
-	}{
-		{
-			"no special bytes, at limit",
-			[]byte{2, 3, 5, 4, 7},
-			[]byte{2, 3, 5, 4, 7, 0},
-			5,
-			false,
-		},
-		{
-			"no special bytes, over limit",
-			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6},
-			6,
-			true,
-		},
-		{
-			"with special bytes, at limit",
-			[]byte{0, 1, 2},
-			[]byte{1, 0, 1, 1, 2, 0},
-			3,
-			false,
-		},
-		{
-			"with special bytes, over limit",
-			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2, 3},
-			4,
-			true,
-		},
-		{
-			"special at limit",
-			[]byte{2, 3, 4, 0},
-			[]byte{2, 3, 4, 1, 0, 0},
-			4,
-			false,
-		},
-		{
-			"escaped crosses limit",
-			[]byte{2, 3, 4, 5, 0},
-			[]byte{2, 3, 4, 5, 1, 0},
-			5,
-			true,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			w := boundedWriter{buf, 6}
-			count, err := lexy.TestingDoEscape(&w, tt.data)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-			assert.Equal(t, tt.count, count, "bytes read from input")
-			assert.Equal(t, tt.escaped, buf.Bytes(), "escaped bytes")
+			buf := lexy.TestingDoEscape(tt.data)
+			assert.Equal(t, tt.escaped, buf, "escaped bytes")
 		})
 	}
 }
@@ -143,83 +66,66 @@ func TestUnescape(t *testing.T) {
 	tests := []struct {
 		name      string
 		data      []byte
-		unescaped []byte
-		atEOF     bool
+		unescaped []byte // nil if a panic is expected
 	}{
 		{
 			"no special bytes",
 			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6},
-			true,
+			nil,
 		},
 		{
 			"with special bytes",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6},
-			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			true,
+			nil,
 		},
 		{
 			"empty",
 			[]byte{},
-			[]byte{},
-			true,
+			nil,
 		},
 		{
 			"terminator",
 			[]byte{1, 0},
-			[]byte{0},
-			true,
+			nil,
 		},
 		{
 			"escape",
 			[]byte{1, 1},
-			[]byte{1},
-			true,
+			nil,
 		},
 		{
 			"trailing escaped terminator",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0},
-			[]byte{0, 1, 2, 3, 1, 4, 0},
-			true,
+			nil,
 		},
 		{
 			"trailing escaped escape",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1},
-			[]byte{0, 1, 2, 3, 1, 4, 1},
-			true,
+			nil,
 		},
 		{
 			"trailing unescaped terminator",
 			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 0},
 			[]byte{0, 1, 2, 3, 1, 4},
-			false,
-		},
-		// This case is malformed, but testing expected behavior (white-box testing here).
-		{
-			"trailing unescaped escape",
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1},
-			[]byte{0, 1, 2, 3, 1, 4},
-			true,
 		},
 		{
 			"non-trailing unescaped terminator",
 			[]byte{2, 3, 4, 1, 0, 5, 6, 0, 7, 8, 9},
 			[]byte{2, 3, 4, 0, 5, 6},
-			false,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(tt.data)
-			got, err := lexy.TestingDoUnescape(r)
-			if tt.atEOF {
-				assert.ErrorIs(t, err, io.EOF)
+			if tt.unescaped == nil {
+				assert.Panics(t, func() {
+					lexy.TestingDoUnescape(tt.data)
+				})
 			} else {
-				require.NoError(t, err)
+				buf, _ := lexy.TestingDoUnescape(tt.data)
+				assert.Equal(t, tt.unescaped, buf)
 			}
-			assert.Equal(t, tt.unescaped, got, "unescaped bytes")
 		})
 	}
 }
@@ -227,18 +133,15 @@ func TestUnescape(t *testing.T) {
 func TestUnescapeMultiple(t *testing.T) {
 	t.Parallel()
 	data := []byte{2, 3, 1, 0, 5, 0, 7, 8, 9, 0, 10, 11, 12, 0}
-	r := bytes.NewReader(data)
-
+	n := 0
 	for _, expected := range [][]byte{
 		{2, 3, 0, 5},
 		{7, 8, 9},
 		{10, 11, 12},
 	} {
-		got, err := lexy.TestingDoUnescape(r)
-		require.NoError(t, err)
+		got, count := lexy.TestingDoUnescape(data[n:])
+		n += count
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
-	got, err := lexy.TestingDoUnescape(r)
-	assert.ErrorIs(t, err, io.EOF)
-	assert.Equal(t, []byte{}, got, "exhausted")
+	assert.Len(t, data, n)
 }

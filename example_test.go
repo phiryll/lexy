@@ -15,20 +15,14 @@ func ExampleEmpty() {
 	type present struct{}
 	type set map[uint8]present
 	codec := lexy.MakeMapOf[set](lexy.Uint8(), lexy.Empty[present]())
-	var buf bytes.Buffer
 	value := set{
 		23: present{},
 		42: present{},
 		59: present{},
 		12: present{},
 	}
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, value)
+	decoded, _ := codec.Get(buf)
 	fmt.Printf("%T\n", decoded)
 	fmt.Printf("%T\n", decoded[0])
 	fmt.Println(reflect.DeepEqual(value, decoded))
@@ -40,22 +34,10 @@ func ExampleEmpty() {
 
 func ExampleBool() {
 	codec := lexy.Bool()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, true); err != nil {
-		panic(err)
-	}
-	first, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	buf.Reset()
-	if err = codec.Write(&buf, false); err != nil {
-		panic(err)
-	}
-	second, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, true)
+	first, _ := codec.Get(buf)
+	_ = codec.Put(buf, false)
+	second, _ := codec.Get(buf)
 	fmt.Printf("%t, %t", first, second)
 	// Output:
 	// true, false
@@ -63,30 +45,18 @@ func ExampleBool() {
 
 func ExampleUint64() {
 	codec := lexy.Uint64()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, 123); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(value)
+	buf := codec.Append(nil, 123)
+	decoded, _ := codec.Get(buf)
+	fmt.Println(decoded)
 	// Output:
 	// 123
 }
 
 func ExampleUint() {
 	codec := lexy.Uint()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, 4567890); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(value)
+	buf := codec.Append(nil, 4567890)
+	decoded, _ := codec.Get(buf)
+	fmt.Println(decoded)
 	// Output:
 	// 4567890
 }
@@ -94,23 +64,15 @@ func ExampleUint() {
 func ExampleUint32_underlyingType() {
 	type size uint32
 	codec := lexy.MakeUint32[size]()
-	var buf bytes.Buffer
-	// Go will type a constant appropriately.
-	if err := codec.Write(&buf, 123); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Value %d of type %T", value, value)
+	buf := codec.Append(nil, 123)
+	decoded, _ := codec.Get(buf)
+	fmt.Printf("Value %d of type %T", decoded, decoded)
 	// Output:
 	// Value 123 of type lexy_test.size
 }
 
 func ExampleInt32() {
 	codec := lexy.Int32()
-	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
 		math.MinInt32,
@@ -119,11 +81,8 @@ func ExampleInt32() {
 		1,
 		math.MaxInt32,
 	} {
-		buf.Reset()
-		if err := codec.Write(&buf, value); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		buf := codec.Append(nil, value)
+		encoded = append(encoded, buf)
 	}
 	// Verify the encodings are increasing.
 	for i, b := range encoded[1:] {
@@ -138,15 +97,9 @@ func ExampleInt32() {
 
 func ExampleInt() {
 	codec := lexy.Int()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, -4567890); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(value)
+	buf := codec.Append(nil, -4567890)
+	decoded, _ := codec.Get(buf)
+	fmt.Println(decoded)
 	// Output:
 	// -4567890
 }
@@ -154,14 +107,8 @@ func ExampleInt() {
 func ExampleFloat32() {
 	codec := lexy.Float32()
 	value := float32(1.45e-17)
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(math.Float32bits(value) == math.Float32bits(decoded))
 	// Output:
 	// true
@@ -170,14 +117,8 @@ func ExampleFloat32() {
 func ExampleFloat64() {
 	codec := lexy.Float64()
 	value := math.Copysign(math.NaN(), -1.0)
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(math.Float64bits(value) == math.Float64bits(decoded))
 	// Output:
 	// true
@@ -187,14 +128,8 @@ func ExampleComplex64() {
 	codec := lexy.Complex64()
 	valueReal := float32(math.Inf(1))
 	valueImag := float32(5.4321e-12)
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, complex(valueReal, valueImag)); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, complex(valueReal, valueImag))
+	decoded, _ := codec.Get(buf)
 	fmt.Println(math.Float32bits(valueReal) == math.Float32bits(real(decoded)))
 	fmt.Println(math.Float32bits(valueImag) == math.Float32bits(imag(decoded)))
 	// Output:
@@ -206,16 +141,8 @@ func ExampleComplex128() {
 	codec := lexy.Complex128()
 	v1 := complex(123.5431, 9.87)
 	v2 := complex(123.5432, 9.87)
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, v1); err != nil {
-		panic(err)
-	}
-	encodedV1 := append([]byte{}, buf.Bytes()...)
-	buf.Reset()
-	if err := codec.Write(&buf, v2); err != nil {
-		panic(err)
-	}
-	encodedV2 := append([]byte{}, buf.Bytes()...)
+	encodedV1 := codec.Append(nil, v1)
+	encodedV2 := codec.Append(nil, v2)
 	fmt.Println(bytes.Compare(encodedV1, encodedV2))
 	// Output:
 	// -1
@@ -223,23 +150,11 @@ func ExampleComplex128() {
 
 func ExampleString() {
 	codec := lexy.String()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, ""); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, "")
+	decoded, _ := codec.Get(buf)
 	fmt.Printf("%q\n", decoded)
-	buf.Reset()
-	if err = codec.Write(&buf, "Go rocks!"); err != nil {
-		panic(err)
-	}
-	decoded, err = codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf = codec.Append(nil, "Go rocks!")
+	decoded, _ = codec.Get(buf)
 	fmt.Printf("%q\n", decoded)
 	// Output:
 	// ""
@@ -248,48 +163,28 @@ func ExampleString() {
 
 func ExampleDuration() {
 	codec := lexy.Duration()
-	var buf bytes.Buffer
-	duration := time.Hour * 57
-	if err := codec.Write(&buf, duration); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(value)
+	buf := codec.Append(nil, time.Hour*57)
+	decoded, _ := codec.Get(buf)
+	fmt.Println(decoded)
 	// Output:
 	// 57h0m0s
 }
 
 func ExampleTime() {
 	codec := lexy.Time()
-	var buf bytes.Buffer
-	aTime := time.Date(2000, 1, 2, 3, 4, 5, 678_901_234, time.UTC)
-	if err := codec.Write(&buf, aTime); err != nil {
-		panic(err)
-	}
-	value, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(value.Format(time.RFC3339Nano))
+	buf := codec.Append(nil, time.Date(2000, 1, 2, 3, 4, 5, 678_901_234, time.UTC))
+	decoded, _ := codec.Get(buf)
+	fmt.Println(decoded.Format(time.RFC3339Nano))
 	// Output:
 	// 2000-01-02T03:04:05.678901234Z
 }
 
 func ExampleBigInt() {
 	codec := lexy.BigInt()
-	var buf bytes.Buffer
 	var value big.Int
 	value.SetString("-1234567890123456789012345678901234567890", 10)
-	if err := codec.Write(&buf, &value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, &value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(decoded)
 	// Output:
 	// -1234567890123456789012345678901234567890
@@ -297,16 +192,10 @@ func ExampleBigInt() {
 
 func ExampleBigFloat() {
 	codec := lexy.BigFloat()
-	var buf bytes.Buffer
 	var value big.Float
 	value.SetString("-1.23456789e+50732")
-	if err := codec.Write(&buf, &value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, &value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(value.Cmp(decoded))
 	// Output:
 	// 0
@@ -314,20 +203,14 @@ func ExampleBigFloat() {
 
 func ExampleBigRat() {
 	codec := lexy.BigRat()
-	var buf bytes.Buffer
-	var value big.Rat
 	// value will be -832/6 in lowest terms
+	var value big.Rat
 	var num, denom big.Int
 	num.SetString("12345", 10)
 	denom.SetString("-90", 10)
 	value.SetFrac(&num, &denom)
-	if err := codec.Write(&buf, &value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, &value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(decoded)
 	// Output:
 	// -823/6
@@ -336,14 +219,8 @@ func ExampleBigRat() {
 func ExamplePointerTo() {
 	codec := lexy.PointerTo(lexy.String())
 	value := "abc"
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, &value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, &value)
+	decoded, _ := codec.Get(buf)
 	fmt.Println(value == *decoded)
 	fmt.Println(&value == decoded)
 	// Output:
@@ -354,14 +231,8 @@ func ExamplePointerTo() {
 func ExampleSliceOf() {
 	type words []string
 	codec := lexy.MakeSliceOf[words](lexy.String())
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, words{"The", "time", "is", "now"}); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, words{"The", "time", "is", "now"})
+	decoded, _ := codec.Get(buf)
 	fmt.Printf("%T\n", decoded)
 	fmt.Println(decoded)
 	// Output:
@@ -371,14 +242,8 @@ func ExampleSliceOf() {
 
 func ExampleBytes() {
 	codec := lexy.Bytes()
-	var buf bytes.Buffer
-	if err := codec.Write(&buf, []byte{1, 2, 3, 11, 17}); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, []byte{1, 2, 3, 11, 17})
+	decoded, _ := codec.Get(buf)
 	fmt.Println(decoded)
 	// Output:
 	// [1 2 3 11 17]
@@ -389,20 +254,14 @@ func ExampleMapOf() {
 	type count int
 	type wordCounts map[word]count
 	codec := lexy.MakeMapOf[wordCounts](lexy.MakeString[word](), lexy.MakeInt[count]())
-	var buf bytes.Buffer
 	value := wordCounts{
 		"Now":  23,
 		"is":   42,
 		"the":  59,
 		"time": 12,
 	}
-	if err := codec.Write(&buf, value); err != nil {
-		panic(err)
-	}
-	decoded, err := codec.Read(&buf)
-	if err != nil {
-		panic(err)
-	}
+	buf := codec.Append(nil, value)
+	decoded, _ := codec.Get(buf)
 	fmt.Printf("%T\n", decoded)
 	fmt.Printf("%T\n", decoded["not-found"])
 	fmt.Println(reflect.DeepEqual(value, decoded))
@@ -415,7 +274,6 @@ func ExampleMapOf() {
 func ExampleNegate() {
 	// Exactly the same as the lexy.Int32() example, except negated.
 	codec := lexy.Negate(lexy.Int32())
-	var buf bytes.Buffer
 	var encoded [][]byte
 	for _, value := range []int32{
 		math.MinInt32,
@@ -424,11 +282,8 @@ func ExampleNegate() {
 		1,
 		math.MaxInt32,
 	} {
-		buf.Reset()
-		if err := codec.Write(&buf, value); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		buf := codec.Append(nil, value)
+		encoded = append(encoded, buf)
 	}
 	// Verify the encodings are decreasing.
 	for i, b := range encoded[1:] {

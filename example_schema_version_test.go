@@ -1,7 +1,6 @@
 package lexy_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"sort"
@@ -48,56 +47,57 @@ var (
 
 type versionedCodec struct{}
 
-func (c versionedCodec) Append(buf []byte, value schemaVersion4) []byte {
-	return lexy.AppendUsingWrite[schemaVersion4](c, buf, value)
+func (versionedCodec) Append(buf []byte, value schemaVersion4) []byte {
+	buf = lexy.Uint32().Append(buf, 4)
+	return SchemaVersion4Codec.Append(buf, value)
 }
 
-func (c versionedCodec) Put(buf []byte, value schemaVersion4) int {
-	return lexy.PutUsingAppend[schemaVersion4](c, buf, value)
+func (versionedCodec) Put(buf []byte, value schemaVersion4) int {
+	n := lexy.Uint32().Put(buf, 4)
+	n += SchemaVersion4Codec.Put(buf[n:], value)
+	return n
 }
 
-func (c versionedCodec) Get(buf []byte) (schemaVersion4, int) {
-	return lexy.GetUsingRead[schemaVersion4](c, buf)
-}
-
-func (versionedCodec) Write(w io.Writer, value schemaVersion4) error {
-	if err := lexy.Uint32().Write(w, 4); err != nil {
-		return err
-	}
-	return SchemaVersion4Codec.Write(w, value)
-}
-
-func (versionedCodec) Read(r io.Reader) (schemaVersion4, error) {
+func (versionedCodec) Get(buf []byte) (schemaVersion4, int) {
 	var zero schemaVersion4
-	version, err := lexy.Uint32().Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
+	}
+	n := 0
+	version, count := lexy.Uint32().Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
 	switch version {
 	case 1:
-		v1, err := SchemaVersion1Codec.Read(r)
-		if err != nil {
-			return zero, lexy.UnexpectedIfEOF(err)
+		v1, count := SchemaVersion1Codec.Get(buf[n:])
+		n += count
+		if count < 0 {
+			panic(io.ErrUnexpectedEOF)
 		}
-		return schemaVersion4{v1.name, "", ""}, nil
+		return schemaVersion4{v1.name, "", ""}, n
 	case 2:
-		v2, err := SchemaVersion2Codec.Read(r)
-		if err != nil {
-			return zero, lexy.UnexpectedIfEOF(err)
+		v2, count := SchemaVersion2Codec.Get(buf[n:])
+		n += count
+		if count < 0 {
+			panic(io.ErrUnexpectedEOF)
 		}
-		return schemaVersion4{v2.name, "", v2.lastName}, nil
+		return schemaVersion4{v2.name, "", v2.lastName}, n
 	case 3:
-		v3, err := SchemaVersion3Codec.Read(r)
-		if err != nil {
-			return zero, lexy.UnexpectedIfEOF(err)
+		v3, count := SchemaVersion3Codec.Get(buf[n:])
+		n += count
+		if count < 0 {
+			panic(io.ErrUnexpectedEOF)
 		}
-		return schemaVersion4{v3.name, "", v3.lastName}, nil
+		return schemaVersion4{v3.name, "", v3.lastName}, n
 	case 4:
-		v4, err := SchemaVersion4Codec.Read(r)
-		if err != nil {
-			return zero, lexy.UnexpectedIfEOF(err)
+		v4, count := SchemaVersion4Codec.Get(buf[n:])
+		n += count
+		if count < 0 {
+			panic(io.ErrUnexpectedEOF)
 		}
-		return v4, nil
+		return v4, n
 	default:
 		panic(fmt.Sprintf("unknown schema version: %d", version))
 	}
@@ -111,29 +111,24 @@ func (versionedCodec) RequiresTerminator() bool {
 
 type schemaVersion1Codec struct{}
 
-func (c schemaVersion1Codec) Append(buf []byte, value schemaVersion1) []byte {
-	return lexy.AppendUsingWrite[schemaVersion1](c, buf, value)
+func (schemaVersion1Codec) Append(buf []byte, value schemaVersion1) []byte {
+	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
-	return lexy.PutUsingAppend[schemaVersion1](c, buf, value)
+func (schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
+	return NameCodec.Put(buf, value.name)
 }
 
-func (c schemaVersion1Codec) Get(buf []byte) (schemaVersion1, int) {
-	return lexy.GetUsingRead[schemaVersion1](c, buf)
-}
-
-func (schemaVersion1Codec) Write(w io.Writer, value schemaVersion1) error {
-	return NameCodec.Write(w, value.name)
-}
-
-func (schemaVersion1Codec) Read(r io.Reader) (schemaVersion1, error) {
+func (schemaVersion1Codec) Get(buf []byte) (schemaVersion1, int) {
 	var zero schemaVersion1
-	name, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	return schemaVersion1{name}, nil
+	name, n := NameCodec.Get(buf)
+	if n < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return schemaVersion1{name}, n
 }
 
 func (schemaVersion1Codec) RequiresTerminator() bool {
@@ -144,36 +139,34 @@ func (schemaVersion1Codec) RequiresTerminator() bool {
 
 type schemaVersion2Codec struct{}
 
-func (c schemaVersion2Codec) Append(buf []byte, value schemaVersion2) []byte {
-	return lexy.AppendUsingWrite[schemaVersion2](c, buf, value)
+func (schemaVersion2Codec) Append(buf []byte, value schemaVersion2) []byte {
+	buf = NameCodec.Append(buf, value.lastName)
+	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
-	return lexy.PutUsingAppend[schemaVersion2](c, buf, value)
+func (schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
+	n := NameCodec.Put(buf, value.lastName)
+	n += NameCodec.Put(buf[n:], value.name)
+	return n
 }
 
-func (c schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
-	return lexy.GetUsingRead[schemaVersion2](c, buf)
-}
-
-func (schemaVersion2Codec) Write(w io.Writer, value schemaVersion2) error {
-	if err := NameCodec.Write(w, value.lastName); err != nil {
-		return err
-	}
-	return NameCodec.Write(w, value.name)
-}
-
-func (schemaVersion2Codec) Read(r io.Reader) (schemaVersion2, error) {
+func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
 	var zero schemaVersion2
-	lastName, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	name, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	n := 0
+	lastName, count := NameCodec.Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	return schemaVersion2{name, lastName}, nil
+	name, count := NameCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return schemaVersion2{name, lastName}, n
 }
 
 func (schemaVersion2Codec) RequiresTerminator() bool {
@@ -184,43 +177,41 @@ func (schemaVersion2Codec) RequiresTerminator() bool {
 
 type schemaVersion3Codec struct{}
 
-func (c schemaVersion3Codec) Append(buf []byte, value schemaVersion3) []byte {
-	return lexy.AppendUsingWrite[schemaVersion3](c, buf, value)
+func (schemaVersion3Codec) Append(buf []byte, value schemaVersion3) []byte {
+	buf = CountCodec.Append(buf, value.count)
+	buf = NameCodec.Append(buf, value.lastName)
+	return NameCodec.Append(buf, value.name)
 }
 
-func (c schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
-	return lexy.PutUsingAppend[schemaVersion3](c, buf, value)
+func (schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
+	n := CountCodec.Put(buf, value.count)
+	n += NameCodec.Put(buf[n:], value.lastName)
+	n += NameCodec.Put(buf[n:], value.name)
+	return n
 }
 
-func (c schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
-	return lexy.GetUsingRead[schemaVersion3](c, buf)
-}
-
-func (schemaVersion3Codec) Write(w io.Writer, value schemaVersion3) error {
-	if err := CountCodec.Write(w, value.count); err != nil {
-		return err
-	}
-	if err := NameCodec.Write(w, value.lastName); err != nil {
-		return err
-	}
-	return NameCodec.Write(w, value.name)
-}
-
-func (schemaVersion3Codec) Read(r io.Reader) (schemaVersion3, error) {
+func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
 	var zero schemaVersion3
-	count, err := CountCodec.Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	lastName, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	n := 0
+	count, byteCount := CountCodec.Get(buf)
+	n += byteCount
+	if byteCount < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	name, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	lastName, byteCount := NameCodec.Get(buf[n:])
+	n += byteCount
+	if byteCount < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	return schemaVersion3{name, lastName, count}, nil
+	name, byteCount := NameCodec.Get(buf[n:])
+	n += byteCount
+	if byteCount < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return schemaVersion3{name, lastName, count}, n
 }
 
 func (schemaVersion3Codec) RequiresTerminator() bool {
@@ -231,43 +222,41 @@ func (schemaVersion3Codec) RequiresTerminator() bool {
 
 type schemaVersion4Codec struct{}
 
-func (c schemaVersion4Codec) Append(buf []byte, value schemaVersion4) []byte {
-	return lexy.AppendUsingWrite[schemaVersion4](c, buf, value)
+func (schemaVersion4Codec) Append(buf []byte, value schemaVersion4) []byte {
+	buf = NameCodec.Append(buf, value.lastName)
+	buf = NameCodec.Append(buf, value.firstName)
+	return NameCodec.Append(buf, value.middleName)
 }
 
-func (c schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
-	return lexy.PutUsingAppend[schemaVersion4](c, buf, value)
+func (schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
+	n := NameCodec.Put(buf, value.lastName)
+	n += NameCodec.Put(buf, value.firstName)
+	n += NameCodec.Put(buf, value.middleName)
+	return n
 }
 
-func (c schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
-	return lexy.GetUsingRead[schemaVersion4](c, buf)
-}
-
-func (schemaVersion4Codec) Write(w io.Writer, value schemaVersion4) error {
-	if err := NameCodec.Write(w, value.lastName); err != nil {
-		return err
-	}
-	if err := NameCodec.Write(w, value.firstName); err != nil {
-		return err
-	}
-	return NameCodec.Write(w, value.middleName)
-}
-
-func (schemaVersion4Codec) Read(r io.Reader) (schemaVersion4, error) {
+func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
 	var zero schemaVersion4
-	lastName, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, err
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	firstName, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	n := 0
+	lastName, count := NameCodec.Get(buf)
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	middleName, err := NameCodec.Read(r)
-	if err != nil {
-		return zero, lexy.UnexpectedIfEOF(err)
+	firstName, count := NameCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
 	}
-	return schemaVersion4{firstName, middleName, lastName}, nil
+	middleName, count := NameCodec.Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	return schemaVersion4{firstName, middleName, lastName}, n
 }
 
 func (schemaVersion4Codec) RequiresTerminator() bool {
@@ -275,11 +264,9 @@ func (schemaVersion4Codec) RequiresTerminator() bool {
 }
 
 // A helper function for this test, to write older versions.
-func writeWithVersion[T any](w io.Writer, version uint32, codec lexy.Codec[T], value T) error {
-	if err := lexy.Uint32().Write(w, version); err != nil {
-		return err
-	}
-	return codec.Write(w, value)
+func writeWithVersion[T any](version uint32, codec lexy.Codec[T], value T) []byte {
+	buf := lexy.Uint32().Append(nil, version)
+	return codec.Append(buf, value)
 }
 
 // ExampleSchemaVersion shows how schema versioning could be implemented.
@@ -298,7 +285,6 @@ func Example_schemaVersion() {
 	// throw all the encodings into the same slice.
 	// Then make sure we can successfully decode them all.
 	var encoded [][]byte
-	var buf bytes.Buffer
 
 	// order: name
 	for _, v1 := range []schemaVersion1{
@@ -306,11 +292,7 @@ func Example_schemaVersion() {
 		{"Alice"},
 		{"Cathy"},
 	} {
-		buf.Reset()
-		if err := writeWithVersion(&buf, 1, SchemaVersion1Codec, v1); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		encoded = append(encoded, writeWithVersion(1, SchemaVersion1Codec, v1))
 	}
 
 	// order: lastName, name
@@ -319,11 +301,7 @@ func Example_schemaVersion() {
 		{"Edgar", "James"},
 		{"Fiona", "Smith"},
 	} {
-		buf.Reset()
-		if err := writeWithVersion(&buf, 2, SchemaVersion2Codec, v2); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		encoded = append(encoded, writeWithVersion(2, SchemaVersion2Codec, v2))
 	}
 
 	// order: count, lastName, name
@@ -332,11 +310,7 @@ func Example_schemaVersion() {
 		{"Henry", "Washington", 3},
 		{"Isabel", "Bardot", 7},
 	} {
-		buf.Reset()
-		if err := writeWithVersion(&buf, 3, SchemaVersion3Codec, v3); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		encoded = append(encoded, writeWithVersion(3, SchemaVersion3Codec, v3))
 	}
 
 	// order: lastName, firstName, middleName
@@ -345,11 +319,7 @@ func Example_schemaVersion() {
 		{"Jennifer", "Anne", "Monroe"},
 		{"Lois", "Elizabeth", "Cassidy"},
 	} {
-		buf.Reset()
-		if err := VersionedCodec.Write(&buf, v4); err != nil {
-			panic(err)
-		}
-		encoded = append(encoded, append([]byte{}, buf.Bytes()...))
+		encoded = append(encoded, VersionedCodec.Append(nil, v4))
 	}
 
 	// When the encodings are sorted, they will be in the order:
@@ -359,10 +329,7 @@ func Example_schemaVersion() {
 	sort.Sort(sortableEncodings{encoded})
 
 	for _, b := range encoded {
-		value, err := VersionedCodec.Read(bytes.NewReader(b))
-		if err != nil {
-			panic(err)
-		}
+		value, _ := VersionedCodec.Get(b)
 		fmt.Printf("%+v\n", value)
 	}
 	// Output:

@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // Prefixes to use for encodings for types whose instances can be nil.
 // The values were chosen so that prefixNilFirst < prefixNonNil < prefixNilLast,
 // and neither the prefixes nor their complements need to be escaped.
@@ -71,40 +67,9 @@ type Prefix interface {
 	//	}
 	Get(buf []byte) (done bool)
 
-	// Write writes a prefix byte to w.
-	// This is a typical usage:
-	//
-	//	func (c fooCodec) Write(w io.Writer, value Foo) error {
-	//	    if done, err := c.prefix.Write(w, value == nil); done {
-	//	        return err
-	//	    }
-	//	    // encode and write the non-nil value to w
-	//	}
-	Write(w io.Writer, isNil bool) (done bool, err error)
-
-	// Read reads a prefix byte from r.
-	// This is a typical usage:
-	//
-	//	func (c fooCodec) Read(r io.Reader) (Foo, error) {
-	//	    if done, err := c.prefix.Read(r); done {
-	//	        return nil, err
-	//	    }
-	//	    // read, decode, and return a non-nil value from r
-	//	}
-	//
-	// Read will return [io.EOF] only if no bytes were read and [io.Reader.Read] returned io.EOF.
-	// Read will not return an error if a prefix was successfully read and io.Reader.Read returned io.EOF,
-	// because the read of the prefix was successful.
-	// Any subsequent read from r should properly return 0 bytes read and io.EOF in this case.
-	Read(r io.Reader) (done bool, err error)
-
 	// prefixFor returns which prefix byte to write.
-	// This method is used by Append, Put, and Write.
+	// This method is used by Append and Put.
 	prefixFor(isNil bool) byte
-
-	// eval returns (done, err), as documented on Prefix, after having read prefix.
-	// This method is used by Get and Read.
-	eval(prefix byte) (bool, error)
 }
 
 var (
@@ -128,19 +93,6 @@ func (prefixNilsFirst) prefixFor(isNil bool) byte {
 	return prefixNonNil
 }
 
-func (prefixNilsFirst) eval(prefix byte) (bool, error) {
-	switch prefix {
-	case prefixNonNil:
-		return false, nil
-	case prefixNilFirst:
-		return true, nil
-	case prefixNilLast:
-		return true, errUnexpectedNilsLast
-	default:
-		return true, unknownPrefixError{prefix}
-	}
-}
-
 func (p prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
 	return isNil, append(buf, p.prefixFor(isNil))
 }
@@ -150,28 +102,17 @@ func (p prefixNilsFirst) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (p prefixNilsFirst) Get(buf []byte) bool {
-	done, err := p.eval(buf[0])
-	if err != nil {
-		panic(err)
+func (prefixNilsFirst) Get(buf []byte) bool {
+	switch buf[0] {
+	case prefixNonNil:
+		return false
+	case prefixNilFirst:
+		return true
+	case prefixNilLast:
+		panic(errUnexpectedNilsLast)
+	default:
+		panic(unknownPrefixError{buf[0]})
 	}
-	return done
-}
-
-func (p prefixNilsFirst) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{p.prefixFor(isNil)}); err != nil {
-		return true, err
-	}
-	return isNil, nil
-}
-
-func (p prefixNilsFirst) Read(r io.Reader) (bool, error) {
-	prefix := []byte{0}
-	_, err := io.ReadFull(r, prefix)
-	if err != nil {
-		return true, err
-	}
-	return p.eval(prefix[0])
 }
 
 //nolint:revive
@@ -191,39 +132,15 @@ func (p prefixNilsLast) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (p prefixNilsLast) Get(buf []byte) bool {
-	done, err := p.eval(buf[0])
-	if err != nil {
-		panic(err)
-	}
-	return done
-}
-
-func (p prefixNilsLast) Write(w io.Writer, isNil bool) (bool, error) {
-	if _, err := w.Write([]byte{p.prefixFor(isNil)}); err != nil {
-		return true, err
-	}
-	return isNil, nil
-}
-
-func (p prefixNilsLast) Read(r io.Reader) (bool, error) {
-	prefix := []byte{0}
-	_, err := io.ReadFull(r, prefix)
-	if err != nil {
-		return true, err
-	}
-	return p.eval(prefix[0])
-}
-
-func (prefixNilsLast) eval(prefix byte) (bool, error) {
-	switch prefix {
+func (prefixNilsLast) Get(buf []byte) bool {
+	switch buf[0] {
 	case prefixNonNil:
-		return false, nil
+		return false
 	case prefixNilFirst:
-		return true, errUnexpectedNilsFirst
+		panic(errUnexpectedNilsFirst)
 	case prefixNilLast:
-		return true, nil
+		return true
 	default:
-		return true, unknownPrefixError{prefix}
+		panic(unknownPrefixError{buf[0]})
 	}
 }

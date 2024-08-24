@@ -1,17 +1,14 @@
 package lexy
 
 import (
-	"bytes"
-	"errors"
 	"io"
 )
 
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
-// Read only reads up to the first unescaped terminator byte,
-// which will have been previously written by Write.
-// This is the entire point of this Codec, to bound a Read that otherwise would not be bound.
+// Get only reads up to the first unescaped terminator byte (which it consumes but does not return),
+// which will have been previously written by Append or Put.
 type terminatorCodec[T any] struct {
 	codec Codec[T]
 }
@@ -53,136 +50,65 @@ const (
 	escape byte = 0x01
 )
 
-// Convenience byte slices for writers.
-var (
-	term    = []byte{terminator}
-	escTerm = []byte{escape, terminator}
-	escEsc  = []byte{escape, escape}
-)
-
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	return AppendUsingWrite[T](c, buf, value)
+	return append(buf, doEscape(c.codec.Append(nil, value))...)
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) int {
-	return PutUsingAppend[T](c, buf, value)
+	return mustCopy(buf, c.Append(nil, value))
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
-	return GetUsingRead[T](c, buf)
-}
-
-func (c terminatorCodec[T]) Write(w io.Writer, value T) error {
-	buf := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-	if err := c.codec.Write(buf, value); err != nil {
-		return err
-	}
-	if _, err := doEscape(w, buf.Bytes()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c terminatorCodec[T]) Read(r io.Reader) (T, error) {
 	var zero T
-	b, readErr := doUnescape(r)
-	if errors.Is(readErr, io.EOF) && len(b) == 0 {
-		return zero, io.EOF
+	if len(buf) == 0 {
+		return zero, -1
 	}
-	if readErr != nil {
-		// The trailing terminator was not reached, we do not have complete data.
-		return zero, UnexpectedIfEOF(readErr)
-	}
-	value, codecErr := c.codec.Read(bytes.NewReader(b))
-	if codecErr != nil {
-		return zero, UnexpectedIfEOF(codecErr)
-	}
-	return value, nil
+	b, n := doUnescape(buf)
+	value, _ := c.codec.Get(b)
+	return value, n
 }
 
 func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-// doEscape writes p to w, escaping all terminators and escapes first, and then writes a final terminator.
-// It returns the number of bytes read from p.
-func doEscape(w io.Writer, p []byte) (int, error) {
-	// running count of the number of bytes of p successfully processed
-	// also used as the start of the next block of bytes to write
-	var n int
-	for i, b := range p {
+// doEscape returns a copy of buf with all escapes and terminators escaped, and a trailing final terminator.
+func doEscape(buf []byte) []byte {
+	out := make([]byte, 0, defaultBufSize)
+	for _, b := range buf {
 		switch b {
 		case terminator:
-			count, err := w.Write(p[n:i])
-			n += count
-			if err != nil {
-				return n, err
-			}
-			if _, err = w.Write(escTerm); err != nil {
-				return n, err
-			}
-			n++
+			out = append(out, escape, terminator)
 		case escape:
-			count, err := w.Write(p[n:i])
-			n += count
-			if err != nil {
-				return n, err
-			}
-			if _, err = w.Write(escEsc); err != nil {
-				return n, err
-			}
-			n++
+			out = append(out, escape, escape)
 		default:
-			// do nothing
+			out = append(out, b)
 		}
 	}
-	if n < len(p) {
-		count, err := w.Write(p[n:])
-		n += count
-		if err != nil {
-			return n, err
-		}
-	}
-	if _, err := w.Write(term); err != nil {
-		return n, err
-	}
-	return n, nil
+	return append(out, terminator)
 }
 
-// doUnescape reads and unescapes data from r until the first unescaped terminator,
-// or until no bytes are read from r and an error occurs.
-// doUnescape does not return the trailing terminator.
-// If the returned error is non-nil, the unescaped terminator was not reached.
-// However, the data is valid for what was read from r,
-// with the possible exception of missing a trailing escape.
-//
-// doUnescape will continue reading from r if no bytes are read and no error occurs.
-// doUnescape will continue reading from r if a byte was read and an error occurs,
-// and will ignore the error assuming it will reoccur on the next read.
-func doUnescape(r io.Reader) ([]byte, error) {
-	// Reading from r one byte at a time, because we can't unread.
-	in := []byte{0}
-	out := bytes.NewBuffer(make([]byte, 0, defaultBufSize))
-
+// doUnescape reads and unescapes data from buf until the first unescaped terminator,
+// returning the unescaped data and number of bytes read from buf.
+// doUnescape will panic if no unescaped terminator is found.
+func doUnescape(buf []byte) ([]byte, int) {
+	out := make([]byte, 0, defaultBufSize)
 	escaped := false // if the previous byte read is an escape
-	for {
-		_, err := io.ReadFull(r, in)
-		if err != nil {
-			return out.Bytes(), err
-		}
+	for i, b := range buf {
 		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {
-			if in[0] == terminator {
-				return out.Bytes(), nil
+			if b == terminator {
+				return out, i + 1
 			}
-			if in[0] == escape {
+			if b == escape {
 				escaped = true
 				continue
 			}
 		}
 		escaped = false
-		// writes to a bytes.Buffer always return a nil error
-		_ = out.WriteByte(in[0])
+		out = append(out, b)
 	}
+	// unescaped terminator not reached
+	panic(io.ErrUnexpectedEOF)
 }

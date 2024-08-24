@@ -1,14 +1,12 @@
 package lexy_test
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"testing"
 
 	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Reusing things from float_test.
@@ -60,11 +58,8 @@ func TestComplex64(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-			require.NoError(t, err)
+			buf := codec.Append(nil, tt.value)
+			got, _ := codec.Get(buf)
 			// works for NaN as well
 			assert.Equal(t, math.Float32bits(real(tt.value)), math.Float32bits(real(got)))
 		})
@@ -79,10 +74,7 @@ func TestComplex64(t *testing.T) {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
 		}
 		t.Run(name, func(t *testing.T) {
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			current := buf.Bytes()
+			current := codec.Append(nil, tt.value)
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}
@@ -138,11 +130,8 @@ func TestComplex128(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			got, err := codec.Read(bytes.NewReader(buf.Bytes()))
-			require.NoError(t, err)
+			buf := codec.Append(nil, tt.value)
+			got, _ := codec.Get(buf)
 			// works for NaN as well
 			assert.Equal(t, math.Float64bits(real(tt.value)), math.Float64bits(real(got)))
 		})
@@ -157,10 +146,7 @@ func TestComplex128(t *testing.T) {
 			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
 		}
 		t.Run(name, func(t *testing.T) {
-			buf := bytes.NewBuffer([]byte{})
-			err := codec.Write(buf, tt.value)
-			require.NoError(t, err)
-			current := buf.Bytes()
+			current := codec.Append(nil, tt.value)
 			if i > 0 {
 				assert.Less(t, prev, current)
 			}

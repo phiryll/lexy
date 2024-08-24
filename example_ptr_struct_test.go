@@ -1,7 +1,6 @@
 package lexy_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 
@@ -21,35 +20,47 @@ type Container struct {
 }
 
 var (
-	PtrToBigStructCodec = ptrToBigStructCodec{}
-	ContainerCodec      = containterCodec{}
+	PtrToBigStructCodec lexy.Codec[*BigStruct] = ptrToBigStructCodec{}
+	ContainerCodec      lexy.Codec[Container]  = containterCodec{}
 )
 
 type ptrToBigStructCodec struct{}
 
-func (ptrToBigStructCodec) Write(w io.Writer, value *BigStruct) error {
-	// done is true if there was an error, or if value is nil,
-	// in which case a prefix denoting "nil" has already been written.
-	if done, err := lexy.PrefixNilsFirst.Write(w, value == nil); done {
-		return err
+func (ptrToBigStructCodec) Append(buf []byte, value *BigStruct) []byte {
+	done, newBuf := lexy.PrefixNilsFirst.Append(buf, value == nil)
+	if done {
+		return newBuf
 	}
-	if err := lexy.TerminatedString().Write(w, value.name); err != nil {
-		return err
-	}
-	// Write other fields.
-	return nil
+	newBuf = lexy.TerminatedString().Append(newBuf, value.name)
+	// Append other fields.
+	return newBuf
 }
 
-func (ptrToBigStructCodec) Read(r io.Reader) (*BigStruct, error) {
-	if done, err := lexy.PrefixNilsFirst.Read(r); done {
-		return nil, err
+func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
+	if lexy.PrefixNilsFirst.Put(buf, value == nil) {
+		return 1
 	}
-	name, err := lexy.TerminatedString().Read(r)
-	if err != nil {
-		return nil, lexy.UnexpectedIfEOF(err)
+	n := 1
+	n += lexy.TerminatedString().Put(buf[n:], value.name)
+	// Put other fields.
+	return n
+}
+
+func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, int) {
+	if len(buf) == 0 {
+		return nil, -1
 	}
-	// Read other fields.
-	return &BigStruct{name /* , other fields ... */}, nil
+	if lexy.PrefixNilsFirst.Get(buf) {
+		return nil, 1
+	}
+	n := 1
+	name, count := lexy.TerminatedString().Get(buf[n:])
+	n += count
+	if count < 0 {
+		panic(io.ErrUnexpectedEOF)
+	}
+	// Get other fields.
+	return &BigStruct{name /* , other fields ... */}, n
 }
 
 func (ptrToBigStructCodec) RequiresTerminator() bool {
@@ -58,22 +69,28 @@ func (ptrToBigStructCodec) RequiresTerminator() bool {
 
 type containterCodec struct{}
 
-func (containterCodec) Write(w io.Writer, value Container) error {
-	if err := PtrToBigStructCodec.Write(w, value.big); err != nil {
-		return err
-	}
-	// Write other fields.
-	return nil
+func (containterCodec) Append(buf []byte, value Container) []byte {
+	buf = PtrToBigStructCodec.Append(buf, value.big)
+	// Append other fields.
+	return buf
 }
 
-func (containterCodec) Read(r io.Reader) (Container, error) {
-	var zero Container
-	big, err := PtrToBigStructCodec.Read(r)
-	if err != nil {
-		return zero, err
-	}
-	// Read other fields.
-	return Container{big /* , other fields ... */}, nil
+func (containterCodec) Put(buf []byte, value Container) int {
+	n := PtrToBigStructCodec.Put(buf, value.big)
+	// Put other fields.
+	// n += someCodec.Put(buf[n:], someValue)
+	return n
+}
+
+func (containterCodec) Get(buf []byte) (Container, int) {
+	big, n := PtrToBigStructCodec.Get(buf)
+	// Get other fields.
+	// someValue, count := someCodec.Get(buf[n:])
+	// n += count
+	// if count < 0 {
+	//     panic(io.ErrUnexpectedEOF)
+	// }
+	return Container{big /* , other fields ... */}, n
 }
 
 func (containterCodec) RequiresTerminator() bool {
@@ -105,20 +122,13 @@ func containerEquals(a, b Container) bool {
 //
 // The order isn't relevant for this example, so other fields are not shown.
 func Example_pointerToStruct() {
-	var buf bytes.Buffer
 	for _, value := range []Container{
 		{nil},
 		{&BigStruct{""}},
 		{&BigStruct{"abc"}},
 	} {
-		buf.Reset()
-		if err := ContainerCodec.Write(&buf, value); err != nil {
-			panic(err)
-		}
-		decoded, err := ContainerCodec.Read(&buf)
-		if err != nil {
-			panic(err)
-		}
+		buf := ContainerCodec.Append(nil, value)
+		decoded, _ := ContainerCodec.Get(buf)
 		fmt.Println(containerEquals(value, decoded))
 	}
 	// Output:
