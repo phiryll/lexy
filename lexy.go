@@ -369,6 +369,7 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 
 // Functions to help in implementing new Codecs.
 
+//nolint:godox
 // TODO: Add more after looking for pain points in examples.
 
 // Helper functions used by implementations.
