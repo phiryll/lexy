@@ -65,24 +65,30 @@ func MakeString[T ~string]() Codec[T] { return castString[T]{} }
 
 // MakeBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
-func MakeBytes[S ~[]byte]() Codec[S] { return castBytes[S]{stdBytes} }
+func MakeBytes[S ~[]byte]() Codec[S] {
+	//nolint:forcetypeassert
+	return castBytes[S]{stdBytes.(bytesCodec)}
+}
 
 // MakePointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, this is the same as [PointerTo].
 func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
-	return castPointer[P, E]{PointerTo(elemCodec)}
+	//nolint:forcetypeassert
+	return castPointer[P, E]{PointerTo(elemCodec).(pointerCodec[E])}
 }
 
 // MakeSliceOf returns a Codec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, this is the same as [SliceOf].
 func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
-	return castSlice[S, E]{SliceOf(elemCodec)}
+	//nolint:forcetypeassert
+	return castSlice[S, E]{SliceOf(elemCodec).(sliceCodec[E])}
 }
 
 // MakeMapOf returns a Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, this is the same as [MapOf].
 func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	return castMap[M, K, V]{MapOf(keyCodec, valueCodec)}
+	//nolint:forcetypeassert
+	return castMap[M, K, V]{MapOf(keyCodec, valueCodec).(mapCodec[K, V])}
 }
 
 // It would be really nice to have just one castCodec[T ~U, U any],
@@ -102,16 +108,16 @@ type (
 	castFloat64[T ~float64]       struct{}
 	castString[T ~string]         struct{}
 	castBytes[T ~[]byte]          struct {
-		codec Codec[[]byte]
+		codec bytesCodec
 	}
 	castPointer[P ~*E, E any] struct {
-		codec Codec[*E]
+		codec pointerCodec[E]
 	}
 	castSlice[S ~[]E, E any] struct {
-		codec Codec[[]E]
+		codec sliceCodec[E]
 	}
 	castMap[M ~map[K]V, K comparable, V any] struct {
-		codec Codec[map[K]V]
+		codec mapCodec[K, V]
 	}
 )
 
@@ -335,6 +341,12 @@ func (c castBytes[T]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
 }
 
+//lint:ignore U1000 this is actually used
+func (c castBytes[T]) nilsLast() Codec[T] {
+	//nolint:forcetypeassert
+	return castBytes[T]{c.codec.nilsLast().(bytesCodec)}
+}
+
 func (c castPointer[P, E]) Append(buf []byte, value P) []byte {
 	return c.codec.Append(buf, (*E)(value))
 }
@@ -349,6 +361,12 @@ func (c castPointer[P, E]) Get(buf []byte) (P, int) {
 
 func (c castPointer[P, E]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
+}
+
+//lint:ignore U1000 this is actually used
+func (c castPointer[P, E]) nilsLast() Codec[P] {
+	//nolint:forcetypeassert
+	return castPointer[P, E]{c.codec.nilsLast().(pointerCodec[E])}
 }
 
 func (c castSlice[S, E]) Append(buf []byte, value S) []byte {
@@ -367,6 +385,12 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
 }
 
+//lint:ignore U1000 this is actually used
+func (c castSlice[S, E]) nilsLast() Codec[S] {
+	//nolint:forcetypeassert
+	return castSlice[S, E]{c.codec.nilsLast().(sliceCodec[E])}
+}
+
 func (c castMap[M, K, V]) Append(buf []byte, value M) []byte {
 	return c.codec.Append(buf, map[K]V(value))
 }
@@ -381,4 +405,10 @@ func (c castMap[M, K, V]) Get(buf []byte) (M, int) {
 
 func (c castMap[M, K, V]) RequiresTerminator() bool {
 	return c.codec.RequiresTerminator()
+}
+
+//lint:ignore U1000 this is actually used
+func (c castMap[M, K, V]) nilsLast() Codec[M] {
+	//nolint:forcetypeassert
+	return castMap[M, K, V]{c.codec.nilsLast().(mapCodec[K, V])}
 }

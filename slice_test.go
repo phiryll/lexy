@@ -204,9 +204,9 @@ type sInt []int32
 
 func TestSliceUnderlyingType(t *testing.T) {
 	t.Parallel()
-	codec := lexy.MakeSliceOf[sInt](lexy.Int32())
+	codec := lexy.NilsLast(lexy.MakeSliceOf[sInt](lexy.Int32()))
 	testCodec(t, codec, []testCase[sInt]{
-		{"nil", sInt(nil), []byte{pNilFirst}},
+		{"nil", sInt(nil), []byte{pNilLast}},
 		{"empty", sInt([]int32{}), []byte{pNonNil}},
 		{"[0]", sInt([]int32{0}), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
 		{"[-1]", sInt([]int32{-1}), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},

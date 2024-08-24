@@ -10,9 +10,14 @@ import (
 
 //nolint:thelper
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
+	testBasicMapWithPrefix(t, pNilFirst, codec)
+}
+
+//nolint:thelper
+func testBasicMapWithPrefix[M ~map[string]int32](t *testing.T, nilPrefix byte, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
-		{"nil", nil, []byte{pNilFirst}},
+		{"nil", nil, []byte{nilPrefix}},
 		{"empty", M{}, []byte{pNonNil}},
 		{"{a:0}", M{"a": 0}, []byte{
 			pNonNil,
@@ -56,7 +61,7 @@ type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
 	t.Parallel()
-	testBasicMap(t, lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32()))
+	testBasicMapWithPrefix(t, pNilLast, lexy.NilsLast(lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32())))
 }
 
 func TestMapSlice(t *testing.T) {
