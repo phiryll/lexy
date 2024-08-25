@@ -59,9 +59,9 @@ func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
-	b, n := doUnescape(buf)
+	b, buf, _ := doUnescape(buf)
 	value, _ := c.codec.Get(b)
-	return value, buf[n:]
+	return value, buf
 }
 
 func (terminatorCodec[T]) RequiresTerminator() bool {
@@ -85,9 +85,11 @@ func doEscape(buf []byte) []byte {
 }
 
 // doUnescape reads and unescapes data from buf until the first unescaped terminator,
-// returning the unescaped data and number of bytes read from buf.
+// returning the unescaped data, the following buf, and number of bytes read from buf.
 // doUnescape will panic if no unescaped terminator is found.
-func doUnescape(buf []byte) ([]byte, int) {
+//
+//nolint:nonamedreturns
+func doUnescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
 	out := make([]byte, 0, defaultBufSize)
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
@@ -95,7 +97,7 @@ func doUnescape(buf []byte) ([]byte, int) {
 		// everything else goes into the output as-is
 		if !escaped {
 			if b == terminator {
-				return out, i + 1
+				return out, buf[i+1:], i + 1
 			}
 			if b == escape {
 				escaped = true

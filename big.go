@@ -267,17 +267,17 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 	exp, buf := stdInt32.Get(buf)
 
 	var mantBytes []byte
-	var n int
 	// Negate the bytes if needed, then unescape.
 	if signbit {
 		// copy buf to negate it, unescape with that
 		tempBuf := append([]byte{}, buf...)
 		negate(tempBuf)
-		mantBytes, n = doUnescape(tempBuf)
+		var n int
+		mantBytes, _, n = doUnescape(tempBuf)
+		buf = buf[n:]
 	} else {
-		mantBytes, n = doUnescape(buf)
+		mantBytes, buf, _ = doUnescape(buf)
 	}
-	buf = buf[n:]
 	prec, buf := stdInt32.Get(buf)
 	mode, buf := modeCodec.Get(buf)
 
