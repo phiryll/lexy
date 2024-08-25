@@ -17,8 +17,6 @@ const (
 // Each Prefix method is a helper for implementing the correspondingly named Codec method.
 // Invoking the Prefix method should be the first action taken by the Codec method,
 // since it allows an early return if the value is nil.
-// The one exception is Get, which should check for an empty buffer argument first.
-// All methods process exactly one byte if they are successful.
 //
 // In addition to other return values, every Prefix method returns done,
 // a bool value which is true if and only if the caller should return immediately.
@@ -32,20 +30,20 @@ type Prefix interface {
 	// Append appends a prefix byte to the end of buf, returning the updated buffer.
 	// This is a typical usage:
 	//
-	//	func (c fooCodec) Append(buf []byte, value Foo) []byte {
-	//	    done, newBuf := c.prefix.Append(buf, value == nil)
+	//	func (fooCodec) Append(buf []byte, value Foo) []byte {
+	//	    done, buf := PrefixNilsFirst.Append(buf, value == nil)
 	//	    if done {
-	//	        return newBuf
+	//	        return buf
 	//	    }
-	//	    // encode and append the non-nil value to newBuf
+	//	    // encode and append the non-nil value to buf
 	//	}
 	Append(buf []byte, isNil bool) (done bool, newBuf []byte)
 
 	// Put sets buf[0] to a prefix byte.
 	// This is a typical usage:
 	//
-	//	func (c fooCodec) Put(buf []byte, value Foo) int {
-	//	    if c.prefix.Put(buf, value == nil) {
+	//	func (fooCodec) Put(buf []byte, value Foo) int {
+	//	    if PrefixNilsFirst.Put(buf, value == nil) {
 	//	        return 1
 	//	    }
 	//	    // encode the non-nil value into buf[1:]
@@ -53,19 +51,18 @@ type Prefix interface {
 	Put(buf []byte, isNil bool) (done bool)
 
 	// Get decodes a prefix byte from buf[0].
+	// Get will panic if the prefix byte is invalid.
 	// Get will not modify buf.
 	// This is a typical usage:
 	//
-	//	func (c fooCodec) Get(buf []byte) (Foo, int)
-	//	    if len(buf) == 0 {
-	//	        return nil, -1
+	//	func (c fooCodec) Get(buf []byte) (Foo, []byte)
+	//	    done, buf := PrefixNilsFirst.Get(buf)
+	//	    if done {
+	//	        return nil, buf
 	//	    }
-	//	    if c.prefix.Get(buf) {
-	//	        return nil, 1
-	//	    }
-	//	    // decode and return a non-nil value from buf[1:]
+	//	    // decode and return a non-nil value from buf
 	//	}
-	Get(buf []byte) (done bool)
+	Get(buf []byte) (done bool, newBuf []byte)
 
 	// prefixFor returns which prefix byte to write.
 	// This method is used by Append and Put.
@@ -102,12 +99,12 @@ func (p prefixNilsFirst) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (prefixNilsFirst) Get(buf []byte) bool {
+func (prefixNilsFirst) Get(buf []byte) (bool, []byte) {
 	switch buf[0] {
 	case prefixNonNil:
-		return false
+		return false, buf[1:]
 	case prefixNilFirst:
-		return true
+		return true, buf[1:]
 	case prefixNilLast:
 		panic(errUnexpectedNilsLast)
 	default:
@@ -132,14 +129,14 @@ func (p prefixNilsLast) Put(buf []byte, isNil bool) bool {
 	return isNil
 }
 
-func (prefixNilsLast) Get(buf []byte) bool {
+func (prefixNilsLast) Get(buf []byte) (bool, []byte) {
 	switch buf[0] {
 	case prefixNonNil:
-		return false
+		return false, buf[1:]
 	case prefixNilFirst:
 		panic(errUnexpectedNilsFirst)
 	case prefixNilLast:
-		return true
+		return true, buf[1:]
 	default:
 		panic(unknownPrefixError{buf[0]})
 	}

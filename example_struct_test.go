@@ -3,7 +3,6 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"math"
 	"sort"
 
@@ -47,28 +46,11 @@ func (someStructCodec) Put(buf []byte, value SomeStruct) int {
 	return n
 }
 
-func (someStructCodec) Get(buf []byte) (SomeStruct, int) {
-	var zero SomeStruct
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
-	size, count := lexy.Int32().Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	score, count := negScoreCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	tags, count := tagsCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return SomeStruct{size, score, tags}, n
+func (someStructCodec) Get(buf []byte) (SomeStruct, []byte) {
+	size, buf := lexy.Int32().Get(buf)
+	score, buf := negScoreCodec.Get(buf)
+	tags, buf := tagsCodec.Get(buf)
+	return SomeStruct{size, score, tags}, buf
 }
 
 func (someStructCodec) RequiresTerminator() bool {
@@ -115,8 +97,7 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //     Get should read data in the same order it was written, using the same Codecs.
 //     The schema change example has an exception to this.
 //   - Use [lexy.PrefixNilsFirst] or [lexy.PrefixNilsLast] if the value can be nil.
-//   - Return a negative byte count from Get only only if the buffer argument was empty
-//     and the Codec cannot encode zero bytes for some value.
+//   - Get must panic if it cannot decode a value.
 //   - Use [lexy.TerminateIfNeeded] when an element's Codec might require it.
 //     See [tagsCodec] in this example for a typical usage.
 //   - Return true from [lexy.Codec.RequiresTerminator] when appropriate,

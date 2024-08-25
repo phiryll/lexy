@@ -179,9 +179,9 @@ func (c toUint32Codec) Put(buf []byte, value uint32) int {
 	return c.codec.Put(buf, math.Float32frombits(value))
 }
 
-func (c toUint32Codec) Get(buf []byte) (uint32, int) {
-	value, n := c.codec.Get(buf)
-	return math.Float32bits(value), n
+func (c toUint32Codec) Get(buf []byte) (uint32, []byte) {
+	value, buf := c.codec.Get(buf)
+	return math.Float32bits(value), buf
 }
 
 func (toUint32Codec) RequiresTerminator() bool {
@@ -200,9 +200,9 @@ func (c toUint64Codec) Put(buf []byte, value uint64) int {
 	return c.codec.Put(buf, math.Float64frombits(value))
 }
 
-func (c toUint64Codec) Get(buf []byte) (uint64, int) {
-	value, n := c.codec.Get(buf)
-	return math.Float64bits(value), n
+func (c toUint64Codec) Get(buf []byte) (uint64, []byte) {
+	value, buf := c.codec.Get(buf)
+	return math.Float64bits(value), buf
 }
 
 func (toUint64Codec) RequiresTerminator() bool {

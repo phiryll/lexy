@@ -2,7 +2,6 @@ package lexy
 
 import (
 	"fmt"
-	"io"
 	"time"
 )
 
@@ -64,28 +63,11 @@ func (timeCodec) Put(buf []byte, value time.Time) int {
 	return n
 }
 
-func (timeCodec) Get(buf []byte) (time.Time, int) {
-	if len(buf) == 0 {
-		var zero time.Time
-		return zero, -1
-	}
-	n := 0
-	seconds, count := stdInt64.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	nanos, count := stdUint32.Get(buf[sizeUint64:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	offset, count := stdInt32.Get(buf[sizeUint64+sizeUint32:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return buildTime(seconds, nanos, offset), n
+func (timeCodec) Get(buf []byte) (time.Time, []byte) {
+	seconds, buf := stdInt64.Get(buf)
+	nanos, buf := stdUint32.Get(buf)
+	offset, buf := stdInt32.Get(buf)
+	return buildTime(seconds, nanos, offset), buf
 }
 
 func (timeCodec) RequiresTerminator() bool {

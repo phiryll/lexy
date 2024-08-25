@@ -2,7 +2,6 @@ package lexy_test
 
 import (
 	"fmt"
-	"io"
 	"sort"
 
 	"github.com/phiryll/lexy"
@@ -58,46 +57,21 @@ func (versionedCodec) Put(buf []byte, value schemaVersion4) int {
 	return n
 }
 
-func (versionedCodec) Get(buf []byte) (schemaVersion4, int) {
-	var zero schemaVersion4
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
-	version, count := lexy.Uint32().Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
+func (versionedCodec) Get(buf []byte) (schemaVersion4, []byte) {
+	version, buf := lexy.Uint32().Get(buf)
 	switch version {
 	case 1:
-		v1, count := SchemaVersion1Codec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
-		return schemaVersion4{v1.name, "", ""}, n
+		v1, newBuf := SchemaVersion1Codec.Get(buf)
+		return schemaVersion4{v1.name, "", ""}, newBuf
 	case 2:
-		v2, count := SchemaVersion2Codec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
-		return schemaVersion4{v2.name, "", v2.lastName}, n
+		v2, newBuf := SchemaVersion2Codec.Get(buf)
+		return schemaVersion4{v2.name, "", v2.lastName}, newBuf
 	case 3:
-		v3, count := SchemaVersion3Codec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
-		return schemaVersion4{v3.name, "", v3.lastName}, n
+		v3, newBuf := SchemaVersion3Codec.Get(buf)
+		return schemaVersion4{v3.name, "", v3.lastName}, newBuf
 	case 4:
-		v4, count := SchemaVersion4Codec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
-		return v4, n
+		v4, newBuf := SchemaVersion4Codec.Get(buf)
+		return v4, newBuf
 	default:
 		panic(fmt.Sprintf("unknown schema version: %d", version))
 	}
@@ -119,16 +93,9 @@ func (schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
 	return NameCodec.Put(buf, value.name)
 }
 
-func (schemaVersion1Codec) Get(buf []byte) (schemaVersion1, int) {
-	var zero schemaVersion1
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	name, n := NameCodec.Get(buf)
-	if n < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return schemaVersion1{name}, n
+func (schemaVersion1Codec) Get(buf []byte) (schemaVersion1, []byte) {
+	name, buf := NameCodec.Get(buf)
+	return schemaVersion1{name}, buf
 }
 
 func (schemaVersion1Codec) RequiresTerminator() bool {
@@ -150,23 +117,10 @@ func (schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
 	return n
 }
 
-func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, int) {
-	var zero schemaVersion2
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
-	lastName, count := NameCodec.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	name, count := NameCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return schemaVersion2{name, lastName}, n
+func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, []byte) {
+	lastName, buf := NameCodec.Get(buf)
+	name, buf := NameCodec.Get(buf)
+	return schemaVersion2{name, lastName}, buf
 }
 
 func (schemaVersion2Codec) RequiresTerminator() bool {
@@ -190,28 +144,11 @@ func (schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
 	return n
 }
 
-func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, int) {
-	var zero schemaVersion3
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
-	count, byteCount := CountCodec.Get(buf)
-	n += byteCount
-	if byteCount < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	lastName, byteCount := NameCodec.Get(buf[n:])
-	n += byteCount
-	if byteCount < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	name, byteCount := NameCodec.Get(buf[n:])
-	n += byteCount
-	if byteCount < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return schemaVersion3{name, lastName, count}, n
+func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, []byte) {
+	count, buf := CountCodec.Get(buf)
+	lastName, buf := NameCodec.Get(buf)
+	name, buf := NameCodec.Get(buf)
+	return schemaVersion3{name, lastName, count}, buf
 }
 
 func (schemaVersion3Codec) RequiresTerminator() bool {
@@ -235,28 +172,11 @@ func (schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
 	return n
 }
 
-func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, int) {
-	var zero schemaVersion4
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
-	lastName, count := NameCodec.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	firstName, count := NameCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	middleName, count := NameCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return schemaVersion4{firstName, middleName, lastName}, n
+func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, []byte) {
+	lastName, buf := NameCodec.Get(buf)
+	firstName, buf := NameCodec.Get(buf)
+	middleName, buf := NameCodec.Get(buf)
+	return schemaVersion4{firstName, middleName, lastName}, buf
 }
 
 func (schemaVersion4Codec) RequiresTerminator() bool {

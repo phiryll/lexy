@@ -20,8 +20,8 @@ func (stringCodec) Put(buf []byte, value string) int {
 	return copyAll(buf, []byte(value))
 }
 
-func (stringCodec) Get(buf []byte) (string, int) {
-	return string(buf), len(buf)
+func (stringCodec) Get(buf []byte) (string, []byte) {
+	return string(buf), buf[len(buf):]
 }
 
 func (stringCodec) RequiresTerminator() bool {

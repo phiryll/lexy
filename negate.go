@@ -45,11 +45,13 @@ func (c negateCodec[T]) Put(buf []byte, value T) int {
 	return n
 }
 
-func (c negateCodec[T]) Get(buf []byte) (T, int) {
+func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
 	// We don't know how much to Get, so we copy everything.
 	b := append([]byte{}, buf...)
 	negate(b)
-	return c.codec.Get(b)
+	totalLen := len(b)
+	value, b := c.codec.Get(b)
+	return value, buf[totalLen-len(b):]
 }
 
 func (negateCodec[T]) RequiresTerminator() bool {

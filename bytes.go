@@ -21,14 +21,12 @@ func (c bytesCodec) Put(buf, value []byte) int {
 	return copyAll(buf, c.Append(nil, value))
 }
 
-func (c bytesCodec) Get(buf []byte) ([]byte, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c bytesCodec) Get(buf []byte) ([]byte, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	return append([]byte{}, buf[1:]...), len(buf)
+	return append([]byte{}, buf...), buf[len(buf):]
 }
 
 func (bytesCodec) RequiresTerminator() bool {

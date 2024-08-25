@@ -58,14 +58,10 @@ func (c terminatorCodec[T]) Put(buf []byte, value T) int {
 	return copyAll(buf, c.Append(nil, value))
 }
 
-func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
-	var zero T
-	if len(buf) == 0 {
-		return zero, -1
-	}
+func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
 	b, n := doUnescape(buf)
 	value, _ := c.codec.Get(b)
-	return value, n
+	return value, buf[n:]
 }
 
 func (terminatorCodec[T]) RequiresTerminator() bool {

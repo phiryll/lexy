@@ -15,9 +15,9 @@ func (emptyCodec[T]) Put(_ []byte, _ T) int {
 	return 0
 }
 
-func (emptyCodec[T]) Get(_ []byte) (T, int) {
+func (emptyCodec[T]) Get(buf []byte) (T, []byte) {
 	var zero T
-	return zero, 0
+	return zero, buf
 }
 
 func (emptyCodec[T]) RequiresTerminator() bool {

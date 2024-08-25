@@ -152,17 +152,11 @@ func (negateTestCodec) Put(buf []byte, value negateTest) int {
 	return n
 }
 
-func (negateTestCodec) Get(buf []byte) (negateTest, int) {
-	var zero negateTest
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	u8, n := lexy.Uint8().Get(buf)
-	s, count := negStringCodec.Get(buf[n:])
-	n += count
-	pInt, count := negPtrIntCodec.Get(buf[n:])
-	n += count
-	return negateTest{u8, pInt, s}, n
+func (negateTestCodec) Get(buf []byte) (negateTest, []byte) {
+	u8, buf := lexy.Uint8().Get(buf)
+	s, buf := negStringCodec.Get(buf)
+	pInt, buf := negPtrIntCodec.Get(buf)
+	return negateTest{u8, pInt, s}, buf
 }
 
 func (negateTestCodec) RequiresTerminator() bool {

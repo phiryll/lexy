@@ -147,14 +147,12 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 func (c testerCodec[T]) getEmpty(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		var zero T
-		got, gotSize := c.codec.Get([]byte{})
-		if gotSize != -1 {
-			assert.Equal(t, 0, gotSize)
-			assert.Empty(t, c.codec.Append(nil, zero))
+		if len(c.codec.Append([]byte{}, zero)) == 0 {
+			return
 		}
-		// All Codecs in lexy can only return the zero value from zero bytes.
-		assert.IsType(t, zero, got)
-		assert.Equal(t, zero, got)
+		assert.Panics(t, func() {
+			c.codec.Get([]byte{})
+		})
 	})
 }
 
@@ -248,16 +246,11 @@ func (c testerCodec[T]) putShortBuf(t *testing.T, tt testCase[T]) {
 func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get", func(t *testing.T) {
-		got, gotSize := c.codec.Get(workingBuf)
-		var expected T
-		if gotSize == -1 {
-			assert.Empty(t, buf)
-		} else {
-			expected = tt.value
-			assert.Equal(t, len(buf), gotSize)
-		}
-		assert.IsType(t, expected, got)
-		assert.Equal(t, expected, got)
+		got, gotBuf := c.codec.Get(workingBuf)
+		// Only empty because that's how these tests are set up.
+		assert.Empty(t, len(gotBuf))
+		assert.IsType(t, tt.value, got)
+		assert.Equal(t, tt.value, got)
 		assert.Equal(t, buf, workingBuf)
 	})
 }
@@ -273,7 +266,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		}
 		// Should either panic, or read one fewer byte and get the wrong value back.
 		var got T
-		var gotSize int
+		var gotBuf []byte
 		//nolint:nonamedreturns
 		panicked := func() (panicked bool) {
 			panicked = false
@@ -282,12 +275,12 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 					panicked = true
 				}
 			}()
-			got, gotSize = c.codec.Get(workingBuf[:size-1])
+			got, gotBuf = c.codec.Get(workingBuf[:size-1])
 			//nolint:nakedret
 			return
 		}()
 		if !panicked {
-			assert.Equal(t, size-1, gotSize, "got wrong amount of data")
+			assert.Empty(t, gotBuf, "got wrong amount of data")
 			assert.IsType(t, tt.value, got)
 			if !reflect.ValueOf(tt.value).IsZero() { // both might be randomly zero
 				assert.NotEqual(t, tt.value, got, "got value without full data")

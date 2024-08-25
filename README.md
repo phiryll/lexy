@@ -30,8 +30,8 @@ type Codec[T any] interface {
     Put(buf []byte, value T) int
 
     // Get decodes a value of type T from buf,
-    // returning the value and the number of bytes read.
-    Get(buf []byte) (T, int)
+    // returning the value and the buffer following the encoded value.
+    Get(buf []byte) (T, []byte)
 
     // RequiresTerminator returns whether encoded values require
     // a terminator and escaping if more data is written following

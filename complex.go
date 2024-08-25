@@ -1,7 +1,5 @@
 package lexy
 
-import "io"
-
 // Codecs for complex64 and complex128 types.
 //
 // The encoded order is real part first, imaginary part second.
@@ -21,22 +19,10 @@ func (complex64Codec) Put(buf []byte, value complex64) int {
 	return n
 }
 
-func (complex64Codec) Get(buf []byte) (complex64, int) {
-	if len(buf) == 0 {
-		return complex(0.0, 0.0), -1
-	}
-	n := 0
-	realPart, count := stdFloat32.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	imagPart, count := stdFloat32.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return complex(realPart, imagPart), n
+func (complex64Codec) Get(buf []byte) (complex64, []byte) {
+	realPart, buf := stdFloat32.Get(buf)
+	imagPart, buf := stdFloat32.Get(buf)
+	return complex(realPart, imagPart), buf
 }
 
 func (complex64Codec) RequiresTerminator() bool {
@@ -54,22 +40,10 @@ func (complex128Codec) Put(buf []byte, value complex128) int {
 	return n
 }
 
-func (complex128Codec) Get(buf []byte) (complex128, int) {
-	if len(buf) == 0 {
-		return complex(0.0, 0.0), -1
-	}
-	n := 0
-	realPart, count := stdFloat64.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	imagPart, count := stdFloat64.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return complex(realPart, imagPart), n
+func (complex128Codec) Get(buf []byte) (complex128, []byte) {
+	realPart, buf := stdFloat64.Get(buf)
+	imagPart, buf := stdFloat64.Get(buf)
+	return complex(realPart, imagPart), buf
 }
 
 func (complex128Codec) RequiresTerminator() bool {

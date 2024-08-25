@@ -1,7 +1,6 @@
 package lexy
 
 import (
-	"io"
 	"math/big"
 )
 
@@ -53,19 +52,15 @@ func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
 	return copyAll(buf, c.Append(nil, value))
 }
 
-func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	buf = buf[1:]
-	size, n := stdInt64.Get(buf)
-	buf = buf[n:]
+	size, buf := stdInt64.Get(buf)
 	var value big.Int
 	if size == 0 {
-		return &value, 1 + n
+		return &value, buf
 	}
 	if size < 0 {
 		size = -size
@@ -76,7 +71,7 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, int) {
 		_ = buf[size-1]
 		value.SetBytes(buf[:size])
 	}
-	return &value, 1 + n + int(size)
+	return &value, buf[size:]
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
@@ -249,63 +244,42 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
 	return copyAll(buf, c.Append(nil, value))
 }
 
-//nolint:cyclop,funlen
-func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
-	kind, count := stdInt8.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
+
+	kind, buf := stdInt8.Get(buf)
 	signbit := kind < 0
 	if kind == negInf || kind == posInf {
 		var value big.Float
-		return value.SetInf(signbit), n
+		return value.SetInf(signbit), buf
 	}
 	if kind == negZero || kind == posZero {
 		var value big.Float
 		if signbit {
 			value.Neg(&value)
 		}
-		return &value, n
+		return &value, buf
 	}
 
-	exp, count := stdInt32.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
+	exp, buf := stdInt32.Get(buf)
 
 	var mantBytes []byte
+	var n int
 	// Negate the bytes if needed, then unescape.
 	if signbit {
 		// copy buf to negate it, unescape with that
-		tempBuf := append([]byte{}, buf[n:]...)
+		tempBuf := append([]byte{}, buf...)
 		negate(tempBuf)
-		mantBytes, count = doUnescape(tempBuf)
+		mantBytes, n = doUnescape(tempBuf)
 	} else {
-		mantBytes, count = doUnescape(buf[n:])
+		mantBytes, n = doUnescape(buf)
 	}
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	prec, count := stdInt32.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	mode, count := modeCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
+	buf = buf[n:]
+	prec, buf := stdInt32.Get(buf)
+	mode, buf := modeCodec.Get(buf)
 
 	if signbit {
 		exp = -exp
@@ -323,7 +297,7 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, int) {
 	if signbit {
 		value.Neg(&value)
 	}
-	return &value, n
+	return &value, buf
 }
 
 func (bigFloatCodec) RequiresTerminator() bool {
@@ -372,17 +346,15 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
 	return n + termIntCodec.Put(buf[n:], value.Denom())
 }
 
-func (c bigRatCodec) Get(buf []byte) (*big.Rat, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c bigRatCodec) Get(buf []byte) (*big.Rat, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	num, nNum := termIntCodec.Get(buf[1:])
-	denom, nDenom := termIntCodec.Get(buf[1+nNum:])
+	num, buf := termIntCodec.Get(buf)
+	denom, buf := termIntCodec.Get(buf)
 	var value big.Rat
-	return value.SetFrac(num, denom), 1 + nNum + nDenom
+	return value.SetFrac(num, denom), buf
 }
 
 func (bigRatCodec) RequiresTerminator() bool {

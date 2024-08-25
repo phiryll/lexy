@@ -1,7 +1,5 @@
 package lexy
 
-import "io"
-
 // mapCodec is the unordered Codec for maps.
 // A map is encoded as:
 //
@@ -39,26 +37,19 @@ func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
 	return n
 }
 
-func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
 	m := map[K]V{}
 	for {
-		key, count := c.keyCodec.Get(buf[n:])
-		if count < 0 {
-			return m, n
+		if len(buf) == 0 {
+			return m, buf
 		}
-		n += count
-		value, count := c.valueCodec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
+		key, newBuf := c.keyCodec.Get(buf)
+		value, newBuf := c.valueCodec.Get(newBuf)
+		buf = newBuf
 		m[key] = value
 	}
 }

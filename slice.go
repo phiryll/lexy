@@ -34,21 +34,18 @@ func (c sliceCodec[E]) Put(buf []byte, value []E) int {
 	return n
 }
 
-func (c sliceCodec[E]) Get(buf []byte) ([]E, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c sliceCodec[E]) Get(buf []byte) ([]E, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
 	values := []E{}
 	for {
-		value, count := c.elemCodec.Get(buf[n:])
-		if count < 0 {
-			return values, n
+		if len(buf) == 0 {
+			return values, buf
 		}
-		n += count
+		value, newBuf := c.elemCodec.Get(buf)
+		buf = newBuf
 		values = append(values, value)
 	}
 }

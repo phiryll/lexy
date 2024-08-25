@@ -3,7 +3,6 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"sort"
 
 	"github.com/phiryll/lexy"
@@ -76,23 +75,10 @@ func (KeyCodec) Put(buf []byte, key UserKey) int {
 	return n
 }
 
-func (KeyCodec) Get(buf []byte) (UserKey, int) {
-	if len(buf) == 0 {
-		var zero UserKey
-		return zero, -1
-	}
-	n := 0
-	cost, count := costCodec.Get(buf)
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	words, count := wordsCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return UserKey{words, cost}, n
+func (KeyCodec) Get(buf []byte) (UserKey, []byte) {
+	cost, buf := costCodec.Get(buf)
+	words, buf := wordsCodec.Get(buf)
+	return UserKey{words, cost}, buf
 }
 
 func (KeyCodec) RequiresTerminator() bool {
