@@ -10,25 +10,23 @@ type bytesCodec struct {
 }
 
 func (c bytesCodec) Append(buf, value []byte) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	return append(newBuf, value...)
+	return append(buf, value...)
 }
 
-func (c bytesCodec) Put(buf, value []byte) int {
-	return mustCopy(buf, c.Append(nil, value))
+func (c bytesCodec) Put(buf, value []byte) []byte {
+	return copyAll(buf, c.Append(nil, value))
 }
 
-func (c bytesCodec) Get(buf []byte) ([]byte, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c bytesCodec) Get(buf []byte) ([]byte, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	return append([]byte{}, buf[1:]...), len(buf)
+	return append([]byte{}, buf...), buf[len(buf):]
 }
 
 func (bytesCodec) RequiresTerminator() bool {

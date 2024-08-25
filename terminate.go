@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
@@ -54,18 +50,14 @@ func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
 	return append(buf, doEscape(c.codec.Append(nil, value))...)
 }
 
-func (c terminatorCodec[T]) Put(buf []byte, value T) int {
-	return mustCopy(buf, c.Append(nil, value))
+func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
+	return copyAll(buf, c.Append(nil, value))
 }
 
-func (c terminatorCodec[T]) Get(buf []byte) (T, int) {
-	var zero T
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	b, n := doUnescape(buf)
+func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
+	b, buf, _ := doUnescape(buf)
 	value, _ := c.codec.Get(b)
-	return value, n
+	return value, buf
 }
 
 func (terminatorCodec[T]) RequiresTerminator() bool {
@@ -89,9 +81,11 @@ func doEscape(buf []byte) []byte {
 }
 
 // doUnescape reads and unescapes data from buf until the first unescaped terminator,
-// returning the unescaped data and number of bytes read from buf.
+// returning the unescaped data, the following buf, and number of bytes read from buf.
 // doUnescape will panic if no unescaped terminator is found.
-func doUnescape(buf []byte) ([]byte, int) {
+//
+//nolint:nonamedreturns
+func doUnescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
 	out := make([]byte, 0, defaultBufSize)
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
@@ -99,7 +93,7 @@ func doUnescape(buf []byte) ([]byte, int) {
 		// everything else goes into the output as-is
 		if !escaped {
 			if b == terminator {
-				return out, i + 1
+				return out, buf[i+1:], i + 1
 			}
 			if b == escape {
 				escaped = true
@@ -109,6 +103,5 @@ func doUnescape(buf []byte) ([]byte, int) {
 		escaped = false
 		out = append(out, b)
 	}
-	// unescaped terminator not reached
-	panic(io.ErrUnexpectedEOF)
+	panic(errUnterminatedBuffer)
 }

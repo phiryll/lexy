@@ -123,7 +123,7 @@ func TestUnescape(t *testing.T) {
 					lexy.TestingDoUnescape(tt.data)
 				})
 			} else {
-				buf, _ := lexy.TestingDoUnescape(tt.data)
+				buf, _, _ := lexy.TestingDoUnescape(tt.data)
 				assert.Equal(t, tt.unescaped, buf)
 			}
 		})
@@ -139,8 +139,8 @@ func TestUnescapeMultiple(t *testing.T) {
 		{7, 8, 9},
 		{10, 11, 12},
 	} {
-		got, count := lexy.TestingDoUnescape(data[n:])
-		n += count
+		var got []byte
+		got, data, _ = lexy.TestingDoUnescape(data)
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
 	assert.Len(t, data, n)

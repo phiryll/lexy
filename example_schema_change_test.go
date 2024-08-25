@@ -2,7 +2,6 @@ package lexy_test
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/phiryll/lexy"
 )
@@ -43,11 +42,11 @@ func (previousCodec) Append(buf []byte, value schemaPrevious) []byte {
 	return nameCodec.Append(buf, value.name)
 }
 
-func (previousCodec) Put(_ []byte, _ schemaPrevious) int {
+func (previousCodec) Put(_ []byte, _ schemaPrevious) []byte {
 	panic("unused in this example")
 }
 
-func (previousCodec) Get(_ []byte) (schemaPrevious, int) {
+func (previousCodec) Get(_ []byte) (schemaPrevious, []byte) {
 	panic("unused in this example")
 }
 
@@ -67,53 +66,34 @@ func (schemaCodec) Append(_ []byte, _ schema) []byte {
 	panic("unused in this example")
 }
 
-func (schemaCodec) Put(_ []byte, _ schema) int {
+func (schemaCodec) Put(_ []byte, _ schema) []byte {
 	panic("unused in this example")
 }
 
-func (schemaCodec) Get(buf []byte) (schema, int) {
-	var zero, value schema
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	n := 0
+func (schemaCodec) Get(buf []byte) (schema, []byte) {
+	var value schema
 	for {
-		field, count := nameCodec.Get(buf[n:])
-		if count < 0 {
-			return value, n
+		if len(buf) == 0 {
+			return value, buf
 		}
-		n += count
+		var field string
+		var firstName, middleName, lastName string
+		field, buf = nameCodec.Get(buf)
 		switch field {
 		case "name", "firstName":
 			// Field was renamed.
-			firstName, count := nameCodec.Get(buf[n:])
-			n += count
-			if count < 0 {
-				panic(io.ErrUnexpectedEOF)
-			}
+			firstName, buf = nameCodec.Get(buf)
 			value.firstName = firstName
 		case "middleName":
 			// Field was added.
-			middleName, count := nameCodec.Get(buf[n:])
-			n += count
-			if count < 0 {
-				panic(io.ErrUnexpectedEOF)
-			}
+			middleName, buf = nameCodec.Get(buf)
 			value.middleName = middleName
 		case "lastName":
-			lastName, count := nameCodec.Get(buf[n:])
-			n += count
-			if count < 0 {
-				panic(io.ErrUnexpectedEOF)
-			}
+			lastName, buf = nameCodec.Get(buf)
 			value.lastName = lastName
 		case "count":
 			// Field was removed, but we still need to read the value.
-			_, count := countCodec.Get(buf[n:])
-			n += count
-			if count < 0 {
-				panic(io.ErrUnexpectedEOF)
-			}
+			_, buf = countCodec.Get(buf)
 		default:
 			// We must stop, we don't know how to proceed.
 			panic(fmt.Sprintf("unrecognized field name %q", field))

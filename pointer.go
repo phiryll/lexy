@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // pointerCodec is the Codec for pointers, using elemCodec to encode and decode its referent.
 // A pointer is encoded as:
 //   - if nil, prefixNilFirst/Last
@@ -14,35 +10,28 @@ type pointerCodec[E any] struct {
 }
 
 func (c pointerCodec[E]) Append(buf []byte, value *E) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	return c.elemCodec.Append(newBuf, *value)
+	return c.elemCodec.Append(buf, *value)
 }
 
-func (c pointerCodec[E]) Put(buf []byte, value *E) int {
-	if c.prefix.Put(buf, value == nil) {
-		return 1
+func (c pointerCodec[E]) Put(buf []byte, value *E) []byte {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
 	}
-	n := 1
-	return n + c.elemCodec.Put(buf[n:], *value)
+	return c.elemCodec.Put(buf, *value)
 }
 
-func (c pointerCodec[E]) Get(buf []byte) (*E, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c pointerCodec[E]) Get(buf []byte) (*E, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
-	value, count := c.elemCodec.Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
-	return &value, n
+	value, buf := c.elemCodec.Get(buf)
+	return &value, buf
 }
 
 func (c pointerCodec[E]) RequiresTerminator() bool {

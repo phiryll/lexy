@@ -13,42 +13,39 @@ type sliceCodec[E any] struct {
 }
 
 func (c sliceCodec[E]) Append(buf []byte, value []E) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	for _, elem := range value {
-		newBuf = c.elemCodec.Append(newBuf, elem)
+		buf = c.elemCodec.Append(buf, elem)
 	}
-	return newBuf
+	return buf
 }
 
-func (c sliceCodec[E]) Put(buf []byte, value []E) int {
-	if c.prefix.Put(buf, value == nil) {
-		return 1
+func (c sliceCodec[E]) Put(buf []byte, value []E) []byte {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
 	}
-	n := 1
 	for _, elem := range value {
-		n += c.elemCodec.Put(buf[n:], elem)
+		buf = c.elemCodec.Put(buf, elem)
 	}
-	return n
+	return buf
 }
 
-func (c sliceCodec[E]) Get(buf []byte) ([]E, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c sliceCodec[E]) Get(buf []byte) ([]E, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
 	values := []E{}
+	var value E
 	for {
-		value, count := c.elemCodec.Get(buf[n:])
-		if count < 0 {
-			return values, n
+		if len(buf) == 0 {
+			return values, buf
 		}
-		n += count
+		value, buf = c.elemCodec.Get(buf)
 		values = append(values, value)
 	}
 }

@@ -38,20 +38,17 @@ func (boolCodec) Append(buf []byte, value bool) []byte {
 }
 
 //nolint:revive
-func (boolCodec) Put(buf []byte, value bool) int {
+func (boolCodec) Put(buf []byte, value bool) []byte {
 	if value {
 		buf[0] = 1
 	} else {
 		buf[0] = 0
 	}
-	return sizeUint8
+	return buf[sizeUint8:]
 }
 
-func (boolCodec) Get(buf []byte) (bool, int) {
-	if len(buf) == 0 {
-		return false, -1
-	}
-	return buf[0] != 0, sizeUint8
+func (boolCodec) Get(buf []byte) (bool, []byte) {
+	return buf[0] != 0, buf[sizeUint8:]
 }
 
 func (boolCodec) RequiresTerminator() bool {
@@ -62,16 +59,13 @@ func (uint8Codec) Append(buf []byte, value uint8) []byte {
 	return append(buf, value)
 }
 
-func (uint8Codec) Put(buf []byte, value uint8) int {
+func (uint8Codec) Put(buf []byte, value uint8) []byte {
 	buf[0] = value
-	return sizeUint8
+	return buf[sizeUint8:]
 }
 
-func (uint8Codec) Get(buf []byte) (uint8, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return buf[0], sizeUint8
+func (uint8Codec) Get(buf []byte) (uint8, []byte) {
+	return buf[0], buf[sizeUint8:]
 }
 
 func (uint8Codec) RequiresTerminator() bool {
@@ -82,16 +76,13 @@ func (uint16Codec) Append(buf []byte, value uint16) []byte {
 	return binary.BigEndian.AppendUint16(buf, value)
 }
 
-func (uint16Codec) Put(buf []byte, value uint16) int {
+func (uint16Codec) Put(buf []byte, value uint16) []byte {
 	binary.BigEndian.PutUint16(buf, value)
-	return sizeUint16
+	return buf[sizeUint16:]
 }
 
-func (uint16Codec) Get(buf []byte) (uint16, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return binary.BigEndian.Uint16(buf), sizeUint16
+func (uint16Codec) Get(buf []byte) (uint16, []byte) {
+	return binary.BigEndian.Uint16(buf), buf[sizeUint16:]
 }
 
 func (uint16Codec) RequiresTerminator() bool {
@@ -102,16 +93,13 @@ func (uint32Codec) Append(buf []byte, value uint32) []byte {
 	return binary.BigEndian.AppendUint32(buf, value)
 }
 
-func (uint32Codec) Put(buf []byte, value uint32) int {
+func (uint32Codec) Put(buf []byte, value uint32) []byte {
 	binary.BigEndian.PutUint32(buf, value)
-	return sizeUint32
+	return buf[sizeUint32:]
 }
 
-func (uint32Codec) Get(buf []byte) (uint32, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return binary.BigEndian.Uint32(buf), sizeUint32
+func (uint32Codec) Get(buf []byte) (uint32, []byte) {
+	return binary.BigEndian.Uint32(buf), buf[sizeUint32:]
 }
 
 func (uint32Codec) RequiresTerminator() bool {
@@ -122,16 +110,13 @@ func (uint64Codec) Append(buf []byte, value uint64) []byte {
 	return binary.BigEndian.AppendUint64(buf, value)
 }
 
-func (uint64Codec) Put(buf []byte, value uint64) int {
+func (uint64Codec) Put(buf []byte, value uint64) []byte {
 	binary.BigEndian.PutUint64(buf, value)
-	return sizeUint64
+	return buf[sizeUint64:]
 }
 
-func (uint64Codec) Get(buf []byte) (uint64, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return binary.BigEndian.Uint64(buf), sizeUint64
+func (uint64Codec) Get(buf []byte) (uint64, []byte) {
+	return binary.BigEndian.Uint64(buf), buf[sizeUint64:]
 }
 
 func (uint64Codec) RequiresTerminator() bool {
@@ -164,16 +149,13 @@ func (int8Codec) Append(buf []byte, value int8) []byte {
 	return append(buf, uint8(math.MinInt8^value))
 }
 
-func (int8Codec) Put(buf []byte, value int8) int {
+func (int8Codec) Put(buf []byte, value int8) []byte {
 	buf[0] = uint8(math.MinInt8 ^ value)
-	return sizeUint8
+	return buf[sizeUint8:]
 }
 
-func (int8Codec) Get(buf []byte) (int8, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return math.MinInt8 ^ int8(buf[0]), sizeUint8
+func (int8Codec) Get(buf []byte) (int8, []byte) {
+	return math.MinInt8 ^ int8(buf[0]), buf[sizeUint8:]
 }
 
 func (int8Codec) RequiresTerminator() bool {
@@ -184,16 +166,13 @@ func (int16Codec) Append(buf []byte, value int16) []byte {
 	return binary.BigEndian.AppendUint16(buf, uint16(math.MinInt16^value))
 }
 
-func (int16Codec) Put(buf []byte, value int16) int {
+func (int16Codec) Put(buf []byte, value int16) []byte {
 	binary.BigEndian.PutUint16(buf, uint16(math.MinInt16^value))
-	return sizeUint16
+	return buf[sizeUint16:]
 }
 
-func (int16Codec) Get(buf []byte) (int16, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return math.MinInt16 ^ int16(binary.BigEndian.Uint16(buf)), sizeUint16
+func (int16Codec) Get(buf []byte) (int16, []byte) {
+	return math.MinInt16 ^ int16(binary.BigEndian.Uint16(buf)), buf[sizeUint16:]
 }
 
 func (int16Codec) RequiresTerminator() bool {
@@ -204,16 +183,13 @@ func (int32Codec) Append(buf []byte, value int32) []byte {
 	return binary.BigEndian.AppendUint32(buf, uint32(math.MinInt32^value))
 }
 
-func (int32Codec) Put(buf []byte, value int32) int {
+func (int32Codec) Put(buf []byte, value int32) []byte {
 	binary.BigEndian.PutUint32(buf, uint32(math.MinInt32^value))
-	return sizeUint32
+	return buf[sizeUint32:]
 }
 
-func (int32Codec) Get(buf []byte) (int32, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return math.MinInt32 ^ int32(binary.BigEndian.Uint32(buf)), sizeUint32
+func (int32Codec) Get(buf []byte) (int32, []byte) {
+	return math.MinInt32 ^ int32(binary.BigEndian.Uint32(buf)), buf[sizeUint32:]
 }
 
 func (int32Codec) RequiresTerminator() bool {
@@ -224,16 +200,13 @@ func (int64Codec) Append(buf []byte, value int64) []byte {
 	return binary.BigEndian.AppendUint64(buf, uint64(math.MinInt64^value))
 }
 
-func (int64Codec) Put(buf []byte, value int64) int {
+func (int64Codec) Put(buf []byte, value int64) []byte {
 	binary.BigEndian.PutUint64(buf, uint64(math.MinInt64^value))
-	return sizeUint64
+	return buf[sizeUint64:]
 }
 
-func (int64Codec) Get(buf []byte) (int64, int) {
-	if len(buf) == 0 {
-		return 0, -1
-	}
-	return math.MinInt64 ^ int64(binary.BigEndian.Uint64(buf)), sizeUint64
+func (int64Codec) Get(buf []byte) (int64, []byte) {
+	return math.MinInt64 ^ int64(binary.BigEndian.Uint64(buf)), buf[sizeUint64:]
 }
 
 func (int64Codec) RequiresTerminator() bool {

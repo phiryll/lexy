@@ -21,8 +21,6 @@ import (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-const timeSize = sizeUint64 + sizeUint32 + sizeUint32
-
 var formatCache = makeCache(formatOffset)
 
 //nolint:mnd
@@ -57,22 +55,18 @@ func (timeCodec) Append(buf []byte, value time.Time) []byte {
 	return stdInt32.Append(buf, offset)
 }
 
-func (timeCodec) Put(buf []byte, value time.Time) int {
+func (timeCodec) Put(buf []byte, value time.Time) []byte {
 	seconds, nanos, offset := splitTime(value)
-	n := stdInt64.Put(buf, seconds)
-	n += stdUint32.Put(buf, nanos)
-	return n + stdInt32.Put(buf, offset)
+	buf = stdInt64.Put(buf, seconds)
+	buf = stdUint32.Put(buf, nanos)
+	return stdInt32.Put(buf, offset)
 }
 
-func (timeCodec) Get(buf []byte) (time.Time, int) {
-	if len(buf) == 0 {
-		var zero time.Time
-		return zero, -1
-	}
-	seconds, _ := stdInt64.Get(buf)
-	nanos, _ := stdUint32.Get(buf[sizeUint64:])
-	offset, _ := stdInt32.Get(buf[sizeUint64+sizeUint32:])
-	return buildTime(seconds, nanos, offset), timeSize
+func (timeCodec) Get(buf []byte) (time.Time, []byte) {
+	seconds, buf := stdInt64.Get(buf)
+	nanos, buf := stdUint32.Get(buf)
+	offset, buf := stdInt32.Get(buf)
+	return buildTime(seconds, nanos, offset), buf
 }
 
 func (timeCodec) RequiresTerminator() bool {

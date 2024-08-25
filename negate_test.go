@@ -145,24 +145,17 @@ func (negateTestCodec) Append(buf []byte, value negateTest) []byte {
 	return negPtrIntCodec.Append(buf, value.fPtrInt16)
 }
 
-func (negateTestCodec) Put(buf []byte, value negateTest) int {
-	n := lexy.Uint8().Put(buf, value.fUint8)
-	n += negStringCodec.Put(buf[n:], value.fString)
-	n += negPtrIntCodec.Put(buf[n:], value.fPtrInt16)
-	return n
+func (negateTestCodec) Put(buf []byte, value negateTest) []byte {
+	buf = lexy.Uint8().Put(buf, value.fUint8)
+	buf = negStringCodec.Put(buf, value.fString)
+	return negPtrIntCodec.Put(buf, value.fPtrInt16)
 }
 
-func (negateTestCodec) Get(buf []byte) (negateTest, int) {
-	var zero negateTest
-	if len(buf) == 0 {
-		return zero, -1
-	}
-	u8, n := lexy.Uint8().Get(buf)
-	s, count := negStringCodec.Get(buf[n:])
-	n += count
-	pInt, count := negPtrIntCodec.Get(buf[n:])
-	n += count
-	return negateTest{u8, pInt, s}, n
+func (negateTestCodec) Get(buf []byte) (negateTest, []byte) {
+	u8, buf := lexy.Uint8().Get(buf)
+	s, buf := negStringCodec.Get(buf)
+	pInt, buf := negPtrIntCodec.Get(buf)
+	return negateTest{u8, pInt, s}, buf
 }
 
 func (negateTestCodec) RequiresTerminator() bool {

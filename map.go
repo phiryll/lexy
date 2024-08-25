@@ -1,7 +1,5 @@
 package lexy
 
-import "io"
-
 // mapCodec is the unordered Codec for maps.
 // A map is encoded as:
 //
@@ -16,49 +14,43 @@ type mapCodec[K comparable, V any] struct {
 }
 
 func (c mapCodec[K, V]) Append(buf []byte, value map[K]V) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	for k, v := range value {
-		newBuf = c.keyCodec.Append(newBuf, k)
-		newBuf = c.valueCodec.Append(newBuf, v)
+		buf = c.keyCodec.Append(buf, k)
+		buf = c.valueCodec.Append(buf, v)
 	}
-	return newBuf
+	return buf
 }
 
-func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
-	if c.prefix.Put(buf, value == nil) {
-		return 1
+func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) []byte {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
 	}
-	n := 1
 	for k, v := range value {
-		n += c.keyCodec.Put(buf[n:], k)
-		n += c.valueCodec.Put(buf[n:], v)
+		buf = c.keyCodec.Put(buf, k)
+		buf = c.valueCodec.Put(buf, v)
 	}
-	return n
+	return buf
 }
 
-func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, []byte) {
+	done, buf := c.prefix.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if c.prefix.Get(buf) {
-		return nil, 1
-	}
-	n := 1
 	m := map[K]V{}
+	var key K
+	var value V
 	for {
-		key, count := c.keyCodec.Get(buf[n:])
-		if count < 0 {
-			return m, n
+		if len(buf) == 0 {
+			return m, buf
 		}
-		n += count
-		value, count := c.valueCodec.Get(buf[n:])
-		n += count
-		if count < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
+		key, buf = c.keyCodec.Get(buf)
+		value, buf = c.valueCodec.Get(buf)
 		m[key] = value
 	}
 }

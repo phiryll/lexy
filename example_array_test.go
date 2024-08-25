@@ -3,7 +3,6 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"math"
 
 	"github.com/phiryll/lexy"
@@ -22,29 +21,19 @@ func (quaternionCodec) Append(buf []byte, value Quaternion) []byte {
 	return buf
 }
 
-func (quaternionCodec) Put(buf []byte, value Quaternion) int {
-	n := 0
+func (quaternionCodec) Put(buf []byte, value Quaternion) []byte {
 	for i := range value {
-		n += lexy.Float64().Put(buf[n:], value[i])
+		buf = lexy.Float64().Put(buf, value[i])
 	}
-	return n
+	return buf
 }
 
-func (quaternionCodec) Get(buf []byte) (Quaternion, int) {
+func (quaternionCodec) Get(buf []byte) (Quaternion, []byte) {
 	var value Quaternion
-	if len(buf) == 0 {
-		return value, -1
-	}
-	n := 0
 	for i := range value {
-		elem, size := lexy.Float64().Get(buf[n:])
-		if size < 0 {
-			panic(io.ErrUnexpectedEOF)
-		}
-		value[i] = elem
-		n += size
+		value[i], buf = lexy.Float64().Get(buf)
 	}
-	return value, n
+	return value, buf
 }
 
 func (quaternionCodec) RequiresTerminator() bool {

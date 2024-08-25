@@ -74,22 +74,19 @@ type Codec[T any] interface {
 	// If buf is nil and no bytes are appended, Append may return nil.
 	Append(buf []byte, value T) []byte
 
-	// Put encodes value into buf, returning the number of bytes written.
+	// Put encodes value into buf, returning buf following what was written.
 	//
 	// Put will panic if buf is too small, and still may have written some data to buf.
 	// Put will write only the bytes that encode value.
-	Put(buf []byte, value T) int
+	Put(buf []byte, value T) []byte
 
-	// Get decodes a value of type T from buf, returning the value and the number of bytes read.
-	//
+	// Get decodes a value of type T from buf,
+	// returning the value and buf following the encoded value.
+	// Get will panic if a value of type T cannot be successfully decoded from buf.
 	// If buf is empty and this Codec could encode zero bytes for some value,
-	// Get will return that value and 0 bytes read.
-	// If buf is empty and this Codec cannot encode zero bytes for any value,
-	// Get will return the zero value of T and a byte count < 0.
-	// Checking the returned byte count is the only way to distinguish these cases.
-	// Get will panic if a value of type T cannot be successfully decoded from a non-empty buf.
+	// Get will return that value and buf.
 	// Get will not modify buf.
-	Get(buf []byte) (T, int)
+	Get(buf []byte) (T, []byte)
 
 	// RequiresTerminator returns whether encoded values require a terminator and escaping
 	// if more data is written following the encoded value.
@@ -367,32 +364,18 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 	panic(badTypeError{codec})
 }
 
-// Functions to help in implementing new Codecs.
-
-//nolint:godox
-// TODO: Add more after looking for pain points in examples.
-
-// Helper functions used by implementations.
+// Helper functionality used by implementations.
 
 // The default size when allocating a buffer, chosen because it should fit in a cache line.
 const defaultBufSize = 64
 
-// mustNonNil panics with a nilError with the given name if x is nil.
-// The best way to panic if something is nil is to use it,
-// use this function only if that isn't possible.
-func mustNonNil(x any, name string) {
-	if x == nil {
-		panic(nilError{name})
-	}
-}
-
-// mustCopy is like the built-in copy(dst, src),
+// copyAll is like the built-in copy(dst, src),
 // except that it panics if dst is not large enough to hold all of src.
-// mustCopy returns the number of bytes copied, which is len(src).
-func mustCopy(dst, src []byte) int {
+// copyAll returns a slice into dst following what was written.
+func copyAll(dst, src []byte) []byte {
 	if len(src) == 0 {
-		return 0
+		return dst
 	}
 	_ = dst[len(src)-1]
-	return copy(dst, src)
+	return dst[copy(dst, src):]
 }

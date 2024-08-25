@@ -34,22 +34,25 @@ type negateCodec[T any] struct {
 
 func (c negateCodec[T]) Append(buf []byte, value T) []byte {
 	start := len(buf)
-	newBuf := c.codec.Append(buf, value)
-	negate(newBuf[start:])
+	buf = c.codec.Append(buf, value)
+	negate(buf[start:])
+	return buf
+}
+
+func (c negateCodec[T]) Put(buf []byte, value T) []byte {
+	newBuf := c.codec.Put(buf, value)
+	putSize := len(buf) - len(newBuf)
+	negate(buf[:putSize])
 	return newBuf
 }
 
-func (c negateCodec[T]) Put(buf []byte, value T) int {
-	n := c.codec.Put(buf, value)
-	negate(buf[:n])
-	return n
-}
-
-func (c negateCodec[T]) Get(buf []byte) (T, int) {
+func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
 	// We don't know how much to Get, so we copy everything.
 	b := append([]byte{}, buf...)
 	negate(b)
-	return c.codec.Get(b)
+	totalLen := len(b)
+	value, b := c.codec.Get(b)
+	return value, buf[totalLen-len(b):]
 }
 
 func (negateCodec[T]) RequiresTerminator() bool {

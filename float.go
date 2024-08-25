@@ -109,16 +109,13 @@ func (float32Codec) Append(buf []byte, value float32) []byte {
 	return stdUint32.Append(buf, float32ToBits(value))
 }
 
-func (float32Codec) Put(buf []byte, value float32) int {
+func (float32Codec) Put(buf []byte, value float32) []byte {
 	return stdUint32.Put(buf, float32ToBits(value))
 }
 
-func (float32Codec) Get(buf []byte) (float32, int) {
-	if len(buf) == 0 {
-		return 0.0, -1
-	}
-	bits, n := stdUint32.Get(buf)
-	return float32FromBits(bits), n
+func (float32Codec) Get(buf []byte) (float32, []byte) {
+	bits, buf := stdUint32.Get(buf)
+	return float32FromBits(bits), buf
 }
 
 func (float32Codec) RequiresTerminator() bool {
@@ -129,16 +126,13 @@ func (float64Codec) Append(buf []byte, value float64) []byte {
 	return stdUint64.Append(buf, float64ToBits(value))
 }
 
-func (float64Codec) Put(buf []byte, value float64) int {
+func (float64Codec) Put(buf []byte, value float64) []byte {
 	return stdUint64.Put(buf, float64ToBits(value))
 }
 
-func (float64Codec) Get(buf []byte) (float64, int) {
-	if len(buf) == 0 {
-		return 0.0, -1
-	}
-	bits, n := stdUint64.Get(buf)
-	return float64FromBits(bits), n
+func (float64Codec) Get(buf []byte) (float64, []byte) {
+	bits, buf := stdUint64.Get(buf)
+	return float64FromBits(bits), buf
 }
 
 func (float64Codec) RequiresTerminator() bool {

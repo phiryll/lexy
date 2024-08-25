@@ -2,7 +2,6 @@ package lexy_test
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/phiryll/lexy"
 )
@@ -27,40 +26,33 @@ var (
 type ptrToBigStructCodec struct{}
 
 func (ptrToBigStructCodec) Append(buf []byte, value *BigStruct) []byte {
-	done, newBuf := lexy.PrefixNilsFirst.Append(buf, value == nil)
+	done, buf := lexy.PrefixNilsFirst.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	newBuf = lexy.TerminatedString().Append(newBuf, value.name)
+	buf = lexy.TerminatedString().Append(buf, value.name)
 	// Append other fields.
-	return newBuf
+	return buf
 }
 
-func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
-	if lexy.PrefixNilsFirst.Put(buf, value == nil) {
-		return 1
+func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) []byte {
+	done, buf := lexy.PrefixNilsFirst.Put(buf, value == nil)
+	if done {
+		return buf
 	}
-	n := 1
-	n += lexy.TerminatedString().Put(buf[n:], value.name)
+	buf = lexy.TerminatedString().Put(buf, value.name)
 	// Put other fields.
-	return n
+	return buf
 }
 
-func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, int) {
-	if len(buf) == 0 {
-		return nil, -1
+func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, []byte) {
+	done, buf := lexy.PrefixNilsFirst.Get(buf)
+	if done {
+		return nil, buf
 	}
-	if lexy.PrefixNilsFirst.Get(buf) {
-		return nil, 1
-	}
-	n := 1
-	name, count := lexy.TerminatedString().Get(buf[n:])
-	n += count
-	if count < 0 {
-		panic(io.ErrUnexpectedEOF)
-	}
+	name, buf := lexy.TerminatedString().Get(buf)
 	// Get other fields.
-	return &BigStruct{name /* , other fields ... */}, n
+	return &BigStruct{name /* , other fields ... */}, buf
 }
 
 func (ptrToBigStructCodec) RequiresTerminator() bool {
@@ -75,22 +67,19 @@ func (containterCodec) Append(buf []byte, value Container) []byte {
 	return buf
 }
 
-func (containterCodec) Put(buf []byte, value Container) int {
-	n := PtrToBigStructCodec.Put(buf, value.big)
+func (containterCodec) Put(buf []byte, value Container) []byte {
+	buf = PtrToBigStructCodec.Put(buf, value.big)
 	// Put other fields.
-	// n += someCodec.Put(buf[n:], someValue)
-	return n
+	// buf = someCodec.Put(buf, someValue)
+	return buf
 }
 
-func (containterCodec) Get(buf []byte) (Container, int) {
-	big, n := PtrToBigStructCodec.Get(buf)
+func (containterCodec) Get(buf []byte) (Container, []byte) {
+	big, buf := PtrToBigStructCodec.Get(buf)
 	// Get other fields.
-	// someValue, count := someCodec.Get(buf[n:])
-	// n += count
-	// if count < 0 {
-	//     panic(io.ErrUnexpectedEOF)
-	// }
-	return Container{big /* , other fields ... */}, n
+	// someValue, buf := someCodec.Get(buf)
+	// ...
+	return Container{big /* , other fields ... */}, buf
 }
 
 func (containterCodec) RequiresTerminator() bool {

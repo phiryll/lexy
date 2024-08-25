@@ -26,12 +26,12 @@ type Codec[T any] interface {
     Append(buf []byte, value T) []byte
 
     // Put encodes value into buf,
-    // returning the number of bytes written.
-    Put(buf []byte, value T) int
+    // returning buf following what was written.
+    Put(buf []byte, value T) []byte
 
     // Get decodes a value of type T from buf,
-    // returning the value and the number of bytes read.
-    Get(buf []byte) (T, int)
+    // returning the value and buf following the encoded value.
+    Get(buf []byte) (T, []byte)
 
     // RequiresTerminator returns whether encoded values require
     // a terminator and escaping if more data is written following
