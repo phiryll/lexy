@@ -10,14 +10,14 @@ type bytesCodec struct {
 }
 
 func (c bytesCodec) Append(buf, value []byte) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	return append(newBuf, value...)
+	return append(buf, value...)
 }
 
-func (c bytesCodec) Put(buf, value []byte) int {
+func (c bytesCodec) Put(buf, value []byte) []byte {
 	return copyAll(buf, c.Append(nil, value))
 }
 

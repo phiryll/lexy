@@ -125,7 +125,7 @@ func (castBool[T]) Append(buf []byte, value T) []byte {
 	return stdBool.Append(buf, bool(value))
 }
 
-func (castBool[T]) Put(buf []byte, value T) int {
+func (castBool[T]) Put(buf []byte, value T) []byte {
 	return stdBool.Put(buf, bool(value))
 }
 
@@ -142,7 +142,7 @@ func (castUint8[T]) Append(buf []byte, value T) []byte {
 	return stdUint8.Append(buf, uint8(value))
 }
 
-func (castUint8[T]) Put(buf []byte, value T) int {
+func (castUint8[T]) Put(buf []byte, value T) []byte {
 	return stdUint8.Put(buf, uint8(value))
 }
 
@@ -159,7 +159,7 @@ func (castUint16[T]) Append(buf []byte, value T) []byte {
 	return stdUint16.Append(buf, uint16(value))
 }
 
-func (castUint16[T]) Put(buf []byte, value T) int {
+func (castUint16[T]) Put(buf []byte, value T) []byte {
 	return stdUint16.Put(buf, uint16(value))
 }
 
@@ -176,7 +176,7 @@ func (castUint32[T]) Append(buf []byte, value T) []byte {
 	return stdUint32.Append(buf, uint32(value))
 }
 
-func (castUint32[T]) Put(buf []byte, value T) int {
+func (castUint32[T]) Put(buf []byte, value T) []byte {
 	return stdUint32.Put(buf, uint32(value))
 }
 
@@ -193,7 +193,7 @@ func (castUint64[T]) Append(buf []byte, value T) []byte {
 	return stdUint64.Append(buf, uint64(value))
 }
 
-func (castUint64[T]) Put(buf []byte, value T) int {
+func (castUint64[T]) Put(buf []byte, value T) []byte {
 	return stdUint64.Put(buf, uint64(value))
 }
 
@@ -210,7 +210,7 @@ func (castInt8[T]) Append(buf []byte, value T) []byte {
 	return stdInt8.Append(buf, int8(value))
 }
 
-func (castInt8[T]) Put(buf []byte, value T) int {
+func (castInt8[T]) Put(buf []byte, value T) []byte {
 	return stdInt8.Put(buf, int8(value))
 }
 
@@ -227,7 +227,7 @@ func (castInt16[T]) Append(buf []byte, value T) []byte {
 	return stdInt16.Append(buf, int16(value))
 }
 
-func (castInt16[T]) Put(buf []byte, value T) int {
+func (castInt16[T]) Put(buf []byte, value T) []byte {
 	return stdInt16.Put(buf, int16(value))
 }
 
@@ -244,7 +244,7 @@ func (castInt32[T]) Append(buf []byte, value T) []byte {
 	return stdInt32.Append(buf, int32(value))
 }
 
-func (castInt32[T]) Put(buf []byte, value T) int {
+func (castInt32[T]) Put(buf []byte, value T) []byte {
 	return stdInt32.Put(buf, int32(value))
 }
 
@@ -261,7 +261,7 @@ func (castInt64[T]) Append(buf []byte, value T) []byte {
 	return stdInt64.Append(buf, int64(value))
 }
 
-func (castInt64[T]) Put(buf []byte, value T) int {
+func (castInt64[T]) Put(buf []byte, value T) []byte {
 	return stdInt64.Put(buf, int64(value))
 }
 
@@ -278,7 +278,7 @@ func (castFloat32[T]) Append(buf []byte, value T) []byte {
 	return stdFloat32.Append(buf, float32(value))
 }
 
-func (castFloat32[T]) Put(buf []byte, value T) int {
+func (castFloat32[T]) Put(buf []byte, value T) []byte {
 	return stdFloat32.Put(buf, float32(value))
 }
 
@@ -295,7 +295,7 @@ func (castFloat64[T]) Append(buf []byte, value T) []byte {
 	return stdFloat64.Append(buf, float64(value))
 }
 
-func (castFloat64[T]) Put(buf []byte, value T) int {
+func (castFloat64[T]) Put(buf []byte, value T) []byte {
 	return stdFloat64.Put(buf, float64(value))
 }
 
@@ -312,7 +312,7 @@ func (castString[T]) Append(buf []byte, value T) []byte {
 	return stdString.Append(buf, string(value))
 }
 
-func (castString[T]) Put(buf []byte, value T) int {
+func (castString[T]) Put(buf []byte, value T) []byte {
 	return stdString.Put(buf, string(value))
 }
 
@@ -329,7 +329,7 @@ func (c castBytes[T]) Append(buf []byte, value T) []byte {
 	return c.codec.Append(buf, []byte(value))
 }
 
-func (c castBytes[T]) Put(buf []byte, value T) int {
+func (c castBytes[T]) Put(buf []byte, value T) []byte {
 	return c.codec.Put(buf, []byte(value))
 }
 
@@ -351,7 +351,7 @@ func (c castPointer[P, E]) Append(buf []byte, value P) []byte {
 	return c.codec.Append(buf, (*E)(value))
 }
 
-func (c castPointer[P, E]) Put(buf []byte, value P) int {
+func (c castPointer[P, E]) Put(buf []byte, value P) []byte {
 	return c.codec.Put(buf, (*E)(value))
 }
 
@@ -373,7 +373,7 @@ func (c castSlice[S, E]) Append(buf []byte, value S) []byte {
 	return c.codec.Append(buf, []E(value))
 }
 
-func (c castSlice[S, E]) Put(buf []byte, value S) int {
+func (c castSlice[S, E]) Put(buf []byte, value S) []byte {
 	return c.codec.Put(buf, []E(value))
 }
 
@@ -395,7 +395,7 @@ func (c castMap[M, K, V]) Append(buf []byte, value M) []byte {
 	return c.codec.Append(buf, map[K]V(value))
 }
 
-func (c castMap[M, K, V]) Put(buf []byte, value M) int {
+func (c castMap[M, K, V]) Put(buf []byte, value M) []byte {
 	return c.codec.Put(buf, map[K]V(value))
 }
 

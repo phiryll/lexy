@@ -39,11 +39,10 @@ func (someStructCodec) Append(buf []byte, value SomeStruct) []byte {
 	return tagsCodec.Append(buf, value.tags)
 }
 
-func (someStructCodec) Put(buf []byte, value SomeStruct) int {
-	n := lexy.Int32().Put(buf, value.size)
-	n += negScoreCodec.Put(buf[n:], value.score)
-	n += tagsCodec.Put(buf[n:], value.tags)
-	return n
+func (someStructCodec) Put(buf []byte, value SomeStruct) []byte {
+	buf = lexy.Int32().Put(buf, value.size)
+	buf = negScoreCodec.Put(buf, value.score)
+	return tagsCodec.Put(buf, value.tags)
 }
 
 func (someStructCodec) Get(buf []byte) (SomeStruct, []byte) {

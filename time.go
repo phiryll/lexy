@@ -55,12 +55,11 @@ func (timeCodec) Append(buf []byte, value time.Time) []byte {
 	return stdInt32.Append(buf, offset)
 }
 
-func (timeCodec) Put(buf []byte, value time.Time) int {
+func (timeCodec) Put(buf []byte, value time.Time) []byte {
 	seconds, nanos, offset := splitTime(value)
-	n := stdInt64.Put(buf, seconds)
-	n += stdUint32.Put(buf, nanos)
-	n += stdInt32.Put(buf, offset)
-	return n
+	buf = stdInt64.Put(buf, seconds)
+	buf = stdUint32.Put(buf, nanos)
+	return stdInt32.Put(buf, offset)
 }
 
 func (timeCodec) Get(buf []byte) (time.Time, []byte) {

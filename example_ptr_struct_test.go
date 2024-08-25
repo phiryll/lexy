@@ -35,15 +35,14 @@ func (ptrToBigStructCodec) Append(buf []byte, value *BigStruct) []byte {
 	return buf
 }
 
-func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
+func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) []byte {
 	done, buf := lexy.PrefixNilsFirst.Put(buf, value == nil)
 	if done {
-		return 1
+		return buf
 	}
-	n := 0
-	n += lexy.TerminatedString().Put(buf[n:], value.name)
+	buf = lexy.TerminatedString().Put(buf, value.name)
 	// Put other fields.
-	return 1 + n
+	return buf
 }
 
 func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, []byte) {
@@ -68,11 +67,11 @@ func (containterCodec) Append(buf []byte, value Container) []byte {
 	return buf
 }
 
-func (containterCodec) Put(buf []byte, value Container) int {
-	n := PtrToBigStructCodec.Put(buf, value.big)
+func (containterCodec) Put(buf []byte, value Container) []byte {
+	buf = PtrToBigStructCodec.Put(buf, value.big)
 	// Put other fields.
-	// n += someCodec.Put(buf[n:], someValue)
-	return n
+	// buf = someCodec.Put(buf, someValue)
+	return buf
 }
 
 func (containterCodec) Get(buf []byte) (Container, []byte) {

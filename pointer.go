@@ -10,19 +10,19 @@ type pointerCodec[E any] struct {
 }
 
 func (c pointerCodec[E]) Append(buf []byte, value *E) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	return c.elemCodec.Append(newBuf, *value)
+	return c.elemCodec.Append(buf, *value)
 }
 
-func (c pointerCodec[E]) Put(buf []byte, value *E) int {
+func (c pointerCodec[E]) Put(buf []byte, value *E) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
-		return 1
+		return buf
 	}
-	return 1 + c.elemCodec.Put(buf, *value)
+	return c.elemCodec.Put(buf, *value)
 }
 
 func (c pointerCodec[E]) Get(buf []byte) (*E, []byte) {

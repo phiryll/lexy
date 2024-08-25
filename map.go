@@ -14,28 +14,27 @@ type mapCodec[K comparable, V any] struct {
 }
 
 func (c mapCodec[K, V]) Append(buf []byte, value map[K]V) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	for k, v := range value {
-		newBuf = c.keyCodec.Append(newBuf, k)
-		newBuf = c.valueCodec.Append(newBuf, v)
+		buf = c.keyCodec.Append(buf, k)
+		buf = c.valueCodec.Append(buf, v)
 	}
-	return newBuf
+	return buf
 }
 
-func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
+func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
-		return 1
+		return buf
 	}
-	n := 0
 	for k, v := range value {
-		n += c.keyCodec.Put(buf[n:], k)
-		n += c.valueCodec.Put(buf[n:], v)
+		buf = c.keyCodec.Put(buf, k)
+		buf = c.valueCodec.Put(buf, v)
 	}
-	return 1 + n
+	return buf
 }
 
 func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, []byte) {
@@ -44,13 +43,14 @@ func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, []byte) {
 		return nil, buf
 	}
 	m := map[K]V{}
+	var key K
+	var value V
 	for {
 		if len(buf) == 0 {
 			return m, buf
 		}
-		key, newBuf := c.keyCodec.Get(buf)
-		value, newBuf := c.valueCodec.Get(newBuf)
-		buf = newBuf
+		key, buf = c.keyCodec.Get(buf)
+		value, buf = c.valueCodec.Get(buf)
 		m[key] = value
 	}
 }

@@ -109,7 +109,7 @@ func (float32Codec) Append(buf []byte, value float32) []byte {
 	return stdUint32.Append(buf, float32ToBits(value))
 }
 
-func (float32Codec) Put(buf []byte, value float32) int {
+func (float32Codec) Put(buf []byte, value float32) []byte {
 	return stdUint32.Put(buf, float32ToBits(value))
 }
 
@@ -126,7 +126,7 @@ func (float64Codec) Append(buf []byte, value float64) []byte {
 	return stdUint64.Append(buf, float64ToBits(value))
 }
 
-func (float64Codec) Put(buf []byte, value float64) int {
+func (float64Codec) Put(buf []byte, value float64) []byte {
 	return stdUint64.Put(buf, float64ToBits(value))
 }
 

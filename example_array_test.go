@@ -21,12 +21,11 @@ func (quaternionCodec) Append(buf []byte, value Quaternion) []byte {
 	return buf
 }
 
-func (quaternionCodec) Put(buf []byte, value Quaternion) int {
-	n := 0
+func (quaternionCodec) Put(buf []byte, value Quaternion) []byte {
 	for i := range value {
-		n += lexy.Float64().Put(buf[n:], value[i])
+		buf = lexy.Float64().Put(buf, value[i])
 	}
-	return n
+	return buf
 }
 
 func (quaternionCodec) Get(buf []byte) (Quaternion, []byte) {

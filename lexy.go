@@ -74,16 +74,14 @@ type Codec[T any] interface {
 	// If buf is nil and no bytes are appended, Append may return nil.
 	Append(buf []byte, value T) []byte
 
-	// TODO: Put gets the same treatment!
-
-	// Put encodes value into buf, returning the number of bytes written.
+	// Put encodes value into buf, returning buf following what was written.
 	//
 	// Put will panic if buf is too small, and still may have written some data to buf.
 	// Put will write only the bytes that encode value.
-	Put(buf []byte, value T) int
+	Put(buf []byte, value T) []byte
 
 	// Get decodes a value of type T from buf,
-	// returning the value and the buffer following the encoded value.
+	// returning the value and buf following the encoded value.
 	// Get will panic if a value of type T cannot be successfully decoded from buf.
 	// If buf is empty and this Codec could encode zero bytes for some value,
 	// Get will return that value and buf.
@@ -373,11 +371,11 @@ const defaultBufSize = 64
 
 // copyAll is like the built-in copy(dst, src),
 // except that it panics if dst is not large enough to hold all of src.
-// copyAll returns the number of bytes copied, which is len(src).
-func copyAll(dst, src []byte) int {
+// copyAll returns a slice into dst following what was written.
+func copyAll(dst, src []byte) []byte {
 	if len(src) == 0 {
-		return 0
+		return dst
 	}
 	_ = dst[len(src)-1]
-	return copy(dst, src)
+	return dst[copy(dst, src):]
 }

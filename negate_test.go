@@ -145,11 +145,10 @@ func (negateTestCodec) Append(buf []byte, value negateTest) []byte {
 	return negPtrIntCodec.Append(buf, value.fPtrInt16)
 }
 
-func (negateTestCodec) Put(buf []byte, value negateTest) int {
-	n := lexy.Uint8().Put(buf, value.fUint8)
-	n += negStringCodec.Put(buf[n:], value.fString)
-	n += negPtrIntCodec.Put(buf[n:], value.fPtrInt16)
-	return n
+func (negateTestCodec) Put(buf []byte, value negateTest) []byte {
+	buf = lexy.Uint8().Put(buf, value.fUint8)
+	buf = negStringCodec.Put(buf, value.fString)
+	return negPtrIntCodec.Put(buf, value.fPtrInt16)
 }
 
 func (negateTestCodec) Get(buf []byte) (negateTest, []byte) {

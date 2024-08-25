@@ -51,10 +51,9 @@ func (versionedCodec) Append(buf []byte, value schemaVersion4) []byte {
 	return SchemaVersion4Codec.Append(buf, value)
 }
 
-func (versionedCodec) Put(buf []byte, value schemaVersion4) int {
-	n := lexy.Uint32().Put(buf, 4)
-	n += SchemaVersion4Codec.Put(buf[n:], value)
-	return n
+func (versionedCodec) Put(buf []byte, value schemaVersion4) []byte {
+	buf = lexy.Uint32().Put(buf, 4)
+	return SchemaVersion4Codec.Put(buf, value)
 }
 
 func (versionedCodec) Get(buf []byte) (schemaVersion4, []byte) {
@@ -89,7 +88,7 @@ func (schemaVersion1Codec) Append(buf []byte, value schemaVersion1) []byte {
 	return NameCodec.Append(buf, value.name)
 }
 
-func (schemaVersion1Codec) Put(buf []byte, value schemaVersion1) int {
+func (schemaVersion1Codec) Put(buf []byte, value schemaVersion1) []byte {
 	return NameCodec.Put(buf, value.name)
 }
 
@@ -111,10 +110,9 @@ func (schemaVersion2Codec) Append(buf []byte, value schemaVersion2) []byte {
 	return NameCodec.Append(buf, value.name)
 }
 
-func (schemaVersion2Codec) Put(buf []byte, value schemaVersion2) int {
-	n := NameCodec.Put(buf, value.lastName)
-	n += NameCodec.Put(buf[n:], value.name)
-	return n
+func (schemaVersion2Codec) Put(buf []byte, value schemaVersion2) []byte {
+	buf = NameCodec.Put(buf, value.lastName)
+	return NameCodec.Put(buf, value.name)
 }
 
 func (schemaVersion2Codec) Get(buf []byte) (schemaVersion2, []byte) {
@@ -137,11 +135,10 @@ func (schemaVersion3Codec) Append(buf []byte, value schemaVersion3) []byte {
 	return NameCodec.Append(buf, value.name)
 }
 
-func (schemaVersion3Codec) Put(buf []byte, value schemaVersion3) int {
-	n := CountCodec.Put(buf, value.count)
-	n += NameCodec.Put(buf[n:], value.lastName)
-	n += NameCodec.Put(buf[n:], value.name)
-	return n
+func (schemaVersion3Codec) Put(buf []byte, value schemaVersion3) []byte {
+	buf = CountCodec.Put(buf, value.count)
+	buf = NameCodec.Put(buf, value.lastName)
+	return NameCodec.Put(buf, value.name)
 }
 
 func (schemaVersion3Codec) Get(buf []byte) (schemaVersion3, []byte) {
@@ -165,11 +162,10 @@ func (schemaVersion4Codec) Append(buf []byte, value schemaVersion4) []byte {
 	return NameCodec.Append(buf, value.middleName)
 }
 
-func (schemaVersion4Codec) Put(buf []byte, value schemaVersion4) int {
-	n := NameCodec.Put(buf, value.lastName)
-	n += NameCodec.Put(buf, value.firstName)
-	n += NameCodec.Put(buf, value.middleName)
-	return n
+func (schemaVersion4Codec) Put(buf []byte, value schemaVersion4) []byte {
+	buf = NameCodec.Put(buf, value.lastName)
+	buf = NameCodec.Put(buf, value.firstName)
+	return NameCodec.Put(buf, value.middleName)
 }
 
 func (schemaVersion4Codec) Get(buf []byte) (schemaVersion4, []byte) {

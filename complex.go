@@ -13,10 +13,9 @@ func (complex64Codec) Append(buf []byte, value complex64) []byte {
 	return stdFloat32.Append(buf, imag(value))
 }
 
-func (complex64Codec) Put(buf []byte, value complex64) int {
-	n := stdFloat32.Put(buf, real(value))
-	n += stdFloat32.Put(buf[n:], imag(value))
-	return n
+func (complex64Codec) Put(buf []byte, value complex64) []byte {
+	buf = stdFloat32.Put(buf, real(value))
+	return stdFloat32.Put(buf, imag(value))
 }
 
 func (complex64Codec) Get(buf []byte) (complex64, []byte) {
@@ -34,10 +33,9 @@ func (complex128Codec) Append(buf []byte, value complex128) []byte {
 	return stdFloat64.Append(buf, imag(value))
 }
 
-func (complex128Codec) Put(buf []byte, value complex128) int {
-	n := stdFloat64.Put(buf, real(value))
-	n += stdFloat64.Put(buf[n:], imag(value))
-	return n
+func (complex128Codec) Put(buf []byte, value complex128) []byte {
+	buf = stdFloat64.Put(buf, real(value))
+	return stdFloat64.Put(buf, imag(value))
 }
 
 func (complex128Codec) Get(buf []byte) (complex128, []byte) {

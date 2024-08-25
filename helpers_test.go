@@ -196,8 +196,8 @@ func (c testerCodec[T]) put(t *testing.T, tt testCase[T]) output {
 	t.Run("put", func(t *testing.T) {
 		size := len(c.codec.Append(nil, tt.value))
 		buf = make([]byte, size)
-		putSize := c.codec.Put(buf, tt.value)
-		assert.Equal(t, size, putSize)
+		bufAfter := c.codec.Put(buf, tt.value)
+		assert.Empty(t, bufAfter)
 		if c.isConsistent {
 			assert.Equal(t, tt.data, buf)
 		}
@@ -214,13 +214,14 @@ func (c testerCodec[T]) putLongBuf(t *testing.T, tt testCase[T]) output {
 		for i := range buf {
 			buf[i] = 37
 		}
-		putSize := c.codec.Put(buf, tt.value)
+		bufAfter := c.codec.Put(buf, tt.value)
+		putSize := len(buf) - len(bufAfter)
 		assert.Equal(t, size, putSize)
 		for i := range buf[size:] {
 			k := size + i
 			assert.Equal(t, byte(37), buf[k], "buf[%d] = %d written to buffer", k, buf[k])
 		}
-		buf = buf[:putSize]
+		buf = buf[:size]
 		if c.isConsistent {
 			assert.Equal(t, tt.data, buf)
 		}

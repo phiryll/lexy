@@ -29,23 +29,23 @@ type bigIntCodec struct {
 }
 
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	sign := value.Sign()
 	b := value.Bytes()
 	size := int64(len(b))
 	if sign < 0 {
-		newBuf = stdInt64.Append(newBuf, -size)
+		buf = stdInt64.Append(buf, -size)
 		negate(b)
 	} else {
-		newBuf = stdInt64.Append(newBuf, size)
+		buf = stdInt64.Append(buf, size)
 	}
-	return append(newBuf, b...)
+	return append(buf, b...)
 }
 
-func (c bigIntCodec) Put(buf []byte, value *big.Int) int {
+func (c bigIntCodec) Put(buf []byte, value *big.Int) []byte {
 	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
 	// but it clears the entire buffer.
 	// So it makes sense here to use Append.
@@ -181,9 +181,9 @@ func computeShift(exp, prec int32) int {
 
 //nolint:cyclop,funlen
 func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	// exp and prec are int and uint, but internally they're 32 bits
 	// use a signed prec here because we're doing possibly negative calculations with it
@@ -211,16 +211,16 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	case !signbit:
 		kind = posFinite
 	}
-	newBuf = stdInt8.Append(newBuf, kind)
+	buf = stdInt8.Append(buf, kind)
 	if isInf || isZero {
-		return newBuf
+		return buf
 	}
 	if signbit {
 		// These values are no longer being used except to write them.
 		exp = -exp
 		prec = -prec
 	}
-	newBuf = stdInt32.Append(newBuf, exp)
+	buf = stdInt32.Append(buf, exp)
 
 	var tmp big.Float
 	tmp.Copy(value)
@@ -235,12 +235,12 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	if signbit {
 		negate(escaped)
 	}
-	newBuf = append(newBuf, escaped...)
-	newBuf = stdInt32.Append(newBuf, prec)
-	return modeCodec.Append(newBuf, mode)
+	buf = append(buf, escaped...)
+	buf = stdInt32.Append(buf, prec)
+	return modeCodec.Append(buf, mode)
 }
 
-func (c bigFloatCodec) Put(buf []byte, value *big.Float) int {
+func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	return copyAll(buf, c.Append(nil, value))
 }
 
@@ -329,23 +329,21 @@ type bigRatCodec struct {
 var termIntCodec = Terminate(BigInt())
 
 func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
-	newBuf = termIntCodec.Append(newBuf, value.Num())
-	return termIntCodec.Append(newBuf, value.Denom())
+	buf = termIntCodec.Append(buf, value.Num())
+	return termIntCodec.Append(buf, value.Denom())
 }
 
-func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
+func (c bigRatCodec) Put(buf []byte, value *big.Rat) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
-		return 1
+		return buf
 	}
-	n := 0
-	n += termIntCodec.Put(buf[n:], value.Num())
-	n += termIntCodec.Put(buf[n:], value.Denom())
-	return 1 + n
+	buf = termIntCodec.Put(buf, value.Num())
+	return termIntCodec.Put(buf, value.Denom())
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, []byte) {

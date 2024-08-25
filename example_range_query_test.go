@@ -69,10 +69,9 @@ func (KeyCodec) Append(buf []byte, key UserKey) []byte {
 	return wordsCodec.Append(buf, key.words)
 }
 
-func (KeyCodec) Put(buf []byte, key UserKey) int {
-	n := costCodec.Put(buf, key.cost)
-	n += wordsCodec.Put(buf[n:], key.words)
-	return n
+func (KeyCodec) Put(buf []byte, key UserKey) []byte {
+	buf = costCodec.Put(buf, key.cost)
+	return wordsCodec.Put(buf, key.words)
 }
 
 func (KeyCodec) Get(buf []byte) (UserKey, []byte) {

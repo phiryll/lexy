@@ -42,7 +42,7 @@ func (previousCodec) Append(buf []byte, value schemaPrevious) []byte {
 	return nameCodec.Append(buf, value.name)
 }
 
-func (previousCodec) Put(_ []byte, _ schemaPrevious) int {
+func (previousCodec) Put(_ []byte, _ schemaPrevious) []byte {
 	panic("unused in this example")
 }
 
@@ -66,7 +66,7 @@ func (schemaCodec) Append(_ []byte, _ schema) []byte {
 	panic("unused in this example")
 }
 
-func (schemaCodec) Put(_ []byte, _ schema) int {
+func (schemaCodec) Put(_ []byte, _ schema) []byte {
 	panic("unused in this example")
 }
 
@@ -77,26 +77,23 @@ func (schemaCodec) Get(buf []byte) (schema, []byte) {
 			return value, buf
 		}
 		var field string
+		var firstName, middleName, lastName string
 		field, buf = nameCodec.Get(buf)
 		switch field {
 		case "name", "firstName":
 			// Field was renamed.
-			firstName, newBuf := nameCodec.Get(buf)
-			buf = newBuf
+			firstName, buf = nameCodec.Get(buf)
 			value.firstName = firstName
 		case "middleName":
 			// Field was added.
-			middleName, newBuf := nameCodec.Get(buf)
-			buf = newBuf
+			middleName, buf = nameCodec.Get(buf)
 			value.middleName = middleName
 		case "lastName":
-			lastName, newBuf := nameCodec.Get(buf)
-			buf = newBuf
+			lastName, buf = nameCodec.Get(buf)
 			value.lastName = lastName
 		case "count":
 			// Field was removed, but we still need to read the value.
-			_, newBuf := countCodec.Get(buf)
-			buf = newBuf
+			_, buf = countCodec.Get(buf)
 		default:
 			// We must stop, we don't know how to proceed.
 			panic(fmt.Sprintf("unrecognized field name %q", field))

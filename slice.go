@@ -13,26 +13,25 @@ type sliceCodec[E any] struct {
 }
 
 func (c sliceCodec[E]) Append(buf []byte, value []E) []byte {
-	done, newBuf := c.prefix.Append(buf, value == nil)
+	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
-		return newBuf
+		return buf
 	}
 	for _, elem := range value {
-		newBuf = c.elemCodec.Append(newBuf, elem)
+		buf = c.elemCodec.Append(buf, elem)
 	}
-	return newBuf
+	return buf
 }
 
-func (c sliceCodec[E]) Put(buf []byte, value []E) int {
+func (c sliceCodec[E]) Put(buf []byte, value []E) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
-		return 1
+		return buf
 	}
-	n := 0
 	for _, elem := range value {
-		n += c.elemCodec.Put(buf[n:], elem)
+		buf = c.elemCodec.Put(buf, elem)
 	}
-	return 1 + n
+	return buf
 }
 
 func (c sliceCodec[E]) Get(buf []byte) ([]E, []byte) {
@@ -41,12 +40,12 @@ func (c sliceCodec[E]) Get(buf []byte) ([]E, []byte) {
 		return nil, buf
 	}
 	values := []E{}
+	var value E
 	for {
 		if len(buf) == 0 {
 			return values, buf
 		}
-		value, newBuf := c.elemCodec.Get(buf)
-		buf = newBuf
+		value, buf = c.elemCodec.Get(buf)
 		values = append(values, value)
 	}
 }

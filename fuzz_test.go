@@ -175,7 +175,7 @@ func (c toUint32Codec) Append(buf []byte, value uint32) []byte {
 	return c.codec.Append(buf, math.Float32frombits(value))
 }
 
-func (c toUint32Codec) Put(buf []byte, value uint32) int {
+func (c toUint32Codec) Put(buf []byte, value uint32) []byte {
 	return c.codec.Put(buf, math.Float32frombits(value))
 }
 
@@ -196,7 +196,7 @@ func (c toUint64Codec) Append(buf []byte, value uint64) []byte {
 	return c.codec.Append(buf, math.Float64frombits(value))
 }
 
-func (c toUint64Codec) Put(buf []byte, value uint64) int {
+func (c toUint64Codec) Put(buf []byte, value uint64) []byte {
 	return c.codec.Put(buf, math.Float64frombits(value))
 }
 

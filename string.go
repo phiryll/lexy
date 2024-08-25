@@ -16,7 +16,7 @@ func (stringCodec) Append(buf []byte, value string) []byte {
 	return append(buf, value...)
 }
 
-func (stringCodec) Put(buf []byte, value string) int {
+func (stringCodec) Put(buf []byte, value string) []byte {
 	return copyAll(buf, []byte(value))
 }
 
