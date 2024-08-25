@@ -1,9 +1,5 @@
 package lexy
 
-import (
-	"io"
-)
-
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
@@ -107,6 +103,5 @@ func doUnescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
 		escaped = false
 		out = append(out, b)
 	}
-	// unescaped terminator not reached
-	panic(io.ErrUnexpectedEOF)
+	panic(errUnterminatedBuffer)
 }
