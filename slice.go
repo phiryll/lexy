@@ -24,14 +24,15 @@ func (c sliceCodec[E]) Append(buf []byte, value []E) []byte {
 }
 
 func (c sliceCodec[E]) Put(buf []byte, value []E) int {
-	if c.prefix.Put(buf, value == nil) {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
 		return 1
 	}
-	n := 1
+	n := 0
 	for _, elem := range value {
 		n += c.elemCodec.Put(buf[n:], elem)
 	}
-	return n
+	return 1 + n
 }
 
 func (c sliceCodec[E]) Get(buf []byte) ([]E, []byte) {

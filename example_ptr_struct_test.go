@@ -36,13 +36,14 @@ func (ptrToBigStructCodec) Append(buf []byte, value *BigStruct) []byte {
 }
 
 func (ptrToBigStructCodec) Put(buf []byte, value *BigStruct) int {
-	if lexy.PrefixNilsFirst.Put(buf, value == nil) {
+	done, buf := lexy.PrefixNilsFirst.Put(buf, value == nil)
+	if done {
 		return 1
 	}
-	n := 1
+	n := 0
 	n += lexy.TerminatedString().Put(buf[n:], value.name)
 	// Put other fields.
-	return n
+	return 1 + n
 }
 
 func (ptrToBigStructCodec) Get(buf []byte) (*BigStruct, []byte) {

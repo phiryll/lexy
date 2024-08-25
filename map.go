@@ -26,15 +26,16 @@ func (c mapCodec[K, V]) Append(buf []byte, value map[K]V) []byte {
 }
 
 func (c mapCodec[K, V]) Put(buf []byte, value map[K]V) int {
-	if c.prefix.Put(buf, value == nil) {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
 		return 1
 	}
-	n := 1
+	n := 0
 	for k, v := range value {
 		n += c.keyCodec.Put(buf[n:], k)
 		n += c.valueCodec.Put(buf[n:], v)
 	}
-	return n
+	return 1 + n
 }
 
 func (c mapCodec[K, V]) Get(buf []byte) (map[K]V, []byte) {

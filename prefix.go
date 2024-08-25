@@ -42,13 +42,14 @@ type Prefix interface {
 	// Put sets buf[0] to a prefix byte.
 	// This is a typical usage:
 	//
-	//	func (fooCodec) Put(buf []byte, value Foo) int {
-	//	    if PrefixNilsFirst.Put(buf, value == nil) {
-	//	        return 1
+	//	func (fooCodec) Put(buf []byte, value Foo) []byte {
+	//	    done, buf := PrefixNilsFirst.Put(buf, value == nil)
+	//	    if done {
+	//	        return nil
 	//	    }
-	//	    // encode the non-nil value into buf[1:]
+	//	    // encode the non-nil value into buf
 	//	}
-	Put(buf []byte, isNil bool) (done bool)
+	Put(buf []byte, isNil bool) (done bool, newBuf []byte)
 
 	// Get decodes a prefix byte from buf[0].
 	// Get will panic if the prefix byte is invalid.
@@ -94,9 +95,9 @@ func (p prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
 	return isNil, append(buf, p.prefixFor(isNil))
 }
 
-func (p prefixNilsFirst) Put(buf []byte, isNil bool) bool {
+func (p prefixNilsFirst) Put(buf []byte, isNil bool) (bool, []byte) {
 	buf[0] = p.prefixFor(isNil)
-	return isNil
+	return isNil, buf[1:]
 }
 
 func (prefixNilsFirst) Get(buf []byte) (bool, []byte) {
@@ -124,9 +125,9 @@ func (p prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
 	return isNil, append(buf, p.prefixFor(isNil))
 }
 
-func (p prefixNilsLast) Put(buf []byte, isNil bool) bool {
+func (p prefixNilsLast) Put(buf []byte, isNil bool) (bool, []byte) {
 	buf[0] = p.prefixFor(isNil)
-	return isNil
+	return isNil, buf[1:]
 }
 
 func (prefixNilsLast) Get(buf []byte) (bool, []byte) {

@@ -18,11 +18,11 @@ func (c pointerCodec[E]) Append(buf []byte, value *E) []byte {
 }
 
 func (c pointerCodec[E]) Put(buf []byte, value *E) int {
-	if c.prefix.Put(buf, value == nil) {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
 		return 1
 	}
-	n := 1
-	return n + c.elemCodec.Put(buf[n:], *value)
+	return 1 + c.elemCodec.Put(buf, *value)
 }
 
 func (c pointerCodec[E]) Get(buf []byte) (*E, []byte) {

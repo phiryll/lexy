@@ -338,12 +338,14 @@ func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
 }
 
 func (c bigRatCodec) Put(buf []byte, value *big.Rat) int {
-	if c.prefix.Put(buf, value == nil) {
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
 		return 1
 	}
-	n := 1
+	n := 0
 	n += termIntCodec.Put(buf[n:], value.Num())
-	return n + termIntCodec.Put(buf[n:], value.Denom())
+	n += termIntCodec.Put(buf[n:], value.Denom())
+	return 1 + n
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, []byte) {
