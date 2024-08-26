@@ -15,6 +15,12 @@ type benchCase[T any] struct {
 	value T
 }
 
+// Types used for cast benchmarking.
+type (
+	MyInt32 int32
+	MySlice []MyInt32
+)
+
 //nolint:revive
 func BenchmarkNothing(b *testing.B) {
 	b.ResetTimer()
@@ -79,6 +85,12 @@ func BenchmarkInt16(b *testing.B) {
 
 func BenchmarkInt32(b *testing.B) {
 	benchCodec(b, lexy.Int32(), []benchCase[int32]{
+		{"+1", 1},
+	})
+}
+
+func BenchmarkCastInt32(b *testing.B) {
+	benchCodec(b, lexy.CastInt32[MyInt32](), []benchCase[MyInt32]{
 		{"+1", 1},
 	})
 }
@@ -215,6 +227,20 @@ func BenchmarkSliceOf(b *testing.B) {
 		{"empty", []int32{}},
 		{"1 element", []int32{931}},
 		{"1000 elements", randomInt32(1000, 28931)},
+	})
+}
+
+func BenchmarkCastSliceOf(b *testing.B) {
+	slice := randomInt32(1000, 28931)
+	bigSlice := make(MySlice, 1000)
+	for i := 0; i < 1000; i++ {
+		bigSlice[i] = MyInt32(slice[i])
+	}
+	benchCodec(b, lexy.CastSliceOf[MySlice](lexy.CastInt32[MyInt32]()), []benchCase[MySlice]{
+		{"nil", nil},
+		{"empty", MySlice{}},
+		{"1 element", MySlice{931}},
+		{"1000 elements", bigSlice},
 	})
 }
 
