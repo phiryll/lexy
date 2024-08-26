@@ -18,7 +18,11 @@ func (c bytesCodec) Append(buf, value []byte) []byte {
 }
 
 func (c bytesCodec) Put(buf, value []byte) []byte {
-	return copyAll(buf, c.Append(nil, value))
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
+	}
+	return copyAll(buf, value)
 }
 
 func (c bytesCodec) Get(buf []byte) ([]byte, []byte) {
