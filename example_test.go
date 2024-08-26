@@ -14,7 +14,7 @@ import (
 func ExampleEmpty() {
 	type present struct{}
 	type set map[uint8]present
-	codec := lexy.MakeMapOf[set](lexy.Uint8(), lexy.Empty[present]())
+	codec := lexy.CastMapOf[set](lexy.Uint8(), lexy.Empty[present]())
 	value := set{
 		23: present{},
 		42: present{},
@@ -63,7 +63,7 @@ func ExampleUint() {
 
 func ExampleUint32_underlyingType() {
 	type size uint32
-	codec := lexy.MakeUint32[size]()
+	codec := lexy.CastUint32[size]()
 	buf := codec.Append(nil, 123)
 	decoded, _ := codec.Get(buf)
 	fmt.Printf("Value %d of type %T", decoded, decoded)
@@ -230,7 +230,7 @@ func ExamplePointerTo() {
 
 func ExampleSliceOf() {
 	type words []string
-	codec := lexy.MakeSliceOf[words](lexy.String())
+	codec := lexy.CastSliceOf[words](lexy.String())
 	buf := codec.Append(nil, words{"The", "time", "is", "now"})
 	decoded, _ := codec.Get(buf)
 	fmt.Printf("%T\n", decoded)
@@ -253,7 +253,7 @@ func ExampleMapOf() {
 	type word string
 	type count int
 	type wordCounts map[word]count
-	codec := lexy.MakeMapOf[wordCounts](lexy.MakeString[word](), lexy.MakeInt[count]())
+	codec := lexy.CastMapOf[wordCounts](lexy.CastString[word](), lexy.CastInt[count]())
 	value := wordCounts{
 		"Now":  23,
 		"is":   42,

@@ -7,86 +7,86 @@ package lexy
 // it also creates a copy of the entire implementation for every type.
 // The casting wrapper types here should take up a lot less space.
 
-// MakeBool returns a Codec for a type with an underlying type of bool.
+// CastBool returns a Codec for a type with an underlying type of bool.
 // Other than the underlying type, this is the same as [Bool].
-func MakeBool[T ~bool]() Codec[T] { return castBool[T]{} }
+func CastBool[T ~bool]() Codec[T] { return castBool[T]{} }
 
-// MakeUint returns a Codec for a type with an underlying type of uint.
+// CastUint returns a Codec for a type with an underlying type of uint.
 // Other than the underlying type, this is the same as [Uint].
-func MakeUint[T ~uint]() Codec[T] { return castUint64[T]{} }
+func CastUint[T ~uint]() Codec[T] { return castUint64[T]{} }
 
-// MakeUint8 returns a Codec for a type with an underlying type of uint8.
+// CastUint8 returns a Codec for a type with an underlying type of uint8.
 // Other than the underlying type, this is the same as [Uint8].
-func MakeUint8[T ~uint8]() Codec[T] { return castUint8[T]{} }
+func CastUint8[T ~uint8]() Codec[T] { return castUint8[T]{} }
 
-// MakeUint16 returns a Codec for a type with an underlying type of uint16.
+// CastUint16 returns a Codec for a type with an underlying type of uint16.
 // Other than the underlying type, this is the same as [Uint16].
-func MakeUint16[T ~uint16]() Codec[T] { return castUint16[T]{} }
+func CastUint16[T ~uint16]() Codec[T] { return castUint16[T]{} }
 
-// MakeUint32 returns a Codec for a type with an underlying type of uint32.
+// CastUint32 returns a Codec for a type with an underlying type of uint32.
 // Other than the underlying type, this is the same as [Uint32].
-func MakeUint32[T ~uint32]() Codec[T] { return castUint32[T]{} }
+func CastUint32[T ~uint32]() Codec[T] { return castUint32[T]{} }
 
-// MakeUint64 returns a Codec for a type with an underlying type of uint64.
+// CastUint64 returns a Codec for a type with an underlying type of uint64.
 // Other than the underlying type, this is the same as [Uint64].
-func MakeUint64[T ~uint64]() Codec[T] { return castUint64[T]{} }
+func CastUint64[T ~uint64]() Codec[T] { return castUint64[T]{} }
 
-// MakeInt returns a Codec for a type with an underlying type of int.
+// CastInt returns a Codec for a type with an underlying type of int.
 // Other than the underlying type, this is the same as [Int].
-func MakeInt[T ~int]() Codec[T] { return castInt64[T]{} }
+func CastInt[T ~int]() Codec[T] { return castInt64[T]{} }
 
-// MakeInt8 returns a Codec for a type with an underlying type of int8.
+// CastInt8 returns a Codec for a type with an underlying type of int8.
 // Other than the underlying type, this is the same as [Int8].
-func MakeInt8[T ~int8]() Codec[T] { return castInt8[T]{} }
+func CastInt8[T ~int8]() Codec[T] { return castInt8[T]{} }
 
-// MakeInt16 returns a Codec for a type with an underlying type of int16.
+// CastInt16 returns a Codec for a type with an underlying type of int16.
 // Other than the underlying type, this is the same as [Int16].
-func MakeInt16[T ~int16]() Codec[T] { return castInt16[T]{} }
+func CastInt16[T ~int16]() Codec[T] { return castInt16[T]{} }
 
-// MakeInt32 returns a Codec for a type with an underlying type of int32.
+// CastInt32 returns a Codec for a type with an underlying type of int32.
 // Other than the underlying type, this is the same as [Int32].
-func MakeInt32[T ~int32]() Codec[T] { return castInt32[T]{} }
+func CastInt32[T ~int32]() Codec[T] { return castInt32[T]{} }
 
-// MakeInt64 returns a Codec for a type with an underlying type of int64.
+// CastInt64 returns a Codec for a type with an underlying type of int64.
 // Other than the underlying type, this is the same as [Int64].
-func MakeInt64[T ~int64]() Codec[T] { return castInt64[T]{} }
+func CastInt64[T ~int64]() Codec[T] { return castInt64[T]{} }
 
-// MakeFloat32 returns a Codec for a type with an underlying type of float32.
+// CastFloat32 returns a Codec for a type with an underlying type of float32.
 // Other than the underlying type, this is the same as [Float32].
-func MakeFloat32[T ~float32]() Codec[T] { return castFloat32[T]{} }
+func CastFloat32[T ~float32]() Codec[T] { return castFloat32[T]{} }
 
-// MakeFloat64 returns a Codec for a type with an underlying type of float64.
+// CastFloat64 returns a Codec for a type with an underlying type of float64.
 // Other than the underlying type, this is the same as [Float64].
-func MakeFloat64[T ~float64]() Codec[T] { return castFloat64[T]{} }
+func CastFloat64[T ~float64]() Codec[T] { return castFloat64[T]{} }
 
-// MakeString returns a Codec for a type with an underlying type of string.
+// CastString returns a Codec for a type with an underlying type of string.
 // Other than the underlying type, this is the same as [String].
-func MakeString[T ~string]() Codec[T] { return castString[T]{} }
+func CastString[T ~string]() Codec[T] { return castString[T]{} }
 
-// MakeBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
+// CastBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
-func MakeBytes[S ~[]byte]() Codec[S] {
+func CastBytes[S ~[]byte]() Codec[S] {
 	//nolint:forcetypeassert
 	return castBytes[S]{stdBytes.(bytesCodec)}
 }
 
-// MakePointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.
+// CastPointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, this is the same as [PointerTo].
-func MakePointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
+func CastPointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
 	//nolint:forcetypeassert
 	return castPointer[P, E]{PointerTo(elemCodec).(pointerCodec[E])}
 }
 
-// MakeSliceOf returns a Codec for a type with an underlying type of []E, with nil slices ordered first.
+// CastSliceOf returns a Codec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, this is the same as [SliceOf].
-func MakeSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
+func CastSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
 	//nolint:forcetypeassert
 	return castSlice[S, E]{SliceOf(elemCodec).(sliceCodec[E])}
 }
 
-// MakeMapOf returns a Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
+// CastMapOf returns a Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, this is the same as [MapOf].
-func MakeMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
+func CastMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
 	//nolint:forcetypeassert
 	return castMap[M, K, V]{MapOf(keyCodec, valueCodec).(mapCodec[K, V])}
 }

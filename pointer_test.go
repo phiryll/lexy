@@ -77,7 +77,7 @@ type pInt *int32
 
 func TestPointerUnderlyingType(t *testing.T) {
 	t.Parallel()
-	codec := lexy.NilsLast(lexy.MakePointerTo[pInt](lexy.Int32()))
+	codec := lexy.NilsLast(lexy.CastPointerTo[pInt](lexy.Int32()))
 	testCodec(t, codec, []testCase[pInt]{
 		{"nil", pInt(nil), []byte{pNilLast}},
 		{"*0", pInt(ptr(int32(0))), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
