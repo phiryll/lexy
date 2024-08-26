@@ -286,10 +286,20 @@ func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase
 
 //nolint:thelper
 func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
-	b.Run("append", func(b *testing.B) {
+	// Tests both encoding and how efficiently codec.Append allocates the buffer.
+	b.Run("append nil", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			codec.Append(nil, value)
+		}
+	})
+	// Tests just encoding, because the buffer is already big enough.
+	// This should be very close in performance to codec.Put.
+	b.Run("append", func(b *testing.B) {
+		buf := codec.Append(nil, value)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			codec.Append(buf[:0], value)
 		}
 	})
 	b.Run("put", func(b *testing.B) {
