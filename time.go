@@ -1,7 +1,6 @@
 package lexy
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -20,22 +19,6 @@ import (
 //	uint32 nanoseconds with the second
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
-
-var locationCache = makeCache(locationFor)
-
-//nolint:mnd
-func locationFor(offsetSec int32) *time.Location {
-	sign := '+'
-	offset := offsetSec
-	if offset < 0 {
-		sign = '-'
-		offset = -offset
-	}
-	minutes := offset / 60
-	hours := minutes / 60
-	zoneName := fmt.Sprintf("%c%02d:%02d:%02d", sign, hours, minutes%60, offset%60)
-	return time.FixedZone(zoneName, int(offsetSec))
-}
 
 func splitTime(value time.Time) (int64, uint32, int32) {
 	utc := value.UTC()
@@ -63,7 +46,7 @@ func (timeCodec) Get(buf []byte) (time.Time, []byte) {
 	seconds, buf := stdInt64.Get(buf)
 	nanos, buf := stdUint32.Get(buf)
 	offset, buf := stdInt32.Get(buf)
-	return time.Unix(seconds, int64(nanos)).In(locationCache.Get(offset)), buf
+	return time.Unix(seconds, int64(nanos)).In(time.FixedZone("", int(offset))), buf
 }
 
 func (timeCodec) RequiresTerminator() bool {
