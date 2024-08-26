@@ -26,7 +26,7 @@ These Codec-returning functions do not require specifying a type parameter when 
   - [Complex64], [Complex128]
   - [String], [TerminatedString]
   - [Time], [Duration]
-  - [BigInt], [BigFloat], [BigRat], [TerminatedBigFloat]
+  - [BigInt], [BigFloat], [BigRat]
   - [Bytes], [TerminatedBytes]
   - [PointerTo], [SliceOf], [MapOf]
   - [Negate]
@@ -242,10 +242,6 @@ func String() Codec[string] { return stdString }
 // This is a convenience function, it returns the same Codec as [Terminate]([String]()).
 func TerminatedString() Codec[string] { return stdTermString }
 
-// Duration returns a Codec for the time.Duration type.
-// This Codec does not require a terminator when used within an aggregate Codec.
-func Duration() Codec[time.Duration] { return stdDuration }
-
 // Time returns a Codec for the time.Time type.
 // The encoded order is UTC time first, timezone offset second.
 // This Codec does not require a terminator when used within an aggregate Codec.
@@ -255,6 +251,10 @@ func Duration() Codec[time.Duration] { return stdDuration }
 // Timezone names and DST behavior are defined outside of Go's control (as they must be),
 // and [time.Time.Zone] can return names that will fail with [time.LoadLocation] in the same program.
 func Time() Codec[time.Time] { return stdTime }
+
+// Duration returns a Codec for the time.Duration type.
+// This Codec does not require a terminator when used within an aggregate Codec.
+func Duration() Codec[time.Duration] { return stdDuration }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
 // This Codec requires a terminator when used within an aggregate Codec.
