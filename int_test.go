@@ -96,7 +96,7 @@ type aBool bool
 
 func TestBoolUnderlyingType(t *testing.T) {
 	t.Parallel()
-	codec := lexy.MakeBool[aBool]()
+	codec := lexy.CastBool[aBool]()
 	testCodec(t, codec, []testCase[aBool]{
 		{"false", aBool(false), []byte{0}},
 		{"true", aBool(true), []byte{1}},

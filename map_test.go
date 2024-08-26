@@ -61,7 +61,7 @@ type mStringInt map[string]int32
 
 func TestMapUnderlyingType(t *testing.T) {
 	t.Parallel()
-	testBasicMapWithPrefix(t, pNilLast, lexy.NilsLast(lexy.MakeMapOf[mStringInt](lexy.String(), lexy.Int32())))
+	testBasicMapWithPrefix(t, pNilLast, lexy.NilsLast(lexy.CastMapOf[mStringInt](lexy.String(), lexy.Int32())))
 }
 
 func TestMapSlice(t *testing.T) {

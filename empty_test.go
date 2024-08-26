@@ -18,7 +18,7 @@ type mValue map[uint8]emptyStruct
 var (
 	empty           = emptyStruct{}
 	emptyCodec      = lexy.Empty[emptyStruct]()
-	valueEmptyCodec = lexy.MakeMapOf[mValue](lexy.Uint8(), emptyCodec)
+	valueEmptyCodec = lexy.CastMapOf[mValue](lexy.Uint8(), emptyCodec)
 )
 
 func TestEmpty(t *testing.T) {

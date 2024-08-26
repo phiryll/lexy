@@ -58,7 +58,7 @@ type Value struct {
 //
 //   var keyCodec = lexy.SliceOf(lexy.String())
 //
-var keyCodec = lexy.MakeSliceOf[Key](lexy.MakeString[Word]())
+var keyCodec = lexy.CastSliceOf[Key](lexy.CastString[Word]())
 
 // lexy could be used here,
 // but may be overkill if ordered Values aren't needed.

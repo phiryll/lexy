@@ -8,7 +8,7 @@ Functions returning Codecs for different types constitute the majority of this A
 There are two kinds of Codec-returning functions defined by this package,
 those for which Go can infer the type arguments, and those for which Go cannot.
 The former have terser names, as in [Int16]().
-The latter have names starting with "Make", as in [MakeInt16][MyIntType]().
+The latter have names starting with "Cast", as in [CastInt16][MyIntType]().
 These latter functions are only needed when creating a Codec for a type that is not the same as its underlying type.
 [Empty] also requires a type argument when used and is the only exception to this naming convention.
 
@@ -35,13 +35,13 @@ These Codec-returning functions do not require specifying a type parameter when 
 
 These Codec-returning functions require specifying a type parameter when invoked.
   - [Empty]
-  - [MakeBool]
-  - [MakeUint], [MakeUint8], [MakeUint16], [MakeUint32], [MakeUint64]
-  - [MakeInt], [MakeInt8], [MakeInt16], [MakeInt32], [MakeInt64]
-  - [MakeFloat32], [MakeFloat64]
-  - [MakeString]
-  - [MakeBytes]
-  - [MakePointerTo], [MakeSliceOf], [MakeMapOf]
+  - [CastBool]
+  - [CastUint], [CastUint8], [CastUint16], [CastUint32], [CastUint64]
+  - [CastInt], [CastInt8], [CastInt16], [CastInt32], [CastInt64]
+  - [CastFloat32], [CastFloat64]
+  - [CastString]
+  - [CastBytes]
+  - [CastPointerTo], [CastSliceOf], [CastMapOf]
 */
 package lexy
 
