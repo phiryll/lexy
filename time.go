@@ -21,18 +21,20 @@ import (
 //	int32 timezone offset in seconds east of UTC
 type timeCodec struct{}
 
-var formatCache = makeCache(formatOffset)
+var locationCache = makeCache(locationFor)
 
 //nolint:mnd
-func formatOffset(seconds int32) string {
+func locationFor(offsetSec int32) *time.Location {
 	sign := '+'
-	if seconds < 0 {
+	offset := offsetSec
+	if offset < 0 {
 		sign = '-'
-		seconds = -seconds
+		offset = -offset
 	}
-	minutes := seconds / 60
+	minutes := offset / 60
 	hours := minutes / 60
-	return fmt.Sprintf("%c%02d:%02d:%02d", sign, hours, minutes%60, seconds%60)
+	zoneName := fmt.Sprintf("%c%02d:%02d:%02d", sign, hours, minutes%60, offset%60)
+	return time.FixedZone(zoneName, int(offsetSec))
 }
 
 func splitTime(value time.Time) (int64, uint32, int32) {
@@ -41,11 +43,6 @@ func splitTime(value time.Time) (int64, uint32, int32) {
 	nanos := utc.Nanosecond() // int nanoseconds within second (9 decimal digits, cast to uint32)
 	_, offset := value.Zone() // abbreviation (ignored), int seconds east of UTC (cast to int32)
 	return seconds, uint32(nanos), int32(offset)
-}
-
-func buildTime(seconds int64, nanos uint32, offset int32) time.Time {
-	loc := time.FixedZone(formatCache.Get(offset), int(offset))
-	return time.Unix(seconds, int64(nanos)).In(loc)
 }
 
 func (timeCodec) Append(buf []byte, value time.Time) []byte {
@@ -66,7 +63,7 @@ func (timeCodec) Get(buf []byte) (time.Time, []byte) {
 	seconds, buf := stdInt64.Get(buf)
 	nanos, buf := stdUint32.Get(buf)
 	offset, buf := stdInt32.Get(buf)
-	return buildTime(seconds, nanos, offset), buf
+	return time.Unix(seconds, int64(nanos)).In(locationCache.Get(offset)), buf
 }
 
 func (timeCodec) RequiresTerminator() bool {
