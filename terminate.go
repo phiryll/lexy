@@ -86,7 +86,7 @@ func doEscape(buf []byte) []byte {
 //
 //nolint:nonamedreturns
 func doUnescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
-	out := make([]byte, 0, defaultBufSize)
+	out := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
 		// handle unescaped terminators and escapes
