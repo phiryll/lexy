@@ -46,10 +46,20 @@ func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 }
 
 func (c bigIntCodec) Put(buf []byte, value *big.Int) []byte {
-	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
-	// but it clears the entire buffer.
-	// So it makes sense here to use Append.
-	return copyAll(buf, c.Append(nil, value))
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
+	}
+	sign := value.Sign()
+	b := value.Bytes()
+	size := int64(len(b))
+	if sign < 0 {
+		buf = stdInt64.Put(buf, -size)
+		negate(b)
+	} else {
+		buf = stdInt64.Put(buf, size)
+	}
+	return copyAll(buf, b)
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
