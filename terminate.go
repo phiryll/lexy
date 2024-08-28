@@ -51,12 +51,22 @@ func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
-	return escapePut(buf, c.codec.Append(nil, value))
+	i := 0
+	for _, b := range c.codec.Append(nil, value) {
+		if b == escape || b == terminator {
+			buf[i] = escape
+			i++
+		}
+		buf[i] = b
+		i++
+	}
+	buf[i] = terminator
+	return buf[i+1:]
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
-	b, buf, _ := unescape(buf)
-	value, _ := c.codec.Get(b)
+	unescaped, buf, _ := unescape(buf)
+	value, _ := c.codec.Get(unescaped)
 	return value, buf
 }
 
@@ -77,20 +87,6 @@ func escapeAppend(buf, value []byte) []byte {
 		}
 	}
 	return append(buf, terminator)
-}
-
-func escapePut(buf, value []byte) []byte {
-	i := 0
-	for _, b := range value {
-		if b == escape || b == terminator {
-			buf[i] = escape
-			i++
-		}
-		buf[i] = b
-		i++
-	}
-	buf[i] = terminator
-	return buf[i+1:]
 }
 
 // unescape reads and unescapes data from buf until the first unescaped terminator,
