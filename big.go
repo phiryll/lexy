@@ -233,19 +233,18 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	buf = stdInt32.Append(buf, exp)
 
 	var tmp big.Float
-	tmp.Copy(value)
-	tmp.SetMantExp(&tmp, shift)
+	tmp.SetMantExp(value, shift)
 	mantInt, acc := tmp.Int(nil)
 	if acc != big.Exact {
 		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
 	// Escape the bytes, then negate them if needed.
-	escaped := doEscape(mantBytes)
+	start := len(buf)
+	buf = escapeAppend(buf, mantBytes)
 	if signbit {
-		negate(escaped)
+		negate(buf[start:])
 	}
-	buf = append(buf, escaped...)
 	buf = stdInt32.Append(buf, prec)
 	return modeCodec.Append(buf, mode)
 }
@@ -283,10 +282,10 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 		tempBuf := append([]byte{}, buf...)
 		negate(tempBuf)
 		var n int
-		mantBytes, _, n = doUnescape(tempBuf)
+		mantBytes, _, n = unescape(tempBuf)
 		buf = buf[n:]
 	} else {
-		mantBytes, buf, _ = doUnescape(buf)
+		mantBytes, buf, _ = unescape(buf)
 	}
 	prec, buf := stdInt32.Get(buf)
 	mode, buf := modeCodec.Get(buf)

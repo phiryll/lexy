@@ -54,8 +54,12 @@ func TestEscape(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			buf := lexy.TestingDoEscape(tt.data)
-			assert.Equal(t, tt.escaped, buf, "escaped bytes")
+			buf := lexy.TestingEscapeAppend(nil, tt.data)
+			assert.Equal(t, tt.escaped, buf, "escapeAppend bytes")
+			buf = make([]byte, len(buf))
+			newBuf := lexy.TestingEscapePut(buf, tt.data)
+			assert.Equal(t, tt.escaped, buf, "escapePut bytes")
+			assert.Empty(t, newBuf)
 		})
 	}
 }
@@ -120,10 +124,10 @@ func TestUnescape(t *testing.T) {
 			t.Parallel()
 			if tt.unescaped == nil {
 				assert.Panics(t, func() {
-					lexy.TestingDoUnescape(tt.data)
+					lexy.TestingUnescape(tt.data)
 				})
 			} else {
-				buf, _, _ := lexy.TestingDoUnescape(tt.data)
+				buf, _, _ := lexy.TestingUnescape(tt.data)
 				assert.Equal(t, tt.unescaped, buf)
 			}
 		})
@@ -140,7 +144,7 @@ func TestUnescapeMultiple(t *testing.T) {
 		{10, 11, 12},
 	} {
 		var got []byte
-		got, data, _ = lexy.TestingDoUnescape(data)
+		got, data, _ = lexy.TestingUnescape(data)
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
 	assert.Len(t, data, n)

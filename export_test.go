@@ -14,6 +14,7 @@ const (
 )
 
 var (
-	TestingDoEscape   = doEscape
-	TestingDoUnescape = doUnescape
+	TestingEscapeAppend = escapeAppend
+	TestingEscapePut    = escapePut
+	TestingUnescape     = unescape
 )
