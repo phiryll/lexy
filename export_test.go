@@ -12,9 +12,3 @@ const (
 	TestingTerminator = terminator
 	TestingEscape     = escape
 )
-
-var (
-	TestingEscapeAppend = escapeAppend
-	TestingEscapePut    = escapePut
-	TestingUnescape     = unescape
-)
