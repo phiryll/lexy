@@ -230,7 +230,6 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 		exp = -exp
 		prec = -prec
 	}
-	buf = stdInt32.Append(buf, exp)
 
 	var tmp big.Float
 	tmp.SetMantExp(value, shift)
@@ -239,6 +238,10 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
+
+	//nolint:mnd
+	buf = extend(buf, len(mantBytes)+9) // 9 for exp, prec, and mode
+	buf = stdInt32.Append(buf, exp)
 	// Escape the bytes, then negate them if needed.
 	start := len(buf)
 	buf = escapeAppend(buf, mantBytes)
