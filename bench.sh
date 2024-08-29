@@ -11,6 +11,10 @@
 
 set -e
 
+cd "$(dirname "$0")"
+rm -f lexy.test
+go test -c
+
 tests=${1:-.}
 count=${2:-10}
 go test -bench "${tests}" -benchmem -timeout 0 -count=${count}
