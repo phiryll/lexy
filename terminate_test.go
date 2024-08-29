@@ -7,131 +7,82 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEscape(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		data    []byte
-		escaped []byte
-	}{
-		{
-			"no special bytes",
-			[]byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6, 0},
-		},
-		{
-			"with special bytes",
-			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0},
-		},
-		{
-			"empty",
-			[]byte{},
-			[]byte{0},
-		},
-		{
-			"terminator",
-			[]byte{0},
-			[]byte{1, 0, 0},
-		},
-		{
-			"escape",
-			[]byte{1},
-			[]byte{1, 1, 0},
-		},
-		{
-			"trailing terminator",
-			[]byte{0, 1, 2, 3, 1, 4, 0},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0},
-		},
-		{
-			"trailing escape",
-			[]byte{0, 1, 2, 3, 1, 4, 1},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			buf := lexy.TestingDoEscape(tt.data)
-			assert.Equal(t, tt.escaped, buf, "escaped bytes")
-		})
-	}
+// A []byte codec that does nothing, encoded == decoded,
+// purely for testing terminatorCodec.
+type nopCodec struct{}
+
+var nop lexy.Codec[[]byte] = nopCodec{}
+
+func (nopCodec) Append(buf, value []byte) []byte {
+	return append(buf, value...)
 }
 
-//nolint:funlen
-func TestUnescape(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name      string
-		data      []byte
-		unescaped []byte // nil if a panic is expected
-	}{
-		{
-			"no special bytes",
-			[]byte{2, 3, 5, 4, 7, 6},
-			nil,
-		},
-		{
-			"with special bytes",
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6},
-			nil,
-		},
-		{
-			"empty",
-			[]byte{},
-			nil,
-		},
-		{
-			"terminator",
-			[]byte{1, 0},
-			nil,
-		},
-		{
-			"escape",
-			[]byte{1, 1},
-			nil,
-		},
-		{
-			"trailing escaped terminator",
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0},
-			nil,
-		},
-		{
-			"trailing escaped escape",
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1},
-			nil,
-		},
-		{
-			"trailing unescaped terminator",
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 0},
-			[]byte{0, 1, 2, 3, 1, 4},
-		},
-		{
-			"non-trailing unescaped terminator",
-			[]byte{2, 3, 4, 1, 0, 5, 6, 0, 7, 8, 9},
-			[]byte{2, 3, 4, 0, 5, 6},
-		},
+func (nopCodec) Put(buf, value []byte) []byte {
+	if len(value) == 0 {
+		return buf
 	}
-	for _, tt := range tests {
+	_ = buf[len(value)-1]
+	return buf[copy(buf, value):]
+}
+
+func (nopCodec) Get(buf []byte) ([]byte, []byte) {
+	return append([]byte{}, buf...), buf[len(buf):]
+}
+
+func (nopCodec) RequiresTerminator() bool {
+	return true
+}
+
+//nolint:gofumpt
+func TestTerminator(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Terminate(nop)
+	testCodec(t, codec, []testCase[[]byte]{
+		{"empty", []byte{},
+			[]byte{0}},
+		{"terminator", []byte{0},
+			[]byte{1, 0, 0}},
+		{"escape", []byte{1},
+			[]byte{1, 1, 0}},
+		{"no special bytes", []byte{2, 3, 5, 4, 7, 6},
+			[]byte{2, 3, 5, 4, 7, 6, 0}},
+		{"with special bytes", []byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0}},
+		{"trailing terminator", []byte{0, 1, 2, 3, 1, 4, 0},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0}},
+		{"trailing escape", []byte{0, 1, 2, 3, 1, 4, 1},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0}},
+	})
+}
+
+func TestUnescapePanic(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Terminate(nop)
+	for _, tt := range []struct {
+		name string
+		data []byte
+	}{
+		{"empty", []byte{}},
+		{"terminator", []byte{1, 0}},
+		{"escape", []byte{1, 1}},
+		{"no special bytes", []byte{2, 3, 5, 4, 7, 6}},
+		{"with special bytes", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6}},
+		{"trailing escaped terminator", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0}},
+		{"trailing escaped escape", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1}},
+	} {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if tt.unescaped == nil {
-				assert.Panics(t, func() {
-					lexy.TestingDoUnescape(tt.data)
-				})
-			} else {
-				buf, _, _ := lexy.TestingDoUnescape(tt.data)
-				assert.Equal(t, tt.unescaped, buf)
-			}
+			assert.Panics(t, func() {
+				codec.Get(tt.data)
+			})
 		})
 	}
 }
 
 func TestUnescapeMultiple(t *testing.T) {
 	t.Parallel()
+	codec := lexy.Terminate(nop)
 	data := []byte{2, 3, 1, 0, 5, 0, 7, 8, 9, 0, 10, 11, 12, 0}
 	n := 0
 	for _, expected := range [][]byte{
@@ -140,7 +91,7 @@ func TestUnescapeMultiple(t *testing.T) {
 		{10, 11, 12},
 	} {
 		var got []byte
-		got, data, _ = lexy.TestingDoUnescape(data)
+		got, data = codec.Get(data)
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
 	assert.Len(t, data, n)

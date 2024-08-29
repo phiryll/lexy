@@ -366,9 +366,6 @@ func NilsLast[T any](codec Codec[T]) Codec[T] {
 
 // Helper functionality used by implementations.
 
-// The default size when allocating a buffer, chosen because it should fit in a cache line.
-const defaultBufSize = 64
-
 // copyAll is like the built-in copy(dst, src),
 // except that it panics if dst is not large enough to hold all of src.
 // copyAll returns a slice into dst following what was written.
@@ -378,4 +375,13 @@ func copyAll(dst, src []byte) []byte {
 	}
 	_ = dst[len(src)-1]
 	return dst[copy(dst, src):]
+}
+
+// extend ensures that n bytes can be appended to buf without another allocation,
+// returning the resulting slice. This was copied from slices.Grow (added in go 1.21).
+func extend(buf []byte, n int) []byte {
+	if n -= cap(buf) - len(buf); n > 0 {
+		buf = append(buf[:cap(buf)], make([]byte, n)...)[:len(buf)]
+	}
+	return buf
 }

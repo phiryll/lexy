@@ -28,28 +28,47 @@ type bigIntCodec struct {
 	prefix Prefix
 }
 
+//nolint:mnd
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
 		return buf
 	}
+	size := (value.BitLen() + 7) / 8
+	// Preallocate and put into it so we can use FillBytes, avoiding a copy.
+	start := len(buf)
+	buf = append(buf, make([]byte, size+8)...)
+	putBuf := buf[start:]
 	sign := value.Sign()
-	b := value.Bytes()
-	size := int64(len(b))
 	if sign < 0 {
-		buf = stdInt64.Append(buf, -size)
-		negate(b)
+		putBuf = stdInt64.Put(putBuf, -int64(size))
+		value.FillBytes(putBuf[:size])
+		negate(putBuf[:size])
 	} else {
-		buf = stdInt64.Append(buf, size)
+		putBuf = stdInt64.Put(putBuf, int64(size))
+		value.FillBytes(putBuf[:size])
 	}
-	return append(buf, b...)
+	return buf
 }
 
+//nolint:mnd
 func (c bigIntCodec) Put(buf []byte, value *big.Int) []byte {
-	// It would be nice to use big.Int.FillBytes to avoid an extra copy,
-	// but it clears the entire buffer.
-	// So it makes sense here to use Append.
-	return copyAll(buf, c.Append(nil, value))
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
+	}
+	size := (value.BitLen() + 7) / 8
+	_ = buf[size+8-1] // check that we have room
+	sign := value.Sign()
+	if sign < 0 {
+		buf = stdInt64.Put(buf, -int64(size))
+		value.FillBytes(buf[:size])
+		negate(buf[:size])
+	} else {
+		buf = stdInt64.Put(buf, int64(size))
+		value.FillBytes(buf[:size])
+	}
+	return buf[size:]
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
@@ -220,22 +239,24 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 		exp = -exp
 		prec = -prec
 	}
-	buf = stdInt32.Append(buf, exp)
 
 	var tmp big.Float
-	tmp.Copy(value)
-	tmp.SetMantExp(&tmp, shift)
+	tmp.SetMantExp(value, shift)
 	mantInt, acc := tmp.Int(nil)
 	if acc != big.Exact {
 		panic(errBigFloatEncoding)
 	}
 	mantBytes := mantInt.Bytes()
+
+	//nolint:mnd
+	buf = extend(buf, len(mantBytes)+9) // 9 for exp, prec, and mode
+	buf = stdInt32.Append(buf, exp)
 	// Escape the bytes, then negate them if needed.
-	escaped := doEscape(mantBytes)
+	start := len(buf)
+	buf = escapeAppend(buf, mantBytes)
 	if signbit {
-		negate(escaped)
+		negate(buf[start:])
 	}
-	buf = append(buf, escaped...)
 	buf = stdInt32.Append(buf, prec)
 	return modeCodec.Append(buf, mode)
 }
@@ -273,10 +294,10 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 		tempBuf := append([]byte{}, buf...)
 		negate(tempBuf)
 		var n int
-		mantBytes, _, n = doUnescape(tempBuf)
+		mantBytes, _, n = unescape(tempBuf)
 		buf = buf[n:]
 	} else {
-		mantBytes, buf, _ = doUnescape(buf)
+		mantBytes, buf, _ = unescape(buf)
 	}
 	prec, buf := stdInt32.Get(buf)
 	mode, buf := modeCodec.Get(buf)

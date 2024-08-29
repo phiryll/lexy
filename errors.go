@@ -6,7 +6,6 @@ import (
 )
 
 var (
-	errNil                 = errors.New("cannot be nil")
 	errUnterminatedBuffer  = errors.New("no unescaped terminator found")
 	errUnexpectedNilsFirst = errors.New("read nils-first prefix when nils-last was configured")
 	errUnexpectedNilsLast  = errors.New("read nils-last prefix when nils-first was configured")

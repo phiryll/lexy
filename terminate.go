@@ -47,16 +47,26 @@ const (
 )
 
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	return append(buf, doEscape(c.codec.Append(nil, value))...)
+	return escapeAppend(buf, c.codec.Append(nil, value))
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
-	return copyAll(buf, c.Append(nil, value))
+	i := 0
+	for _, b := range c.codec.Append(nil, value) {
+		if b == escape || b == terminator {
+			buf[i] = escape
+			i++
+		}
+		buf[i] = b
+		i++
+	}
+	buf[i] = terminator
+	return buf[i+1:]
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
-	b, buf, _ := doUnescape(buf)
-	value, _ := c.codec.Get(b)
+	unescaped, buf, _ := unescape(buf)
+	value, _ := c.codec.Get(unescaped)
 	return value, buf
 }
 
@@ -64,29 +74,24 @@ func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-// doEscape returns a copy of buf with all escapes and terminators escaped, and a trailing final terminator.
-func doEscape(buf []byte) []byte {
-	out := make([]byte, 0, defaultBufSize)
-	for _, b := range buf {
-		switch b {
-		case terminator:
-			out = append(out, escape, terminator)
-		case escape:
-			out = append(out, escape, escape)
-		default:
-			out = append(out, b)
+func escapeAppend(buf, value []byte) []byte {
+	buf = extend(buf, len(value))
+	for _, b := range value {
+		if b == escape || b == terminator {
+			buf = append(buf, escape)
 		}
+		buf = append(buf, b)
 	}
-	return append(out, terminator)
+	return append(buf, terminator)
 }
 
-// doUnescape reads and unescapes data from buf until the first unescaped terminator,
+// unescape reads and unescapes data from buf until the first unescaped terminator,
 // returning the unescaped data, the following buf, and number of bytes read from buf.
-// doUnescape will panic if no unescaped terminator is found.
+// unescape will panic if no unescaped terminator is found.
 //
 //nolint:nonamedreturns
-func doUnescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
-	out := make([]byte, 0, defaultBufSize)
+func unescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
+	out := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
 		// handle unescaped terminators and escapes
