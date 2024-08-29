@@ -210,7 +210,7 @@ func (c testerCodec[T]) putLongBuf(t *testing.T, tt testCase[T]) output {
 	var buf []byte
 	t.Run("put long buf", func(t *testing.T) {
 		size := len(c.codec.Append(nil, tt.value))
-		buf = make([]byte, size+1000)
+		buf = make([]byte, size+10)
 		for i := range buf {
 			buf[i] = 37
 		}
@@ -236,7 +236,7 @@ func (c testerCodec[T]) putShortBuf(t *testing.T, tt testCase[T]) {
 		if size == 0 {
 			return
 		}
-		buf := make([]byte, size+100)
+		buf := make([]byte, size+2000)
 		assert.Panics(t, func() {
 			c.codec.Put(buf[:size-1], tt.value)
 		})
