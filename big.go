@@ -236,7 +236,9 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	if isInf || isZero {
 		return buf
 	}
+	mantAppend := termAppend
 	if signbit {
+		mantAppend = negAppend
 		// These values are no longer being used except to write them.
 		exp = -exp
 		prec = -prec
@@ -253,12 +255,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	//nolint:mnd
 	buf = extend(buf, len(mantBytes)+9) // 9 for exp, prec, and mode
 	buf = stdInt32.Append(buf, exp)
-	// Escape the bytes, then negate them if needed.
-	start := len(buf)
-	buf = escapeAppend(buf, mantBytes)
-	if signbit {
-		negate(buf[start:])
-	}
+	buf = mantAppend(buf, mantBytes)
 	buf = stdInt32.Append(buf, prec)
 	return modeCodec.Append(buf, mode)
 }
@@ -287,20 +284,13 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 		return &value, buf
 	}
 
-	exp, buf := stdInt32.Get(buf)
-
-	var mantBytes []byte
-	// Negate the bytes if needed, then unescape.
+	mantGet := termGet
 	if signbit {
-		// copy buf to negate it, unescape with that
-		tempBuf := append([]byte{}, buf...)
-		negate(tempBuf)
-		var n int
-		mantBytes, _, n = unescape(tempBuf)
-		buf = buf[n:]
-	} else {
-		mantBytes, buf, _ = unescape(buf)
+		mantGet = negGet
 	}
+
+	exp, buf := stdInt32.Get(buf)
+	mantBytes, buf := mantGet(buf)
 	prec, buf := stdInt32.Get(buf)
 	mode, buf := modeCodec.Get(buf)
 

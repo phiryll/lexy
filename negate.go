@@ -33,26 +33,17 @@ type negateCodec[T any] struct {
 }
 
 func (c negateCodec[T]) Append(buf []byte, value T) []byte {
-	start := len(buf)
-	buf = c.codec.Append(buf, value)
-	negate(buf[start:])
-	return buf
+	return negAppend(buf, c.codec.Append(nil, value))
 }
 
 func (c negateCodec[T]) Put(buf []byte, value T) []byte {
-	newBuf := c.codec.Put(buf, value)
-	putSize := len(buf) - len(newBuf)
-	negate(buf[:putSize])
-	return newBuf
+	return negPut(buf, c.codec.Append(nil, value))
 }
 
 func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
-	// We don't know how much to Get, so we copy everything.
-	b := append([]byte{}, buf...)
-	negate(b)
-	totalLen := len(b)
-	value, b := c.codec.Get(b)
-	return value, buf[totalLen-len(b):]
+	encodedValue, buf := negGet(buf)
+	value, _ := c.codec.Get(encodedValue)
+	return value, buf
 }
 
 func (negateCodec[T]) RequiresTerminator() bool {
@@ -65,4 +56,54 @@ func negate(buf []byte) []byte {
 		buf[i] ^= 0xFF
 	}
 	return buf
+}
+
+// negAppend is exactly the same as termAppend, except that it negates every byte written.
+func negAppend(buf, value []byte) []byte {
+	buf = extend(buf, len(value))
+	for _, b := range value {
+		if b == escape || b == terminator {
+			buf = append(buf, ^escape)
+		}
+		buf = append(buf, ^b)
+	}
+	return append(buf, ^terminator)
+}
+
+// negPut is exactly the same as termPut, except that it negates every byte written.
+func negPut(buf, value []byte) []byte {
+	i := 0
+	for _, b := range value {
+		if b == escape || b == terminator {
+			buf[i] = ^escape
+			i++
+		}
+		buf[i] = ^b
+		i++
+	}
+	buf[i] = ^terminator
+	return buf[i+1:]
+}
+
+// negGet is exactly the same as termGet, except that it negates every byte read first.
+func negGet(buf []byte) ([]byte, []byte) {
+	value := make([]byte, 0, len(buf))
+	escaped := false // if the previous byte read is an escape
+	for i, b := range buf {
+		b = ^b
+		// handle unescaped terminators and escapes
+		// everything else goes into the output as-is
+		if !escaped {
+			if b == terminator {
+				return value, buf[i+1:]
+			}
+			if b == escape {
+				escaped = true
+				continue
+			}
+		}
+		escaped = false
+		value = append(value, b)
+	}
+	panic(errUnterminatedBuffer)
 }

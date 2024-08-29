@@ -46,12 +46,37 @@ const (
 )
 
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	return escapeAppend(buf, c.codec.Append(nil, value))
+	return termAppend(buf, c.codec.Append(nil, value))
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
+	return termPut(buf, c.codec.Append(nil, value))
+}
+
+func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
+	encodedValue, buf := termGet(buf)
+	value, _ := c.codec.Get(encodedValue)
+	return value, buf
+}
+
+func (terminatorCodec[T]) RequiresTerminator() bool {
+	return false
+}
+
+func termAppend(buf, value []byte) []byte {
+	buf = extend(buf, len(value))
+	for _, b := range value {
+		if b == escape || b == terminator {
+			buf = append(buf, escape)
+		}
+		buf = append(buf, b)
+	}
+	return append(buf, terminator)
+}
+
+func termPut(buf, value []byte) []byte {
 	i := 0
-	for _, b := range c.codec.Append(nil, value) {
+	for _, b := range value {
 		if b == escape || b == terminator {
 			buf[i] = escape
 			i++
@@ -63,41 +88,15 @@ func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
 	return buf[i+1:]
 }
 
-func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
-	unescaped, buf, _ := unescape(buf)
-	value, _ := c.codec.Get(unescaped)
-	return value, buf
-}
-
-func (terminatorCodec[T]) RequiresTerminator() bool {
-	return false
-}
-
-func escapeAppend(buf, value []byte) []byte {
-	buf = extend(buf, len(value))
-	for _, b := range value {
-		if b == escape || b == terminator {
-			buf = append(buf, escape)
-		}
-		buf = append(buf, b)
-	}
-	return append(buf, terminator)
-}
-
-// unescape reads and unescapes data from buf until the first unescaped terminator,
-// returning the unescaped data, the following buf, and number of bytes read from buf.
-// unescape will panic if no unescaped terminator is found.
-//
-//nolint:nonamedreturns
-func unescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
-	out := make([]byte, 0, len(buf))
+func termGet(buf []byte) ([]byte, []byte) {
+	value := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
 		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {
 			if b == terminator {
-				return out, buf[i+1:], i + 1
+				return value, buf[i+1:]
 			}
 			if b == escape {
 				escaped = true
@@ -105,7 +104,7 @@ func unescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
 			}
 		}
 		escaped = false
-		out = append(out, b)
+		value = append(value, b)
 	}
 	panic(errUnterminatedBuffer)
 }

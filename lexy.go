@@ -320,11 +320,14 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[ma
 // Negate returns a Codec reversing the encoded order of codec.
 // This Codec does not require a terminator when used within an aggregate Codec.
 func Negate[T any](codec Codec[T]) Codec[T] {
-	// Negate must escape and terminate its delegate whether it requires it or not,
-	// but shouldn't wrap if the delegate is already a terminatorCodec.
-	// This will also attempt to wrap a nil Codec, causing Terminate() to panic.
-	if _, ok := codec.(terminatorCodec[T]); !ok {
-		codec = Terminate(codec)
+	codec.RequiresTerminator() // force panic if nil
+	// negateCodec internally escapes its data, so unwrap any terminatorCodecs.
+	for {
+		delegate, ok := codec.(terminatorCodec[T])
+		if !ok {
+			break
+		}
+		codec = delegate.codec
 	}
 	return negateCodec[T]{codec}
 }
