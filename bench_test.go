@@ -168,8 +168,8 @@ func BenchmarkBigInt(b *testing.B) {
 		{"0", big.NewInt(0)},
 		{"-1", big.NewInt(-1)},
 		{"+1", big.NewInt(1)},
-		{"big positive", newBigInt(manyDigits)},
-		{"big negative", newBigInt("-" + manyDigits)},
+		{"big pos", newBigInt(manyDigits)},
+		{"big neg", newBigInt("-" + manyDigits)},
 	})
 }
 
@@ -178,17 +178,17 @@ func BenchmarkBigFloat(b *testing.B) {
 	negZero.Neg(&negZero)
 	negInf.SetInf(true)
 	posInf.SetInf(false)
-	wholeNumber := newBigFloat(manyDigits + manyDigits)
-	mixedNumber := newBigFloat(manyDigits + "." + manyDigits)
-	smallNumber := newBigFloat("0." + manyZeros + manyDigits)
 	benchCodec(b, lexy.BigFloat(), []benchCase[*big.Float]{
 		{"-0", &negZero},
 		{"+0", &posZero},
 		{"-Inf", &negInf},
 		{"+Inf", &posInf},
-		{"long whole", wholeNumber},
-		{"long mixed", mixedNumber},
-		{"long small", smallNumber},
+		{"big pos whole", newBigFloat(manyDigits + manyDigits)},
+		{"big pos mixed", newBigFloat(manyDigits + "." + manyDigits)},
+		{"big pos small", newBigFloat("0." + manyZeros + manyDigits)},
+		{"big neg whole", newBigFloat("-" + manyDigits + manyDigits)},
+		{"big neg mixed", newBigFloat("-" + manyDigits + "." + manyDigits)},
+		{"big neg small", newBigFloat("-0." + manyZeros + manyDigits)},
 	})
 }
 
@@ -196,7 +196,8 @@ func BenchmarkBigRat(b *testing.B) {
 	benchCodec(b, lexy.BigRat(), []benchCase[*big.Rat]{
 		{"-1/3", newBigRat("-1", "3")},
 		{"0/123", newBigRat("0", "123")},
-		{"long/long", newBigRat(manyDigits, "42"+manyDigits)},
+		{"pos big/big", newBigRat(manyDigits, "42"+manyDigits)},
+		{"neg big/big", newBigRat("-"+manyDigits, "42"+manyDigits)},
 	})
 }
 
