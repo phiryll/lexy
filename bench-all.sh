@@ -18,7 +18,7 @@
 set -e
 
 cd "$(dirname "$0")"
-rm lexy.test
+rm -f lexy.test
 go test -c
 
 files=$(ggrep -r --include='**_test.go' --files-with-matches 'func Bench' .)
