@@ -28,38 +28,47 @@ type bigIntCodec struct {
 	prefix Prefix
 }
 
+//nolint:mnd
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
 		return buf
 	}
+	size := (value.BitLen() + 7) / 8
+	// Preallocate and put into it so we can use FillBytes, avoiding a copy.
+	start := len(buf)
+	buf = append(buf, make([]byte, size+8)...)
+	putBuf := buf[start:]
 	sign := value.Sign()
-	b := value.Bytes()
-	size := int64(len(b))
 	if sign < 0 {
-		buf = stdInt64.Append(buf, -size)
-		negate(b)
+		putBuf = stdInt64.Put(putBuf, -int64(size))
+		value.FillBytes(putBuf[:size])
+		negate(putBuf[:size])
 	} else {
-		buf = stdInt64.Append(buf, size)
+		putBuf = stdInt64.Put(putBuf, int64(size))
+		value.FillBytes(putBuf[:size])
 	}
-	return append(buf, b...)
+	return buf
 }
 
+//nolint:mnd
 func (c bigIntCodec) Put(buf []byte, value *big.Int) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
 		return buf
 	}
+	size := (value.BitLen() + 7) / 8
+	_ = buf[size+8-1] // check that we have room
 	sign := value.Sign()
-	b := value.Bytes()
-	size := int64(len(b))
 	if sign < 0 {
-		buf = stdInt64.Put(buf, -size)
-		negate(b)
+		buf = stdInt64.Put(buf, -int64(size))
+		value.FillBytes(buf[:size])
+		negate(buf[:size])
 	} else {
-		buf = stdInt64.Put(buf, size)
+		buf = stdInt64.Put(buf, int64(size))
+		value.FillBytes(buf[:size])
 	}
-	return copyAll(buf, b)
+	return buf[size:]
 }
 
 func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
