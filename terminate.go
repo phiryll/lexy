@@ -77,14 +77,10 @@ func (terminatorCodec[T]) RequiresTerminator() bool {
 func escapeAppend(buf, value []byte) []byte {
 	buf = extend(buf, len(value))
 	for _, b := range value {
-		switch b {
-		case terminator:
-			buf = append(buf, escape, terminator)
-		case escape:
-			buf = append(buf, escape, escape)
-		default:
-			buf = append(buf, b)
+		if b == escape || b == terminator {
+			buf = append(buf, escape)
 		}
+		buf = append(buf, b)
 	}
 	return append(buf, terminator)
 }
