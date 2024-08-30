@@ -46,11 +46,24 @@ const (
 )
 
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	return termAppend(buf, c.codec.Append(nil, value))
+	// return termAppend(buf, c.codec.Append(nil, value))
+	// This approach is slower for longer encodings than the above approach.
+	start := len(buf)
+	buf = c.codec.Append(buf, value)
+	n := numAddedBytes(buf[start:])
+	buf = append(buf, make([]byte, n)...)
+	escapeBytes(buf[start:], n)
+	return buf
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
-	return termPut(buf, c.codec.Append(nil, value))
+	// return termPut(buf, c.codec.Append(nil, value))
+	original := buf
+	buf = c.codec.Put(buf, value)
+	numPut := len(original) - len(buf)
+	n := numAddedBytes(original[:numPut])
+	escapeBytes(original[:numPut+n], n)
+	return buf[n:]
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
@@ -61,6 +74,32 @@ func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
 
 func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
+}
+
+func numAddedBytes(buf []byte) int {
+	n := 0
+	for _, b := range buf {
+		if b == escape || b == terminator {
+			n++
+		}
+	}
+	return n + 1 // final terminator
+}
+
+// escapeBytes escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
+func escapeBytes(buf []byte, n int) {
+	// Going backwards ensures that every byte is copied at most once.
+	dst := len(buf) - 1
+	buf[dst] = terminator
+	dst--
+	for i := len(buf) - n - 1; i != dst; i-- {
+		buf[dst] = buf[i]
+		dst--
+		if buf[i] == escape || buf[i] == terminator {
+			buf[dst] = escape
+			dst--
+		}
+	}
 }
 
 func termAppend(buf, value []byte) []byte {
