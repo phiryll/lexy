@@ -1,5 +1,7 @@
 package lexy
 
+import "bytes"
+
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
@@ -46,23 +48,20 @@ const (
 )
 
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	// return termAppend(buf, c.codec.Append(nil, value))
-	// This approach is slower for longer encodings than the above approach.
 	start := len(buf)
 	buf = c.codec.Append(buf, value)
-	n := numAddedBytes(buf[start:])
+	n := termNumAdded(buf[start:])
 	buf = append(buf, make([]byte, n)...)
-	escapeBytes(buf[start:], n)
+	termEscape(buf[start:], n)
 	return buf
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
-	// return termPut(buf, c.codec.Append(nil, value))
 	original := buf
 	buf = c.codec.Put(buf, value)
 	numPut := len(original) - len(buf)
-	n := numAddedBytes(original[:numPut])
-	escapeBytes(original[:numPut+n], n)
+	n := termNumAdded(original[:numPut])
+	termEscape(original[:numPut+n], n)
 	return buf[n:]
 }
 
@@ -76,7 +75,18 @@ func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-func numAddedBytes(buf []byte) int {
+var (
+	eByte = []byte{escape}
+	tByte = []byte{terminator}
+)
+
+// termNumAdded returns how many more bytes need to be added to escape and terminate buf.
+func termNumAdded(buf []byte) int {
+	//nolint:mnd
+	if len(buf) > 64 {
+		// This performs better for larger inputs, on systems with native implementations of bytes.Count.
+		return bytes.Count(buf, eByte) + bytes.Count(buf, tByte) + 1
+	}
 	n := 0
 	for _, b := range buf {
 		if b == escape || b == terminator {
@@ -86,8 +96,8 @@ func numAddedBytes(buf []byte) int {
 	return n + 1 // final terminator
 }
 
-// escapeBytes escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
-func escapeBytes(buf []byte, n int) {
+// termEscape escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
+func termEscape(buf []byte, n int) {
 	// Going backwards ensures that every byte is copied at most once.
 	dst := len(buf) - 1
 	buf[dst] = terminator
