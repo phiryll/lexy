@@ -332,11 +332,15 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 }
 
 // Terminate returns a Codec that escapes and terminates the encodings produced by codec.
+// If codec was created by Terminate, it is returned without further wrapping.
 // This function is for the rare edge case requiring a Codec's encodings to be escaped and terminated,
 // whether or not it normally requires it.
 // Most of the time, [TerminateIfNeeded] should be used instead.
 func Terminate[T any](codec Codec[T]) Codec[T] {
 	codec.RequiresTerminator() // force panic if nil
+	if _, ok := codec.(terminatorCodec[T]); ok {
+		return codec
+	}
 	return terminatorCodec[T]{codec}
 }
 
