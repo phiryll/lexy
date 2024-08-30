@@ -325,11 +325,10 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 	for {
 		delegate, ok := codec.(terminatorCodec[T])
 		if !ok {
-			break
+			return negateCodec[T]{codec}
 		}
 		codec = delegate.codec
 	}
-	return negateCodec[T]{codec}
 }
 
 // Terminate returns a Codec that escapes and terminates the encodings produced by codec.
