@@ -3,7 +3,7 @@ package lexy
 // stringCodec is the Codec for strings.
 //
 // A string is encoded as its bytes.
-// Get will fully consume its argument buffer, and will never return a negative byte count.
+// Get will fully consume its argument buffer, and will never fail.
 //
 // The order of strings, and this encoding, may be surprising.
 // A string in Go is essentially an immutable []byte without text semantics.
