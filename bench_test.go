@@ -264,8 +264,16 @@ func BenchmarkNegate(b *testing.B) {
 		{"nil", nil},
 		{"empty", []byte{}},
 		{"1 byte", []byte{53}},
-		{"20 bytes", []byte("12345678901234567890")},
-		{"1000 bytes", randomBytes(1000, 10983431)},
+		{"20 bytes", randomBytes(20, 601239)},
+		{"40 bytes", randomBytes(40, 9312457)},
+		{"60 bytes", randomBytes(60, 38701)},
+		{"80 bytes", randomBytes(80, 5239107)},
+		{"100 bytes", randomBytes(100, 4387201)},
+		{"200 bytes", randomBytes(200, 23832)},
+		{"400 bytes", randomBytes(400, 129045)},
+		{"600 bytes", randomBytes(600, 7932462)},
+		{"800 bytes", randomBytes(800, 931247)},
+		{"1000 bytes", randomBytes(1000, 3903748)},
 	})
 }
 
@@ -274,12 +282,20 @@ func BenchmarkTerminate(b *testing.B) {
 		{"nil", nil},
 		{"empty", []byte{}},
 		{"1 byte", []byte{53}},
-		{"20 bytes", []byte("12345678901234567890")},
+		{"20 bytes", randomBytes(20, 601239)},
+		{"40 bytes", randomBytes(40, 9312457)},
+		{"60 bytes", randomBytes(60, 38701)},
+		{"80 bytes", randomBytes(80, 5239107)},
+		{"100 bytes", randomBytes(100, 4387201)},
+		{"200 bytes", randomBytes(200, 23832)},
+		{"400 bytes", randomBytes(400, 129045)},
+		{"600 bytes", randomBytes(600, 7932462)},
+		{"800 bytes", randomBytes(800, 931247)},
 		{"1000 bytes", randomBytes(1000, 3903748)},
 	})
 }
 
-//nolint:gosec,revive,unparam
+//nolint:gosec,revive
 func randomBytes(n int, seed int64) []byte {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]byte, n)
