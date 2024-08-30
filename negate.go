@@ -33,11 +33,21 @@ type negateCodec[T any] struct {
 }
 
 func (c negateCodec[T]) Append(buf []byte, value T) []byte {
-	return negAppend(buf, c.codec.Append(nil, value))
+	start := len(buf)
+	buf = c.codec.Append(buf, value)
+	n := termNumAdded(buf[start:])
+	buf = append(buf, make([]byte, n)...)
+	negTermEscape(buf[start:], n)
+	return buf
 }
 
 func (c negateCodec[T]) Put(buf []byte, value T) []byte {
-	return negPut(buf, c.codec.Append(nil, value))
+	original := buf
+	buf = c.codec.Put(buf, value)
+	numPut := len(original) - len(buf)
+	n := termNumAdded(original[:numPut])
+	negTermEscape(original[:numPut+n], n)
+	return buf[n:]
 }
 
 func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
@@ -56,6 +66,27 @@ func negate(buf []byte) []byte {
 		buf[i] ^= 0xFF
 	}
 	return buf
+}
+
+// negTermEscape escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes,
+// negating every byte written.
+func negTermEscape(buf []byte, n int) {
+	// Going backwards ensures that every byte is copied at most once.
+	dst := len(buf) - 1
+	buf[dst] = ^terminator
+	dst--
+	for i := len(buf) - n - 1; i != dst; i-- {
+		buf[dst] = ^buf[i]
+		dst--
+		if buf[i] == escape || buf[i] == terminator {
+			buf[dst] = ^escape
+			dst--
+		}
+	}
+	// still need to negate the first block
+	for i := dst; i >= 0; i-- {
+		buf[i] = ^buf[i]
+	}
 }
 
 // negAppend is exactly the same as termAppend, except that it negates every byte written.
