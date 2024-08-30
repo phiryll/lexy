@@ -30,7 +30,8 @@ func splitTime(value time.Time) (int64, uint32, int32) {
 
 func (timeCodec) Append(buf []byte, value time.Time) []byte {
 	seconds, nanos, offset := splitTime(value)
-	buf = stdInt64.Append(buf, seconds)
+	//nolint:mnd
+	buf = stdInt64.Append(extend(buf, 16), seconds)
 	buf = stdUint32.Append(buf, nanos)
 	return stdInt32.Append(buf, offset)
 }

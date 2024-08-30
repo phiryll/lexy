@@ -29,7 +29,8 @@ func (complex64Codec) RequiresTerminator() bool {
 }
 
 func (complex128Codec) Append(buf []byte, value complex128) []byte {
-	buf = stdFloat64.Append(buf, real(value))
+	//nolint:mnd
+	buf = stdFloat64.Append(extend(buf, 16), real(value))
 	return stdFloat64.Append(buf, imag(value))
 }
 
