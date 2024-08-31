@@ -29,6 +29,31 @@ func BenchmarkNothing(b *testing.B) {
 	}
 }
 
+func BenchmarkAllocate(b *testing.B) {
+	for _, bb := range []benchCase[int]{
+		{"0", 0},
+		{"1", 1},
+		{"20", 20},
+		{"40", 40},
+		{"60", 60},
+		{"80", 80},
+		{"100", 100},
+		{"200", 200},
+		{"400", 400},
+		{"600", 600},
+		{"800", 800},
+		{"1000", 1000},
+	} {
+		bb := bb
+		b.Run(bb.name, func(b *testing.B) {
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_ = make([]byte, bb.value)
+			}
+		})
+	}
+}
+
 func BenchmarkEmpty(b *testing.B) {
 	benchCodec(b, lexy.Empty[bool](), []benchCase[bool]{
 		{"true", true},
