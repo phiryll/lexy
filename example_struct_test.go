@@ -23,7 +23,7 @@ func (s SomeStruct) String() string {
 var (
 	// Score sorts high to low.
 	negScoreCodec   = lexy.Negate(lexy.Float32())
-	tagsCodec       = lexy.TerminateIfNeeded(lexy.SliceOf(lexy.String()))
+	tagsCodec       = lexy.Terminate(lexy.SliceOf(lexy.String()))
 	SomeStructCodec = someStructCodec{}
 )
 
@@ -97,7 +97,7 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //     The schema change example has an exception to this.
 //   - Use [lexy.PrefixNilsFirst] or [lexy.PrefixNilsLast] if the value can be nil.
 //   - Get must panic if it cannot decode a value.
-//   - Generally use [lexy.TerminateIfNeeded] when a field's Codec might require it.
+//   - Generally use [lexy.Terminate] when a field's Codec might require it.
 //     See [tagsCodec] in this example for a typical usage.
 //     It is safe to return false from [lexy.Codec.RequiresTerminator]
 //     if you do this for all encoded fields and the number of fields is fixed.

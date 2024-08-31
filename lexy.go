@@ -30,7 +30,7 @@ These Codec-returning functions do not require specifying a type parameter when 
   - [Bytes], [TerminatedBytes]
   - [PointerTo], [SliceOf], [MapOf]
   - [Negate]
-  - [Terminate], [TerminateIfNeeded]
+  - [Terminate]
   - [NilsLast]
 
 These Codec-returning functions require specifying a type parameter when invoked.
@@ -92,8 +92,7 @@ type Codec[T any] interface {
 	// if more data is written following the encoded value.
 	// This is the case for most unbounded types like slices and maps,
 	// as well as types whose encodings can be zero bytes.
-	// Wrapping this Codec with [Terminate] or [TerminateIfNeeded]
-	// will return a Codec which behaves properly in these situations.
+	// Wrapping this Codec with [Terminate] will return a Codec which behaves properly in these situations.
 	//
 	// For the rest of this doc comment, "requires escaping" is shorthand for
 	// "requires escaping and a terminator if more data is written following the encoded value."
@@ -303,7 +302,7 @@ func PointerTo[E any](elemCodec Codec[E]) Codec[*E] {
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
 // This Codec requires a terminator when used within an aggregate Codec.
 func SliceOf[E any](elemCodec Codec[E]) Codec[[]E] {
-	return sliceCodec[E]{TerminateIfNeeded(elemCodec), PrefixNilsFirst}
+	return sliceCodec[E]{Terminate(elemCodec), PrefixNilsFirst}
 }
 
 // MapOf returns a Codec for the map[K]V type, with nil maps ordered first.
@@ -311,8 +310,8 @@ func SliceOf[E any](elemCodec Codec[E]) Codec[[]E] {
 // This Codec requires a terminator when used within an aggregate Codec.
 func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return mapCodec[K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
+		Terminate(keyCodec),
+		Terminate(valueCodec),
 		PrefixNilsFirst,
 	}
 }
@@ -331,23 +330,10 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 	}
 }
 
-// Terminate returns a Codec that escapes and terminates the encodings produced by codec.
-// If codec was created by Terminate, it is returned without further wrapping.
-// This function is for the rare edge case requiring a Codec's encodings to be escaped and terminated,
-// whether or not it normally requires it.
-// Most of the time, [TerminateIfNeeded] should be used instead.
-func Terminate[T any](codec Codec[T]) Codec[T] {
-	codec.RequiresTerminator() // force panic if nil
-	if _, ok := codec.(terminatorCodec[T]); ok {
-		return codec
-	}
-	return terminatorCodec[T]{codec}
-}
-
-// TerminateIfNeeded returns a Codec that escapes and terminates the encodings produced by codec,
+// Terminate returns a Codec that escapes and terminates the encodings produced by codec,
 // if [Codec.RequiresTerminator] returns true for codec. Otherwise it returns codec.
-func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	// This also covers the case if codec is a terminator.
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	// This also covers the case if codec is a terminatorCodec.
 	if !codec.RequiresTerminator() {
 		return codec
 	}
@@ -364,7 +350,7 @@ type nillableCodec[T any] interface {
 
 // NilsLast returns a Codec exactly like codec, but with nils ordered last.
 // NilsLast will panic if codec is not a pointer, slice, map, []byte, or *big.Int/Float/Rat Codec provided by lexy.
-// Codecs returned by [Negate], [Terminate], and [TerminateIfNeeded] will cause NilsLast to panic,
+// Codecs returned by [Negate] and [Terminate] will cause NilsLast to panic,
 // regardless of the Codec they are wrapping.
 func NilsLast[T any](codec Codec[T]) Codec[T] {
 	if c, ok := codec.(nillableCodec[T]); ok {
