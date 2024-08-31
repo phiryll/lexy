@@ -260,6 +260,16 @@ func BenchmarkMapOf(b *testing.B) {
 }
 
 func BenchmarkNegate(b *testing.B) {
+	benchCodec(b, lexy.Negate(lexy.BigInt()), []benchCase[*big.Int]{
+		{"0", big.NewInt(0)},
+		{"-1", big.NewInt(-1)},
+		{"+1", big.NewInt(1)},
+		{"big pos", newBigInt(manyDigits)},
+		{"big neg", newBigInt("-" + manyDigits)},
+	})
+}
+
+func BenchmarkNegateEscaped(b *testing.B) {
 	benchCodec(b, lexy.Negate(lexy.Bytes()), []benchCase[[]byte]{
 		{"nil", nil},
 		{"empty", []byte{}},
