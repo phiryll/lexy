@@ -90,21 +90,23 @@ type Codec[T any] interface {
 
 	// RequiresTerminator returns whether encoded values require escaping and a terminator
 	// if more data is written following the encoded value.
-	// This is the case for most unbounded types like strings and slices,
+	// This is the case for most unbounded types like slices and maps,
 	// as well as types whose encodings can be zero bytes.
+	// Wrapping this Codec with [Terminate] or [TerminateIfNeeded]
+	// will return a Codec which behaves properly in these situations.
 	//
-	// Types whose encodings are always a non-zero fixed size, like integers and floats,
-	// never require escaping and a terminator.
-	// Types whose encodings have a variable size and are not ended by an unescaped terminator
-	// always require escaping and a terminator if more data is written following the encoded value.
+	// For the rest of this doc comment, "requires escaping" is shorthand for
+	// "requires escaping and a terminator if more data is written following the encoded value."
 	//
-	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
-	// and more data could be written following the data written by this Codec.
-	// This is optional because escaping and terminating is unnecessary
-	// if this is the last Codec to Get from the encoded bytes.
+	// Codecs that could encode zero bytes, like those for string and [Empty], always require escaping.
+	// Codecs that could produce two distinct non-empty encodings with one being a prefix of the other,
+	// like those for slices and maps, always require escaping.
+	// Codecs that cannot produce two distinct non-empty encodings with one being a prefix of the other,
+	// like those for primitive integers and floats, never require escaping.
+	// Codecs that always encode to a non-zero fixed number of bytes are a special case of this.
 	//
-	// The Codec returned by [PointerTo] is a special case in that it only requires a terminator
-	// if its referent Codec requires one.
+	// The net effect of escaping and terminating is to prevent one encoding from being the prefix of another,
+	// while maintaining the same lexicographical ordering.
 	RequiresTerminator() bool
 }
 
