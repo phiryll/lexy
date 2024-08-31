@@ -35,7 +35,7 @@ type Codec[T any] interface {
 
     // RequiresTerminator returns whether encoded values require
     // a terminator and escaping if more data is written following
-    // the encoded value. This is the case for unbounded types
+    // the encoded value. This is the case for most unbounded types
     // like strings and slices, as well as types whose encodings
     // can be zero bytes.
     RequiresTerminator() bool
