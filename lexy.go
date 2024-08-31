@@ -330,7 +330,7 @@ func Negate[T any](codec Codec[T]) Codec[T] {
 	if codec.RequiresTerminator() {
 		return negateEscapeCodec[T]{codec}
 	}
-	return negateEscapeCodec[T]{codec}
+	return negateCodec[T]{codec}
 }
 
 // Terminate returns a Codec that escapes and terminates the encodings produced by codec,

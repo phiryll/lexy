@@ -29,11 +29,11 @@ func TestNegateInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
 	testCodec(t, codec, []testCase[int32]{
-		{"min", math.MinInt32, []byte{negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negTerm}},
-		{"-1", -1, []byte{0x80, 0x00, 0x00, 0x00, negTerm}},
-		{"0", 0, []byte{0x7F, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFF, negTerm}},
-		{"+1", 1, []byte{0x7F, negEsc, 0xFF, negEsc, 0xFF, negEsc, 0xFE, negTerm}},
-		{"max", math.MaxInt32, []byte{0x00, 0x00, 0x00, 0x00, negTerm}},
+		{"min", math.MinInt32, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
+		{"-1", -1, []byte{0x80, 0x00, 0x00, 0x00}},
+		{"0", 0, []byte{0x7F, 0xFF, 0xFF, 0xFF}},
+		{"+1", 1, []byte{0x7F, 0xFF, 0xFF, 0xFE}},
+		{"max", math.MaxInt32, []byte{0x00, 0x00, 0x00, 0x00}},
 	})
 
 	encode := encoderFor(codec)
@@ -173,12 +173,12 @@ func TestNegateComplex(t *testing.T) {
 		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, concat(
 			[]byte{0x05},
 			negString("def"), []byte{negTerm},
-			[]byte{negPNonNil, ^byte(0x80), ^byte(0x64), negTerm},
+			[]byte{negPNonNil, ^byte(0x80), ^byte(0x64)},
 		)},
 		{"{5, nil, \"\"}", negateTest{5, nil, ""}, []byte{
 			0x05,
 			negTerm,
-			negPNilFirst, negTerm,
+			negPNilFirst,
 		}},
 	})
 

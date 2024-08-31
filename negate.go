@@ -1,11 +1,43 @@
 package lexy
 
+// negateCodec negates codec which does not require escaping, reversing the ordering of its encoding.
+//
+// This Codec simply flips all the encoded bits.
+type negateCodec[T any] struct {
+	codec Codec[T]
+}
+
 // Negate negates buf, in the sense of lexicographical ordering, returning buf.
 func negate(buf []byte) []byte {
 	for i := range buf {
 		buf[i] ^= 0xFF
 	}
 	return buf
+}
+
+func (c negateCodec[T]) Append(buf []byte, value T) []byte {
+	start := len(buf)
+	buf = c.codec.Append(buf, value)
+	negate(buf[start:])
+	return buf
+}
+
+func (c negateCodec[T]) Put(buf []byte, value T) []byte {
+	original := buf
+	buf = c.codec.Put(buf, value)
+	negate(original[:len(original)-len(buf)])
+	return buf
+}
+
+func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
+	temp := append([]byte(nil), buf...)
+	negate(temp)
+	value, temp := c.codec.Get(temp)
+	return value, buf[len(buf)-len(temp):]
+}
+
+func (negateCodec[T]) RequiresTerminator() bool {
+	return false
 }
 
 // negateEscapeCodec negates codec which requires escaping, reversing the ordering of its encoding.
