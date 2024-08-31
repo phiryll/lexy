@@ -97,11 +97,10 @@ func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i]
 //     The schema change example has an exception to this.
 //   - Use [lexy.PrefixNilsFirst] or [lexy.PrefixNilsLast] if the value can be nil.
 //   - Get must panic if it cannot decode a value.
-//   - Use [lexy.TerminateIfNeeded] when an element's Codec might require it.
+//   - Generally use [lexy.TerminateIfNeeded] when a field's Codec might require it.
 //     See [tagsCodec] in this example for a typical usage.
-//   - Return true from [lexy.Codec.RequiresTerminator] when appropriate,
-//     whether or not it's relevant at the moment.
-//     This allows the Codec to be safely used by others later.
+//     It is safe to return false from [lexy.Codec.RequiresTerminator]
+//     if you do this for all encoded fields and the number of fields is fixed.
 func Example_struct() {
 	structs := []SomeStruct{
 		{1, 5.0, nil},

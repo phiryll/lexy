@@ -35,6 +35,8 @@ func (c pointerCodec[E]) Get(buf []byte) (*E, []byte) {
 }
 
 func (c pointerCodec[E]) RequiresTerminator() bool {
+	// A encoded nil pointer cannot be a prefix of an encoded non-nil pointer,
+	// so this Codec requires escaping if and only if the element Codec does.
 	return c.elemCodec.RequiresTerminator()
 }
 
