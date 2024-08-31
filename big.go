@@ -94,7 +94,9 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
 }
 
 func (bigIntCodec) RequiresTerminator() bool {
-	return true
+	// One can't be a prefix of another because they would need to have the same first int64,
+	// which is the number of bytes in the rest of the encoded value.
+	return false
 }
 
 //lint:ignore U1000 this is actually used
@@ -322,7 +324,8 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 }
 
 func (bigFloatCodec) RequiresTerminator() bool {
-	return true
+	// All encoded parts are either fixed-length or escaped.
+	return false
 }
 
 //lint:ignore U1000 this is actually used
@@ -344,18 +347,13 @@ type bigRatCodec struct {
 	prefix Prefix
 }
 
-// A terminator is required to preserve the numerator-then-denominator ordering.
-// Otherwise a numerator's byte might be compared with a denominator's byte.
-// The denominator is also terminated because that allows bigRatCodec to not require a terminator.
-var termIntCodec = Terminate(BigInt())
-
 func (c bigRatCodec) Append(buf []byte, value *big.Rat) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
 		return buf
 	}
-	buf = termIntCodec.Append(buf, value.Num())
-	return termIntCodec.Append(buf, value.Denom())
+	buf = stdBigInt.Append(buf, value.Num())
+	return stdBigInt.Append(buf, value.Denom())
 }
 
 func (c bigRatCodec) Put(buf []byte, value *big.Rat) []byte {
@@ -363,8 +361,8 @@ func (c bigRatCodec) Put(buf []byte, value *big.Rat) []byte {
 	if done {
 		return buf
 	}
-	buf = termIntCodec.Put(buf, value.Num())
-	return termIntCodec.Put(buf, value.Denom())
+	buf = stdBigInt.Put(buf, value.Num())
+	return stdBigInt.Put(buf, value.Denom())
 }
 
 func (c bigRatCodec) Get(buf []byte) (*big.Rat, []byte) {
@@ -372,8 +370,8 @@ func (c bigRatCodec) Get(buf []byte) (*big.Rat, []byte) {
 	if done {
 		return nil, buf
 	}
-	num, buf := termIntCodec.Get(buf)
-	denom, buf := termIntCodec.Get(buf)
+	num, buf := stdBigInt.Get(buf)
+	denom, buf := stdBigInt.Get(buf)
 	var value big.Rat
 	return value.SetFrac(num, denom), buf
 }
