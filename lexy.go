@@ -319,15 +319,18 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[ma
 // Negate returns a Codec reversing the encoded order of codec.
 // This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Negate[T any](codec Codec[T]) Codec[T] {
-	codec.RequiresTerminator() // force panic if nil
 	// negateCodec internally escapes its data, so unwrap any terminatorCodecs.
 	for {
 		delegate, ok := codec.(terminatorCodec[T])
 		if !ok {
-			return negateCodec[T]{codec}
+			break
 		}
 		codec = delegate.codec
 	}
+	if codec.RequiresTerminator() {
+		return negateEscapeCodec[T]{codec}
+	}
+	return negateEscapeCodec[T]{codec}
 }
 
 // Terminate returns a Codec that escapes and terminates the encodings produced by codec,

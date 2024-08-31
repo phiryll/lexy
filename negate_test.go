@@ -49,7 +49,7 @@ func TestNegateInt32(t *testing.T) {
 }
 
 // The simple implementation is to simply invert all the bits, but it doesn't work.
-// This tests for that regression, see the comments on negateCodec for details.
+// This tests for that regression, see the comments on negateEscapeCodec for details.
 func TestNegateLength(t *testing.T) {
 	t.Parallel()
 	encode := encoderFor(lexy.Negate(lexy.String()))

@@ -1,6 +1,14 @@
 package lexy
 
-// negateCodec negates codec, reversing the ordering of its encoding.
+// Negate negates buf, in the sense of lexicographical ordering, returning buf.
+func negate(buf []byte) []byte {
+	for i := range buf {
+		buf[i] ^= 0xFF
+	}
+	return buf
+}
+
+// negateEscapeCodec negates codec which requires escaping, reversing the ordering of its encoding.
 //
 // Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
 // For example, consider these encodings:
@@ -28,11 +36,11 @@ package lexy
 //
 //	^esc+term(A) = {0xFE, 0xFF, 0xFD, 0xFC, 0xFF}
 //	^esc+term(B) = {0xFE, 0xFF, 0xFD, 0xFC, 0xFE, 0xFF, 0xFF}
-type negateCodec[T any] struct {
+type negateEscapeCodec[T any] struct {
 	codec Codec[T]
 }
 
-func (c negateCodec[T]) Append(buf []byte, value T) []byte {
+func (c negateEscapeCodec[T]) Append(buf []byte, value T) []byte {
 	start := len(buf)
 	buf = c.codec.Append(buf, value)
 	n := termNumAdded(buf[start:])
@@ -41,7 +49,7 @@ func (c negateCodec[T]) Append(buf []byte, value T) []byte {
 	return buf
 }
 
-func (c negateCodec[T]) Put(buf []byte, value T) []byte {
+func (c negateEscapeCodec[T]) Put(buf []byte, value T) []byte {
 	original := buf
 	buf = c.codec.Put(buf, value)
 	numPut := len(original) - len(buf)
@@ -50,22 +58,14 @@ func (c negateCodec[T]) Put(buf []byte, value T) []byte {
 	return buf[n:]
 }
 
-func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
+func (c negateEscapeCodec[T]) Get(buf []byte) (T, []byte) {
 	encodedValue, buf := negGet(buf)
 	value, _ := c.codec.Get(encodedValue)
 	return value, buf
 }
 
-func (negateCodec[T]) RequiresTerminator() bool {
+func (negateEscapeCodec[T]) RequiresTerminator() bool {
 	return false
-}
-
-// Negate negates buf, in the sense of lexicographical ordering, returning buf.
-func negate(buf []byte) []byte {
-	for i := range buf {
-		buf[i] ^= 0xFF
-	}
-	return buf
 }
 
 // negTermEscape escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes,
