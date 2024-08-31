@@ -270,6 +270,29 @@ func BenchmarkCastSliceOf(b *testing.B) {
 	})
 }
 
+// Timing how long it takes to build maps used in BenchmarkMapOf,
+// to separate Get() performance from just building the map.
+func BenchmarkRawMap(b *testing.B) {
+	ints := randomInt32(2000, 639871)
+	for _, bb := range []benchCase[[]int32]{
+		{"empty", []int32{}},
+		{"1 element", []int32{43943, -319432}},
+		{"1000 elements", ints},
+	} {
+		bb := bb
+		b.Run(bb.name, func(b *testing.B) {
+			arr := bb.value
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				m := map[int32]int32{}
+				for k := 0; k < len(arr); k += 2 {
+					m[arr[k]] = m[arr[k+1]]
+				}
+			}
+		})
+	}
+}
+
 func BenchmarkMapOf(b *testing.B) {
 	ints := randomInt32(2000, 639871)
 	bigMap := make(map[int32]int32, 1000)
