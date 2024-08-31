@@ -259,14 +259,14 @@ func Time() Codec[time.Time] { return stdTime }
 func Duration() Codec[time.Duration] { return stdDuration }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
 func BigInt() Codec[*big.Int] { return stdBigInt }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
 // Like floats, -Inf, -0.0, +0.0, and +Inf all have a big.Float representation.
 // However, there is no big.Float representation for NaN.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec does not require a terminator when used within an aggregate Codec.
 //
 // This Codec is lossy. It does not encode the value's [big.Accuracy].
 func BigFloat() Codec[*big.Float] { return stdBigFloat }
