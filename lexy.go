@@ -88,19 +88,20 @@ type Codec[T any] interface {
 	// Get will not modify buf.
 	Get(buf []byte) (T, []byte)
 
-	// RequiresTerminator returns whether encoded values require a terminator and escaping
+	// RequiresTerminator returns whether encoded values require escaping and a terminator
 	// if more data is written following the encoded value.
-	// This is the case for unbounded types like strings and slices,
+	// This is the case for most unbounded types like strings and slices,
 	// as well as types whose encodings can be zero bytes.
-	// Types whose encodings are always a fixed size, like integers and floats,
-	// never require a terminator and escaping.
+	//
+	// Types whose encodings are always a non-zero fixed size, like integers and floats,
+	// never require escaping and a terminator.
 	// Types whose encodings have a variable size and are not ended by an unescaped terminator
-	// always require a terminator and escaping if more data is written following the encoded value.
+	// always require escaping and a terminator if more data is written following the encoded value.
 	//
 	// Users of this Codec must wrap it with [Terminate] or [TerminateIfNeeded] if RequiresTerminator may return true
 	// and more data could be written following the data written by this Codec.
-	// This is optional because terminating and escaping is unnecessary
-	// if this Codec will decode the entire buffer given to Get.
+	// This is optional because escaping and terminating is unnecessary
+	// if this is the last Codec to Get from the encoded bytes.
 	//
 	// The Codec returned by [PointerTo] is a special case in that it only requires a terminator
 	// if its referent Codec requires one.

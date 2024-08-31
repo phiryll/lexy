@@ -9,13 +9,12 @@ type terminatorCodec[T any] struct {
 	codec Codec[T]
 }
 
-// Codec for terminating and escaping.
 // The lexicographical binary ordering of encoded aggregates is preserved.
 // For example, {"ab", "cde"} is less than {"aba", "de"}, because "ab" is less than "aba".
 // The terminator can't itself be used to escape a terminator because it leads to ambiguities,
 // so there needs to be a distinct escape character.
-
-// This comment explains why the terminator and escape values must be 0x00 and 0x01.
+//
+// The rest of this comment explains why the terminator and escape values must be 0x00 and 0x01.
 // Strings are used for clarity, with "," and "\" denoting the terminator and escape bytes.
 // All input characters have their natural meaning (no terminators or escapes).
 // The encodings for maps and structs will be analogous.

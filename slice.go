@@ -6,7 +6,7 @@ package lexy
 // - if nil, prefixNilFirst/Last
 // - if non-nil, prefixNonNil followed by its encoded elements
 //
-// Encoded elements are escaped and termninated if elemCodec requires it.
+// Encoded elements are escaped and terminated if elemCodec requires it.
 type sliceCodec[E any] struct {
 	elemCodec Codec[E]
 	prefix    Prefix
