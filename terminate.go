@@ -123,20 +123,6 @@ func termAppend(buf, value []byte) []byte {
 	return append(buf, terminator)
 }
 
-func termPut(buf, value []byte) []byte {
-	i := 0
-	for _, b := range value {
-		if b == escape || b == terminator {
-			buf[i] = escape
-			i++
-		}
-		buf[i] = b
-		i++
-	}
-	buf[i] = terminator
-	return buf[i+1:]
-}
-
 func termGet(buf []byte) ([]byte, []byte) {
 	value := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape

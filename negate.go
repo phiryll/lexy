@@ -133,21 +133,6 @@ func negAppend(buf, value []byte) []byte {
 	return append(buf, ^terminator)
 }
 
-// negPut is exactly the same as termPut, except that it negates every byte written.
-func negPut(buf, value []byte) []byte {
-	i := 0
-	for _, b := range value {
-		if b == escape || b == terminator {
-			buf[i] = ^escape
-			i++
-		}
-		buf[i] = ^b
-		i++
-	}
-	buf[i] = ^terminator
-	return buf[i+1:]
-}
-
 // negGet is exactly the same as termGet, except that it negates every byte read first.
 func negGet(buf []byte) ([]byte, []byte) {
 	value := make([]byte, 0, len(buf))
