@@ -1,0 +1,65 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/phiryll/lexy
+BenchmarkRawMap/empty-10         	174114946	         6.900 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173149491	         6.933 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173826979	         6.891 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173021720	         6.949 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	174006224	         6.910 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173212567	         6.936 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173495700	         6.900 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	172912717	         6.939 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	174189031	         6.905 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173125540	         6.949 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	174154429	         6.909 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	172969928	         6.932 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173695797	         6.906 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173157840	         6.927 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	174120031	         6.907 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173196505	         6.927 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173746399	         6.893 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	172994178	         6.943 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173922988	         6.895 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/empty-10         	173024734	         6.925 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.82 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.76 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1_element-10     	100000000	        11.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawMap/1000_elements-10 	   20850	     57608 ns/op	   47739 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   20842	     57413 ns/op	   47734 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   20882	     57227 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21037	     57009 ns/op	   47731 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21104	     57005 ns/op	   47736 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   20988	     56798 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21100	     56728 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21219	     56698 ns/op	   47734 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21186	     56730 ns/op	   47734 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   20961	     56840 ns/op	   47738 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21181	     56438 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21115	     56630 ns/op	   47735 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21186	     56652 ns/op	   47735 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21158	     56603 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21100	     56628 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21190	     56528 ns/op	   47738 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21061	     56735 ns/op	   47736 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21192	     56605 ns/op	   47732 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21169	     56672 ns/op	   47737 B/op	      65 allocs/op
+BenchmarkRawMap/1000_elements-10 	   21189	     56607 ns/op	   47735 B/op	      65 allocs/op
+PASS
+ok  	github.com/phiryll/lexy	98.257s

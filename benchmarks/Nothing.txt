@@ -1,25 +1,25 @@
 goos: darwin
 goarch: arm64
 pkg: github.com/phiryll/lexy
-BenchmarkNothing-10    	1000000000	         0.3116 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3109 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3131 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3131 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3120 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3114 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3108 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3119 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3134 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3144 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3154 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3149 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3147 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3135 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3133 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3137 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3129 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3137 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3135 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3136 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3137 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3133 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3137 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3134 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3150 ns/op	       0 B/op	       0 allocs/op
 BenchmarkNothing-10    	1000000000	         0.3104 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3107 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3103 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3104 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3106 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3103 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3105 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3113 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3108 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3104 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3108 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3140 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNothing-10    	1000000000	         0.3108 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNothing-10    	1000000000	         0.3154 ns/op	       0 B/op	       0 allocs/op
 PASS
-ok  	github.com/phiryll/lexy	7.844s
+ok  	github.com/phiryll/lexy	7.935s
