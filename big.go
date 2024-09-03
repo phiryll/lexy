@@ -238,7 +238,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	}
 	mantAppend := termAppend
 	if signbit {
-		mantAppend = negAppend
+		mantAppend = negTermAppend
 		// These values are no longer being used except to write them.
 		exp = -exp
 		prec = -prec
@@ -286,7 +286,7 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 
 	mantGet := termGet
 	if signbit {
-		mantGet = negGet
+		mantGet = negTermGet
 	}
 
 	exp, buf := stdInt32.Get(buf)

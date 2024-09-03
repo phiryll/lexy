@@ -52,7 +52,7 @@ func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
 	buf = c.codec.Append(buf, value)
 	n := termNumAdded(buf[start:])
 	buf = append(buf, make([]byte, n)...)
-	termEscape(buf[start:], n)
+	term(buf[start:], n)
 	return buf
 }
 
@@ -61,7 +61,7 @@ func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
 	buf = c.codec.Put(buf, value)
 	numPut := len(original) - len(buf)
 	n := termNumAdded(original[:numPut])
-	termEscape(original[:numPut+n], n)
+	term(original[:numPut+n], n)
 	return buf[n:]
 }
 
@@ -96,8 +96,8 @@ func termNumAdded(buf []byte) int {
 	return n + 1 // final terminator
 }
 
-// termEscape escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
-func termEscape(buf []byte, n int) {
+// term escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
+func term(buf []byte, n int) {
 	// Going backwards ensures that every byte is copied at most once.
 	dst := len(buf) - 1
 	buf[dst] = terminator

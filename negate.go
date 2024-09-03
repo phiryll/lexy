@@ -77,7 +77,7 @@ func (c negateEscapeCodec[T]) Append(buf []byte, value T) []byte {
 	buf = c.codec.Append(buf, value)
 	n := termNumAdded(buf[start:])
 	buf = append(buf, make([]byte, n)...)
-	negTermEscape(buf[start:], n)
+	negTerm(buf[start:], n)
 	return buf
 }
 
@@ -86,12 +86,12 @@ func (c negateEscapeCodec[T]) Put(buf []byte, value T) []byte {
 	buf = c.codec.Put(buf, value)
 	numPut := len(original) - len(buf)
 	n := termNumAdded(original[:numPut])
-	negTermEscape(original[:numPut+n], n)
+	negTerm(original[:numPut+n], n)
 	return buf[n:]
 }
 
 func (c negateEscapeCodec[T]) Get(buf []byte) (T, []byte) {
-	encodedValue, buf := negGet(buf)
+	encodedValue, buf := negTermGet(buf)
 	value, _ := c.codec.Get(encodedValue)
 	return value, buf
 }
@@ -100,9 +100,8 @@ func (negateEscapeCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-// negTermEscape escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes,
-// negating every byte written.
-func negTermEscape(buf []byte, n int) {
+// negTerm is exactly the same as term, except that it negates every byte written.
+func negTerm(buf []byte, n int) {
 	// Going backwards ensures that every byte is copied at most once.
 	dst := len(buf) - 1
 	buf[dst] = ^terminator
@@ -121,8 +120,8 @@ func negTermEscape(buf []byte, n int) {
 	}
 }
 
-// negAppend is exactly the same as termAppend, except that it negates every byte written.
-func negAppend(buf, value []byte) []byte {
+// negTermAppend is exactly the same as termAppend, except that it negates every byte written.
+func negTermAppend(buf, value []byte) []byte {
 	buf = extend(buf, len(value))
 	for _, b := range value {
 		if b == escape || b == terminator {
@@ -133,8 +132,8 @@ func negAppend(buf, value []byte) []byte {
 	return append(buf, ^terminator)
 }
 
-// negGet is exactly the same as termGet, except that it negates every byte read first.
-func negGet(buf []byte) ([]byte, []byte) {
+// negTermGet is exactly the same as termGet, except that it negates every byte read first.
+func negTermGet(buf []byte) ([]byte, []byte) {
 	value := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
