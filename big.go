@@ -232,9 +232,8 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	case !signbit:
 		kind = posFinite
 	}
-	buf = stdInt8.Append(buf, kind)
 	if isInf || isZero {
-		return buf
+		return stdInt8.Append(buf, kind)
 	}
 	mantAppend := termAppend
 	if signbit {
@@ -253,7 +252,8 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	mantBytes := mantInt.Bytes()
 
 	//nolint:mnd
-	buf = extend(buf, len(mantBytes)+9) // 9 for exp, prec, and mode
+	buf = extend(buf, len(mantBytes)+10) // kind(1), exp(4), prec(4), and mode(1)
+	buf = stdInt8.Append(buf, kind)
 	buf = stdInt32.Append(buf, exp)
 	buf = mantAppend(buf, mantBytes)
 	buf = stdInt32.Append(buf, prec)
