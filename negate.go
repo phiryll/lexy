@@ -15,6 +15,15 @@ func negate(buf []byte) []byte {
 	return buf
 }
 
+// negCopy returns a negated copy of buf.
+func negCopy(buf []byte) []byte {
+	dst := make([]byte, len(buf))
+	for i := range buf {
+		dst[i] = ^buf[i]
+	}
+	return dst
+}
+
 func (c negateCodec[T]) Append(buf []byte, value T) []byte {
 	start := len(buf)
 	buf = c.codec.Append(buf, value)
@@ -30,9 +39,7 @@ func (c negateCodec[T]) Put(buf []byte, value T) []byte {
 }
 
 func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
-	temp := append([]byte(nil), buf...)
-	negate(temp)
-	value, temp := c.codec.Get(temp)
+	value, temp := c.codec.Get(negCopy(buf))
 	return value, buf[len(buf)-len(temp):]
 }
 

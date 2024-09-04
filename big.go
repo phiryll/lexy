@@ -84,7 +84,7 @@ func (c bigIntCodec) Get(buf []byte) (*big.Int, []byte) {
 	if size < 0 {
 		size = -size
 		_ = buf[size-1]
-		value.SetBytes(negate(append([]byte(nil), buf[:size]...)))
+		value.SetBytes(negCopy(buf[:size]))
 		value.Neg(&value)
 	} else {
 		_ = buf[size-1]
