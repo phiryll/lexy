@@ -200,7 +200,7 @@ func computeShift(exp, prec int32) int {
 	return int(shift + adjustment)
 }
 
-//nolint:cyclop,funlen
+//nolint:cyclop,funlen,mnd
 func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
@@ -242,21 +242,32 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	if acc != big.Exact {
 		panic(errBigFloatEncoding)
 	}
-	mantBytes := mantInt.Bytes()
 
-	//nolint:mnd
-	buf = extend(buf, len(mantBytes)+10) // kind(1), exp(4), prec(4), and mode(1)
-	buf = stdInt8.Append(buf, kind)
+	mantSize := (mantInt.BitLen() + 7) / 8
+	start := len(buf)
+	// 10 = 1 (kind) + 4 (exp) + 4 (prec) + 1 (mode)
+	buf = append(buf, make([]byte, mantSize+10)...)
+	putBuf := buf[start:]
+	putBuf = stdInt8.Put(putBuf, kind)
 	if signbit {
-		buf = stdInt32.Append(buf, -exp)
-		buf = negTermAppend(buf, mantBytes)
-		buf = stdInt32.Append(buf, -prec)
+		putBuf = stdInt32.Put(putBuf, -exp)
+		mantInt.FillBytes(putBuf[:mantSize])
+		n := termNumAdded(putBuf[:mantSize])
+		buf = append(buf, make([]byte, n)...)
+		putBuf = buf[start+5:]
+		negTerm(putBuf[:mantSize+n], n)
+		putBuf = stdInt32.Put(putBuf[mantSize+n:], -prec)
 	} else {
-		buf = stdInt32.Append(buf, exp)
-		buf = termAppend(buf, mantBytes)
-		buf = stdInt32.Append(buf, prec)
+		putBuf = stdInt32.Put(putBuf, +exp)
+		mantInt.FillBytes(putBuf[:mantSize])
+		n := termNumAdded(putBuf[:mantSize])
+		buf = append(buf, make([]byte, n)...)
+		putBuf = buf[start+5:]
+		term(putBuf[:mantSize+n], n)
+		putBuf = stdInt32.Put(putBuf[mantSize+n:], prec)
 	}
-	return modeCodec.Append(buf, mode)
+	modeCodec.Put(putBuf, mode)
+	return buf
 }
 
 func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
