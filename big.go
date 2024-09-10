@@ -270,8 +270,65 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	return buf
 }
 
+//nolint:cyclop,mnd
 func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
-	return copyAll(buf, c.Append(nil, value))
+	done, buf := c.prefix.Put(buf, value == nil)
+	if done {
+		return buf
+	}
+	// exp and prec are int and uint, but internally they're 32 bits
+	// use a signed prec here because we're doing possibly negative calculations with it
+	signbit := value.Signbit() // true if negative or negative zero
+	exp := int32(value.MantExp(nil))
+	prec := int32(value.Prec())
+	mode := value.Mode() // uint8
+	shift := computeShift(exp, prec)
+
+	isInf := value.IsInf()
+	isZero := prec == 0
+
+	var kind int8
+	switch {
+	case isInf && signbit:
+		kind = negInf
+	case isInf && !signbit:
+		kind = posInf
+	case isZero && signbit:
+		kind = negZero
+	case isZero && !signbit:
+		kind = posZero
+	case signbit:
+		kind = negFinite
+	case !signbit:
+		kind = posFinite
+	}
+	buf = stdInt8.Put(buf, kind)
+	if isInf || isZero {
+		return buf
+	}
+
+	var tmp big.Float
+	tmp.SetMantExp(value, shift)
+	mantInt, acc := tmp.Int(nil)
+	if acc != big.Exact {
+		panic(errBigFloatEncoding)
+	}
+
+	mantSize := (mantInt.BitLen() + 7) / 8
+	if signbit {
+		buf = stdInt32.Put(buf, -exp)
+		mantInt.FillBytes(buf[:mantSize])
+		n := termNumAdded(buf[:mantSize])
+		negTerm(buf[:mantSize+n], n)
+		buf = stdInt32.Put(buf[mantSize+n:], -prec)
+	} else {
+		buf = stdInt32.Put(buf, +exp)
+		mantInt.FillBytes(buf[:mantSize])
+		n := termNumAdded(buf[:mantSize])
+		term(buf[:mantSize+n], n)
+		buf = stdInt32.Put(buf[mantSize+n:], prec)
+	}
+	return modeCodec.Put(buf, mode)
 }
 
 func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
