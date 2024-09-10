@@ -129,7 +129,6 @@ func negTerm(buf []byte, n int) {
 
 // negTermAppend is exactly the same as termAppend, except that it negates every byte written.
 func negTermAppend(buf, value []byte) []byte {
-	buf = extend(buf, len(value))
 	for _, b := range value {
 		if b == escape || b == terminator {
 			buf = append(buf, ^escape)

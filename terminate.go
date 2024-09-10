@@ -113,7 +113,6 @@ func term(buf []byte, n int) {
 }
 
 func termAppend(buf, value []byte) []byte {
-	buf = extend(buf, len(value))
 	for _, b := range value {
 		if b == escape || b == terminator {
 			buf = append(buf, escape)
