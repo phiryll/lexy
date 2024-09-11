@@ -1,5 +1,7 @@
 package lexy
 
+import "bytes"
+
 // terminatorCodec escapes and terminates data written by codec,
 // and performs the inverse operation when reading.
 //
@@ -46,26 +48,26 @@ const (
 )
 
 func (c terminatorCodec[T]) Append(buf []byte, value T) []byte {
-	return escapeAppend(buf, c.codec.Append(nil, value))
+	start := len(buf)
+	buf = c.codec.Append(buf, value)
+	n := termNumAdded(buf[start:])
+	buf = append(buf, make([]byte, n)...)
+	term(buf[start:], n)
+	return buf
 }
 
 func (c terminatorCodec[T]) Put(buf []byte, value T) []byte {
-	i := 0
-	for _, b := range c.codec.Append(nil, value) {
-		if b == escape || b == terminator {
-			buf[i] = escape
-			i++
-		}
-		buf[i] = b
-		i++
-	}
-	buf[i] = terminator
-	return buf[i+1:]
+	original := buf
+	buf = c.codec.Put(buf, value)
+	numPut := len(original) - len(buf)
+	n := termNumAdded(original[:numPut])
+	term(original[:numPut+n], n)
+	return buf[n:]
 }
 
 func (c terminatorCodec[T]) Get(buf []byte) (T, []byte) {
-	unescaped, buf, _ := unescape(buf)
-	value, _ := c.codec.Get(unescaped)
+	encodedValue, buf := termGet(buf)
+	value, _ := c.codec.Get(encodedValue)
 	return value, buf
 }
 
@@ -73,31 +75,52 @@ func (terminatorCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-func escapeAppend(buf, value []byte) []byte {
-	buf = extend(buf, len(value))
-	for _, b := range value {
-		if b == escape || b == terminator {
-			buf = append(buf, escape)
-		}
-		buf = append(buf, b)
+var (
+	eByte = []byte{escape}
+	tByte = []byte{terminator}
+)
+
+// termNumAdded returns how many more bytes need to be added to escape and terminate buf.
+func termNumAdded(buf []byte) int {
+	//nolint:mnd
+	if len(buf) > 64 {
+		// This performs better for larger inputs, on systems with native implementations of bytes.Count.
+		return bytes.Count(buf, eByte) + bytes.Count(buf, tByte) + 1
 	}
-	return append(buf, terminator)
+	n := 0
+	for _, b := range buf {
+		if b == escape || b == terminator {
+			n++
+		}
+	}
+	return n + 1 // final terminator
 }
 
-// unescape reads and unescapes data from buf until the first unescaped terminator,
-// returning the unescaped data, the following buf, and number of bytes read from buf.
-// unescape will panic if no unescaped terminator is found.
-//
-//nolint:nonamedreturns
-func unescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
-	out := make([]byte, 0, len(buf))
+// term escapes and terminates buf[:len(buf)-n] in-place, expanding into the last n bytes.
+func term(buf []byte, n int) {
+	// Going backwards ensures that every byte is copied at most once.
+	dst := len(buf) - 1
+	buf[dst] = terminator
+	dst--
+	for i := len(buf) - n - 1; i != dst; i-- {
+		buf[dst] = buf[i]
+		dst--
+		if buf[i] == escape || buf[i] == terminator {
+			buf[dst] = escape
+			dst--
+		}
+	}
+}
+
+func termGet(buf []byte) ([]byte, []byte) {
+	value := make([]byte, 0, len(buf))
 	escaped := false // if the previous byte read is an escape
 	for i, b := range buf {
 		// handle unescaped terminators and escapes
 		// everything else goes into the output as-is
 		if !escaped {
 			if b == terminator {
-				return out, buf[i+1:], i + 1
+				return value, buf[i+1:]
 			}
 			if b == escape {
 				escaped = true
@@ -105,7 +128,7 @@ func unescape(buf []byte) (unescaped, newBuf []byte, numRead int) {
 			}
 		}
 		escaped = false
-		out = append(out, b)
+		value = append(value, b)
 	}
 	panic(errUnterminatedBuffer)
 }

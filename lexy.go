@@ -30,7 +30,7 @@ These Codec-returning functions do not require specifying a type parameter when 
   - [Bytes], [TerminatedBytes]
   - [PointerTo], [SliceOf], [MapOf]
   - [Negate]
-  - [Terminate], [TerminateIfNeeded]
+  - [Terminate]
   - [NilsLast]
 
 These Codec-returning functions require specifying a type parameter when invoked.
@@ -92,8 +92,7 @@ type Codec[T any] interface {
 	// if more data is written following the encoded value.
 	// This is the case for most unbounded types like slices and maps,
 	// as well as types whose encodings can be zero bytes.
-	// Wrapping this Codec with [Terminate] or [TerminateIfNeeded]
-	// will return a Codec which behaves properly in these situations.
+	// Wrapping this Codec with [Terminate] will return a Codec which behaves properly in these situations.
 	//
 	// For the rest of this doc comment, "requires escaping" is shorthand for
 	// "requires escaping and a terminator if more data is written following the encoded value."
@@ -145,61 +144,61 @@ var (
 // No method of this Codec will ever fail.
 //
 // This is useful for empty structs, which are often used as map values.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec requires escaping, as defined by [Codec.RequiresTerminator].
 func Empty[T any]() Codec[T] { return emptyCodec[T]{} }
 
 // Bool returns a Codec for the bool type.
 // The encoded order is false, then true.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Bool() Codec[bool] { return stdBool }
 
 // Uint returns a Codec for the uint type.
 // Values are converted to/from uint64 and encoded with [Uint64].
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Uint() Codec[uint] { return stdUint }
 
 // Uint8 returns a Codec for the uint8 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Uint8() Codec[uint8] { return stdUint8 }
 
 // Uint16 returns a Codec for the uint16 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Uint16() Codec[uint16] { return stdUint16 }
 
 // Uint32 returns a Codec for the uint32 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Uint32() Codec[uint32] { return stdUint32 }
 
 // Uint64 returns a Codec for the uint64 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Uint64() Codec[uint64] { return stdUint64 }
 
 // Int returns a Codec for the int type.
 // Values are converted to/from int64 and encoded with [Int64].
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Int() Codec[int] { return stdInt }
 
 // Int8 returns a Codec for the int8 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Int8() Codec[int8] { return stdInt8 }
 
 // Int16 returns a Codec for the int16 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Int16() Codec[int16] { return stdInt16 }
 
 // Int32 returns a Codec for the int32 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Int32() Codec[int32] { return stdInt32 }
 
 // Int64 returns a Codec for the int64 type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Int64() Codec[int64] { return stdInt64 }
 
 // Float32 returns a Codec for the float32 type.
 // All bits of the value are preserved by this encoding.
 // There are many different bit patterns for NaN, and their encodings will be distinct.
 // No ordering distinction is made between quiet and signaling NaNs.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 // The order of encoded values is:
 //
 //	-NaN
@@ -219,17 +218,17 @@ func Float64() Codec[float64] { return stdFloat64 }
 // Complex64 returns a Codec for the complex64 type.
 // The encoded order is real part first, imaginary part second,
 // with those parts ordered as documented for [Float32].
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Complex64() Codec[complex64] { return stdComplex64 }
 
 // Complex128 returns a Codec for the complex128 type.
 // The encoded order is real part first, imaginary part second,
 // with those parts ordered as documented for [Float64].
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Complex128() Codec[complex128] { return stdComplex128 }
 
 // String returns a Codec for the string type.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec requires escaping, as defined by [Codec.RequiresTerminator].
 //
 // A string is encoded as its bytes.
 // This encoded order may be surprising.
@@ -240,14 +239,14 @@ func Complex128() Codec[complex128] { return stdComplex128 }
 func String() Codec[string] { return stdString }
 
 // TerminatedString returns a Codec for the string type which escapes and terminates the encoded bytes.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 //
 // This is a convenience function, it returns the same Codec as [Terminate]([String]()).
 func TerminatedString() Codec[string] { return stdTermString }
 
 // Time returns a Codec for the time.Time type.
 // The encoded order is UTC time first, timezone offset second.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 //
 // This Codec is lossy. It encodes the timezone's offset, but not its name.
 // It will therefore lose information about Daylight Saving Time.
@@ -256,18 +255,18 @@ func TerminatedString() Codec[string] { return stdTermString }
 func Time() Codec[time.Time] { return stdTime }
 
 // Duration returns a Codec for the time.Duration type.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Duration() Codec[time.Duration] { return stdDuration }
 
 // BigInt returns a Codec for the *big.Int type, with nils ordered first.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func BigInt() Codec[*big.Int] { return stdBigInt }
 
 // BigFloat returns a Codec for the *big.Float type, with nils ordered first.
 // The encoded order is the numeric value first, precision second, and rounding mode third.
 // Like floats, -Inf, -0.0, +0.0, and +Inf all have a big.Float representation.
 // However, there is no big.Float representation for NaN.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 //
 // This Codec is lossy. It does not encode the value's [big.Accuracy].
 func BigFloat() Codec[*big.Float] { return stdBigFloat }
@@ -275,25 +274,25 @@ func BigFloat() Codec[*big.Float] { return stdBigFloat }
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
 // Note that big.Rat will normalize its value to lowest terms.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func BigRat() Codec[*big.Rat] { return stdBigRat }
 
 // Bytes returns a Codec for the []byte type, with nil slices ordered first.
 // A []byte is written as-is following a nil/non-nil indicator.
 // This Codec is more efficient than Codecs produced by [SliceOf]([Uint8]()),
 // and will allow nil unlike [String].
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec requires escaping, as defined by [Codec.RequiresTerminator].
 func Bytes() Codec[[]byte] { return stdBytes }
 
 // TerminatedBytes returns a Codec for the []byte type which escapes and terminates the encoded bytes.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 //
 // This is a convenience function, it returns the same Codec as [Terminate]([Bytes]()).
 func TerminatedBytes() Codec[[]byte] { return stdTermBytes }
 
 // PointerTo returns a Codec for the *E type, with nil pointers ordered first.
 // The encoded order of non-nil values is the same as is produced by elemCodec.
-// This Codec requires a terminator when used within an aggregate Codec if elemCodec does.
+// This Codec requires escaping if elemCodec does, as defined by [Codec.RequiresTerminator].
 func PointerTo[E any](elemCodec Codec[E]) Codec[*E] {
 	elemCodec.RequiresTerminator() // force panic if nil
 	return pointerCodec[E]{elemCodec, PrefixNilsFirst}
@@ -301,47 +300,43 @@ func PointerTo[E any](elemCodec Codec[E]) Codec[*E] {
 
 // SliceOf returns a Codec for the []E type, with nil slices ordered first.
 // The encoded order is lexicographical using the encoded order of elemCodec for the elements.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec requires escaping, as defined by [Codec.RequiresTerminator].
 func SliceOf[E any](elemCodec Codec[E]) Codec[[]E] {
-	return sliceCodec[E]{TerminateIfNeeded(elemCodec), PrefixNilsFirst}
+	return sliceCodec[E]{Terminate(elemCodec), PrefixNilsFirst}
 }
 
 // MapOf returns a Codec for the map[K]V type, with nil maps ordered first.
 // The encoded order for non-nil maps is empty maps first, with all other maps randomly ordered after.
-// This Codec requires a terminator when used within an aggregate Codec.
+// This Codec requires escaping, as defined by [Codec.RequiresTerminator].
 func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[map[K]V] {
 	return mapCodec[K, V]{
-		TerminateIfNeeded(keyCodec),
-		TerminateIfNeeded(valueCodec),
+		Terminate(keyCodec),
+		Terminate(valueCodec),
 		PrefixNilsFirst,
 	}
 }
 
 // Negate returns a Codec reversing the encoded order of codec.
-// This Codec does not require a terminator when used within an aggregate Codec.
+// This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Negate[T any](codec Codec[T]) Codec[T] {
-	// Negate must escape and terminate its delegate whether it requires it or not,
-	// but shouldn't wrap if the delegate is already a terminatorCodec.
-	// This will also attempt to wrap a nil Codec, causing Terminate() to panic.
-	if _, ok := codec.(terminatorCodec[T]); !ok {
-		codec = Terminate(codec)
+	// negateCodec internally escapes its data, so unwrap any terminatorCodecs.
+	for {
+		delegate, ok := codec.(terminatorCodec[T])
+		if !ok {
+			break
+		}
+		codec = delegate.codec
+	}
+	if codec.RequiresTerminator() {
+		return negateEscapeCodec[T]{codec}
 	}
 	return negateCodec[T]{codec}
 }
 
-// Terminate returns a Codec that escapes and terminates the encodings produced by codec.
-// This function is for the rare edge case requiring a Codec's encodings to be escaped and terminated,
-// whether or not it normally requires it.
-// Most of the time, [TerminateIfNeeded] should be used instead.
-func Terminate[T any](codec Codec[T]) Codec[T] {
-	codec.RequiresTerminator() // force panic if nil
-	return terminatorCodec[T]{codec}
-}
-
-// TerminateIfNeeded returns a Codec that escapes and terminates the encodings produced by codec,
+// Terminate returns a Codec that escapes and terminates the encodings produced by codec,
 // if [Codec.RequiresTerminator] returns true for codec. Otherwise it returns codec.
-func TerminateIfNeeded[T any](codec Codec[T]) Codec[T] {
-	// This also covers the case if codec is a terminator.
+func Terminate[T any](codec Codec[T]) Codec[T] {
+	// This also covers the case if codec is a terminatorCodec.
 	if !codec.RequiresTerminator() {
 		return codec
 	}
@@ -358,7 +353,7 @@ type nillableCodec[T any] interface {
 
 // NilsLast returns a Codec exactly like codec, but with nils ordered last.
 // NilsLast will panic if codec is not a pointer, slice, map, []byte, or *big.Int/Float/Rat Codec provided by lexy.
-// Codecs returned by [Negate], [Terminate], and [TerminateIfNeeded] will cause NilsLast to panic,
+// Codecs returned by [Negate] and [Terminate] will cause NilsLast to panic,
 // regardless of the Codec they are wrapping.
 func NilsLast[T any](codec Codec[T]) Codec[T] {
 	if c, ok := codec.(nillableCodec[T]); ok {

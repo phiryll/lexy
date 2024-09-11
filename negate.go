@@ -1,6 +1,55 @@
 package lexy
 
-// negateCodec negates codec, reversing the ordering of its encoding.
+// negateCodec negates codec which does not require escaping, reversing the ordering of its encoding.
+//
+// This Codec simply flips all the encoded bits.
+type negateCodec[T any] struct {
+	codec Codec[T]
+}
+
+// Negate negates buf, in the sense of lexicographical ordering, returning buf.
+//
+//nolint:unparam
+func negate(buf []byte) []byte {
+	for i := range buf {
+		buf[i] ^= 0xFF
+	}
+	return buf
+}
+
+// negCopy returns a negated copy of buf.
+func negCopy(buf []byte) []byte {
+	dst := make([]byte, len(buf))
+	for i := range buf {
+		dst[i] = ^buf[i]
+	}
+	return dst
+}
+
+func (c negateCodec[T]) Append(buf []byte, value T) []byte {
+	start := len(buf)
+	buf = c.codec.Append(buf, value)
+	negate(buf[start:])
+	return buf
+}
+
+func (c negateCodec[T]) Put(buf []byte, value T) []byte {
+	original := buf
+	buf = c.codec.Put(buf, value)
+	negate(original[:len(original)-len(buf)])
+	return buf
+}
+
+func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
+	value, temp := c.codec.Get(negCopy(buf))
+	return value, buf[len(buf)-len(temp):]
+}
+
+func (negateCodec[T]) RequiresTerminator() bool {
+	return false
+}
+
+// negateEscapeCodec negates codec which requires escaping, reversing the ordering of its encoding.
 //
 // Every encoding will be greater than any prefix of that encoding (definition of lexicographical ordering).
 // For example, consider these encodings:
@@ -28,41 +77,77 @@ package lexy
 //
 //	^esc+term(A) = {0xFE, 0xFF, 0xFD, 0xFC, 0xFF}
 //	^esc+term(B) = {0xFE, 0xFF, 0xFD, 0xFC, 0xFE, 0xFF, 0xFF}
-type negateCodec[T any] struct {
+type negateEscapeCodec[T any] struct {
 	codec Codec[T]
 }
 
-func (c negateCodec[T]) Append(buf []byte, value T) []byte {
+func (c negateEscapeCodec[T]) Append(buf []byte, value T) []byte {
 	start := len(buf)
 	buf = c.codec.Append(buf, value)
-	negate(buf[start:])
+	n := termNumAdded(buf[start:])
+	buf = append(buf, make([]byte, n)...)
+	negTerm(buf[start:], n)
 	return buf
 }
 
-func (c negateCodec[T]) Put(buf []byte, value T) []byte {
-	newBuf := c.codec.Put(buf, value)
-	putSize := len(buf) - len(newBuf)
-	negate(buf[:putSize])
-	return newBuf
+func (c negateEscapeCodec[T]) Put(buf []byte, value T) []byte {
+	original := buf
+	buf = c.codec.Put(buf, value)
+	numPut := len(original) - len(buf)
+	n := termNumAdded(original[:numPut])
+	negTerm(original[:numPut+n], n)
+	return buf[n:]
 }
 
-func (c negateCodec[T]) Get(buf []byte) (T, []byte) {
-	// We don't know how much to Get, so we copy everything.
-	b := append([]byte{}, buf...)
-	negate(b)
-	totalLen := len(b)
-	value, b := c.codec.Get(b)
-	return value, buf[totalLen-len(b):]
+func (c negateEscapeCodec[T]) Get(buf []byte) (T, []byte) {
+	encodedValue, buf := negTermGet(buf)
+	value, _ := c.codec.Get(encodedValue)
+	return value, buf
 }
 
-func (negateCodec[T]) RequiresTerminator() bool {
+func (negateEscapeCodec[T]) RequiresTerminator() bool {
 	return false
 }
 
-// Negate negates buf, in the sense of lexicographical ordering, returning buf.
-func negate(buf []byte) []byte {
-	for i := range buf {
-		buf[i] ^= 0xFF
+// negTerm is exactly the same as term, except that it negates every byte written.
+func negTerm(buf []byte, n int) {
+	// Going backwards ensures that every byte is copied at most once.
+	dst := len(buf) - 1
+	buf[dst] = ^terminator
+	dst--
+	for i := len(buf) - n - 1; i != dst; i-- {
+		buf[dst] = ^buf[i]
+		dst--
+		if buf[i] == escape || buf[i] == terminator {
+			buf[dst] = ^escape
+			dst--
+		}
 	}
-	return buf
+	// still need to negate the first block
+	for i := dst; i >= 0; i-- {
+		buf[i] = ^buf[i]
+	}
+}
+
+// negTermGet is exactly the same as termGet, except that it negates every byte read first.
+func negTermGet(buf []byte) ([]byte, []byte) {
+	value := make([]byte, 0, len(buf))
+	escaped := false // if the previous byte read is an escape
+	for i, b := range buf {
+		b = ^b
+		// handle unescaped terminators and escapes
+		// everything else goes into the output as-is
+		if !escaped {
+			if b == terminator {
+				return value, buf[i+1:]
+			}
+			if b == escape {
+				escaped = true
+				continue
+			}
+		}
+		escaped = false
+		value = append(value, b)
+	}
+	panic(errUnterminatedBuffer)
 }

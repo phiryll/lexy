@@ -57,7 +57,7 @@ func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 // BEGIN KEY CODEC
 
 var (
-	wordsCodec = lexy.TerminateIfNeeded(lexy.SliceOf(lexy.String()))
+	wordsCodec = lexy.Terminate(lexy.SliceOf(lexy.String()))
 	costCodec  = lexy.Int32()
 	keyCodec   = KeyCodec{}
 )

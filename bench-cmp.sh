@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This script compares benchmark results to the baseline.
-# The single argument is a prefix of the test name(s) to compare, following "Benchmark".
+# The single argument is a prefix of the test name(s) to compare.
+# For example, a prefix of "Int" for "func BenchmarkInt", "func BenchmarkInt8", ....
 # It will find matching benchmark results in benchmarks/ other than the baseline.
 # A typical use would look like:
 #
@@ -23,11 +24,10 @@ go test -c
 
 for prefix in "$@"
 do
-    for file in $(ls benchmarks/Benchmark${prefix}*.txt)
+    for file in $(ls benchmarks/${prefix}*.txt)
     do
         base_name=${file##*/}
-        no_ext=${base_name%.txt}
-        test_name=${no_ext#Benchmark}
+        test_name=${base_name%.txt}
         cmp_files=$(ggrep --exclude="${base_name}" -l "Benchmark${test_name}" benchmarks/*)
         ~/go/bin/benchstat -filter ".name:${test_name}" $file $cmp_files
     done

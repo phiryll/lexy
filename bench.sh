@@ -7,7 +7,7 @@
 #
 # Or if "Float64" unintentionally matches multiple benchmarks:
 #
-#   $ ./bench.sh "BencharkFloat64$" 3
+#   $ ./bench.sh "BenchmarkFloat64$" 3
 
 set -e
 

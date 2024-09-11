@@ -78,7 +78,7 @@ func TestNegateEmpty(t *testing.T) {
 
 func TestTerminateEmpty(t *testing.T) {
 	t.Parallel()
-	testCodec(t, lexy.TerminateIfNeeded(emptyCodec), []testCase[emptyStruct]{
+	testCodec(t, lexy.Terminate(emptyCodec), []testCase[emptyStruct]{
 		{"terminate(empty)", empty, []byte{0x00}},
 	})
 }
