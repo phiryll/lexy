@@ -7,12 +7,11 @@ type negateCodec[T any] struct {
 	codec Codec[T]
 }
 
-// Negate negates buf, in the sense of lexicographical ordering, returning buf.
-func negate(buf []byte) []byte {
+// Negate negates buf, in the sense of lexicographical ordering.
+func negate(buf []byte) {
 	for i := range buf {
 		buf[i] ^= 0xFF
 	}
-	return buf
 }
 
 // negCopy returns a negated copy of buf.
