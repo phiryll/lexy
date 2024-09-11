@@ -232,9 +232,14 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	case !signbit:
 		kind = posFinite
 	}
+	buf = stdInt8.Append(buf, kind)
 	if isInf || isZero {
-		return stdInt8.Append(buf, kind)
+		return buf
 	}
+	mantSize := int((prec + 7) / 8)
+	start := len(buf)
+	// 9 = 4 (exp) + 4 (prec) + 1 (mode)
+	buf = append(buf, make([]byte, mantSize+9)...)
 
 	var tmp big.Float
 	tmp.SetMantExp(value, shift)
@@ -243,26 +248,21 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 		panic(errBigFloatEncoding)
 	}
 
-	mantSize := (mantInt.BitLen() + 7) / 8
-	start := len(buf)
-	// 10 = 1 (kind) + 4 (exp) + 4 (prec) + 1 (mode)
-	buf = append(buf, make([]byte, mantSize+10)...)
 	putBuf := buf[start:]
-	putBuf = stdInt8.Put(putBuf, kind)
 	if signbit {
 		putBuf = stdInt32.Put(putBuf, -exp)
 		mantInt.FillBytes(putBuf[:mantSize])
 		n := termNumAdded(putBuf[:mantSize])
 		buf = append(buf, make([]byte, n)...)
-		putBuf = buf[start+5:]
+		putBuf = buf[start+4:]
 		negTerm(putBuf[:mantSize+n], n)
 		putBuf = stdInt32.Put(putBuf[mantSize+n:], -prec)
 	} else {
-		putBuf = stdInt32.Put(putBuf, +exp)
+		putBuf = stdInt32.Put(putBuf, exp)
 		mantInt.FillBytes(putBuf[:mantSize])
 		n := termNumAdded(putBuf[:mantSize])
 		buf = append(buf, make([]byte, n)...)
-		putBuf = buf[start+5:]
+		putBuf = buf[start+4:]
 		term(putBuf[:mantSize+n], n)
 		putBuf = stdInt32.Put(putBuf[mantSize+n:], prec)
 	}
@@ -306,6 +306,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	if isInf || isZero {
 		return buf
 	}
+	mantSize := int((prec + 7) / 8)
 
 	var tmp big.Float
 	tmp.SetMantExp(value, shift)
@@ -314,7 +315,6 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 		panic(errBigFloatEncoding)
 	}
 
-	mantSize := (mantInt.BitLen() + 7) / 8
 	if signbit {
 		buf = stdInt32.Put(buf, -exp)
 		mantInt.FillBytes(buf[:mantSize])
@@ -322,7 +322,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 		negTerm(buf[:mantSize+n], n)
 		buf = stdInt32.Put(buf[mantSize+n:], -prec)
 	} else {
-		buf = stdInt32.Put(buf, +exp)
+		buf = stdInt32.Put(buf, exp)
 		mantInt.FillBytes(buf[:mantSize])
 		n := termNumAdded(buf[:mantSize])
 		term(buf[:mantSize+n], n)
