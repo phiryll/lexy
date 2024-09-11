@@ -119,7 +119,7 @@ func newBigFloat(s string) *big.Float {
 	var value big.Float
 	// Parse truncates to 64 bits if precision is currently 0.
 	value.SetPrec(100000)
-	//nolint:dogsled,errcheck,gosec
+	//nolint:dogsled,errcheck
 	_, _, _ = value.Parse(s, 10)
 	value.SetPrec(value.MinPrec())
 	return &value

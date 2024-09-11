@@ -268,7 +268,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		// Should either panic, or read one fewer byte and get the wrong value back.
 		var got T
 		var gotBuf []byte
-		//nolint:nonamedreturns
+		//nolint:nakedret,nonamedreturns
 		panicked := func() (panicked bool) {
 			panicked = false
 			defer func() {
@@ -277,7 +277,6 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 				}
 			}()
 			got, gotBuf = c.codec.Get(workingBuf[:size-1])
-			//nolint:nakedret
 			return
 		}()
 		if !panicked {

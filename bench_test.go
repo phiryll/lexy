@@ -353,7 +353,7 @@ func BenchmarkTerminate(b *testing.B) {
 	})
 }
 
-//nolint:gosec,revive
+//nolint:revive
 func randomBytes(n int, seed int64) []byte {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]byte, n)
@@ -361,7 +361,6 @@ func randomBytes(n int, seed int64) []byte {
 	return b
 }
 
-//nolint:gosec
 func randomInt32(n int, seed int64) []int32 {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]int32, n)
