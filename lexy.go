@@ -383,3 +383,9 @@ func extend(buf []byte, n int) []byte {
 	}
 	return buf
 }
+
+const bitsPerByte = 8
+
+func numBytes(numBits int) int {
+	return (numBits + bitsPerByte - 1) / bitsPerByte
+}
