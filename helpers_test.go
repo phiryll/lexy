@@ -289,3 +289,19 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		assert.Equal(t, buf, workingBuf)
 	})
 }
+
+//nolint:thelper
+func testOrdering[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
+	tests = fillTestData(codec, tests)
+	for i := range tests {
+		if i == 0 {
+			continue
+		}
+		a := tests[i-1]
+		b := tests[i]
+		t.Run(a.name+" < "+b.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Less(t, a.data, b.data)
+		})
+	}
+}

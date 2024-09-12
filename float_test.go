@@ -183,27 +183,26 @@ func TestNames32(t *testing.T) {
 // Test that the encoded forms have the right lexicographical ordering.
 func TestFloat32CodecOrdering(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(lexy.Float32())
-	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN32))
-	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN32))
-
-	assert.IsIncreasing(t, [][]byte{
-		encode(negMaxNaN32),
-		encode(negMinNaN32),
-		encode(negInf32),
-		encode(negMaxNormal32),
-		encode(negMinNormal32),
-		encode(negMaxSubnormal32),
-		encode(negMinSubnormal32),
-		encode(negZero32),
-		encode(posZero32),
-		encode(posMinSubnormal32),
-		encode(posMaxSubnormal32),
-		encode(posMinNormal32),
-		encode(posMaxNormal32),
-		encode(posInf32),
-		encode(posMinNaN32),
-		encode(posMaxNaN32),
+	codec := lexy.Float32()
+	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00}, codec.Append(nil, negMaxNaN32))
+	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF}, codec.Append(nil, posMaxNaN32))
+	testOrdering(t, codec, []testCase[float32]{
+		{"negMaxNaN32", negMaxNaN32, nil},
+		{"negMinNaN32", negMinNaN32, nil},
+		{"negInf32", negInf32, nil},
+		{"negMaxNormal32", negMaxNormal32, nil},
+		{"negMinNormal32", negMinNormal32, nil},
+		{"negMaxSubnormal32", negMaxSubnormal32, nil},
+		{"negMinSubnormal32", negMinSubnormal32, nil},
+		{"negZero32", negZero32, nil},
+		{"posZero32", posZero32, nil},
+		{"posMinSubnormal32", posMinSubnormal32, nil},
+		{"posMaxSubnormal32", posMaxSubnormal32, nil},
+		{"posMinNormal32", posMinNormal32, nil},
+		{"posMaxNormal32", posMaxNormal32, nil},
+		{"posInf32", posInf32, nil},
+		{"posMinNaN32", posMinNaN32, nil},
+		{"posMaxNaN32", posMaxNaN32, nil},
 	})
 }
 
@@ -288,26 +287,25 @@ func TestNames64(t *testing.T) {
 
 func TestFloat64CodecOrdering(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(lexy.Float64())
-	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, encode(negMaxNaN64))
-	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, encode(posMaxNaN64))
-
-	assert.IsIncreasing(t, [][]byte{
-		encode(negMaxNaN64),
-		encode(negMinNaN64),
-		encode(negInf64),
-		encode(negMaxNormal64),
-		encode(negMinNormal64),
-		encode(negMaxSubnormal64),
-		encode(negMinSubnormal64),
-		encode(negZero64),
-		encode(posZero64),
-		encode(posMinSubnormal64),
-		encode(posMaxSubnormal64),
-		encode(posMinNormal64),
-		encode(posMaxNormal64),
-		encode(posInf64),
-		encode(posMinNaN64),
-		encode(posMaxNaN64),
+	codec := lexy.Float64()
+	assert.Equal(t, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, codec.Append(nil, negMaxNaN64))
+	assert.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, codec.Append(nil, posMaxNaN64))
+	testOrdering(t, codec, []testCase[float64]{
+		{"negMaxNaN64", negMaxNaN64, nil},
+		{"negMinNaN64", negMinNaN64, nil},
+		{"negInf64", negInf64, nil},
+		{"negMaxNormal64", negMaxNormal64, nil},
+		{"negMinNormal64", negMinNormal64, nil},
+		{"negMaxSubnormal64", negMaxSubnormal64, nil},
+		{"negMinSubnormal64", negMinSubnormal64, nil},
+		{"negZero64", negZero64, nil},
+		{"posZero64", posZero64, nil},
+		{"posMinSubnormal64", posMinSubnormal64, nil},
+		{"posMaxSubnormal64", posMaxSubnormal64, nil},
+		{"posMinNormal64", posMinNormal64, nil},
+		{"posMaxNormal64", posMaxNormal64, nil},
+		{"posInf64", posInf64, nil},
+		{"posMinNaN64", posMinNaN64, nil},
+		{"posMaxNaN64", posMaxNaN64, nil},
 	})
 }

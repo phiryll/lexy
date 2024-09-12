@@ -56,8 +56,7 @@ func TestTime(t *testing.T) {
 	}
 }
 
-//nolint:tparallel
-func TestTimeOrder(t *testing.T) {
+func TestTimeOrdering(t *testing.T) {
 	t.Parallel()
 	// in order from west to east, expected sort order,
 	// UTC is between NYC and Berlin.
@@ -76,48 +75,34 @@ func TestTimeOrder(t *testing.T) {
 	posUTC6 := time.Date(2000, 1, 2, 3, 4, 5, 6, time.UTC)
 	posUTC7 := time.Date(2000, 1, 2, 3, 4, 5, 7, time.UTC)
 
-	var prev []byte
-	//nolint:paralleltest
-	for i, tt := range []struct {
-		string
-		time.Time
-	}{
+	testOrdering(t, lexy.Time(), []testCase[time.Time]{
 		// Encodings should sort in this order.
 		//
 		// before and after the epoch start (Jan 1, 1970)
 		// with different nanoseconds within the same second
 		// with different timezones
-		{"neg fixed 6", negUTC6.In(locFixed)},
-		{"neg LA 6", negUTC6.In(locLA)},
-		{"neg NYC 6", negUTC6.In(locNYC)},
-		{"neg UTC 6", negUTC6},
-		{"neg Berlin 6", negUTC6.In(locBerlin)},
+		{"neg fixed 6", negUTC6.In(locFixed), nil},
+		{"neg LA 6", negUTC6.In(locLA), nil},
+		{"neg NYC 6", negUTC6.In(locNYC), nil},
+		{"neg UTC 6", negUTC6, nil},
+		{"neg Berlin 6", negUTC6.In(locBerlin), nil},
 
-		{"neg fixed 7", negUTC7.In(locFixed)},
-		{"neg LA 7", negUTC7.In(locLA)},
-		{"neg NYC 7", negUTC7.In(locNYC)},
-		{"neg UTC 7", negUTC7},
-		{"neg Berlin 7", negUTC7.In(locBerlin)},
+		{"neg fixed 7", negUTC7.In(locFixed), nil},
+		{"neg LA 7", negUTC7.In(locLA), nil},
+		{"neg NYC 7", negUTC7.In(locNYC), nil},
+		{"neg UTC 7", negUTC7, nil},
+		{"neg Berlin 7", negUTC7.In(locBerlin), nil},
 
-		{"pos fixed 6", posUTC6.In(locFixed)},
-		{"pos LA 6", posUTC6.In(locLA)},
-		{"pos NYC 6", posUTC6.In(locNYC)},
-		{"pos UTC 6", posUTC6},
-		{"pos Berlin 6", posUTC6.In(locBerlin)},
+		{"pos fixed 6", posUTC6.In(locFixed), nil},
+		{"pos LA 6", posUTC6.In(locLA), nil},
+		{"pos NYC 6", posUTC6.In(locNYC), nil},
+		{"pos UTC 6", posUTC6, nil},
+		{"pos Berlin 6", posUTC6.In(locBerlin), nil},
 
-		{"pos fixed 7", posUTC7.In(locFixed)},
-		{"pos LA 7", posUTC7.In(locLA)},
-		{"pos NYC 7", posUTC7.In(locNYC)},
-		{"pos UTC 7", posUTC7},
-		{"pos Berlin 7", posUTC7.In(locBerlin)},
-	} {
-		i := i
-		t.Run(tt.string, func(t *testing.T) {
-			current := lexy.Time().Append(nil, tt.Time)
-			if i > 0 {
-				assert.Less(t, prev, current)
-			}
-			prev = current
-		})
-	}
+		{"pos fixed 7", posUTC7.In(locFixed), nil},
+		{"pos LA 7", posUTC7.In(locLA), nil},
+		{"pos NYC 7", posUTC7.In(locNYC), nil},
+		{"pos UTC 7", posUTC7, nil},
+		{"pos Berlin 7", posUTC7.In(locBerlin), nil},
+	})
 }

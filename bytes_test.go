@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBytes(t *testing.T) {
@@ -31,20 +30,12 @@ func TestBytesUnderlyingType(t *testing.T) {
 
 func TestBytesNilsLast(t *testing.T) {
 	t.Parallel()
-	encodeFirst := encoderFor(lexy.Bytes())
-	encodeLast := encoderFor(lexy.NilsLast(lexy.Bytes()))
-	assert.IsIncreasing(t, [][]byte{
-		encodeFirst(nil),
-		encodeFirst([]byte{0}),
-		encodeFirst([]byte{0, 0, 0}),
-		encodeFirst([]byte{0, 1}),
-		encodeFirst([]byte{35}),
-	})
-	assert.IsIncreasing(t, [][]byte{
-		encodeLast([]byte{0}),
-		encodeLast([]byte{0, 0, 0}),
-		encodeLast([]byte{0, 1}),
-		encodeLast([]byte{35}),
-		encodeLast(nil),
+	testOrdering(t, lexy.NilsLast(lexy.Bytes()), []testCase[[]byte]{
+		{"empty", []byte{}, nil},
+		{"[0]", []byte{0}, nil},
+		{"[0, 0, 0]", []byte{0, 0, 0}, nil},
+		{"[0, 1]", []byte{0, 1}, nil},
+		{"[35]", []byte{35}, nil},
+		{"nil", nil, nil},
 	})
 }
