@@ -173,12 +173,8 @@ func (negateTestCodec) RequiresTerminator() bool {
 
 func TestNegateComplex(t *testing.T) {
 	t.Parallel()
-	ptr := func(x int) *int16 {
-		i16 := int16(x)
-		return &i16
-	}
 	testCodec(t, negTestCodec, []testCase[negateTest]{
-		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, concat(
+		{"{5, &100, def}", negateTest{5, ptr(int16(100)), "def"}, concat(
 			[]byte{0x05},
 			negString("def"), []byte{negTerm},
 			[]byte{negPNonNil, ^byte(0x80), ^byte(0x64)},
@@ -193,46 +189,43 @@ func TestNegateComplex(t *testing.T) {
 
 func TestNegateComplexOrdering(t *testing.T) {
 	t.Parallel()
-	ptr := func(x int) *int16 {
-		i16 := int16(x)
-		return &i16
-	}
+	p := ptr[int16]
 	testOrdering(t, negTestCodec, []testCase[negateTest]{
 		// sort order is: first, neg(third), neg(second)
-		{"{5, *100, def}", negateTest{5, ptr(100), "def"}, nil},
-		{"{5, *0, def}", negateTest{5, ptr(0), "def"}, nil},
-		{"{5, *-1, def}", negateTest{5, ptr(-1), "def"}, nil},
-		{"{5, *-100, def}", negateTest{5, ptr(-100), "def"}, nil},
+		{"{5, *100, def}", negateTest{5, p(100), "def"}, nil},
+		{"{5, *0, def}", negateTest{5, p(0), "def"}, nil},
+		{"{5, *-1, def}", negateTest{5, p(-1), "def"}, nil},
+		{"{5, *-100, def}", negateTest{5, p(-100), "def"}, nil},
 		{"{5, nil, def}", negateTest{5, nil, "def"}, nil},
 
-		{"{5, *100, abc}", negateTest{5, ptr(100), "abc"}, nil},
-		{"{5, *0, abc}", negateTest{5, ptr(0), "abc"}, nil},
-		{"{5, *-1, abc}", negateTest{5, ptr(-1), "abc"}, nil},
-		{"{5, *-100, abc}", negateTest{5, ptr(-100), "abc"}, nil},
+		{"{5, *100, abc}", negateTest{5, p(100), "abc"}, nil},
+		{"{5, *0, abc}", negateTest{5, p(0), "abc"}, nil},
+		{"{5, *-1, abc}", negateTest{5, p(-1), "abc"}, nil},
+		{"{5, *-100, abc}", negateTest{5, p(-100), "abc"}, nil},
 		{"{5, nil, abc}", negateTest{5, nil, "abc"}, nil},
 
-		{"{5, *100, empty}", negateTest{5, ptr(100), ""}, nil},
-		{"{5, *0, empty}", negateTest{5, ptr(0), ""}, nil},
-		{"{5, *-1, empty}", negateTest{5, ptr(-1), ""}, nil},
-		{"{5, *-100, empty}", negateTest{5, ptr(-100), ""}, nil},
+		{"{5, *100, empty}", negateTest{5, p(100), ""}, nil},
+		{"{5, *0, empty}", negateTest{5, p(0), ""}, nil},
+		{"{5, *-1, empty}", negateTest{5, p(-1), ""}, nil},
+		{"{5, *-100, empty}", negateTest{5, p(-100), ""}, nil},
 		{"{5, nil, empty}", negateTest{5, nil, ""}, nil},
 
-		{"{10, *100, def}", negateTest{10, ptr(100), "def"}, nil},
-		{"{10, *0, def}", negateTest{10, ptr(0), "def"}, nil},
-		{"{10, *-1, def}", negateTest{10, ptr(-1), "def"}, nil},
-		{"{10, *-100, def}", negateTest{10, ptr(-100), "def"}, nil},
+		{"{10, *100, def}", negateTest{10, p(100), "def"}, nil},
+		{"{10, *0, def}", negateTest{10, p(0), "def"}, nil},
+		{"{10, *-1, def}", negateTest{10, p(-1), "def"}, nil},
+		{"{10, *-100, def}", negateTest{10, p(-100), "def"}, nil},
 		{"{10, nil, def}", negateTest{10, nil, "def"}, nil},
 
-		{"{10, *100, abc}", negateTest{10, ptr(100), "abc"}, nil},
-		{"{10, *0, abc}", negateTest{10, ptr(0), "abc"}, nil},
-		{"{10, *-1, abc}", negateTest{10, ptr(-1), "abc"}, nil},
-		{"{10, *-100, abc}", negateTest{10, ptr(-100), "abc"}, nil},
+		{"{10, *100, abc}", negateTest{10, p(100), "abc"}, nil},
+		{"{10, *0, abc}", negateTest{10, p(0), "abc"}, nil},
+		{"{10, *-1, abc}", negateTest{10, p(-1), "abc"}, nil},
+		{"{10, *-100, abc}", negateTest{10, p(-100), "abc"}, nil},
 		{"{10, nil, abc}", negateTest{10, nil, "abc"}, nil},
 
-		{"{10, *100, empty}", negateTest{10, ptr(100), ""}, nil},
-		{"{10, *0, empty}", negateTest{10, ptr(0), ""}, nil},
-		{"{10, *-1, empty}", negateTest{10, ptr(-1), ""}, nil},
-		{"{10, *-100, empty}", negateTest{10, ptr(-100), ""}, nil},
+		{"{10, *100, empty}", negateTest{10, p(100), ""}, nil},
+		{"{10, *0, empty}", negateTest{10, p(0), ""}, nil},
+		{"{10, *-1, empty}", negateTest{10, p(-1), ""}, nil},
+		{"{10, *-100, empty}", negateTest{10, p(-100), ""}, nil},
 		{"{10, nil, empty}", negateTest{10, nil, ""}, nil},
 	})
 }
