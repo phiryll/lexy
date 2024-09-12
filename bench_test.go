@@ -370,7 +370,6 @@ func randomInt32(n int, seed int64) []int32 {
 	return b
 }
 
-//nolint:thelper
 func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase[T]) {
 	if len(benchCases) == 1 {
 		benchSingleValue(b, codec, benchCases[0].value)
@@ -384,7 +383,6 @@ func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase
 	}
 }
 
-//nolint:thelper
 func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	// Tests both encoding and how efficiently codec.Append allocates the buffer.
 	b.Run("append nil", func(b *testing.B) {

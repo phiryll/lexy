@@ -8,12 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//nolint:thelper
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	testBasicMapWithPrefix(t, pNilFirst, codec)
 }
 
-//nolint:thelper
 func testBasicMapWithPrefix[M ~map[string]int32](t *testing.T, nilPrefix byte, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{

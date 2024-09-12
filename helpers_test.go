@@ -69,8 +69,6 @@ func fillTestData[T any](codec lexy.Codec[T], tests []testCase[T]) []testCase[T]
 //	    - panics
 //	    - OR if expected value is non-zero, returns the wrong value
 //	      - AND byte count return value == size-1
-//
-//nolint:thelper
 func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	testerCodec[T]{codec, true}.test(t, tests)
 }
@@ -81,8 +79,6 @@ func testCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 // This performs all of the same tests as testCodec, except it doesn't use testCase.data.
 // Instead, it tests each of the outputs of Append/Put as inputs to Get, all combinations.
 // It also tests that different ways of invoking Append/Put always output the same number of bytes.
-//
-//nolint:thelper
 func testVaryingCodec[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	testerCodec[T]{codec, false}.test(t, tests)
 }
@@ -99,7 +95,6 @@ type output struct {
 	buf  []byte
 }
 
-//nolint:thelper
 func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	c.getEmpty(t)
 
@@ -137,7 +132,7 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	}
 }
 
-//nolint:thelper,revive
+//nolint:revive
 func (c testerCodec[T]) getEmpty(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		var zero T
@@ -150,7 +145,6 @@ func (c testerCodec[T]) getEmpty(t *testing.T) {
 	})
 }
 
-//nolint:thelper
 func (c testerCodec[T]) appendNil(t *testing.T, tt testCase[T]) output {
 	var buf []byte
 	t.Run("append nil", func(t *testing.T) {
@@ -165,7 +159,6 @@ func (c testerCodec[T]) appendNil(t *testing.T, tt testCase[T]) output {
 	return output{"append nil", buf}
 }
 
-//nolint:thelper
 func (c testerCodec[T]) appendExisting(t *testing.T, tt testCase[T]) output {
 	var buf []byte
 	t.Run("append existing", func(t *testing.T) {
@@ -184,7 +177,6 @@ func (c testerCodec[T]) appendExisting(t *testing.T, tt testCase[T]) output {
 	return output{"append existing", buf}
 }
 
-//nolint:thelper
 func (c testerCodec[T]) put(t *testing.T, tt testCase[T]) output {
 	var buf []byte
 	t.Run("put", func(t *testing.T) {
@@ -199,7 +191,6 @@ func (c testerCodec[T]) put(t *testing.T, tt testCase[T]) output {
 	return output{"put", buf}
 }
 
-//nolint:thelper
 func (c testerCodec[T]) putLongBuf(t *testing.T, tt testCase[T]) output {
 	var buf []byte
 	t.Run("put long buf", func(t *testing.T) {
@@ -223,7 +214,6 @@ func (c testerCodec[T]) putLongBuf(t *testing.T, tt testCase[T]) output {
 	return output{"put long buf", buf}
 }
 
-//nolint:thelper
 func (c testerCodec[T]) putShortBuf(t *testing.T, tt testCase[T]) {
 	t.Run("put short buf", func(t *testing.T) {
 		size := len(c.codec.Append(nil, tt.value))
@@ -237,7 +227,6 @@ func (c testerCodec[T]) putShortBuf(t *testing.T, tt testCase[T]) {
 	})
 }
 
-//nolint:thelper
 func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get", func(t *testing.T) {
@@ -250,7 +239,7 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	})
 }
 
-//nolint:thelper,revive
+//nolint:revive
 func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get short buf", func(t *testing.T) {
@@ -284,7 +273,6 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	})
 }
 
-//nolint:thelper
 func testOrdering[T any](t *testing.T, codec lexy.Codec[T], tests []testCase[T]) {
 	tests = fillTestData(codec, tests)
 	for i := range tests {
