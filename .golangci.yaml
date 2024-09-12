@@ -76,11 +76,6 @@ issues:
         - govet
       text: "fieldalignment"
 
-    - path: _test\.go
-      linters:
-        - revive
-      text: "add-constant"
-
 linters:
   # Enable all available linters.
   # Default: false

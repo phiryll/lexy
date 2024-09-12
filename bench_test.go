@@ -21,11 +21,10 @@ type (
 	MySlice []MyInt32
 )
 
-//nolint:revive
 func BenchmarkNothing(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		// do nothing
+		_ = 0
 	}
 }
 
@@ -353,11 +352,10 @@ func BenchmarkTerminate(b *testing.B) {
 	})
 }
 
-//nolint:revive
 func randomBytes(n int, seed int64) []byte {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]byte, n)
-	random.Read(b)
+	_, _ = random.Read(b)
 	return b
 }
 
