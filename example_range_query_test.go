@@ -20,7 +20,7 @@ type Entry struct {
 }
 
 func (db *DB) insert(i int, entry Entry) {
-	db.entries = append(db.entries, Entry{})
+	db.entries = append(db.entries, Entry{nil, 0})
 	copy(db.entries[i+1:], db.entries[i:])
 	db.entries[i] = entry
 }

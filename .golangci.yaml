@@ -166,13 +166,6 @@ linters-settings:
     # Default: true
     errorf-multi: false
 
-  exhaustruct:
-    # List of regular expressions to exclude struct packages and their names from checks.
-    # Regular expressions must match complete canonical struct package/name/structname.
-    # Default: []
-    exclude:
-      - 'github\.com/phiryll/lexy_test\.Entry'
-
   forbidigo:
     # Instead of matching the literal source code,
     # use type information to replace expressions with strings that contain the package name
