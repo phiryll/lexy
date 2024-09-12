@@ -28,15 +28,15 @@ type bigIntCodec struct {
 	prefix Prefix
 }
 
-//nolint:mnd
 func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
 		return buf
 	}
-	size := (value.BitLen() + 7) / 8
+	size := numBytes(value.BitLen())
 	// Preallocate and put into it so we can use FillBytes, avoiding a copy.
 	start := len(buf)
+	//nolint:mnd
 	buf = append(buf, make([]byte, size+8)...)
 	putBuf := buf[start:]
 	sign := value.Sign()
@@ -51,13 +51,12 @@ func (c bigIntCodec) Append(buf []byte, value *big.Int) []byte {
 	return buf
 }
 
-//nolint:mnd
 func (c bigIntCodec) Put(buf []byte, value *big.Int) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
 		return buf
 	}
-	size := (value.BitLen() + 7) / 8
+	size := numBytes(value.BitLen())
 	_ = buf[size+8-1] // check that we have room
 	sign := value.Sign()
 	if sign < 0 {
@@ -192,15 +191,14 @@ func computeShift(exp, prec int) int {
 	// Equivalently, the exponent is a multiple of 8.
 	// There are exactly prec bits to that leading bit,
 	// so shift enough to round up prec to the nearest multiple of 8.
-	//nolint:mnd
-	adjustment := (-prec) % 8
+	adjustment := (-prec) % bitsPerByte
 	if adjustment < 0 {
-		adjustment += 8
+		adjustment += bitsPerByte
 	}
 	return shift + adjustment
 }
 
-//nolint:cyclop,funlen,mnd
+//nolint:cyclop,funlen
 func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	done, buf := c.prefix.Append(buf, value == nil)
 	if done {
@@ -236,9 +234,10 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	if isInf || isZero {
 		return buf
 	}
-	mantSize := (prec + 7) / 8
+	mantSize := numBytes(prec)
 	start := len(buf)
 	// 9 = 4 (exp) + 4 (prec) + 1 (mode)
+	//nolint:mnd
 	buf = append(buf, make([]byte, mantSize+9)...)
 
 	var tmp big.Float
@@ -270,7 +269,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	return buf
 }
 
-//nolint:cyclop,mnd
+//nolint:cyclop
 func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
@@ -306,7 +305,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	if isInf || isZero {
 		return buf
 	}
-	mantSize := (prec + 7) / 8
+	mantSize := numBytes(prec)
 
 	var tmp big.Float
 	tmp.SetMantExp(value, shift)

@@ -33,25 +33,45 @@ func (nopCodec) RequiresTerminator() bool {
 	return true
 }
 
-//nolint:gofumpt
 func TestTerminator(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Terminate(nop)
 	testCodec(t, codec, []testCase[[]byte]{
-		{"empty", []byte{},
-			[]byte{0}},
-		{"terminator", []byte{0},
-			[]byte{1, 0, 0}},
-		{"escape", []byte{1},
-			[]byte{1, 1, 0}},
-		{"no special bytes", []byte{2, 3, 5, 4, 7, 6},
-			[]byte{2, 3, 5, 4, 7, 6, 0}},
-		{"with special bytes", []byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0}},
-		{"trailing terminator", []byte{0, 1, 2, 3, 1, 4, 0},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0}},
-		{"trailing escape", []byte{0, 1, 2, 3, 1, 4, 1},
-			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0}},
+		{
+			"empty",
+			[]byte{},
+			[]byte{0},
+		},
+		{
+			"terminator",
+			[]byte{0},
+			[]byte{1, 0, 0},
+		},
+		{
+			"escape",
+			[]byte{1},
+			[]byte{1, 1, 0},
+		},
+		{
+			"no special bytes",
+			[]byte{2, 3, 5, 4, 7, 6},
+			[]byte{2, 3, 5, 4, 7, 6, 0},
+		},
+		{
+			"with special bytes",
+			[]byte{0, 1, 2, 3, 1, 4, 0, 5, 6},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 5, 6, 0},
+		},
+		{
+			"trailing terminator",
+			[]byte{0, 1, 2, 3, 1, 4, 0},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0, 0},
+		},
+		{
+			"trailing escape",
+			[]byte{0, 1, 2, 3, 1, 4, 1},
+			[]byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1, 0},
+		},
 	})
 }
 

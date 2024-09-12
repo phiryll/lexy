@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPointerInt32(t *testing.T) {
@@ -57,19 +56,12 @@ func TestPointerSliceInt32(t *testing.T) {
 
 func TestPointerNilsLast(t *testing.T) {
 	t.Parallel()
-	encodeFirst := encoderFor(lexy.PointerTo(lexy.String()))
-	encodeLast := encoderFor(lexy.NilsLast(lexy.PointerTo(lexy.String())))
-	assert.IsIncreasing(t, [][]byte{
-		encodeFirst(nil),
-		encodeFirst(ptr("")),
-		encodeFirst(ptr("abc")),
-		encodeFirst(ptr("xyz")),
-	})
-	assert.IsIncreasing(t, [][]byte{
-		encodeLast(ptr("")),
-		encodeLast(ptr("abc")),
-		encodeLast(ptr("xyz")),
-		encodeLast(nil),
+	codec := lexy.PointerTo(lexy.String())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[*string]{
+		{"*empty", ptr(""), nil},
+		{"*abc", ptr("abc"), nil},
+		{"*xyz", ptr("xyz"), nil},
+		{"nil", nil, nil},
 	})
 }
 

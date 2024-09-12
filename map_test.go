@@ -8,12 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//nolint:thelper
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 	testBasicMapWithPrefix(t, pNilFirst, codec)
 }
 
-//nolint:thelper
 func testBasicMapWithPrefix[M ~map[string]int32](t *testing.T, nilPrefix byte, codec lexy.Codec[M]) {
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
@@ -123,16 +121,10 @@ func TestMapPointerPointer(t *testing.T) {
 func TestMapNilsLast(t *testing.T) {
 	t.Parallel()
 	// Maps are randomly ordered, so we can only test nil/non-nil.
-	encodeFirst := encoderFor(lexy.MapOf(lexy.String(), lexy.Int32()))
-	encodeLast := encoderFor(lexy.NilsLast(lexy.MapOf(lexy.String(), lexy.Int32())))
-	assert.IsIncreasing(t, [][]byte{
-		encodeFirst(nil),
-		encodeFirst(map[string]int32{}),
-		encodeFirst(map[string]int32{"a": 0}),
-	})
-	assert.IsIncreasing(t, [][]byte{
-		encodeLast(map[string]int32{}),
-		encodeLast(map[string]int32{"a": 0}),
-		encodeLast(nil),
+	codec := lexy.MapOf(lexy.String(), lexy.Int32())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[map[string]int32]{
+		{"empty", map[string]int32{}, nil},
+		{"non-empty", map[string]int32{"a": 0}, nil},
+		{"nil", nil, nil},
 	})
 }

@@ -64,21 +64,17 @@ issues:
 
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
-    # Exclude some linters from running on tests files.
     - path: _test\.go
       linters:
         - dupword
+        - gosec
         - prealloc
+        - thelper
 
     - path: _test\.go
       linters:
         - govet
       text: "fieldalignment"
-
-    - path: _test\.go
-      linters:
-        - revive
-      text: "add-constant"
 
 linters:
   # Enable all available linters.
@@ -103,7 +99,6 @@ linters:
     - rowserrcheck      # SQL not used
     - spancheck         # OpenTelemetry/Census not used
     - varnamelen        # I don't agree with this one most of the time
-    - wrapcheck         # I don't agree with this one for this project, io errors should go through
     - wsl               # might be able to configure this well, but it'll take effort
     # replaced or duplicated
     - gocyclo           # by cyclop
@@ -169,13 +164,6 @@ linters-settings:
     # Permit more than 1 %w verb, valid per Go 1.20 (Requires errorf:true)
     # Default: true
     errorf-multi: false
-
-  exhaustruct:
-    # List of regular expressions to exclude struct packages and their names from checks.
-    # Regular expressions must match complete canonical struct package/name/structname.
-    # Default: []
-    exclude:
-      - 'github\.com/phiryll/lexy_test\.Entry'
 
   forbidigo:
     # Instead of matching the literal source code,

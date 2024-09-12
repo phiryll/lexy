@@ -82,9 +82,9 @@ var (
 
 // termNumAdded returns how many more bytes need to be added to escape and terminate buf.
 func termNumAdded(buf []byte) int {
+	// bytes.Count performs better for larger inputs, on systems with native implementations.
 	//nolint:mnd
 	if len(buf) > 64 {
-		// This performs better for larger inputs, on systems with native implementations of bytes.Count.
 		return bytes.Count(buf, eByte) + bytes.Count(buf, tByte) + 1
 	}
 	n := 0

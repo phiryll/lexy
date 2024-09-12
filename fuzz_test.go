@@ -231,7 +231,6 @@ func addUnorderedPairs[T any](f *testing.F, values ...T) {
 // Functions to create fuzz targets.
 
 func fuzzTargetForValue[T any](codec lexy.Codec[T]) func(*testing.T, T) {
-	//nolint:thelper
 	return func(t *testing.T, value T) {
 		testCodec(t, codec, []testCase[T]{
 			{"fuzz", value, codec.Append([]byte{}, value)},
@@ -240,7 +239,6 @@ func fuzzTargetForValue[T any](codec lexy.Codec[T]) func(*testing.T, T) {
 }
 
 func fuzzTargetForPair[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*testing.T, T, T) {
-	//nolint:thelper
 	return func(t *testing.T, a, b T) {
 		aEncoded := codec.Append(nil, a)
 		bEncoded := codec.Append(nil, b)

@@ -9,7 +9,7 @@ type negateCodec[T any] struct {
 
 // Negate negates buf, in the sense of lexicographical ordering, returning buf.
 //
-//nolint:unparam
+//nolint:unparam  // For some reason, this method is faster if it returns something.
 func negate(buf []byte) []byte {
 	for i := range buf {
 		buf[i] ^= 0xFF

@@ -19,45 +19,39 @@ func newBigInt(s string) *big.Int {
 	return &value
 }
 
-func concatNonNil(slices ...[]byte) []byte {
-	result := []byte{pNonNil}
-	for _, s := range slices {
-		result = append(result, s...)
-	}
-	return result
-}
-
 func TestBigInt(t *testing.T) {
 	t.Parallel()
 	codec := lexy.BigInt()
-	encodeSize := encoderFor(lexy.Int64())
+	encodeSize := func(size int64) []byte {
+		return lexy.Int64().Append(nil, size)
+	}
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
-		{"-257", big.NewInt(-257), concatNonNil(encodeSize(-2),
+		{"-257", big.NewInt(-257), concat([]byte{pNonNil}, encodeSize(-2),
 			[]byte{0xFE, 0xFE})},
-		{"-256", big.NewInt(-256), concatNonNil(encodeSize(-2),
+		{"-256", big.NewInt(-256), concat([]byte{pNonNil}, encodeSize(-2),
 			[]byte{0xFE, 0xFF})},
-		{"-255", big.NewInt(-255), concatNonNil(encodeSize(-1),
+		{"-255", big.NewInt(-255), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0x00})},
-		{"-254", big.NewInt(-254), concatNonNil(encodeSize(-1),
+		{"-254", big.NewInt(-254), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0x01})},
-		{"-2", big.NewInt(-2), concatNonNil(encodeSize(-1),
+		{"-2", big.NewInt(-2), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0xFD})},
-		{"-1", big.NewInt(-1), concatNonNil(encodeSize(-1),
+		{"-1", big.NewInt(-1), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0xFE})},
-		{"0", big.NewInt(0), concatNonNil(encodeSize(0),
+		{"0", big.NewInt(0), concat([]byte{pNonNil}, encodeSize(0),
 			[]byte{})},
-		{"+1", big.NewInt(1), concatNonNil(encodeSize(1),
+		{"+1", big.NewInt(1), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0x01})},
-		{"+2", big.NewInt(2), concatNonNil(encodeSize(1),
+		{"+2", big.NewInt(2), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0x02})},
-		{"254", big.NewInt(254), concatNonNil(encodeSize(1),
+		{"254", big.NewInt(254), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0xFE})},
-		{"255", big.NewInt(255), concatNonNil(encodeSize(1),
+		{"255", big.NewInt(255), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0xFF})},
-		{"256", big.NewInt(256), concatNonNil(encodeSize(2),
+		{"256", big.NewInt(256), concat([]byte{pNonNil}, encodeSize(2),
 			[]byte{0x01, 0x00})},
-		{"257", big.NewInt(257), concatNonNil(encodeSize(2),
+		{"257", big.NewInt(257), concat([]byte{pNonNil}, encodeSize(2),
 			[]byte{0x01, 0x01})},
 	})
 
@@ -69,42 +63,33 @@ func TestBigInt(t *testing.T) {
 
 func TestBigIntOrdering(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(lexy.BigInt())
-	assert.IsIncreasing(t, [][]byte{
-		encode(nil),
-		encode(newBigInt("-12345")),
-		encode(newBigInt("-12344")),
-		encode(newBigInt("-12343")),
-		encode(newBigInt("-257")),
-		encode(newBigInt("-256")),
-		encode(newBigInt("-255")),
-		encode(newBigInt("-1")),
-		encode(newBigInt("0")),
-		encode(newBigInt("1")),
-		encode(newBigInt("255")),
-		encode(newBigInt("256")),
-		encode(newBigInt("257")),
-		encode(newBigInt("12343")),
-		encode(newBigInt("12344")),
-		encode(newBigInt("12345")),
+	testOrdering(t, lexy.BigInt(), []testCase[*big.Int]{
+		{"nil", nil, nil},
+		{"-12345", newBigInt("-12345"), nil},
+		{"-12344", newBigInt("-12344"), nil},
+		{"-12343", newBigInt("-12343"), nil},
+		{"-257", newBigInt("-257"), nil},
+		{"-256", newBigInt("-256"), nil},
+		{"-255", newBigInt("-255"), nil},
+		{"-1", newBigInt("-1"), nil},
+		{"0", newBigInt("0"), nil},
+		{"1", newBigInt("1"), nil},
+		{"255", newBigInt("255"), nil},
+		{"256", newBigInt("256"), nil},
+		{"257", newBigInt("257"), nil},
+		{"12343", newBigInt("12343"), nil},
+		{"12344", newBigInt("12344"), nil},
+		{"12345", newBigInt("12345"), nil},
 	})
 }
 
 func TestBigIntNilsLast(t *testing.T) {
 	t.Parallel()
-	encodeFirst := encoderFor(lexy.BigInt())
-	encodeLast := encoderFor(lexy.NilsLast(lexy.BigInt()))
-	assert.IsIncreasing(t, [][]byte{
-		encodeFirst(nil),
-		encodeFirst(newBigInt("-12345")),
-		encodeFirst(newBigInt("0")),
-		encodeFirst(newBigInt("12345")),
-	})
-	assert.IsIncreasing(t, [][]byte{
-		encodeLast(newBigInt("-12345")),
-		encodeLast(newBigInt("0")),
-		encodeLast(newBigInt("12345")),
-		encodeLast(nil),
+	testOrdering(t, lexy.NilsLast(lexy.BigInt()), []testCase[*big.Int]{
+		{"-12345", newBigInt("-12345"), nil},
+		{"0", newBigInt("0"), nil},
+		{"12345", newBigInt("12345"), nil},
+		{"nil", nil, nil},
 	})
 }
 
@@ -119,7 +104,7 @@ func newBigFloat(s string) *big.Float {
 	var value big.Float
 	// Parse truncates to 64 bits if precision is currently 0.
 	value.SetPrec(100000)
-	//nolint:dogsled,errcheck,gosec
+	//nolint:dogsled,errcheck
 	_, _, _ = value.Parse(s, 10)
 	value.SetPrec(value.MinPrec())
 	return &value
@@ -169,7 +154,6 @@ func TestBigFloat(t *testing.T) {
 	}))
 }
 
-//nolint:funlen
 func TestBigFloatOrdering(t *testing.T) {
 	t.Parallel()
 	var negInf, posInf, negZero, posZero big.Float
@@ -181,76 +165,83 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
-	encode := encoderFor(lexy.BigFloat())
-	assert.IsIncreasing(t, [][]byte{
-		encode(nil),
-		encode(&negInf),
-
-		// Negative Numbers
-		// for the same matissa, a higher exponent (first) or precision is more negative
+	// For the same matissa, a higher exponent (first) or precision is closer to infinity.
+	testOrdering(t, lexy.BigFloat(), []testCase[*big.Float]{
+		{"nil", nil, nil},
+		{"-Inf", &negInf, nil},
 
 		// large negative numbers
-		encode(newBigFloat64(-12345.0, 10000, 21)),
-		encode(newBigFloat64(-12345.0, 10000, 20)),
-		encode(newBigFloat64(-12345.0, 10000, 19)),
-		encode(newBigFloat64(-12345.0, 9999, 21)),
-		encode(newBigFloat64(-12345.0, 9999, 20)),
-		encode(newBigFloat64(-12345.0, 9999, 19)),
+		{"-12345.0 * 2^10000 (21)", newBigFloat64(-12345.0, 10000, 21), nil},
+		{"-12345.0 * 2^10000 (20)", newBigFloat64(-12345.0, 10000, 20), nil},
+		{"-12345.0 * 2^10000 (19)", newBigFloat64(-12345.0, 10000, 19), nil},
+		{"-12345.0 * 2^9999 (21)", newBigFloat64(-12345.0, 9999, 21), nil},
+		{"-12345.0 * 2^9999 (20)", newBigFloat64(-12345.0, 9999, 20), nil},
+		{"-12345.0 * 2^9999 (19)", newBigFloat64(-12345.0, 9999, 19), nil},
 
 		// both whole and fractional parts
-		encode(newBigFloat64(-12345.0, 10, 21)),
-		encode(newBigFloat64(-12345.0, 10, 20)),
-		encode(newBigFloat64(-12345.0, 10, 19)),
+		{"-12345.0 * 2^10 (21)", newBigFloat64(-12345.0, 10, 21), nil},
+		{"-12345.0 * 2^10 (20)", newBigFloat64(-12345.0, 10, 20), nil},
+		{"-12345.0 * 2^10 (19)", newBigFloat64(-12345.0, 10, 19), nil},
 
 		// numbers near -7.0
-		encode(newBigFloat64(-7.1, 0, 21)),
-		encode(newBigFloat64(-7.1, 0, 20)),
-		encode(newBigFloat64(-7.0, 0, 10)), // shift 13
-		encode(newBigFloat64(-7.0, 0, 4)),  // shift 5
-		encode(newBigFloat64(-7.0, 0, 3)),  // shift 5
-		encode(newBigFloat64(-6.9, 0, 21)),
-		encode(newBigFloat64(-6.9, 0, 20)),
+		{"-7.1 * 2^0 (21)", newBigFloat64(-7.1, 0, 21), nil},
+		{"-7.1 * 2^0 (20)", newBigFloat64(-7.1, 0, 20), nil},
+		{"-7.0 * 2^0 (10)", newBigFloat64(-7.0, 0, 10), nil}, // shift 13
+		{"-7.0 * 2^0 (4)", newBigFloat64(-7.0, 0, 4), nil},   // shift 5
+		{"-7.0 * 2^0 (3)", newBigFloat64(-7.0, 0, 3), nil},   // shift 5
+		{"-6.9 * 2^0 (21)", newBigFloat64(-6.9, 0, 21), nil},
+		{"-6.9 * 2^0 (20)", newBigFloat64(-6.9, 0, 20), nil},
 
 		// very small negative numbers
-		encode(newBigFloat64(-12345.0, -10000, 21)),
-		encode(newBigFloat64(-12345.0, -10000, 20)),
-		encode(newBigFloat64(-12345.0, -10000, 19)),
+		{"-12345.0 * 2^-10000 (21)", newBigFloat64(-12345.0, -10000, 21), nil},
+		{"-12345.0 * 2^-10000 (20)", newBigFloat64(-12345.0, -10000, 20), nil},
+		{"-12345.0 * 2^-10000 (19)", newBigFloat64(-12345.0, -10000, 19), nil},
 
 		// zeros
-		encode(&negZero),
-		encode(&posZero),
-
-		// Positive Numbers
-		// for the same matissa, a higher exponent (first) or precision is more positive
+		{"-0.0", &negZero, nil},
+		{"+0.0", &posZero, nil},
 
 		// very small positive numbers
-		encode(newBigFloat64(12345.0, -10000, 19)),
-		encode(newBigFloat64(12345.0, -10000, 20)),
-		encode(newBigFloat64(12345.0, -10000, 21)),
+		{"12345.0 * 2^-10000 (19)", newBigFloat64(12345.0, -10000, 19), nil},
+		{"12345.0 * 2^-10000 (20)", newBigFloat64(12345.0, -10000, 20), nil},
+		{"12345.0 * 2^-10000 (21)", newBigFloat64(12345.0, -10000, 21), nil},
 
 		// numbers near 7.0
-		encode(newBigFloat64(6.9, 0, 20)),
-		encode(newBigFloat64(6.9, 0, 21)),
-		encode(newBigFloat64(7.0, 0, 3)),  // shift
-		encode(newBigFloat64(7.0, 0, 4)),  // shift 5
-		encode(newBigFloat64(7.0, 0, 10)), // shift 13
-		encode(newBigFloat64(7.1, 0, 20)),
-		encode(newBigFloat64(7.1, 0, 21)),
+		{"6.9 * 2^0 (20)", newBigFloat64(6.9, 0, 20), nil},
+		{"6.9 * 2^0 (21)", newBigFloat64(6.9, 0, 21), nil},
+		{"7.0 * 2^0 (3)", newBigFloat64(7.0, 0, 3), nil},   // shift
+		{"7.0 * 2^0 (4)", newBigFloat64(7.0, 0, 4), nil},   // shift 5
+		{"7.0 * 2^0 (10)", newBigFloat64(7.0, 0, 10), nil}, // shift 13
+		{"7.1 * 2^0 (20)", newBigFloat64(7.1, 0, 20), nil},
+		{"7.1 * 2^0 (21)", newBigFloat64(7.1, 0, 21), nil},
 
 		// both whole and fractional parts
-		encode(newBigFloat64(12345.0, 10, 19)),
-		encode(newBigFloat64(12345.0, 10, 20)),
-		encode(newBigFloat64(12345.0, 10, 21)),
+		{"12345.0 * 2^10 (19)", newBigFloat64(12345.0, 10, 19), nil},
+		{"12345.0 * 2^10 (20)", newBigFloat64(12345.0, 10, 20), nil},
+		{"12345.0 * 2^10 (21)", newBigFloat64(12345.0, 10, 21), nil},
 
 		// large positive numbers
-		encode(newBigFloat64(12345.0, 9999, 19)),
-		encode(newBigFloat64(12345.0, 9999, 20)),
-		encode(newBigFloat64(12345.0, 9999, 21)),
-		encode(newBigFloat64(12345.0, 10000, 19)),
-		encode(newBigFloat64(12345.0, 10000, 20)),
-		encode(newBigFloat64(12345.0, 10000, 21)),
+		{"12345.0 * 2^9999 (19)", newBigFloat64(12345.0, 9999, 19), nil},
+		{"12345.0 * 2^9999 (20)", newBigFloat64(12345.0, 9999, 20), nil},
+		{"12345.0 * 2^9999 (21)", newBigFloat64(12345.0, 9999, 21), nil},
+		{"12345.0 * 2^10000 (19)", newBigFloat64(12345.0, 10000, 19), nil},
+		{"12345.0 * 2^10000 (20)", newBigFloat64(12345.0, 10000, 20), nil},
+		{"12345.0 * 2^10000 (21)", newBigFloat64(12345.0, 10000, 21), nil},
 
-		encode(&posInf),
+		{"+Inf", &posInf, nil},
+	})
+}
+
+func TestBigFloatNilsLast(t *testing.T) {
+	t.Parallel()
+	var negInf, posInf, posZero big.Float
+	negInf.SetInf(true)
+	posInf.SetInf(false)
+	testOrdering(t, lexy.NilsLast(lexy.BigFloat()), []testCase[*big.Float]{
+		{"-Inf", &negInf, nil},
+		{"+0.0", &posZero, nil},
+		{"+Inf", &posInf, nil},
+		{"nil", nil, nil},
 	})
 }
 
@@ -269,14 +260,26 @@ func TestBigRat(t *testing.T) {
 		{"0/123", newBigRat("0", "123"), nil},
 		{"5432/42", newBigRat("5432", "42"), nil},
 	}))
+}
 
-	encode := encoderFor(codec)
-	assert.IsIncreasing(t, [][]byte{
-		encode(nil),
-		encode(newBigRat("-1", "1")),
-		encode(newBigRat("-1", "2")),
-		encode(newBigRat("0", "1")),
-		encode(newBigRat("1", "1")),
-		encode(newBigRat("1", "2")),
+func TestBigRatOrdering(t *testing.T) {
+	t.Parallel()
+	testOrdering(t, lexy.BigRat(), []testCase[*big.Rat]{
+		{"nil", nil, nil},
+		{"-1/1", newBigRat("-1", "1"), nil},
+		{"-1/2", newBigRat("-1", "2"), nil},
+		{"0/1", newBigRat("0", "1"), nil},
+		{"1/1", newBigRat("1", "1"), nil},
+		{"1/2", newBigRat("1", "2"), nil},
+	})
+}
+
+func TestBigRatNilsLast(t *testing.T) {
+	t.Parallel()
+	testOrdering(t, lexy.NilsLast(lexy.BigRat()), []testCase[*big.Rat]{
+		{"-1/1", newBigRat("-1", "1"), nil},
+		{"0/1", newBigRat("0", "1"), nil},
+		{"1/2", newBigRat("1", "2"), nil},
+		{"nil", nil, nil},
 	})
 }

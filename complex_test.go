@@ -2,155 +2,46 @@ package lexy_test
 
 import (
 	"fmt"
-	"math"
 	"testing"
 
 	"github.com/phiryll/lexy"
-	"github.com/stretchr/testify/assert"
 )
 
-// Reusing things from float_test.
+func comp64(r, i float32) complex64   { return complex(r, i) }
+func comp128(r, i float64) complex128 { return complex(r, i) }
 
-// float32s in increasing order.
-var float32s = []struct {
-	name  string
-	value float32
-}{
-	{"-max NaN", negMaxNaN32},
-	{"-min NaN", negMinNaN32},
-	{"-Inf", negInf32},
-	{"-max normal", negMaxNormal32},
-	{"-min normal", negMinNormal32},
-	{"-max subnormal", negMaxSubnormal32},
-	{"-min subnormal", negMinSubnormal32},
-	{"-0", negZero32},
-	{"+0", posZero32},
-	{"+min subnormal", posMinSubnormal32},
-	{"+max subnormal", posMaxSubnormal32},
-	{"+min normal", posMinNormal32},
-	{"+max normal", posMaxNormal32},
-	{"+Inf", posInf32},
-	{"+min NaN", posMinNaN32},
-	{"+max NaN", posMaxNaN32},
+func pairTestCases[T, P any](tests []testCase[T], pair func(a, b T) P) []testCase[P] {
+	result := []testCase[P]{}
+	for _, a := range tests {
+		for _, b := range tests {
+			result = append(result, testCase[P]{
+				fmt.Sprintf("(%s, %s)", a.name, b.name),
+				pair(a.value, b.value),
+				nil,
+			})
+		}
+	}
+	return result
 }
 
-//nolint:dupl
 func TestComplex64(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex64()
-	// Ensure we get a complex64 without having to cast the arguments.
-	comp := func(r, i float32) complex64 { return complex(r, i) }
-
-	// all pairs of float32s in increasing "order"
-	testCases := []testCase[complex64]{}
-	for _, r := range float32s {
-		for _, i := range float32s {
-			testCases = append(testCases, testCase[complex64]{
-				fmt.Sprintf("(%s, %s)", r.name, i.name),
-				comp(r.value, i.value),
-				nil,
-			})
-		}
-	}
-
-	// test round trip
-	for _, tt := range testCases {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			buf := codec.Append(nil, tt.value)
-			got, _ := codec.Get(buf)
-			// works for NaN as well
-			assert.Equal(t, math.Float32bits(real(tt.value)), math.Float32bits(real(got)))
-		})
-	}
-
-	// test ordering
-	var prev []byte
-	for i, tt := range testCases {
-		i, tt := i, tt
-		name := tt.name
-		if i > 0 {
-			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
-		}
-		t.Run(name, func(t *testing.T) {
-			current := codec.Append(nil, tt.value)
-			if i > 0 {
-				assert.Less(t, prev, current)
-			}
-			prev = current
-		})
-	}
+	testCodec(t, codec, fillTestData(codec, pairTestCases(float32NumberTestCases, comp64)))
 }
 
-// float64s in increasing order.
-var float64s = []struct {
-	name  string
-	value float64
-}{
-	{"-max NaN", negMaxNaN64},
-	{"-min NaN", negMinNaN64},
-	{"-Inf", negInf64},
-	{"-max normal", negMaxNormal64},
-	{"-min normal", negMinNormal64},
-	{"-max subnormal", negMaxSubnormal64},
-	{"-min subnormal", negMinSubnormal64},
-	{"-0", negZero64},
-	{"+0", posZero64},
-	{"+min subnormal", posMinSubnormal64},
-	{"+max subnormal", posMaxSubnormal64},
-	{"+min normal", posMinNormal64},
-	{"+max normal", posMaxNormal64},
-	{"+Inf", posInf64},
-	{"+min NaN", posMinNaN64},
-	{"+max NaN", posMaxNaN64},
+func TestComplex64Ordering(t *testing.T) {
+	t.Parallel()
+	testOrdering(t, lexy.Complex64(), pairTestCases(float32TestCases, comp64))
 }
 
-//nolint:dupl
 func TestComplex128(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex128()
-	// Ensure we get a complex128 without having to cast the arguments.
-	comp := func(r, i float64) complex128 { return complex(r, i) }
+	testCodec(t, codec, fillTestData(codec, pairTestCases(float64NumberTestCases, comp128)))
+}
 
-	// all pairs of float64s in increasing "order"
-	testCases := []testCase[complex128]{}
-	for _, r := range float64s {
-		for _, i := range float64s {
-			testCases = append(testCases, testCase[complex128]{
-				fmt.Sprintf("(%s, %s)", r.name, i.name),
-				comp(r.value, i.value),
-				nil,
-			})
-		}
-	}
-
-	// test round trip
-	for _, tt := range testCases {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			buf := codec.Append(nil, tt.value)
-			got, _ := codec.Get(buf)
-			// works for NaN as well
-			assert.Equal(t, math.Float64bits(real(tt.value)), math.Float64bits(real(got)))
-		})
-	}
-
-	// test ordering
-	var prev []byte
-	for i, tt := range testCases {
-		i, tt := i, tt
-		name := tt.name
-		if i > 0 {
-			name = fmt.Sprintf("%s < %s", testCases[i-1].name, name)
-		}
-		t.Run(name, func(t *testing.T) {
-			current := codec.Append(nil, tt.value)
-			if i > 0 {
-				assert.Less(t, prev, current)
-			}
-			prev = current
-		})
-	}
+func TestComplex128Ordering(t *testing.T) {
+	t.Parallel()
+	testOrdering(t, lexy.Complex128(), pairTestCases(float64TestCases, comp128))
 }

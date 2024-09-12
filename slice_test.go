@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestSliceInt32(t *testing.T) {
@@ -221,22 +220,13 @@ func TestSliceUnderlyingType(t *testing.T) {
 
 func TestSliceNilsLast(t *testing.T) {
 	t.Parallel()
-	encodeFirst := encoderFor(lexy.SliceOf(lexy.Int32()))
-	encodeLast := encoderFor(lexy.NilsLast(lexy.SliceOf(lexy.Int32())))
-	assert.IsIncreasing(t, [][]byte{
-		encodeFirst(nil),
-		encodeFirst([]int32{-100, 5}),
-		encodeFirst([]int32{0}),
-		encodeFirst([]int32{0, 0, 0}),
-		encodeFirst([]int32{0, 1}),
-		encodeFirst([]int32{35}),
-	})
-	assert.IsIncreasing(t, [][]byte{
-		encodeLast([]int32{-100, 5}),
-		encodeLast([]int32{0}),
-		encodeLast([]int32{0, 0, 0}),
-		encodeLast([]int32{0, 1}),
-		encodeLast([]int32{35}),
-		encodeLast(nil),
+	codec := lexy.SliceOf(lexy.Int32())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[[]int32]{
+		{"[-100, 5]", []int32{-100, 5}, nil},
+		{"[0]", []int32{0}, nil},
+		{"[0, 0, 0]", []int32{0, 0, 0}, nil},
+		{"[0, 1]", []int32{0, 1}, nil},
+		{"[35]", []int32{35}, nil},
+		{"nil", nil, nil},
 	})
 }

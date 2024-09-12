@@ -64,10 +64,6 @@ type Prefix interface {
 	//	    // decode and return a non-nil value from buf
 	//	}
 	Get(buf []byte) (done bool, newBuf []byte)
-
-	// prefixFor returns which prefix byte to write.
-	// This method is used by Append and Put.
-	prefixFor(isNil bool) byte
 }
 
 var (
@@ -84,20 +80,21 @@ type (
 )
 
 //nolint:revive
-func (prefixNilsFirst) prefixFor(isNil bool) byte {
+func (prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
-		return prefixNilFirst
+		return true, append(buf, prefixNilFirst)
 	}
-	return prefixNonNil
+	return false, append(buf, prefixNonNil)
 }
 
-func (p prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
-	return isNil, append(buf, p.prefixFor(isNil))
-}
-
-func (p prefixNilsFirst) Put(buf []byte, isNil bool) (bool, []byte) {
-	buf[0] = p.prefixFor(isNil)
-	return isNil, buf[1:]
+//nolint:revive
+func (prefixNilsFirst) Put(buf []byte, isNil bool) (bool, []byte) {
+	if isNil {
+		buf[0] = prefixNilFirst
+		return true, buf[1:]
+	}
+	buf[0] = prefixNonNil
+	return false, buf[1:]
 }
 
 func (prefixNilsFirst) Get(buf []byte) (bool, []byte) {
@@ -114,20 +111,21 @@ func (prefixNilsFirst) Get(buf []byte) (bool, []byte) {
 }
 
 //nolint:revive
-func (prefixNilsLast) prefixFor(isNil bool) byte {
+func (prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
-		return prefixNilLast
+		return true, append(buf, prefixNilLast)
 	}
-	return prefixNonNil
+	return false, append(buf, prefixNonNil)
 }
 
-func (p prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
-	return isNil, append(buf, p.prefixFor(isNil))
-}
-
-func (p prefixNilsLast) Put(buf []byte, isNil bool) (bool, []byte) {
-	buf[0] = p.prefixFor(isNil)
-	return isNil, buf[1:]
+//nolint:revive
+func (prefixNilsLast) Put(buf []byte, isNil bool) (bool, []byte) {
+	if isNil {
+		buf[0] = prefixNilLast
+		return true, buf[1:]
+	}
+	buf[0] = prefixNonNil
+	return false, buf[1:]
 }
 
 func (prefixNilsLast) Get(buf []byte) (bool, []byte) {

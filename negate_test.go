@@ -35,16 +35,19 @@ func TestNegateInt32(t *testing.T) {
 		{"+1", 1, []byte{0x7F, 0xFF, 0xFF, 0xFE}},
 		{"max", math.MaxInt32, []byte{0x00, 0x00, 0x00, 0x00}},
 	})
+}
 
-	encode := encoderFor(codec)
-	assert.IsIncreasing(t, [][]byte{
-		encode(math.MaxInt32),
-		encode(100),
-		encode(1),
-		encode(0),
-		encode(-1),
-		encode(-100),
-		encode(math.MinInt32),
+func TestNegateInt32Ordering(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Negate(lexy.Int32())
+	testOrdering(t, codec, []testCase[int32]{
+		{"max", math.MaxInt32, nil},
+		{"100", 100, nil},
+		{"1", 1, nil},
+		{"0", 0, nil},
+		{"-1", -1, nil},
+		{"-100", -100, nil},
+		{"min", math.MinInt32, nil},
 	})
 }
 
@@ -52,8 +55,8 @@ func TestNegateInt32(t *testing.T) {
 // This tests for that regression, see the comments on negateEscapeCodec for details.
 func TestNegateLength(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(lexy.Negate(lexy.String()))
-	assert.Less(t, encode("ab"), encode("a"))
+	codec := lexy.Negate(lexy.String())
+	assert.Less(t, codec.Append(nil, "ab"), codec.Append(nil, "a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
@@ -71,14 +74,17 @@ func TestNegatePtrString(t *testing.T) {
 			negString("def"),
 			[]byte{negTerm})},
 	})
+}
 
-	encode := encoderFor(codec)
-	assert.IsIncreasing(t, [][]byte{
-		encode(ptr("def")),
-		encode(ptr("abc")),
-		encode(ptr("ab")),
-		encode(ptr("")),
-		encode(nil),
+func TestNegatePtrStringOrdering(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Negate(lexy.PointerTo(lexy.String()))
+	testOrdering(t, codec, []testCase[*string]{
+		{"*def", ptr("def"), nil},
+		{"*abc", ptr("abc"), nil},
+		{"*ab", ptr("ab"), nil},
+		{"*empty", ptr(""), nil},
+		{"nil", nil, nil},
 	})
 }
 
@@ -105,20 +111,23 @@ func TestNegateSlicePtrString(t *testing.T) {
 			[]byte{negPNonNil}, negString("xyz"), []byte{negEsc, negTerm},
 			[]byte{negTerm})},
 	})
+}
 
-	encode := encoderFor(codec)
-	assert.IsIncreasing(t, [][]byte{
-		encode([]*string{ptr("b"), nil}),
-		encode([]*string{ptr("b")}),
-		encode([]*string{ptr("a"), ptr("a")}),
-		encode([]*string{ptr("a"), ptr("")}),
-		encode([]*string{ptr("a"), nil, ptr("z")}),
-		encode([]*string{ptr("a"), nil, nil, nil, nil}),
-		encode([]*string{ptr("a"), nil}),
-		encode([]*string{ptr("a")}),
-		encode([]*string{nil}),
-		encode([]*string{}),
-		encode(nil),
+func TestNegateSlicePtrStringOrdering(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Negate(lexy.SliceOf(lexy.PointerTo(lexy.String())))
+	testOrdering(t, codec, []testCase[[]*string]{
+		{"[*b, nil]", []*string{ptr("b"), nil}, nil},
+		{"[*b]", []*string{ptr("b")}, nil},
+		{"[*a, *a]", []*string{ptr("a"), ptr("a")}, nil},
+		{"[*a, *empty]", []*string{ptr("a"), ptr("")}, nil},
+		{"[*a, nil, *z]", []*string{ptr("a"), nil, ptr("z")}, nil},
+		{"[*a, nil, nil, nil, nil]", []*string{ptr("a"), nil, nil, nil, nil}, nil},
+		{"[*a, nil]", []*string{ptr("a"), nil}, nil},
+		{"[*a]", []*string{ptr("a")}, nil},
+		{"[nil]", []*string{nil}, nil},
+		{"[]", []*string{}, nil},
+		{"nil", nil, nil},
 	})
 }
 
@@ -164,13 +173,8 @@ func (negateTestCodec) RequiresTerminator() bool {
 
 func TestNegateComplex(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(negTestCodec)
-	ptr := func(x int) *int16 {
-		i16 := int16(x)
-		return &i16
-	}
 	testCodec(t, negTestCodec, []testCase[negateTest]{
-		{"{5, &100, def}", negateTest{5, ptr(100), "def"}, concat(
+		{"{5, &100, def}", negateTest{5, ptr(int16(100)), "def"}, concat(
 			[]byte{0x05},
 			negString("def"), []byte{negTerm},
 			[]byte{negPNonNil, ^byte(0x80), ^byte(0x64)},
@@ -181,43 +185,47 @@ func TestNegateComplex(t *testing.T) {
 			negPNilFirst,
 		}},
 	})
+}
 
-	assert.IsIncreasing(t, [][]byte{
+func TestNegateComplexOrdering(t *testing.T) {
+	t.Parallel()
+	p := ptr[int16]
+	testOrdering(t, negTestCodec, []testCase[negateTest]{
 		// sort order is: first, neg(third), neg(second)
-		encode(negateTest{5, ptr(100), "def"}),
-		encode(negateTest{5, ptr(0), "def"}),
-		encode(negateTest{5, ptr(-1), "def"}),
-		encode(negateTest{5, ptr(-100), "def"}),
-		encode(negateTest{5, nil, "def"}),
+		{"{5, *100, def}", negateTest{5, p(100), "def"}, nil},
+		{"{5, *0, def}", negateTest{5, p(0), "def"}, nil},
+		{"{5, *-1, def}", negateTest{5, p(-1), "def"}, nil},
+		{"{5, *-100, def}", negateTest{5, p(-100), "def"}, nil},
+		{"{5, nil, def}", negateTest{5, nil, "def"}, nil},
 
-		encode(negateTest{5, ptr(100), "abc"}),
-		encode(negateTest{5, ptr(0), "abc"}),
-		encode(negateTest{5, ptr(-1), "abc"}),
-		encode(negateTest{5, ptr(-100), "abc"}),
-		encode(negateTest{5, nil, "abc"}),
+		{"{5, *100, abc}", negateTest{5, p(100), "abc"}, nil},
+		{"{5, *0, abc}", negateTest{5, p(0), "abc"}, nil},
+		{"{5, *-1, abc}", negateTest{5, p(-1), "abc"}, nil},
+		{"{5, *-100, abc}", negateTest{5, p(-100), "abc"}, nil},
+		{"{5, nil, abc}", negateTest{5, nil, "abc"}, nil},
 
-		encode(negateTest{5, ptr(100), ""}),
-		encode(negateTest{5, ptr(0), ""}),
-		encode(negateTest{5, ptr(-1), ""}),
-		encode(negateTest{5, ptr(-100), ""}),
-		encode(negateTest{5, nil, ""}),
+		{"{5, *100, empty}", negateTest{5, p(100), ""}, nil},
+		{"{5, *0, empty}", negateTest{5, p(0), ""}, nil},
+		{"{5, *-1, empty}", negateTest{5, p(-1), ""}, nil},
+		{"{5, *-100, empty}", negateTest{5, p(-100), ""}, nil},
+		{"{5, nil, empty}", negateTest{5, nil, ""}, nil},
 
-		encode(negateTest{10, ptr(100), "def"}),
-		encode(negateTest{10, ptr(0), "def"}),
-		encode(negateTest{10, ptr(-1), "def"}),
-		encode(negateTest{10, ptr(-100), "def"}),
-		encode(negateTest{10, nil, "def"}),
+		{"{10, *100, def}", negateTest{10, p(100), "def"}, nil},
+		{"{10, *0, def}", negateTest{10, p(0), "def"}, nil},
+		{"{10, *-1, def}", negateTest{10, p(-1), "def"}, nil},
+		{"{10, *-100, def}", negateTest{10, p(-100), "def"}, nil},
+		{"{10, nil, def}", negateTest{10, nil, "def"}, nil},
 
-		encode(negateTest{10, ptr(100), "abc"}),
-		encode(negateTest{10, ptr(0), "abc"}),
-		encode(negateTest{10, ptr(-1), "abc"}),
-		encode(negateTest{10, ptr(-100), "abc"}),
-		encode(negateTest{10, nil, "abc"}),
+		{"{10, *100, abc}", negateTest{10, p(100), "abc"}, nil},
+		{"{10, *0, abc}", negateTest{10, p(0), "abc"}, nil},
+		{"{10, *-1, abc}", negateTest{10, p(-1), "abc"}, nil},
+		{"{10, *-100, abc}", negateTest{10, p(-100), "abc"}, nil},
+		{"{10, nil, abc}", negateTest{10, nil, "abc"}, nil},
 
-		encode(negateTest{10, ptr(100), ""}),
-		encode(negateTest{10, ptr(0), ""}),
-		encode(negateTest{10, ptr(-1), ""}),
-		encode(negateTest{10, ptr(-100), ""}),
-		encode(negateTest{10, nil, ""}),
+		{"{10, *100, empty}", negateTest{10, p(100), ""}, nil},
+		{"{10, *0, empty}", negateTest{10, p(0), ""}, nil},
+		{"{10, *-1, empty}", negateTest{10, p(-1), ""}, nil},
+		{"{10, *-100, empty}", negateTest{10, p(-100), ""}, nil},
+		{"{10, nil, empty}", negateTest{10, nil, ""}, nil},
 	})
 }

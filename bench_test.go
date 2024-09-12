@@ -21,11 +21,10 @@ type (
 	MySlice []MyInt32
 )
 
-//nolint:revive
 func BenchmarkNothing(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		// do nothing
+		_ = 0
 	}
 }
 
@@ -353,15 +352,13 @@ func BenchmarkTerminate(b *testing.B) {
 	})
 }
 
-//nolint:gosec,revive
 func randomBytes(n int, seed int64) []byte {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]byte, n)
-	random.Read(b)
+	_, _ = random.Read(b)
 	return b
 }
 
-//nolint:gosec
 func randomInt32(n int, seed int64) []int32 {
 	random := rand.New(rand.NewSource(seed))
 	b := make([]int32, n)
@@ -371,7 +368,6 @@ func randomInt32(n int, seed int64) []int32 {
 	return b
 }
 
-//nolint:thelper
 func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase[T]) {
 	if len(benchCases) == 1 {
 		benchSingleValue(b, codec, benchCases[0].value)
@@ -385,7 +381,6 @@ func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase
 	}
 }
 
-//nolint:thelper
 func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	// Tests both encoding and how efficiently codec.Append allocates the buffer.
 	b.Run("append nil", func(b *testing.B) {
