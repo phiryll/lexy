@@ -99,7 +99,6 @@ linters:
     - rowserrcheck      # SQL not used
     - spancheck         # OpenTelemetry/Census not used
     - varnamelen        # I don't agree with this one most of the time
-    - wrapcheck         # I don't agree with this one for this project, io errors should go through
     - wsl               # might be able to configure this well, but it'll take effort
     # replaced or duplicated
     - gocyclo           # by cyclop
