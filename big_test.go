@@ -154,7 +154,6 @@ func TestBigFloat(t *testing.T) {
 	}))
 }
 
-//nolint:funlen
 func TestBigFloatOrdering(t *testing.T) {
 	t.Parallel()
 	var negInf, posInf, negZero, posZero big.Float
@@ -166,12 +165,10 @@ func TestBigFloatOrdering(t *testing.T) {
 	assert.Equal(t, 0, negZero.Cmp(&posZero))
 	assert.NotEqual(t, &negZero, &posZero)
 
+	// For the same matissa, a higher exponent (first) or precision is closer to infinity.
 	testOrdering(t, lexy.BigFloat(), []testCase[*big.Float]{
 		{"nil", nil, nil},
 		{"-Inf", &negInf, nil},
-
-		// Negative Numbers
-		// for the same matissa, a higher exponent (first) or precision is more negative
 
 		// large negative numbers
 		{"-12345.0 * 2^10000 (21)", newBigFloat64(-12345.0, 10000, 21), nil},
@@ -203,9 +200,6 @@ func TestBigFloatOrdering(t *testing.T) {
 		// zeros
 		{"-0.0", &negZero, nil},
 		{"+0.0", &posZero, nil},
-
-		// Positive Numbers
-		// for the same matissa, a higher exponent (first) or precision is more positive
 
 		// very small positive numbers
 		{"12345.0 * 2^-10000 (19)", newBigFloat64(12345.0, -10000, 19), nil},
