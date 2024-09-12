@@ -55,8 +55,8 @@ func TestNegateInt32Ordering(t *testing.T) {
 // This tests for that regression, see the comments on negateEscapeCodec for details.
 func TestNegateLength(t *testing.T) {
 	t.Parallel()
-	encode := encoderFor(lexy.Negate(lexy.String()))
-	assert.Less(t, encode("ab"), encode("a"))
+	codec := lexy.Negate(lexy.String())
+	assert.Less(t, codec.Append(nil, "ab"), codec.Append(nil, "a"))
 }
 
 func TestNegatePtrString(t *testing.T) {

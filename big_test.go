@@ -22,7 +22,9 @@ func newBigInt(s string) *big.Int {
 func TestBigInt(t *testing.T) {
 	t.Parallel()
 	codec := lexy.BigInt()
-	encodeSize := encoderFor(lexy.Int64())
+	encodeSize := func(size int64) []byte {
+		return lexy.Int64().Append(nil, size)
+	}
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"-257", big.NewInt(-257), concat([]byte{pNonNil}, encodeSize(-2),

@@ -25,12 +25,6 @@ func ptr[T any](value T) *T {
 	return &value
 }
 
-func encoderFor[T any](codec lexy.Codec[T]) func(value T) []byte {
-	return func(value T) []byte {
-		return codec.Append(nil, value)
-	}
-}
-
 func concat(slices ...[]byte) []byte {
 	var result []byte
 	for _, s := range slices {
