@@ -19,45 +19,37 @@ func newBigInt(s string) *big.Int {
 	return &value
 }
 
-func concatNonNil(slices ...[]byte) []byte {
-	result := []byte{pNonNil}
-	for _, s := range slices {
-		result = append(result, s...)
-	}
-	return result
-}
-
 func TestBigInt(t *testing.T) {
 	t.Parallel()
 	codec := lexy.BigInt()
 	encodeSize := encoderFor(lexy.Int64())
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
-		{"-257", big.NewInt(-257), concatNonNil(encodeSize(-2),
+		{"-257", big.NewInt(-257), concat([]byte{pNonNil}, encodeSize(-2),
 			[]byte{0xFE, 0xFE})},
-		{"-256", big.NewInt(-256), concatNonNil(encodeSize(-2),
+		{"-256", big.NewInt(-256), concat([]byte{pNonNil}, encodeSize(-2),
 			[]byte{0xFE, 0xFF})},
-		{"-255", big.NewInt(-255), concatNonNil(encodeSize(-1),
+		{"-255", big.NewInt(-255), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0x00})},
-		{"-254", big.NewInt(-254), concatNonNil(encodeSize(-1),
+		{"-254", big.NewInt(-254), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0x01})},
-		{"-2", big.NewInt(-2), concatNonNil(encodeSize(-1),
+		{"-2", big.NewInt(-2), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0xFD})},
-		{"-1", big.NewInt(-1), concatNonNil(encodeSize(-1),
+		{"-1", big.NewInt(-1), concat([]byte{pNonNil}, encodeSize(-1),
 			[]byte{0xFE})},
-		{"0", big.NewInt(0), concatNonNil(encodeSize(0),
+		{"0", big.NewInt(0), concat([]byte{pNonNil}, encodeSize(0),
 			[]byte{})},
-		{"+1", big.NewInt(1), concatNonNil(encodeSize(1),
+		{"+1", big.NewInt(1), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0x01})},
-		{"+2", big.NewInt(2), concatNonNil(encodeSize(1),
+		{"+2", big.NewInt(2), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0x02})},
-		{"254", big.NewInt(254), concatNonNil(encodeSize(1),
+		{"254", big.NewInt(254), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0xFE})},
-		{"255", big.NewInt(255), concatNonNil(encodeSize(1),
+		{"255", big.NewInt(255), concat([]byte{pNonNil}, encodeSize(1),
 			[]byte{0xFF})},
-		{"256", big.NewInt(256), concatNonNil(encodeSize(2),
+		{"256", big.NewInt(256), concat([]byte{pNonNil}, encodeSize(2),
 			[]byte{0x01, 0x00})},
-		{"257", big.NewInt(257), concatNonNil(encodeSize(2),
+		{"257", big.NewInt(257), concat([]byte{pNonNil}, encodeSize(2),
 			[]byte{0x01, 0x01})},
 	})
 
