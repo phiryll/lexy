@@ -97,12 +97,11 @@ All `Codecs` provided by lexy are safe for concurrent use if their delegate `Cod
 
 `Codecs` do not normally encode a data's type, users must know what is being decoded.
 This aligns with best practices in Go, types should be known at compile time.
-A custom `Codec` handling multiple types could be created, but it is not recommended,
+A user-defined `Codec` handling multiple types could be created, but it is not recommended,
 and it would still require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Different `Codecs` will generally not produce encodings with consistent orderings with respect to each other.
-For example, `Int8().Append(nil, 1)` will produce an encoding
-that is lexicographically greater than the encoding produced by `Uint8().Append(nil, 100)`.
+For example, the encoding for `int8(1)` will be lexicographically greater than the encoding for `uint8(100)`.
 
 The `Codecs` provided by lexy can encode `nil` to be less than or greater than
 the encodings for non-`nil` values, for types that allow `nil` values.
@@ -136,19 +135,19 @@ Lexy provides these additional `Codecs`.
 * A `Codec` which reverses the lexicographical ordering of another `Codec`.
 * A `Codec` which terminates and escapes the encodings of another `Codec`.
 
-Lexy does not does not provide `Codecs` for the following types, but custom `Codecs` are easy to create.
+Lexy does not does not provide `Codecs` for the following types, but user-defined `Codecs` are easy to create.
 See the Go docs for examples.
 
 * structs  
   The inherent limitations of generic types in Go make it impossible
   to do this in a general way without having a separate parallel set of non-generic codecs.
   This is not a bad thing, resolving types at compile time is one of the reasons Go is so efficient.
-  Creating a strongly-typed custom `Codec` is a much simpler and safer alternative,
+  Creating a strongly-typed user-defined `Codec` is a much simpler and safer alternative,
   and also prevents silently changing an encoding when the data type it encodes is changed.
 * arrays  
   While it is possible to create a general `Codec` for array types,
   the generics are very messy and it requires using reflection extensively.
-  As is the case for structs, creating a strongly-typed custom `Codec` is a better option.
+  As is the case for structs, creating a strongly-typed user-defined `Codec` is a better option.
 * `uintptr`  
   This type has an implementation-specific size,
   and encoding a pointer without encoding what it points to doesn't make much sense.
