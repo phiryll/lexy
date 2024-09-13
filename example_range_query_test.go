@@ -166,11 +166,14 @@ func Example_rangeQuery() {
 		}
 	}
 
-	printRange(UserKey{[]string{"an"}, -1000},
+	printRange(
+		UserKey{[]string{"an"}, -1000},
 		UserKey{[]string{"empty", "result"}, 1})
-	printRange(UserKey{[]string{}, 1},
+	printRange(
+		UserKey{[]string{}, 1},
 		UserKey{[]string{"not", "the", "beginning"}, 1})
-	printRange(UserKey{[]string{"nouns", "are", "words"}, 1},
+	printRange(
+		UserKey{[]string{"nouns", "are", "words"}, 1},
 		UserKey{[]string{"in", "sort", "disorder"}, 2})
 	// Output:
 	// Range: {-1000, [an]} -> {1, [empty result]}
