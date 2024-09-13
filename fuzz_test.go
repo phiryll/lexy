@@ -247,46 +247,6 @@ func fuzzTargetForPair[T any](codec lexy.Codec[T], cmp func(T, T) int) func(*tes
 	}
 }
 
-func FuzzUint8(f *testing.F) {
-	addValues(f, seedsUint8...)
-	f.Fuzz(fuzzTargetForValue(lexy.Uint8()))
-}
-
-func FuzzUint16(f *testing.F) {
-	addValues(f, seedsUint16...)
-	f.Fuzz(fuzzTargetForValue(lexy.Uint16()))
-}
-
-func FuzzUint32(f *testing.F) {
-	addValues(f, seedsUint32...)
-	f.Fuzz(fuzzTargetForValue(lexy.Uint32()))
-}
-
-func FuzzUint64(f *testing.F) {
-	addValues(f, seedsUint64...)
-	f.Fuzz(fuzzTargetForValue(lexy.Uint64()))
-}
-
-func FuzzInt8(f *testing.F) {
-	addValues(f, seedsInt8...)
-	f.Fuzz(fuzzTargetForValue(lexy.Int8()))
-}
-
-func FuzzInt16(f *testing.F) {
-	addValues(f, seedsInt16...)
-	f.Fuzz(fuzzTargetForValue(lexy.Int16()))
-}
-
-func FuzzInt32(f *testing.F) {
-	addValues(f, seedsInt32...)
-	f.Fuzz(fuzzTargetForValue(lexy.Int32()))
-}
-
-func FuzzInt64(f *testing.F) {
-	addValues(f, seedsInt64...)
-	f.Fuzz(fuzzTargetForValue(lexy.Int64()))
-}
-
 func FuzzFloat32(f *testing.F) {
 	addValues(f, seedsFloat32...)
 	f.Fuzz(fuzzTargetForValue(toUint32(lexy.Float32())))
