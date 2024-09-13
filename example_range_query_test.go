@@ -59,28 +59,28 @@ func (db *DB) Range(begin, end []byte) ([]Entry, error) {
 var (
 	wordsCodec = lexy.Terminate(lexy.SliceOf(lexy.String()))
 	costCodec  = lexy.Int32()
-	keyCodec   = KeyCodec{}
+	KeyCodec   = keyCodec{}
 )
 
-type KeyCodec struct{}
+type keyCodec struct{}
 
-func (KeyCodec) Append(buf []byte, key UserKey) []byte {
+func (keyCodec) Append(buf []byte, key UserKey) []byte {
 	buf = costCodec.Append(buf, key.cost)
 	return wordsCodec.Append(buf, key.words)
 }
 
-func (KeyCodec) Put(buf []byte, key UserKey) []byte {
+func (keyCodec) Put(buf []byte, key UserKey) []byte {
 	buf = costCodec.Put(buf, key.cost)
 	return wordsCodec.Put(buf, key.words)
 }
 
-func (KeyCodec) Get(buf []byte) (UserKey, []byte) {
+func (keyCodec) Get(buf []byte) (UserKey, []byte) {
 	cost, buf := costCodec.Get(buf)
 	words, buf := wordsCodec.Get(buf)
 	return UserKey{words, cost}, buf
 }
 
-func (KeyCodec) RequiresTerminator() bool {
+func (keyCodec) RequiresTerminator() bool {
 	return false
 }
 
@@ -107,20 +107,20 @@ type UserEntry struct {
 }
 
 func (db *UserDB) Put(key UserKey, value int) error {
-	return db.realDB.Put(keyCodec.Append(nil, key), value)
+	return db.realDB.Put(KeyCodec.Append(nil, key), value)
 }
 
 // Returns Entries, in order, such that (begin <= entry.Key < end).
 func (db *UserDB) Range(begin, end UserKey) ([]UserEntry, error) {
-	beginBytes := keyCodec.Append(nil, begin)
-	endBytes := keyCodec.Append(nil, end)
+	beginBytes := KeyCodec.Append(nil, begin)
+	endBytes := KeyCodec.Append(nil, end)
 	dbEntries, err := db.realDB.Range(beginBytes, endBytes)
 	if err != nil {
 		return nil, err
 	}
 	userEntries := make([]UserEntry, len(dbEntries))
 	for i, dbEntry := range dbEntries {
-		userKey, _ := keyCodec.Get(dbEntry.Key)
+		userKey, _ := KeyCodec.Get(dbEntry.Key)
 		userEntries[i] = UserEntry{userKey, dbEntry.Value}
 	}
 	return userEntries, nil
