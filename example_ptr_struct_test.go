@@ -98,7 +98,7 @@ func containerEquals(a, b Container) bool {
 }
 
 // ExamplePointerToStruct shows how to use pointers for efficiency
-// in a custom Codec, to avoid unnecessarily copying large data structures.
+// in a user-defined Codec, to avoid unnecessarily copying large data structures.
 // Note that types in Go other than structs and arrays do not have this problem.
 // Complex numbers, strings, pointers, slices, and maps
 // all have a relatively small footprint when passed by value.

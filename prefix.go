@@ -45,7 +45,7 @@ type Prefix interface {
 	//	func (fooCodec) Put(buf []byte, value Foo) []byte {
 	//	    done, buf := PrefixNilsFirst.Put(buf, value == nil)
 	//	    if done {
-	//	        return nil
+	//	        return buf
 	//	    }
 	//	    // encode the non-nil value into buf
 	//	}

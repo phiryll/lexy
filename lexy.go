@@ -1,16 +1,18 @@
 /*
 Package lexy defines an API for lexicographically ordered binary encodings.
 Implementations are provided for most builtin Go data types,
-and supporting functions are provided to allow the creation of custom encodings.
+and supporting functionality is provided to allow for the creation of user-defined encodings.
 
 The [Codec][T] interface defines an encoding, with methods to encode and decode values of type T.
 Functions returning Codecs for different types constitute the majority of this API.
 There are two kinds of Codec-returning functions defined by this package,
 those for which Go can infer the type arguments, and those for which Go cannot.
-The former have terser names, as in [Int16]().
-The latter have names starting with "Cast", as in [CastInt16][MyIntType]().
+The former have terser names, as in [Int16].
+The latter have names starting with "Cast", as in [CastInt16][MyIntType].
 These latter functions are only needed when creating a Codec for a type that is not the same as its underlying type.
 [Empty] also requires a type argument when used and is the only exception to this naming convention.
+
+All Codecs provided by lexy are safe for concurrent use if their delegate Codecs (if any) are.
 
 All Codecs provided by lexy will order nils first if nil can be encoded.
 Invoking [NilsLast](codec) on a Codec will return a Codec which orders nils last,
@@ -42,6 +44,10 @@ These Codec-returning functions require specifying a type parameter when invoked
   - [CastString]
   - [CastBytes]
   - [CastPointerTo], [CastSliceOf], [CastMapOf]
+
+These are implementations of [Prefix], used when creating user-defined Codecs
+that can encode types whose instances can be nil.
+  - [PrefixNilsFirst], [PrefixNilsLast]
 */
 package lexy
 
@@ -80,11 +86,9 @@ type Codec[T any] interface {
 	// Put will write only the bytes that encode value.
 	Put(buf []byte, value T) []byte
 
-	// Get decodes a value of type T from buf,
-	// returning the value and buf following the encoded value.
+	// Get decodes a value of type T from buf, returning the value and buf following the encoded value.
 	// Get will panic if a value of type T cannot be successfully decoded from buf.
-	// If buf is empty and this Codec could encode zero bytes for some value,
-	// Get will return that value and buf.
+	// If buf is empty and this Codec could encode zero bytes for some value, Get will return that value and buf.
 	// Get will not modify buf.
 	Get(buf []byte) (T, []byte)
 
@@ -273,7 +277,8 @@ func BigFloat() Codec[*big.Float] { return stdBigFloat }
 
 // BigRat returns a Codec for the *big.Rat type, with nils ordered first.
 // The encoded order is signed numerator first, positive denominator second.
-// Note that big.Rat will normalize its value to lowest terms.
+// Note that this is not the natural ordering for rational numbers.
+// big.Rat will normalize its value to lowest terms.
 // This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func BigRat() Codec[*big.Rat] { return stdBigRat }
 
@@ -319,7 +324,7 @@ func MapOf[K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[ma
 // Negate returns a Codec reversing the encoded order of codec.
 // This Codec does not require escaping, as defined by [Codec.RequiresTerminator].
 func Negate[T any](codec Codec[T]) Codec[T] {
-	// negateCodec internally escapes its data, so unwrap any terminatorCodecs.
+	// negateEscapeCodec internally escapes its data, so unwrap any terminatorCodecs.
 	for {
 		delegate, ok := codec.(terminatorCodec[T])
 		if !ok {

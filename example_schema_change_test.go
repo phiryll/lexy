@@ -58,7 +58,7 @@ func (previousCodec) RequiresTerminator() bool {
 }
 
 // Other than handling the field changes, this Codec could change the sort order,
-// although writing back to the same database index would corrupt the its ordering.
+// although writing back to the same database index would corrupt the ordering.
 // Because Get reads field names first, it is tolerant of field reorderings.
 type schemaCodec struct{}
 
@@ -76,6 +76,8 @@ func (schemaCodec) Get(buf []byte) (schema, []byte) {
 		if len(buf) == 0 {
 			return value, buf
 		}
+		// Declaring these because "x, buf := ..." would declare a new buf,
+		// and we need to keep the same buf throughout.
 		var field string
 		var firstName, middleName, lastName string
 		field, buf = nameCodec.Get(buf)
