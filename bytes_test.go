@@ -4,10 +4,13 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytes(t *testing.T) {
 	t.Parallel()
+	assert.True(t, lexy.Bytes().RequiresTerminator())
+	assert.False(t, lexy.TerminatedBytes().RequiresTerminator())
 	testCodec(t, lexy.Bytes(), []testCase[[]byte]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []byte{}, []byte{pNonNil}},

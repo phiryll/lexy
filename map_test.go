@@ -13,6 +13,8 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 }
 
 func testBasicMapWithPrefix[M ~map[string]int32](t *testing.T, nilPrefix byte, codec lexy.Codec[M]) {
+	assert.True(t, codec.RequiresTerminator())
+
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
 		{"nil", nil, []byte{nilPrefix}},
@@ -65,6 +67,7 @@ func TestMapUnderlyingType(t *testing.T) {
 func TestMapSlice(t *testing.T) {
 	t.Parallel()
 	codec := lexy.MapOf(lexy.String(), lexy.SliceOf(lexy.String()))
+	assert.True(t, codec.RequiresTerminator())
 	testVaryingCodec(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -90,6 +93,7 @@ func TestMapPointerPointer(t *testing.T) {
 	// Instead, we'll dump the referents into a new map and compare that.
 	pointerCodec := lexy.PointerTo(lexy.String())
 	codec := lexy.MapOf(pointerCodec, pointerCodec)
+	assert.True(t, codec.RequiresTerminator())
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},

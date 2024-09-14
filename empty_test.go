@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 // There are good reasons to test emptyCodec in combination with other Codecs.
@@ -23,6 +24,7 @@ var (
 
 func TestEmpty(t *testing.T) {
 	t.Parallel()
+	assert.True(t, emptyCodec.RequiresTerminator())
 	testCodec(t, emptyCodec, []testCase[emptyStruct]{
 		{"empty", emptyStruct{}, []byte{}},
 	})

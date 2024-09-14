@@ -255,6 +255,7 @@ func TestNames32(t *testing.T) {
 func TestFloat32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Float32()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, float32NumberTestCases))
 }
 
@@ -349,6 +350,7 @@ func TestNames64(t *testing.T) {
 func TestFloat64(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Float64()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, float64NumberTestCases))
 }
 

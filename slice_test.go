@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSliceInt32(t *testing.T) {
@@ -67,6 +68,7 @@ func TestSlicePtrUint8(t *testing.T) {
 func TestSlicePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.SliceOf(lexy.PointerTo(lexy.String()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[[]*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []*string{}, []byte{pNonNil}},
@@ -85,6 +87,7 @@ func TestSlicePtrString(t *testing.T) {
 func TestSliceSliceInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.SliceOf(lexy.SliceOf(lexy.Int32()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[[][]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]int32{}, []byte{pNonNil}},
@@ -119,6 +122,7 @@ func TestSliceSliceInt32(t *testing.T) {
 func TestSliceSliceString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.SliceOf(lexy.SliceOf(lexy.String()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[[][]string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"[]", [][]string{}, []byte{pNonNil}},
@@ -204,6 +208,7 @@ type sInt []int32
 func TestSliceUnderlyingType(t *testing.T) {
 	t.Parallel()
 	codec := lexy.NilsLast(lexy.CastSliceOf[sInt](lexy.Int32()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[sInt]{
 		{"nil", sInt(nil), []byte{pNilLast}},
 		{"empty", sInt([]int32{}), []byte{pNonNil}},
@@ -221,6 +226,7 @@ func TestSliceUnderlyingType(t *testing.T) {
 func TestSliceNilsLast(t *testing.T) {
 	t.Parallel()
 	codec := lexy.SliceOf(lexy.Int32())
+	assert.True(t, codec.RequiresTerminator())
 	testOrdering(t, lexy.NilsLast(codec), []testCase[[]int32]{
 		{"[-100, 5]", []int32{-100, 5}, nil},
 		{"[0]", []int32{0}, nil},

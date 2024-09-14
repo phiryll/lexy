@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
-
-// Testing bool, uint/int, uint/int8, and uint/int32 should be sufficient.
 
 func TestBool(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Bool().RequiresTerminator())
 	testCodec(t, lexy.Bool(), []testCase[bool]{
 		{"false", false, []byte{0}},
 		{"true", true, []byte{1}},
@@ -20,6 +20,7 @@ func TestBool(t *testing.T) {
 
 func TestUint8(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Uint8().RequiresTerminator())
 	testCodec(t, lexy.Uint8(), []testCase[uint8]{
 		{"0x00", 0x00, []byte{0x00}},
 		{"0x01", 0x01, []byte{0x01}},
@@ -29,8 +30,21 @@ func TestUint8(t *testing.T) {
 	})
 }
 
+func TestUint16(t *testing.T) {
+	t.Parallel()
+	assert.False(t, lexy.Uint16().RequiresTerminator())
+	testCodec(t, lexy.Uint16(), []testCase[uint16]{
+		{"0x0000", 0x0000, []byte{0x00, 0x00}},
+		{"0x0001", 0x0001, []byte{0x00, 0x01}},
+		{"0x7FFF", 0x7FFF, []byte{0x7F, 0xFF}},
+		{"0x8000", 0x8000, []byte{0x80, 0x00}},
+		{"0xFFFF", 0xFFFF, []byte{0xFF, 0xFF}},
+	})
+}
+
 func TestUint32(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Uint32().RequiresTerminator())
 	testCodec(t, lexy.Uint32(), []testCase[uint32]{
 		{"0x00000000", 0x00000000, []byte{0x00, 0x00, 0x00, 0x00}},
 		{"0x00000001", 0x00000001, []byte{0x00, 0x00, 0x00, 0x01}},
@@ -40,8 +54,21 @@ func TestUint32(t *testing.T) {
 	})
 }
 
+func TestUint64(t *testing.T) {
+	t.Parallel()
+	assert.False(t, lexy.Uint64().RequiresTerminator())
+	testCodec(t, lexy.Uint64(), []testCase[uint64]{
+		{"0x0000000000000000", 0x0000000000000000, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"0x0000000000000001", 0x0000000000000001, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
+		{"0x7FFFFFFFFFFFFFFF", 0x7FFFFFFFFFFFFFFF, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+		{"0x8000000000000000", 0x8000000000000000, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"0xFFFFFFFFFFFFFFFF", 0xFFFFFFFFFFFFFFFF, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+	})
+}
+
 func TestUint(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Uint().RequiresTerminator())
 	testCodec(t, lexy.Uint(), []testCase[uint]{
 		{"0", 0, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 		{"1", 1, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
@@ -52,6 +79,7 @@ func TestUint(t *testing.T) {
 
 func TestInt8(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Int8().RequiresTerminator())
 	testCodec(t, lexy.Int8(), []testCase[int8]{
 		{"min", math.MinInt8, []byte{0x00}},
 		{"-1", -1, []byte{0x7F}},
@@ -61,8 +89,21 @@ func TestInt8(t *testing.T) {
 	})
 }
 
+func TestInt16(t *testing.T) {
+	t.Parallel()
+	assert.False(t, lexy.Int16().RequiresTerminator())
+	testCodec(t, lexy.Int16(), []testCase[int16]{
+		{"min", math.MinInt16, []byte{0x00, 0x00}},
+		{"-1", -1, []byte{0x7F, 0xFF}},
+		{"0", 0, []byte{0x80, 0x00}},
+		{"+1", 1, []byte{0x80, 0x01}},
+		{"max", math.MaxInt16, []byte{0xFF, 0xFF}},
+	})
+}
+
 func TestInt32(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Int32().RequiresTerminator())
 	testCodec(t, lexy.Int32(), []testCase[int32]{
 		{"min", math.MinInt32, []byte{0x00, 0x00, 0x00, 0x00}},
 		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF}},
@@ -72,8 +113,21 @@ func TestInt32(t *testing.T) {
 	})
 }
 
+func TestInt64(t *testing.T) {
+	t.Parallel()
+	assert.False(t, lexy.Int64().RequiresTerminator())
+	testCodec(t, lexy.Int64(), []testCase[int64]{
+		{"min", math.MinInt64, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+		{"+1", 1, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}},
+		{"max", math.MaxInt64, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+	})
+}
+
 func TestInt(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Int().RequiresTerminator())
 	testCodec(t, lexy.Int(), []testCase[int]{
 		{"-1", -1, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
 		{"0", 0, []byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
@@ -83,6 +137,7 @@ func TestInt(t *testing.T) {
 
 func TestDuration(t *testing.T) {
 	t.Parallel()
+	assert.False(t, lexy.Duration().RequiresTerminator())
 	testCodec(t, lexy.Duration(), []testCase[time.Duration]{
 		{"min", math.MinInt64 * time.Nanosecond, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 		{"-1", -time.Nanosecond, []byte{0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},

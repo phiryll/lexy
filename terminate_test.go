@@ -36,6 +36,7 @@ func (nopCodec) RequiresTerminator() bool {
 func TestTerminator(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Terminate(nop)
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[[]byte]{
 		{
 			"empty",

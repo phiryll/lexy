@@ -12,6 +12,7 @@ import (
 func TestTime(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Time()
+	assert.False(t, codec.RequiresTerminator())
 
 	// West of UTC, negative timezone offset
 	locNYC, err := time.LoadLocation("America/New_York")

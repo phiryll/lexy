@@ -21,10 +21,11 @@ func newBigInt(s string) *big.Int {
 
 func TestBigInt(t *testing.T) {
 	t.Parallel()
-	codec := lexy.BigInt()
 	encodeSize := func(size int64) []byte {
 		return lexy.Int64().Append(nil, size)
 	}
+	codec := lexy.BigInt()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*big.Int]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"-257", big.NewInt(-257), concat([]byte{pNonNil}, encodeSize(-2),
@@ -126,6 +127,7 @@ func TestBigFloat(t *testing.T) {
 	smallNumber := newBigFloat("0." + manyZeros + manyDigits)
 
 	codec := lexy.BigFloat()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
@@ -253,6 +255,7 @@ func newBigRat(num, denom string) *big.Rat {
 func TestBigRat(t *testing.T) {
 	t.Parallel()
 	codec := lexy.BigRat()
+	assert.False(t, codec.RequiresTerminator())
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Rat]{

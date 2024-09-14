@@ -4,10 +4,13 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestString(t *testing.T) {
 	t.Parallel()
+	assert.True(t, lexy.String().RequiresTerminator())
+	assert.False(t, lexy.TerminatedString().RequiresTerminator())
 	testCodec(t, lexy.String(), []testCase[string]{
 		{"empty", "", []byte{}},
 		{"a", "a", []byte{'a'}},

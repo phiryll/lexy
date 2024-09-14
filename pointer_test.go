@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPointerInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.Int32())
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
@@ -19,6 +21,7 @@ func TestPointerInt32(t *testing.T) {
 func TestPointerString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.String())
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(""), []byte{pNonNil}},
@@ -29,6 +32,7 @@ func TestPointerString(t *testing.T) {
 func TestPointerPointerString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.PointerTo(lexy.String()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[**string]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr((*string)(nil)), []byte{pNonNil, pNilFirst}},
@@ -40,6 +44,7 @@ func TestPointerPointerString(t *testing.T) {
 func TestPointerSliceInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.SliceOf(lexy.Int32()))
+	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*[]int32]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*nil", ptr([]int32(nil)), []byte{pNonNil, pNilFirst}},
@@ -57,6 +62,7 @@ func TestPointerSliceInt32(t *testing.T) {
 func TestPointerNilsLast(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.String())
+	assert.True(t, codec.RequiresTerminator())
 	testOrdering(t, lexy.NilsLast(codec), []testCase[*string]{
 		{"*empty", ptr(""), nil},
 		{"*abc", ptr("abc"), nil},
