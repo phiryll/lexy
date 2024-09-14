@@ -57,6 +57,12 @@ func TestMapInt(t *testing.T) {
 	testBasicMap(t, lexy.MapOf(lexy.String(), lexy.Int32()))
 }
 
+func TestCastMapInt(t *testing.T) {
+	t.Parallel()
+	type myMap map[string]int32
+	testBasicMap(t, lexy.CastMapOf[myMap](lexy.String(), lexy.Int32()))
+}
+
 func TestMapSlice(t *testing.T) {
 	t.Parallel()
 	codec := lexy.MapOf(lexy.String(), lexy.SliceOf(lexy.String()))
