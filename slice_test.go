@@ -252,3 +252,18 @@ func TestSliceNilsLast(t *testing.T) {
 		{"nil", nil, nil},
 	})
 }
+
+func TestCastSliceNilsLast(t *testing.T) {
+	t.Parallel()
+	type mySlice []int32
+	codec := lexy.CastSliceOf[mySlice](lexy.Int32())
+	assert.True(t, codec.RequiresTerminator())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[mySlice]{
+		{"[-100, 5]", []int32{-100, 5}, nil},
+		{"[0]", []int32{0}, nil},
+		{"[0, 0, 0]", []int32{0, 0, 0}, nil},
+		{"[0, 1]", []int32{0, 1}, nil},
+		{"[35]", []int32{35}, nil},
+		{"nil", nil, nil},
+	})
+}

@@ -43,3 +43,17 @@ func TestBytesNilsLast(t *testing.T) {
 		{"nil", nil, nil},
 	})
 }
+
+func TestCastBytesNilsLast(t *testing.T) {
+	t.Parallel()
+	type myBytes []byte
+	codec := lexy.CastBytes[myBytes]()
+	testOrdering(t, lexy.NilsLast(codec), []testCase[myBytes]{
+		{"empty", []byte{}, nil},
+		{"[0]", []byte{0}, nil},
+		{"[0, 0, 0]", []byte{0, 0, 0}, nil},
+		{"[0, 1]", []byte{0, 1}, nil},
+		{"[35]", []byte{35}, nil},
+		{"nil", nil, nil},
+	})
+}

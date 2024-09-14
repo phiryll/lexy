@@ -131,3 +131,15 @@ func TestMapNilsLast(t *testing.T) {
 		{"nil", nil, nil},
 	})
 }
+
+func TestCastMapNilsLast(t *testing.T) {
+	t.Parallel()
+	// Maps are randomly ordered, so we can only test nil/non-nil.
+	type myMap map[string]int32
+	codec := lexy.CastMapOf[myMap](lexy.String(), lexy.Int32())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[myMap]{
+		{"empty", map[string]int32{}, nil},
+		{"non-empty", map[string]int32{"a": 0}, nil},
+		{"nil", nil, nil},
+	})
+}

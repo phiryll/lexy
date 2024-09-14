@@ -94,3 +94,16 @@ func TestPointerNilsLast(t *testing.T) {
 		{"nil", nil, nil},
 	})
 }
+
+func TestCastPointerNilsLast(t *testing.T) {
+	t.Parallel()
+	type myPointer *string
+	codec := lexy.CastPointerTo[myPointer](lexy.String())
+	assert.True(t, codec.RequiresTerminator())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[myPointer]{
+		{"*empty", ptr(""), nil},
+		{"*abc", ptr("abc"), nil},
+		{"*xyz", ptr("xyz"), nil},
+		{"nil", nil, nil},
+	})
+}
