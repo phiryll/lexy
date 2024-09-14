@@ -33,6 +33,22 @@ func concat(slices ...[]byte) []byte {
 	return result
 }
 
+//nolint:nakedret,nonamedreturns
+func getPanicMessage(f func()) (msg string) {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				msg = err.Error()
+				return
+			}
+			panic(r)
+		}
+		panic("should have panicked")
+	}()
+	f()
+	return
+}
+
 type testCase[T any] struct {
 	name  string
 	value T
