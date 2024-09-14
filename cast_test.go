@@ -1,0 +1,66 @@
+package lexy_test
+
+import (
+	"testing"
+
+	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestBoolUnderlyingType(t *testing.T) {
+	t.Parallel()
+	type aBool bool
+	codec := lexy.CastBool[aBool]()
+	testCodec(t, codec, []testCase[aBool]{
+		{"false", aBool(false), []byte{0}},
+		{"true", aBool(true), []byte{1}},
+	})
+}
+
+func TestBytesUnderlyingType(t *testing.T) {
+	t.Parallel()
+	type header []byte
+	codec := lexy.NilsLast(lexy.CastBytes[header]())
+	testCodec(t, codec, []testCase[header]{
+		{"nil", header(nil), []byte{pNilLast}},
+		{"empty", header{}, []byte{pNonNil}},
+		{"[0]", header{0}, []byte{pNonNil, 0x00}},
+		{"[1, 2, 3]", header{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
+	})
+}
+
+func TestPointerUnderlyingType(t *testing.T) {
+	t.Parallel()
+	type pInt *int32
+	codec := lexy.NilsLast(lexy.CastPointerTo[pInt](lexy.Int32()))
+	testCodec(t, codec, []testCase[pInt]{
+		{"nil", pInt(nil), []byte{pNilLast}},
+		{"*0", pInt(ptr(int32(0))), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
+		{"*-1", pInt(ptr(int32(-1))), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
+	})
+}
+
+func TestMapUnderlyingType(t *testing.T) {
+	t.Parallel()
+	type mStringInt map[string]int32
+	testBasicMapWithPrefix(t, pNilLast, lexy.NilsLast(lexy.CastMapOf[mStringInt](lexy.String(), lexy.Int32())))
+}
+
+func TestSliceUnderlyingType(t *testing.T) {
+	t.Parallel()
+	type sInt []int32
+	codec := lexy.NilsLast(lexy.CastSliceOf[sInt](lexy.Int32()))
+	assert.True(t, codec.RequiresTerminator())
+	testCodec(t, codec, []testCase[sInt]{
+		{"nil", sInt(nil), []byte{pNilLast}},
+		{"empty", sInt([]int32{}), []byte{pNonNil}},
+		{"[0]", sInt([]int32{0}), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
+		{"[-1]", sInt([]int32{-1}), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
+		{"[0, 1, -1]", sInt([]int32{0, 1, -1}), []byte{
+			pNonNil,
+			0x80, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x01,
+			0x7F, 0xFF, 0xFF, 0xFF,
+		}},
+	})
+}

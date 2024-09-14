@@ -146,14 +146,3 @@ func TestDuration(t *testing.T) {
 		{"max", math.MaxInt64 * time.Nanosecond, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
 	})
 }
-
-type aBool bool
-
-func TestBoolUnderlyingType(t *testing.T) {
-	t.Parallel()
-	codec := lexy.CastBool[aBool]()
-	testCodec(t, codec, []testCase[aBool]{
-		{"false", aBool(false), []byte{0}},
-		{"true", aBool(true), []byte{1}},
-	})
-}
