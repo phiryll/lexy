@@ -18,11 +18,35 @@ func TestPointerInt32(t *testing.T) {
 	})
 }
 
+func TestCastPointerInt32(t *testing.T) {
+	t.Parallel()
+	type myPointer *int32
+	codec := lexy.CastPointerTo[myPointer](lexy.Int32())
+	assert.False(t, codec.RequiresTerminator())
+	testCodec(t, codec, []testCase[myPointer]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"*0", ptr(int32(0)), []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
+		{"*-1", ptr(int32(-1)), []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
+	})
+}
+
 func TestPointerString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.PointerTo(lexy.String())
 	assert.True(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*string]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"*empty", ptr(""), []byte{pNonNil}},
+		{"*abc", ptr("abc"), []byte{pNonNil, 'a', 'b', 'c'}},
+	})
+}
+
+func TestCastPointerString(t *testing.T) {
+	t.Parallel()
+	type myPointer *string
+	codec := lexy.CastPointerTo[myPointer](lexy.String())
+	assert.True(t, codec.RequiresTerminator())
+	testCodec(t, codec, []testCase[myPointer]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"*empty", ptr(""), []byte{pNonNil}},
 		{"*abc", ptr("abc"), []byte{pNonNil, 'a', 'b', 'c'}},
