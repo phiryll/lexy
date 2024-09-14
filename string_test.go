@@ -18,3 +18,16 @@ func TestString(t *testing.T) {
 		{"⌘", "⌘", []byte{0xE2, 0x8C, 0x98}},
 	})
 }
+
+func TestCastString(t *testing.T) {
+	t.Parallel()
+	type myString string
+	codec := lexy.CastString[myString]()
+	assert.True(t, codec.RequiresTerminator())
+	testCodec(t, codec, []testCase[myString]{
+		{"empty", "", []byte{}},
+		{"a", "a", []byte{'a'}},
+		{"xyz", "xyz", []byte{'x', 'y', 'z'}},
+		{"⌘", "⌘", []byte{0xE2, 0x8C, 0x98}},
+	})
+}
