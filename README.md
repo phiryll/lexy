@@ -9,7 +9,7 @@ Lexicographical Byte Order Encodings
 Lexy is a library for order-preserving lexicographical binary encodings.
 Most common Go types and user-defined types are supported,
 and it allows for encodings ordered differently than a type's natural ordering.
-Lexy uses generics and requires Go 1.19 to use. It has been tested through Go 1.22.
+Lexy uses generics and requires Go 1.19 to use. It has been tested with Go versions 1.19 and 1.22.
 Lexy has no non-test dependencies.
 
 It may be more efficient to use another encoding if lexicographical unsigned byte ordering is not needed.
