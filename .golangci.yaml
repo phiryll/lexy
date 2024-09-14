@@ -69,7 +69,6 @@ issues:
         - dupword
         - gosec
         - prealloc
-        - thelper
 
     - path: _test\.go
       linters:
@@ -98,6 +97,7 @@ linters:
     - protogetter       # protocol buffers not used
     - rowserrcheck      # SQL not used
     - spancheck         # OpenTelemetry/Census not used
+    - thelper           # I need the line numbers
     - varnamelen        # I don't agree with this one most of the time
     - wsl               # might be able to configure this well, but it'll take effort
     # replaced or duplicated
