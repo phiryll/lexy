@@ -259,6 +259,7 @@ func TestBigRat(t *testing.T) {
 	// Note that big.Rat normalizes values when set using SetFrac.
 	// So 2/4 => 1/2, and 0/100 => 0/1
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Rat]{
+		{"nil", nil, nil},
 		{"-1/3", newBigRat("-1", "3"), nil},
 		{"0/123", newBigRat("0", "123"), nil},
 		{"5432/42", newBigRat("5432", "42"), nil},
