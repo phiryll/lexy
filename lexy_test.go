@@ -1,12 +1,29 @@
 package lexy_test
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
 )
 
 // Tests that don't fit better somewhere else.
+
+func TestNilsLastPanics(t *testing.T) {
+	t.Parallel()
+	assert.Panics(t, func() {
+		lexy.NilsLast(lexy.Bool())
+	})
+	assert.Panics(t, func() {
+		lexy.NilsLast(lexy.Negate(lexy.Bytes()))
+	})
+	assert.Panics(t, func() {
+		lexy.NilsLast(lexy.Terminate(lexy.Bytes()))
+	})
+	msg := getPanicMessage(func() { lexy.NilsLast(lexy.Bool()) })
+	assert.Contains(t, strings.ToLower(msg), "bool")
+}
 
 // Tests that the bounds check idiom being used by lexy doesn't get optimized out by the Go compiler.
 func TestBoundsCheck(t *testing.T) {

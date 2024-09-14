@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/phiryll/lexy"
+	"github.com/stretchr/testify/assert"
 )
 
 func comp64(r, i float32) complex64   { return complex(r, i) }
@@ -27,6 +28,7 @@ func pairTestCases[T, P any](tests []testCase[T], pair func(a, b T) P) []testCas
 func TestComplex64(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex64()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, pairTestCases(float32NumberTestCases, comp64)))
 }
 
@@ -38,6 +40,7 @@ func TestComplex64Ordering(t *testing.T) {
 func TestComplex128(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Complex128()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, pairTestCases(float64NumberTestCases, comp128)))
 }
 

@@ -13,6 +13,8 @@ func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
 }
 
 func testBasicMapWithPrefix[M ~map[string]int32](t *testing.T, nilPrefix byte, codec lexy.Codec[M]) {
+	assert.True(t, codec.RequiresTerminator())
+
 	// at most one key so order does not matter
 	testCodec(t, codec, []testCase[M]{
 		{"nil", nil, []byte{nilPrefix}},
@@ -55,16 +57,16 @@ func TestMapInt(t *testing.T) {
 	testBasicMap(t, lexy.MapOf(lexy.String(), lexy.Int32()))
 }
 
-type mStringInt map[string]int32
-
-func TestMapUnderlyingType(t *testing.T) {
+func TestCastMapInt(t *testing.T) {
 	t.Parallel()
-	testBasicMapWithPrefix(t, pNilLast, lexy.NilsLast(lexy.CastMapOf[mStringInt](lexy.String(), lexy.Int32())))
+	type myMap map[string]int32
+	testBasicMap(t, lexy.CastMapOf[myMap](lexy.String(), lexy.Int32()))
 }
 
 func TestMapSlice(t *testing.T) {
 	t.Parallel()
 	codec := lexy.MapOf(lexy.String(), lexy.SliceOf(lexy.String()))
+	assert.True(t, codec.RequiresTerminator())
 	testVaryingCodec(t, codec, []testCase[map[string][]string]{
 		{"nil map", map[string][]string(nil), nil},
 		{"empty map", map[string][]string{}, nil},
@@ -90,6 +92,7 @@ func TestMapPointerPointer(t *testing.T) {
 	// Instead, we'll dump the referents into a new map and compare that.
 	pointerCodec := lexy.PointerTo(lexy.String())
 	codec := lexy.MapOf(pointerCodec, pointerCodec)
+	assert.True(t, codec.RequiresTerminator())
 	tests := []testCase[map[*string]*string]{
 		{"nil map", map[*string]*string(nil), nil},
 		{"empty map", map[*string]*string{}, nil},
@@ -123,6 +126,18 @@ func TestMapNilsLast(t *testing.T) {
 	// Maps are randomly ordered, so we can only test nil/non-nil.
 	codec := lexy.MapOf(lexy.String(), lexy.Int32())
 	testOrdering(t, lexy.NilsLast(codec), []testCase[map[string]int32]{
+		{"empty", map[string]int32{}, nil},
+		{"non-empty", map[string]int32{"a": 0}, nil},
+		{"nil", nil, nil},
+	})
+}
+
+func TestCastMapNilsLast(t *testing.T) {
+	t.Parallel()
+	// Maps are randomly ordered, so we can only test nil/non-nil.
+	type myMap map[string]int32
+	codec := lexy.CastMapOf[myMap](lexy.String(), lexy.Int32())
+	testOrdering(t, lexy.NilsLast(codec), []testCase[myMap]{
 		{"empty", map[string]int32{}, nil},
 		{"non-empty", map[string]int32{"a": 0}, nil},
 		{"nil", nil, nil},

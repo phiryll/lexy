@@ -28,6 +28,7 @@ func negString(s string) []byte {
 func TestNegateInt32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[int32]{
 		{"min", math.MinInt32, []byte{0xFF, 0xFF, 0xFF, 0xFF}},
 		{"-1", -1, []byte{0x80, 0x00, 0x00, 0x00}},
@@ -40,6 +41,7 @@ func TestNegateInt32(t *testing.T) {
 func TestNegateInt32Ordering(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.Int32())
+	assert.False(t, codec.RequiresTerminator())
 	testOrdering(t, codec, []testCase[int32]{
 		{"max", math.MaxInt32, nil},
 		{"100", 100, nil},
@@ -56,12 +58,14 @@ func TestNegateInt32Ordering(t *testing.T) {
 func TestNegateLength(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.String())
+	assert.False(t, codec.RequiresTerminator())
 	assert.Less(t, codec.Append(nil, "ab"), codec.Append(nil, "a"))
 }
 
 func TestNegatePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.PointerTo(lexy.String()))
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[*string]{
 		{"nil", nil, []byte{negPNilFirst, negTerm}},
 		{"*empty", ptr(""), []byte{negPNonNil, negTerm}},
@@ -79,6 +83,7 @@ func TestNegatePtrString(t *testing.T) {
 func TestNegatePtrStringOrdering(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.PointerTo(lexy.String()))
+	assert.False(t, codec.RequiresTerminator())
 	testOrdering(t, codec, []testCase[*string]{
 		{"*def", ptr("def"), nil},
 		{"*abc", ptr("abc"), nil},
@@ -91,6 +96,7 @@ func TestNegatePtrStringOrdering(t *testing.T) {
 func TestNegateSlicePtrString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.SliceOf(lexy.PointerTo(lexy.String())))
+	assert.False(t, codec.RequiresTerminator())
 	// neg([]*string)
 	// negate and slice codecs are escaping and terminating.
 	testCodec(t, codec, []testCase[[]*string]{
@@ -116,6 +122,7 @@ func TestNegateSlicePtrString(t *testing.T) {
 func TestNegateSlicePtrStringOrdering(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Negate(lexy.SliceOf(lexy.PointerTo(lexy.String())))
+	assert.False(t, codec.RequiresTerminator())
 	testOrdering(t, codec, []testCase[[]*string]{
 		{"[*b, nil]", []*string{ptr("b"), nil}, nil},
 		{"[*b]", []*string{ptr("b")}, nil},
@@ -173,6 +180,7 @@ func (negateTestCodec) RequiresTerminator() bool {
 
 func TestNegateComplex(t *testing.T) {
 	t.Parallel()
+	assert.False(t, negTestCodec.RequiresTerminator())
 	testCodec(t, negTestCodec, []testCase[negateTest]{
 		{"{5, &100, def}", negateTest{5, ptr(int16(100)), "def"}, concat(
 			[]byte{0x05},
@@ -228,4 +236,11 @@ func TestNegateComplexOrdering(t *testing.T) {
 		{"{10, *-100, empty}", negateTest{10, p(-100), ""}, nil},
 		{"{10, nil, empty}", negateTest{10, nil, ""}, nil},
 	})
+}
+
+func TestNegateUnwrapsTerminator(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t,
+		lexy.Negate(lexy.String()),
+		lexy.Negate(lexy.TerminatedString()))
 }

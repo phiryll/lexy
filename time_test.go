@@ -9,16 +9,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTime(t *testing.T) {
-	t.Parallel()
-	codec := lexy.Time()
-
+func timeTestCases() []testCase[time.Time] {
 	// West of UTC, negative timezone offset
 	locNYC, err := time.LoadLocation("America/New_York")
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 	// East of UTC, positive timezone offset
 	locBerlin, err := time.LoadLocation("Europe/Berlin")
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 	var zero time.Time
 	// Before the epoch start on Jan 1, 1970
 	past := time.Date(1900, 1, 2, 3, 4, 5, 600_000_000, time.UTC)
@@ -27,24 +28,29 @@ func TestTime(t *testing.T) {
 	nyc := time.Date(2000, 1, 2, 3, 4, 5, 999_999_999, locNYC)
 	berlin := time.Date(2000, 1, 2, 3, 4, 5, 999_999_999, locBerlin)
 	noZoneName, err := time.Parse(time.RFC3339Nano, "2000-01-02T03:04:05.6-05:00")
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
+	return []testCase[time.Time]{
+		{"zero", zero, nil},
+		{"past", past, nil},
+		{"utc", utc, nil},
+		{"local", local, nil},
+		{"nyc", nyc, nil},
+		{"berlin", berlin, nil},
+		{"no zone name", noZoneName, nil},
+	}
+}
 
-	for _, tt := range []struct {
-		string
-		time.Time
-	}{
-		{"zero", zero},
-		{"past", past},
-		{"utc", utc},
-		{"local", local},
-		{"nyc", nyc},
-		{"berlin", berlin},
-		{"no zone name", noZoneName},
-	} {
+func TestTimeWithZoneNames(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Time()
+	assert.False(t, codec.RequiresTerminator())
+	for _, tt := range timeTestCases() {
 		tt := tt
-		t.Run(tt.string, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			when := tt.Time
+			when := tt.value
 			_, expectedOffset := when.Zone()
 			buf := codec.Append(nil, when)
 			got, _ := codec.Get(buf)
@@ -54,6 +60,21 @@ func TestTime(t *testing.T) {
 			assert.Equal(t, expectedOffset, actualOffset, "offsets")
 		})
 	}
+}
+
+func TestTimeStripZoneName(t *testing.T) {
+	t.Parallel()
+	codec := lexy.Time()
+	var testCases []testCase[time.Time]
+	for _, tt := range timeTestCases() {
+		_, offset := tt.value.Zone()
+		testCases = append(testCases, testCase[time.Time]{
+			tt.name,
+			tt.value.In(time.FixedZone("", offset)),
+			tt.data,
+		})
+	}
+	testCodec(t, codec, fillTestData(codec, testCases))
 }
 
 func TestTimeOrdering(t *testing.T) {

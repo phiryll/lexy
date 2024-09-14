@@ -36,6 +36,7 @@ func (nopCodec) RequiresTerminator() bool {
 func TestTerminator(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Terminate(nop)
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, []testCase[[]byte]{
 		{
 			"empty",
@@ -115,4 +116,9 @@ func TestUnescapeMultiple(t *testing.T) {
 		assert.Equal(t, expected, got, "unescaped bytes")
 	}
 	assert.Len(t, data, n)
+}
+
+func TestTerminateNoWrap(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, lexy.Int32(), lexy.Terminate(lexy.Int32()))
 }

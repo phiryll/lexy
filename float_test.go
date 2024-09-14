@@ -255,7 +255,20 @@ func TestNames32(t *testing.T) {
 func TestFloat32(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Float32()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, float32NumberTestCases))
+}
+
+func TestCastFloat32(t *testing.T) {
+	t.Parallel()
+	type myFloat32 float32
+	codec := lexy.CastFloat32[myFloat32]()
+	assert.False(t, codec.RequiresTerminator())
+	testCases := make([]testCase[myFloat32], len(float32NumberTestCases))
+	for i, tt := range float32NumberTestCases {
+		testCases[i] = testCase[myFloat32]{tt.name, myFloat32(tt.value), tt.data}
+	}
+	testCodec(t, codec, fillTestData(codec, testCases))
 }
 
 // Test that the encoded forms have the right lexicographical ordering.
@@ -349,7 +362,20 @@ func TestNames64(t *testing.T) {
 func TestFloat64(t *testing.T) {
 	t.Parallel()
 	codec := lexy.Float64()
+	assert.False(t, codec.RequiresTerminator())
 	testCodec(t, codec, fillTestData(codec, float64NumberTestCases))
+}
+
+func TestCastFloat64(t *testing.T) {
+	t.Parallel()
+	type myFloat64 float64
+	codec := lexy.CastFloat64[myFloat64]()
+	assert.False(t, codec.RequiresTerminator())
+	testCases := make([]testCase[myFloat64], len(float64NumberTestCases))
+	for i, tt := range float64NumberTestCases {
+		testCases[i] = testCase[myFloat64]{tt.name, myFloat64(tt.value), tt.data}
+	}
+	testCodec(t, codec, fillTestData(codec, testCases))
 }
 
 func TestFloat64CodecOrdering(t *testing.T) {

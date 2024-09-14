@@ -17,7 +17,7 @@ type unknownPrefixError struct {
 }
 
 func (e unknownPrefixError) Error() string {
-	return fmt.Sprintf("unexpected prefix %X", e.prefix)
+	return fmt.Sprintf("unexpected prefix 0x%X", e.prefix)
 }
 
 type badTypeError struct {
