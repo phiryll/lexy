@@ -24,10 +24,46 @@ func TestSliceInt32(t *testing.T) {
 	})
 }
 
+func TestCastSliceInt32(t *testing.T) {
+	t.Parallel()
+	type mySlice []int32
+	codec := lexy.CastSliceOf[mySlice](lexy.Int32())
+	testCodec(t, codec, []testCase[mySlice]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"empty", []int32{}, []byte{pNonNil}},
+		{"[0]", []int32{0}, []byte{pNonNil, 0x80, 0x00, 0x00, 0x00}},
+		{"[-1]", []int32{-1}, []byte{pNonNil, 0x7F, 0xFF, 0xFF, 0xFF}},
+		{"[0, 1, -1]", []int32{0, 1, -1}, []byte{
+			pNonNil,
+			0x80, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x01,
+			0x7F, 0xFF, 0xFF, 0xFF,
+		}},
+	})
+}
+
 func TestSliceString(t *testing.T) {
 	t.Parallel()
 	codec := lexy.SliceOf(lexy.String())
 	testCodec(t, codec, []testCase[[]string]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"empty", []string{}, []byte{pNonNil}},
+		{"[\"\"]", []string{""}, []byte{pNonNil, term}},
+		{"[a]", []string{"a"}, []byte{pNonNil, 'a', term}},
+		{"[a, \"\", xyz]", []string{"a", "", "xyz"}, []byte{
+			pNonNil,
+			'a', term,
+			term,
+			'x', 'y', 'z', term,
+		}},
+	})
+}
+
+func TestCastSliceString(t *testing.T) {
+	t.Parallel()
+	type mySlice []string
+	codec := lexy.CastSliceOf[mySlice](lexy.String())
+	testCodec(t, codec, []testCase[mySlice]{
 		{"nil", nil, []byte{pNilFirst}},
 		{"empty", []string{}, []byte{pNonNil}},
 		{"[\"\"]", []string{""}, []byte{pNonNil, term}},
