@@ -117,3 +117,8 @@ func TestUnescapeMultiple(t *testing.T) {
 	}
 	assert.Len(t, data, n)
 }
+
+func TestTerminateNoWrap(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, lexy.Int32(), lexy.Terminate(lexy.Int32()))
+}
