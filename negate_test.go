@@ -237,3 +237,10 @@ func TestNegateComplexOrdering(t *testing.T) {
 		{"{10, nil, empty}", negateTest{10, nil, ""}, nil},
 	})
 }
+
+func TestNegateUnwrapsTerminator(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t,
+		lexy.Negate(lexy.String()),
+		lexy.Negate(lexy.TerminatedString()))
+}
