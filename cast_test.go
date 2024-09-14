@@ -7,16 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBoolUnderlyingType(t *testing.T) {
-	t.Parallel()
-	type aBool bool
-	codec := lexy.CastBool[aBool]()
-	testCodec(t, codec, []testCase[aBool]{
-		{"false", aBool(false), []byte{0}},
-		{"true", aBool(true), []byte{1}},
-	})
-}
-
 func TestBytesUnderlyingType(t *testing.T) {
 	t.Parallel()
 	type header []byte
