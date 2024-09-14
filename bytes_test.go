@@ -19,6 +19,19 @@ func TestBytes(t *testing.T) {
 	})
 }
 
+func TestCastBytes(t *testing.T) {
+	t.Parallel()
+	type myBytes []byte
+	codec := lexy.CastBytes[myBytes]()
+	assert.True(t, codec.RequiresTerminator())
+	testCodec(t, codec, []testCase[myBytes]{
+		{"nil", nil, []byte{pNilFirst}},
+		{"empty", []byte{}, []byte{pNonNil}},
+		{"[0]", []byte{0}, []byte{pNonNil, 0x00}},
+		{"[1, 2, 3]", []byte{1, 2, 3}, []byte{pNonNil, 0x01, 0x02, 0x03}},
+	})
+}
+
 func TestBytesNilsLast(t *testing.T) {
 	t.Parallel()
 	testOrdering(t, lexy.NilsLast(lexy.Bytes()), []testCase[[]byte]{
