@@ -316,6 +316,8 @@ linters:
           disabled: true
         - name: confusing-naming      # can't handle multiple implementations of an interface
           disabled: true
+        - name: confusing-results     # uses here are not really problematic
+          disabled: true
         - name: file-header           # not using file headers
           disabled: true
         - name: max-public-structs    # don't know how to limit to one file

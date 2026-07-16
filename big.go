@@ -216,6 +216,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	isZero := prec == 0
 
 	var kind int8
+	//nolint:revive  // switch is exhaustive
 	switch {
 	case isInf && signbit:
 		kind = negInf
@@ -287,6 +288,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	isZero := prec == 0
 
 	var kind int8
+	//nolint:revive  // switch is exhaustive
 	switch {
 	case isInf && signbit:
 		kind = negInf

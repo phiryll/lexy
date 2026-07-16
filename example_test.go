@@ -172,6 +172,7 @@ func ExampleDuration() {
 
 func ExampleTime() {
 	codec := lexy.Time()
+	//nolint:revive  // 678_901_234 is a fine syntax for nanoseconds
 	buf := codec.Append(nil, time.Date(2000, 1, 2, 3, 4, 5, 678_901_234, time.UTC))
 	decoded, _ := codec.Get(buf)
 	fmt.Println(decoded.Format(time.RFC3339Nano))

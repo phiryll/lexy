@@ -128,10 +128,9 @@ func cmpFloats[T float32 | float64, U uint32 | uint64](aBits, bBits U, a, b T) i
 		if aSign {
 			// Codec flips all bits, compare in reverse order
 			return compare(bBits, aBits)
-		} else {
-			// Codec flips the high bit, compare as signed ints
-			return compare(int64(aBits), int64(bBits))
 		}
+		// Codec flips the high bit, compare as signed ints
+		return compare(int64(aBits), int64(bBits))
 	case math.IsNaN(float64(a)):
 		if aSign {
 			return -1
