@@ -130,7 +130,7 @@ linters:
         main:
           list-mode: strict
           files:
-            - ""
+            - !$test
           allow:
             - $gostd
         test:
