@@ -92,7 +92,6 @@ func TestUnescapePanic(t *testing.T) {
 		{"trailing escaped terminator", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0}},
 		{"trailing escaped escape", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1}},
 	} {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			assert.Panics(t, func() {

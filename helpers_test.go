@@ -61,9 +61,8 @@ type testCase[T any] struct {
 func fillTestData[T any](codec lexy.Codec[T], tests []testCase[T]) []testCase[T] {
 	newTests := make([]testCase[T], len(tests))
 	for i, tt := range tests {
-		test := tt
-		test.data = codec.Append(nil, tt.value)
-		newTests[i] = test
+		tt.data = codec.Append(nil, tt.value)
+		newTests[i] = tt
 	}
 	return newTests
 }
@@ -116,7 +115,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	c.getEmpty(t)
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			t.Logf("Test case: %v", tt)
@@ -137,7 +135,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 				c.getShortBuf(t, tt, tt.data)
 			} else {
 				for _, out := range outputs {
-					out := out
 					t.Run("round trip: "+out.name+" to", func(t *testing.T) {
 						t.Parallel()
 						c.get(t, tt, out.buf)

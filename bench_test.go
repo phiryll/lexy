@@ -43,7 +43,6 @@ func BenchmarkAllocate(b *testing.B) {
 		{"800", 800},
 		{"1000", 1000},
 	} {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
@@ -278,7 +277,6 @@ func BenchmarkRawMap(b *testing.B) {
 		{"1 element", []int32{43943, -319432}},
 		{"1000 elements", ints},
 	} {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			arr := bb.value
 			b.ResetTimer()
@@ -374,7 +372,6 @@ func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase
 		return
 	}
 	for _, bb := range benchCases {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			benchSingleValue(b, codec, bb.value)
 		})

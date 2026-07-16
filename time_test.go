@@ -53,7 +53,6 @@ func TestTimeWithZoneNames(t *testing.T) {
 	codec := lexy.Time()
 	assert.False(t, codec.RequiresTerminator())
 	for _, tt := range timeTestCases() {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			when := tt.value
