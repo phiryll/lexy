@@ -151,6 +151,14 @@ linters:
       # Minimal code complexity to report.
       min-complexity: 20
 
+    goconst:
+      # Ignore when constant is not used as function argument.
+      ignore-calls: false
+      # Detects constants with identical values.
+      find-duplicates: true
+      # Ignore strings from test files.
+      ignore-tests: true
+
     gocritic:
       enable-all: true
       disabled-checks:
