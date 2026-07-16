@@ -33,7 +33,7 @@ func concat(slices ...[]byte) []byte {
 	return result
 }
 
-//nolint:nakedret,nonamedreturns
+//nolint:nonamedreturns
 func getPanicMessage(f func()) (msg string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -46,7 +46,7 @@ func getPanicMessage(f func()) (msg string) {
 		panic("should have panicked")
 	}()
 	f()
-	return
+	return msg
 }
 
 type testCase[T any] struct {
@@ -267,7 +267,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		// Should either panic, or read one fewer byte and get the wrong value back.
 		var got T
 		var gotBuf []byte
-		//nolint:nakedret,nonamedreturns
+		//nolint:nonamedreturns
 		panicked := func() (panicked bool) {
 			panicked = false
 			defer func() {
@@ -276,7 +276,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 				}
 			}()
 			got, gotBuf = c.codec.Get(workingBuf[:size-1])
-			return
+			return panicked
 		}()
 		if !panicked {
 			assert.Empty(t, gotBuf, "got wrong amount of data")
