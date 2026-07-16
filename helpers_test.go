@@ -249,7 +249,7 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	t.Run("get", func(t *testing.T) {
 		got, gotBuf := c.codec.Get(workingBuf)
 		// Only empty because that's how these tests are set up.
-		assert.Empty(t, len(gotBuf))
+		assert.Empty(t, gotBuf)
 		assert.IsType(t, tt.value, got)
 		assert.Equal(t, tt.value, got)
 		assert.Equal(t, buf, workingBuf)
