@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 func comp64(r, i float32) complex64   { return complex(r, i) }

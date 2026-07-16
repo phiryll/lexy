@@ -4,8 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {

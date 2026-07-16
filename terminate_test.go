@@ -3,8 +3,9 @@ package lexy_test
 import (
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 // A []byte codec that does nothing, encoded == decoded,
