@@ -95,6 +95,10 @@ linters:
           - govet
         path: _test\.go
         text: fieldalignment
+      - linters:
+          - gosec
+        path: (big|int)\.go
+        text: G115  # integer conversion overflow
 
   # Settings for specific linters.
   #
