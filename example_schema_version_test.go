@@ -1,8 +1,9 @@
 package lexy_test
 
 import (
+	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/phiryll/lexy"
 )
@@ -241,8 +242,7 @@ func Example_schemaVersion() {
 	// When the encodings are sorted, they will be in the order:
 	// - primary: version
 	// - secondary: the encoded order for that version
-	// sortableEncodings is defined in the Struct example.
-	sort.Sort(sortableEncodings{encoded})
+	slices.SortFunc(encoded, bytes.Compare)
 
 	for _, b := range encoded {
 		value, _ := VersionedCodec.Get(b)
