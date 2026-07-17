@@ -112,7 +112,6 @@ linters:
       use-builtin-exclusions: false
 
     copyloopvar:
-      # Disabled for go version <= 1.21
       # Check all assigning the loop variable to another variable.
       check-alias: true
 
