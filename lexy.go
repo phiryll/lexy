@@ -380,15 +380,6 @@ func copyAll(dst, src []byte) []byte {
 	return dst[copy(dst, src):]
 }
 
-// extend ensures that n bytes can be appended to buf without another allocation,
-// returning the resulting slice. This was copied from slices.Grow (added in go 1.21).
-func extend(buf []byte, n int) []byte {
-	if n -= cap(buf) - len(buf); n > 0 {
-		buf = append(buf[:cap(buf)], make([]byte, n)...)[:len(buf)]
-	}
-	return buf
-}
-
 const bitsPerByte = 8
 
 func numBytes(numBits int) int {
