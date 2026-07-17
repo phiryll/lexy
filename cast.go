@@ -66,8 +66,7 @@ func CastString[T ~string]() Codec[T] { return castString[T]{} }
 // CastBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
 func CastBytes[S ~[]byte]() Codec[S] {
-	//nolint:errcheck,forcetypeassert
-	return castBytes[S]{stdBytes.(bytesCodec)}
+	return castBytes[S]{stdBytes}
 }
 
 // CastPointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.

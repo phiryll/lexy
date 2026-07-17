@@ -12,7 +12,7 @@ import (
 // purely for testing terminatorCodec.
 type nopCodec struct{}
 
-var nop lexy.Codec[[]byte] = nopCodec{}
+var nop = nopCodec{}
 
 func (nopCodec) Append(buf, value []byte) []byte {
 	return append(buf, value...)
