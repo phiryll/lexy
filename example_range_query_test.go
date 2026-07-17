@@ -3,7 +3,7 @@ package lexy_test
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/phiryll/lexy"
 )
@@ -26,13 +26,9 @@ func (db *DB) insert(i int, entry Entry) {
 }
 
 func (db *DB) search(entry Entry) (int, bool) {
-	index := sort.Search(len(db.entries), func(i int) bool {
-		return bytes.Compare(entry.Key, db.entries[i].Key) <= 0
+	return slices.BinarySearchFunc(db.entries, entry, func(a, b Entry) int {
+		return bytes.Compare(a.Key, b.Key)
 	})
-	if index < len(db.entries) && bytes.Equal(entry.Key, db.entries[index].Key) {
-		return index, true
-	}
-	return index, false
 }
 
 func (db *DB) Put(key []byte, value int) error {
