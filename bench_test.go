@@ -1,9 +1,10 @@
 package lexy_test
 
 import (
+	"encoding/binary"
 	"math"
 	"math/big"
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -349,15 +350,25 @@ func BenchmarkTerminate(b *testing.B) {
 	})
 }
 
-func randomBytes(n int, seed int64) []byte {
-	random := rand.New(rand.NewSource(seed))
+func randomBytes(n int, seed uint64) []byte {
+	random := rand.New(rand.NewPCG(seed, 10254389391))
 	b := make([]byte, n)
-	_, _ = random.Read(b)
+	for i := range n / 8 {
+		binary.BigEndian.PutUint64(b[8*i:], random.Uint64())
+	}
+	if rem := n % 8; rem > 0 {
+		offset := 8 * (n / 8)
+		src := random.Uint64()
+		for i := range rem {
+			b[offset+i] = byte(src)
+			src >>= 8
+		}
+	}
 	return b
 }
 
-func randomInt32(n int, seed int64) []int32 {
-	random := rand.New(rand.NewSource(seed))
+func randomInt32(n int, seed uint64) []int32 {
+	random := rand.New(rand.NewPCG(seed, 3421123804))
 	b := make([]int32, n)
 	for i := range n {
 		b[i] = int32(random.Uint32())
