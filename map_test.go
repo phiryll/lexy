@@ -4,8 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 func testBasicMap[M ~map[string]int32](t *testing.T, codec lexy.Codec[M]) {
@@ -111,7 +112,6 @@ func TestMapPointerPointer(t *testing.T) {
 		}, nil},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			buf := codec.Append(nil, tt.value)

@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 // Tests that don't fit better somewhere else.

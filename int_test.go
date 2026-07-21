@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 func TestBool(t *testing.T) {

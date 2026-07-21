@@ -1,6 +1,7 @@
 package lexy
 
 import (
+	"slices"
 	"time"
 )
 
@@ -25,13 +26,14 @@ func splitTime(value time.Time) (int64, uint32, int32) {
 	seconds := utc.Unix()     // int64 seconds since epoch
 	nanos := utc.Nanosecond() // int nanoseconds within second (9 decimal digits, cast to uint32)
 	_, offset := value.Zone() // abbreviation (ignored), int seconds east of UTC (cast to int32)
+	//nolint:gosec  // integer conversions here will not overflow
 	return seconds, uint32(nanos), int32(offset)
 }
 
 func (timeCodec) Append(buf []byte, value time.Time) []byte {
 	seconds, nanos, offset := splitTime(value)
 	//nolint:mnd
-	buf = stdInt64.Append(extend(buf, 16), seconds)
+	buf = stdInt64.Append(slices.Grow(buf, 16), seconds)
 	buf = stdUint32.Append(buf, nanos)
 	return stdInt32.Append(buf, offset)
 }

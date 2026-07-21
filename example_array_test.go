@@ -12,7 +12,7 @@ type Quaternion [4]float64
 
 type quaternionCodec struct{}
 
-var quatCodec lexy.Codec[Quaternion] = quaternionCodec{}
+var quatCodec = quaternionCodec{}
 
 func (quaternionCodec) Append(buf []byte, value Quaternion) []byte {
 	for i := range value {

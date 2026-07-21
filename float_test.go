@@ -4,8 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 // Bit masks for the sign, exponent, and matissa of the

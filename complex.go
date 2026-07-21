@@ -1,5 +1,9 @@
 package lexy
 
+import (
+	"slices"
+)
+
 // Codecs for complex64 and complex128 types.
 //
 // The encoded order is real part first, imaginary part second.
@@ -30,7 +34,7 @@ func (complex64Codec) RequiresTerminator() bool {
 
 func (complex128Codec) Append(buf []byte, value complex128) []byte {
 	//nolint:mnd
-	buf = stdFloat64.Append(extend(buf, 16), real(value))
+	buf = stdFloat64.Append(slices.Grow(buf, 16), real(value))
 	return stdFloat64.Append(buf, imag(value))
 }
 
