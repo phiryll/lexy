@@ -23,8 +23,7 @@ type (
 
 func BenchmarkNothing(b *testing.B) {
 	b.ResetTimer()
-	for range b.N {
-		_ = 0
+	for b.Loop() {
 	}
 }
 
@@ -45,7 +44,7 @@ func BenchmarkAllocate(b *testing.B) {
 	} {
 		b.Run(bb.name, func(b *testing.B) {
 			b.ResetTimer()
-			for range b.N {
+			for b.Loop() {
 				_ = make([]byte, bb.value)
 			}
 		})
@@ -280,7 +279,7 @@ func BenchmarkRawMap(b *testing.B) {
 		b.Run(bb.name, func(b *testing.B) {
 			arr := bb.value
 			b.ResetTimer()
-			for range b.N {
+			for b.Loop() {
 				m := map[int32]int32{}
 				for k := 0; k < len(arr); k += 2 {
 					m[arr[k]] = m[arr[k+1]]
@@ -382,7 +381,7 @@ func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	// Tests both encoding and how efficiently codec.Append allocates the buffer.
 	b.Run("append nil", func(b *testing.B) {
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			codec.Append(nil, value)
 		}
 	})
@@ -391,21 +390,21 @@ func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	b.Run("append", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			codec.Append(buf[:0], value)
 		}
 	})
 	b.Run("put", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			codec.Put(buf, value)
 		}
 	})
 	b.Run("get", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			codec.Get(buf)
 		}
 	})
