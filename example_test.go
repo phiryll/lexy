@@ -244,6 +244,7 @@ func ExampleBytes() {
 	codec := lexy.Bytes()
 	buf := codec.Append(nil, []byte{1, 2, 3, 11, 17})
 	decoded, _ := codec.Get(buf)
+	//nolint:staticcheck  // print an array of byte values, not characters
 	fmt.Println(decoded)
 	// Output:
 	// [1 2 3 11 17]

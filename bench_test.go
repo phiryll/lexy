@@ -1,9 +1,10 @@
 package lexy_test
 
 import (
+	"encoding/binary"
 	"math"
 	"math/big"
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -23,8 +24,7 @@ type (
 
 func BenchmarkNothing(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = 0
+	for b.Loop() {
 	}
 }
 
@@ -43,10 +43,9 @@ func BenchmarkAllocate(b *testing.B) {
 		{"800", 800},
 		{"1000", 1000},
 	} {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_ = make([]byte, bb.value)
 			}
 		})
@@ -258,7 +257,7 @@ func BenchmarkSliceOf(b *testing.B) {
 func BenchmarkCastSliceOf(b *testing.B) {
 	slice := randomInt32(1000, 28931)
 	bigSlice := make(MySlice, 1000)
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		bigSlice[i] = MyInt32(slice[i])
 	}
 	benchCodec(b, lexy.CastSliceOf[MySlice](lexy.CastInt32[MyInt32]()), []benchCase[MySlice]{
@@ -278,11 +277,10 @@ func BenchmarkRawMap(b *testing.B) {
 		{"1 element", []int32{43943, -319432}},
 		{"1000 elements", ints},
 	} {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			arr := bb.value
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				m := map[int32]int32{}
 				for k := 0; k < len(arr); k += 2 {
 					m[arr[k]] = m[arr[k+1]]
@@ -295,7 +293,7 @@ func BenchmarkRawMap(b *testing.B) {
 func BenchmarkMapOf(b *testing.B) {
 	ints := randomInt32(2000, 639871)
 	bigMap := make(map[int32]int32, 1000)
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		bigMap[ints[2*i]] = ints[2*i+1]
 	}
 	benchCodec(b, lexy.MapOf(lexy.Int32(), lexy.Int32()), []benchCase[map[int32]int32]{
@@ -352,17 +350,27 @@ func BenchmarkTerminate(b *testing.B) {
 	})
 }
 
-func randomBytes(n int, seed int64) []byte {
-	random := rand.New(rand.NewSource(seed))
+func randomBytes(n int, seed uint64) []byte {
+	random := rand.New(rand.NewPCG(seed, 10254389391))
 	b := make([]byte, n)
-	_, _ = random.Read(b)
+	for i := range n / 8 {
+		binary.BigEndian.PutUint64(b[8*i:], random.Uint64())
+	}
+	if rem := n % 8; rem > 0 {
+		offset := 8 * (n / 8)
+		src := random.Uint64()
+		for i := range rem {
+			b[offset+i] = byte(src)
+			src >>= 8
+		}
+	}
 	return b
 }
 
-func randomInt32(n int, seed int64) []int32 {
-	random := rand.New(rand.NewSource(seed))
+func randomInt32(n int, seed uint64) []int32 {
+	random := rand.New(rand.NewPCG(seed, 3421123804))
 	b := make([]int32, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		b[i] = int32(random.Uint32())
 	}
 	return b
@@ -374,7 +382,6 @@ func benchCodec[T any](b *testing.B, codec lexy.Codec[T], benchCases []benchCase
 		return
 	}
 	for _, bb := range benchCases {
-		bb := bb
 		b.Run(bb.name, func(b *testing.B) {
 			benchSingleValue(b, codec, bb.value)
 		})
@@ -385,7 +392,7 @@ func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	// Tests both encoding and how efficiently codec.Append allocates the buffer.
 	b.Run("append nil", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			codec.Append(nil, value)
 		}
 	})
@@ -394,21 +401,21 @@ func benchSingleValue[T any](b *testing.B, codec lexy.Codec[T], value T) {
 	b.Run("append", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			codec.Append(buf[:0], value)
 		}
 	})
 	b.Run("put", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			codec.Put(buf, value)
 		}
 	})
 	b.Run("get", func(b *testing.B) {
 		buf := codec.Append(nil, value)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			codec.Get(buf)
 		}
 	})

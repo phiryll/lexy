@@ -1,8 +1,9 @@
 package lexy_test
 
 import (
+	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/phiryll/lexy"
 )
@@ -32,13 +33,12 @@ type schemaVersion4 struct {
 
 var (
 	// Which schema this returns will be updated as new versions are added.
-	VersionedCodec lexy.Codec[schemaVersion4] = versionedCodec{}
+	VersionedCodec = versionedCodec{}
 
-	// The types of the Codecs can be inferred if using Go 1.21 or later.
-	SchemaVersion1Codec lexy.Codec[schemaVersion1] = schemaVersion1Codec{}
-	SchemaVersion2Codec lexy.Codec[schemaVersion2] = schemaVersion2Codec{}
-	SchemaVersion3Codec lexy.Codec[schemaVersion3] = schemaVersion3Codec{}
-	SchemaVersion4Codec lexy.Codec[schemaVersion4] = schemaVersion4Codec{}
+	SchemaVersion1Codec = schemaVersion1Codec{}
+	SchemaVersion2Codec = schemaVersion2Codec{}
+	SchemaVersion3Codec = schemaVersion3Codec{}
+	SchemaVersion4Codec = schemaVersion4Codec{}
 
 	NameCodec  = lexy.TerminatedString()
 	CountCodec = lexy.Uint16()
@@ -241,8 +241,7 @@ func Example_schemaVersion() {
 	// When the encodings are sorted, they will be in the order:
 	// - primary: version
 	// - secondary: the encoded order for that version
-	// sortableEncodings is defined in the Struct example.
-	sort.Sort(sortableEncodings{encoded})
+	slices.SortFunc(encoded, bytes.Compare)
 
 	for _, b := range encoded {
 		value, _ := VersionedCodec.Get(b)

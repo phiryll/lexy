@@ -66,28 +66,27 @@ func CastString[T ~string]() Codec[T] { return castString[T]{} }
 // CastBytes returns a Codec for a type with an underlying type of []byte, with nil slices ordered first.
 // Other than the underlying type, this is the same as [Bytes].
 func CastBytes[S ~[]byte]() Codec[S] {
-	//nolint:forcetypeassert
-	return castBytes[S]{stdBytes.(bytesCodec)}
+	return castBytes[S]{stdBytes}
 }
 
 // CastPointerTo returns a Codec for a type with an underlying type of *E, with nil pointers ordered first.
 // Other than the underlying type, this is the same as [PointerTo].
 func CastPointerTo[P ~*E, E any](elemCodec Codec[E]) Codec[P] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castPointer[P, E]{PointerTo(elemCodec).(pointerCodec[E])}
 }
 
 // CastSliceOf returns a Codec for a type with an underlying type of []E, with nil slices ordered first.
 // Other than the underlying type, this is the same as [SliceOf].
 func CastSliceOf[S ~[]E, E any](elemCodec Codec[E]) Codec[S] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castSlice[S, E]{SliceOf(elemCodec).(sliceCodec[E])}
 }
 
 // CastMapOf returns a Codec for a type with an underlying type of map[K]V, with nil maps ordered first.
 // Other than the underlying type, this is the same as [MapOf].
 func CastMapOf[M ~map[K]V, K comparable, V any](keyCodec Codec[K], valueCodec Codec[V]) Codec[M] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castMap[M, K, V]{MapOf(keyCodec, valueCodec).(mapCodec[K, V])}
 }
 
@@ -343,7 +342,7 @@ func (c castBytes[T]) RequiresTerminator() bool {
 
 //lint:ignore U1000 this is actually used
 func (c castBytes[T]) nilsLast() Codec[T] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castBytes[T]{c.codec.nilsLast().(bytesCodec)}
 }
 
@@ -365,7 +364,7 @@ func (c castPointer[P, E]) RequiresTerminator() bool {
 
 //lint:ignore U1000 this is actually used
 func (c castPointer[P, E]) nilsLast() Codec[P] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castPointer[P, E]{c.codec.nilsLast().(pointerCodec[E])}
 }
 
@@ -387,7 +386,7 @@ func (c castSlice[S, E]) RequiresTerminator() bool {
 
 //lint:ignore U1000 this is actually used
 func (c castSlice[S, E]) nilsLast() Codec[S] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castSlice[S, E]{c.codec.nilsLast().(sliceCodec[E])}
 }
 
@@ -409,6 +408,6 @@ func (c castMap[M, K, V]) RequiresTerminator() bool {
 
 //lint:ignore U1000 this is actually used
 func (c castMap[M, K, V]) nilsLast() Codec[M] {
-	//nolint:forcetypeassert
+	//nolint:errcheck,forcetypeassert
 	return castMap[M, K, V]{c.codec.nilsLast().(mapCodec[K, V])}
 }

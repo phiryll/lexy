@@ -4,8 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 const (
@@ -147,8 +148,7 @@ type negateTest struct {
 var (
 	negPtrIntCodec = lexy.Negate(lexy.PointerTo(lexy.Int16()))
 	negStringCodec = lexy.Negate(lexy.String())
-
-	negTestCodec lexy.Codec[negateTest] = negateTestCodec{}
+	negTestCodec   = negateTestCodec{}
 )
 
 // Sort order is: uint8, neg(string), neg(pInt16).

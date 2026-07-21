@@ -116,31 +116,30 @@ type Codec[T any] interface {
 // Codec instances for the common use cases.
 // There are corresponding exported functions for each of these.
 var (
-	stdBool       Codec[bool]          = boolCodec{}
-	stdUint       Codec[uint]          = castUint64[uint]{}
-	stdUint8      Codec[uint8]         = uint8Codec{}
-	stdUint16     Codec[uint16]        = uint16Codec{}
-	stdUint32     Codec[uint32]        = uint32Codec{}
-	stdUint64     Codec[uint64]        = uint64Codec{}
-	stdInt        Codec[int]           = castInt64[int]{}
-	stdInt8       Codec[int8]          = int8Codec{}
-	stdInt16      Codec[int16]         = int16Codec{}
-	stdInt32      Codec[int32]         = int32Codec{}
-	stdInt64      Codec[int64]         = int64Codec{}
-	stdFloat32    Codec[float32]       = float32Codec{}
-	stdFloat64    Codec[float64]       = float64Codec{}
-	stdComplex64  Codec[complex64]     = complex64Codec{}
-	stdComplex128 Codec[complex128]    = complex128Codec{}
-	stdString     Codec[string]        = stringCodec{}
-	stdDuration   Codec[time.Duration] = castInt64[time.Duration]{}
-	stdTime       Codec[time.Time]     = timeCodec{}
-	stdBigFloat   Codec[*big.Float]    = bigFloatCodec{PrefixNilsFirst}
-	stdBigInt     Codec[*big.Int]      = bigIntCodec{PrefixNilsFirst}
-	stdBigRat     Codec[*big.Rat]      = bigRatCodec{PrefixNilsFirst}
-	stdBytes      Codec[[]byte]        = bytesCodec{PrefixNilsFirst}
-
-	stdTermString Codec[string] = terminatorCodec[string]{stdString}
-	stdTermBytes  Codec[[]byte] = terminatorCodec[[]byte]{stdBytes}
+	stdBool       = boolCodec{}
+	stdUint       = castUint64[uint]{}
+	stdUint8      = uint8Codec{}
+	stdUint16     = uint16Codec{}
+	stdUint32     = uint32Codec{}
+	stdUint64     = uint64Codec{}
+	stdInt        = castInt64[int]{}
+	stdInt8       = int8Codec{}
+	stdInt16      = int16Codec{}
+	stdInt32      = int32Codec{}
+	stdInt64      = int64Codec{}
+	stdFloat32    = float32Codec{}
+	stdFloat64    = float64Codec{}
+	stdComplex64  = complex64Codec{}
+	stdComplex128 = complex128Codec{}
+	stdString     = stringCodec{}
+	stdDuration   = castInt64[time.Duration]{}
+	stdTime       = timeCodec{}
+	stdBigFloat   = bigFloatCodec{PrefixNilsFirst}
+	stdBigInt     = bigIntCodec{PrefixNilsFirst}
+	stdBigRat     = bigRatCodec{PrefixNilsFirst}
+	stdBytes      = bytesCodec{PrefixNilsFirst}
+	stdTermString = terminatorCodec[string]{stdString}
+	stdTermBytes  = terminatorCodec[[]byte]{stdBytes}
 )
 
 // Empty returns a Codec that encodes instances of T to zero bytes.
@@ -378,15 +377,6 @@ func copyAll(dst, src []byte) []byte {
 	}
 	_ = dst[len(src)-1]
 	return dst[copy(dst, src):]
-}
-
-// extend ensures that n bytes can be appended to buf without another allocation,
-// returning the resulting slice. This was copied from slices.Grow (added in go 1.21).
-func extend(buf []byte, n int) []byte {
-	if n -= cap(buf) - len(buf); n > 0 {
-		buf = append(buf[:cap(buf)], make([]byte, n)...)[:len(buf)]
-	}
-	return buf
 }
 
 const bitsPerByte = 8

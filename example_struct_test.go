@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
-	"sort"
+	"slices"
 
 	"github.com/phiryll/lexy"
 )
@@ -76,16 +76,6 @@ func structsEqual(a, b SomeStruct) bool {
 	return true
 }
 
-type sortableEncodings struct {
-	b [][]byte
-}
-
-var _ sort.Interface = sortableEncodings{nil}
-
-func (s sortableEncodings) Len() int           { return len(s.b) }
-func (s sortableEncodings) Less(i, j int) bool { return bytes.Compare(s.b[i], s.b[j]) < 0 }
-func (s sortableEncodings) Swap(i, j int)      { s.b[i], s.b[j] = s.b[j], s.b[i] }
-
 // ExampleStruct shows how to define a typical user-defined Codec.
 // someStructCodec in this example demonstrates an idiomatic Codec definition.
 // The same pattern is used for non-struct types,
@@ -123,7 +113,7 @@ func Example_struct() {
 		encoded = append(encoded, buf)
 	}
 
-	sort.Sort(sortableEncodings{encoded})
+	slices.SortFunc(encoded, bytes.Compare)
 	fmt.Println("Sorted:")
 	for _, enc := range encoded {
 		decoded, _ := SomeStructCodec.Get(enc)

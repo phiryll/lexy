@@ -19,8 +19,8 @@ type Container struct {
 }
 
 var (
-	PtrToBigStructCodec lexy.Codec[*BigStruct] = ptrToBigStructCodec{}
-	ContainerCodec      lexy.Codec[Container]  = containterCodec{}
+	PtrToBigStructCodec = ptrToBigStructCodec{}
+	ContainerCodec      = containterCodec{}
 )
 
 type ptrToBigStructCodec struct{}

@@ -8,8 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 // Just to make the test cases terser.
@@ -33,7 +34,7 @@ func concat(slices ...[]byte) []byte {
 	return result
 }
 
-//nolint:nakedret,nonamedreturns
+//nolint:nonamedreturns
 func getPanicMessage(f func()) (msg string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -46,7 +47,7 @@ func getPanicMessage(f func()) (msg string) {
 		panic("should have panicked")
 	}()
 	f()
-	return
+	return msg
 }
 
 type testCase[T any] struct {
@@ -60,9 +61,8 @@ type testCase[T any] struct {
 func fillTestData[T any](codec lexy.Codec[T], tests []testCase[T]) []testCase[T] {
 	newTests := make([]testCase[T], len(tests))
 	for i, tt := range tests {
-		test := tt
-		test.data = codec.Append(nil, tt.value)
-		newTests[i] = test
+		tt.data = codec.Append(nil, tt.value)
+		newTests[i] = tt
 	}
 	return newTests
 }
@@ -115,7 +115,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	c.getEmpty(t)
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			t.Logf("Test case: %v", tt)
@@ -136,7 +135,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 				c.getShortBuf(t, tt, tt.data)
 			} else {
 				for _, out := range outputs {
-					out := out
 					t.Run("round trip: "+out.name+" to", func(t *testing.T) {
 						t.Parallel()
 						c.get(t, tt, out.buf)
@@ -148,7 +146,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	}
 }
 
-//nolint:revive
 func (c testerCodec[T]) getEmpty(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		var zero T
@@ -248,14 +245,13 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	t.Run("get", func(t *testing.T) {
 		got, gotBuf := c.codec.Get(workingBuf)
 		// Only empty because that's how these tests are set up.
-		assert.Empty(t, len(gotBuf))
+		assert.Empty(t, gotBuf)
 		assert.IsType(t, tt.value, got)
 		assert.Equal(t, tt.value, got)
 		assert.Equal(t, buf, workingBuf)
 	})
 }
 
-//nolint:revive
 func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get short buf", func(t *testing.T) {
@@ -267,7 +263,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 		// Should either panic, or read one fewer byte and get the wrong value back.
 		var got T
 		var gotBuf []byte
-		//nolint:nakedret,nonamedreturns
+		//nolint:nonamedreturns
 		panicked := func() (panicked bool) {
 			panicked = false
 			defer func() {
@@ -276,7 +272,7 @@ func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 				}
 			}()
 			got, gotBuf = c.codec.Get(workingBuf[:size-1])
-			return
+			return panicked
 		}()
 		if !panicked {
 			assert.Empty(t, gotBuf, "got wrong amount of data")

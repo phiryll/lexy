@@ -3,15 +3,16 @@ package lexy_test
 import (
 	"testing"
 
-	"github.com/phiryll/lexy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/phiryll/lexy"
 )
 
 // A []byte codec that does nothing, encoded == decoded,
 // purely for testing terminatorCodec.
 type nopCodec struct{}
 
-var nop lexy.Codec[[]byte] = nopCodec{}
+var nop = nopCodec{}
 
 func (nopCodec) Append(buf, value []byte) []byte {
 	return append(buf, value...)
@@ -91,7 +92,6 @@ func TestUnescapePanic(t *testing.T) {
 		{"trailing escaped terminator", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 0}},
 		{"trailing escaped escape", []byte{1, 0, 1, 1, 2, 3, 1, 1, 4, 1, 1}},
 	} {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			assert.Panics(t, func() {
