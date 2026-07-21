@@ -79,7 +79,6 @@ type (
 	prefixNilsLast  struct{}
 )
 
-//nolint:revive
 func (prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
 		return true, append(buf, prefixNilFirst)
@@ -87,7 +86,6 @@ func (prefixNilsFirst) Append(buf []byte, isNil bool) (bool, []byte) {
 	return false, append(buf, prefixNonNil)
 }
 
-//nolint:revive
 func (prefixNilsFirst) Put(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
 		buf[0] = prefixNilFirst
@@ -110,7 +108,6 @@ func (prefixNilsFirst) Get(buf []byte) (bool, []byte) {
 	}
 }
 
-//nolint:revive
 func (prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
 		return true, append(buf, prefixNilLast)
@@ -118,7 +115,6 @@ func (prefixNilsLast) Append(buf []byte, isNil bool) (bool, []byte) {
 	return false, append(buf, prefixNonNil)
 }
 
-//nolint:revive
 func (prefixNilsLast) Put(buf []byte, isNil bool) (bool, []byte) {
 	if isNil {
 		buf[0] = prefixNilLast

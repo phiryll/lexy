@@ -146,7 +146,6 @@ func (c testerCodec[T]) test(t *testing.T, tests []testCase[T]) {
 	}
 }
 
-//nolint:revive
 func (c testerCodec[T]) getEmpty(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		var zero T
@@ -253,7 +252,6 @@ func (c testerCodec[T]) get(t *testing.T, tt testCase[T], buf []byte) {
 	})
 }
 
-//nolint:revive
 func (c testerCodec[T]) getShortBuf(t *testing.T, tt testCase[T], buf []byte) {
 	workingBuf := append([]byte{}, buf...)
 	t.Run("get short buf", func(t *testing.T) {
