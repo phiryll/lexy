@@ -23,15 +23,11 @@ func timeTestCases() []testCase[time.Time] {
 	}
 	var zero time.Time
 	// Before the epoch start on Jan 1, 1970
-	//nolint:revive  // 600_000_000 is a fine syntax for nanoseconds
 	past := time.Date(1900, 1, 2, 3, 4, 5, 600_000_000, time.UTC)
 	//nolint:gosmopolitan
 	local := time.Date(2000, 1, 2, 3, 4, 5, 6, time.Local)
-	//nolint:revive  // 600_000_000 is a fine syntax for nanoseconds
 	utc := time.Date(2000, 1, 2, 3, 4, 5, 600_000_000, time.UTC)
-	//nolint:revive  // 999_999_999 is a fine syntax for nanoseconds
 	nyc := time.Date(2000, 1, 2, 3, 4, 5, 999_999_999, locNYC)
-	//nolint:revive  // 999_999_999 is a fine syntax for nanoseconds
 	berlin := time.Date(2000, 1, 2, 3, 4, 5, 999_999_999, locBerlin)
 	noZoneName, err := time.Parse(time.RFC3339Nano, "2000-01-02T03:04:05.6-05:00")
 	if err != nil {

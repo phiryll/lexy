@@ -73,6 +73,7 @@ linters:
     - nlreturn          # also absurd, a blank line before every return and branch?
     - promlinter        # metrics collection not used
     - protogetter       # protocol buffers not used
+    - revive            # mostly good, but flaky and doesn't allow nolint per sub-rule
     - rowserrcheck      # SQL not used
     - spancheck         # OpenTelemetry/Census not used
     - thelper           # I need the line numbers
@@ -288,56 +289,6 @@ linters:
       # See https://github.com/curioswitch/go-reassign#usage
       patterns:
         - .*
-
-    revive:
-
-      # Linting errors with less than this confidence will be ignored.
-      confidence: 0.6
-
-      # Enable all available rules.
-      enable-all-rules: true
-
-      # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md
-      rules:
-        - name: add-constant          # duplicated by mnd
-          disabled: true
-        - name: bare-return           # duplicated by nakedret
-          disabled: true
-        - name: cognitive-complexity  # duplicated by gocognit
-          disabled: true
-        - name: cyclomatic            # duplicated by cyclop
-          disabled: true
-        - name: function-length       # duplicated by funlen
-          disabled: true
-        - name: line-length-limit     # duplicated by formatters/golines
-          disabled: true
-        - name: comment-spacings      # configuration of this rule does not work, and gofmt should fix it anyway.
-          disabled: true
-        - name: confusing-naming      # can't handle multiple implementations of an interface
-          disabled: true
-        - name: confusing-results     # uses here are not really problematic
-          disabled: true
-        - name: file-header           # not using file headers
-          disabled: true
-        - name: max-public-structs    # don't know how to limit to one file
-          disabled: true
-
-        - name: enforce-map-style
-          arguments:
-            - literal
-        - name: enforce-repeated-arg-type-style
-          arguments:
-            - short
-        - name: enforce-slice-style
-          arguments:
-            - literal
-        - name: max-control-nesting
-          arguments:
-            - 3
-        - name: unhandled-error
-          arguments:
-            - fmt.Printf
-            - fmt.Println
 
     testifylint:
       # Enable all checkers (https://github.com/Antonboom/testifylint#checkers).
