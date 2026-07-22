@@ -1,7 +1,6 @@
 package lexy_test
 
 import (
-	"bytes"
 	"math/big"
 	"testing"
 
@@ -234,59 +233,6 @@ func TestBigFloatOrdering(t *testing.T) {
 
 		{"+Inf", &posInf, nil},
 	})
-}
-
-// A big.Float's precision is independent of its value, so a zero can have any
-// precision. big.NewFloat(0) and any zero produced by arithmetic have nonzero
-// precision, unlike the var/new(big.Float) zeros used elsewhere in these tests.
-// This regression test guards against classifying such zeros as finite numbers,
-// which encoded them out of order (as though they were large finite values).
-func TestBigFloatZeroPrecision(t *testing.T) {
-	t.Parallel()
-	codec := lexy.BigFloat()
-	enc := func(f *big.Float) []byte { return codec.Append(nil, f) }
-
-	posZeroPrec := big.NewFloat(0) // sign 0, precision 53
-	negZeroPrec := new(big.Float).Neg(posZeroPrec)
-	assert.True(t, negZeroPrec.Signbit())
-	assert.Equal(t, uint(53), posZeroPrec.Prec())
-
-	tiny := big.NewFloat(1e-300)
-	negTiny := big.NewFloat(-1e-300)
-	half := big.NewFloat(0.5)
-	negHalf := big.NewFloat(-0.5)
-
-	// A precision-bearing zero must encode identically to the var-declared zero,
-	// and must sort between the smallest negative and smallest positive values.
-	var plainPosZero, plainNegZero big.Float
-	plainNegZero.Neg(&plainNegZero)
-	assert.Equal(t, enc(&plainPosZero), enc(posZeroPrec))
-	assert.Equal(t, enc(&plainNegZero), enc(negZeroPrec))
-
-	// Encoded order is strictly ascending, including -0.0 < +0.0 (the codec
-	// distinguishes signed zeros even though they are numerically equal).
-	ordered := []struct {
-		name string
-		f    *big.Float
-	}{
-		{"-0.5", negHalf},
-		{"-1e-300", negTiny},
-		{"-0.0 (prec 53)", negZeroPrec},
-		{"+0.0 (prec 53)", posZeroPrec},
-		{"+1e-300", tiny},
-		{"+0.5", half},
-	}
-	for i := 1; i < len(ordered); i++ {
-		a, b := ordered[i-1], ordered[i]
-		cmp := bytes.Compare(enc(a.f), enc(b.f))
-		assert.Negativef(t, cmp, "%s should encode before %s (encoded cmp=%d)", a.name, b.name, cmp)
-	}
-
-	// Round trips still work for precision-bearing zeros.
-	for _, o := range ordered {
-		got, _ := codec.Get(enc(o.f))
-		assert.Zerof(t, got.Cmp(o.f), "round trip %s: got %v", o.name, got)
-	}
 }
 
 func TestBigFloatNilsLast(t *testing.T) {

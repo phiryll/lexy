@@ -213,8 +213,6 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	shift := computeShift(exp, prec)
 
 	isInf := value.IsInf()
-	// A big.Float's precision is independent of its value; a zero can have any
-	// precision (e.g. big.NewFloat(0) has precision 53), so test the value.
 	isZero := value.Sign() == 0
 
 	var kind int8
@@ -286,8 +284,6 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	shift := computeShift(exp, prec)
 
 	isInf := value.IsInf()
-	// A big.Float's precision is independent of its value; a zero can have any
-	// precision (e.g. big.NewFloat(0) has precision 53), so test the value.
 	isZero := value.Sign() == 0
 
 	var kind int8
