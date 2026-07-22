@@ -140,12 +140,12 @@ func TestBigFloat(t *testing.T) {
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
-		{"seven(3)", newBigFloat64(7.0, 0, 3), nil},
-		{"seven(4)", newBigFloat64(7.0, 0, 4), nil},
-		{"seven(10)", newBigFloat64(7.0, 0, 10), nil},
-		{"-seven(3)", newBigFloat64(-7.0, 0, 3), nil},
-		{"-seven(4)", newBigFloat64(-7.0, 0, 4), nil},
-		{"-seven(10)", newBigFloat64(-7.0, 0, 10), nil},
+		{"seven (3)", newBigFloat64(7.0, 0, 3), nil},
+		{"seven (4)", newBigFloat64(7.0, 0, 4), nil},
+		{"seven (10)", newBigFloat64(7.0, 0, 10), nil},
+		{"-seven (3)", newBigFloat64(-7.0, 0, 3), nil},
+		{"-seven (4)", newBigFloat64(-7.0, 0, 4), nil},
+		{"-seven (10)", newBigFloat64(-7.0, 0, 10), nil},
 
 		{"tiny", newBigFloat64(12345.0, -100, 20), nil},
 		{"mixed", newBigFloat64(12345.0, -10, 20), nil},
@@ -156,8 +156,13 @@ func TestBigFloat(t *testing.T) {
 
 		{"-Inf", &negInf, nil},
 		{"+Inf", &posInf, nil},
-		{"-0", newBigFloatNegZero(0), nil},
-		{"+0", newBigFloatPosZero(0), nil},
+
+		{"-0.0 (0)", newBigFloatNegZero(0), nil},
+		{"-0.0 (10)", newBigFloatNegZero(10), nil},
+		{"-0.0 (20)", newBigFloatNegZero(20), nil},
+		{"+0.0 (0)", newBigFloatPosZero(0), nil},
+		{"+0.0 (10)", newBigFloatPosZero(10), nil},
+		{"+0.0 (20)", newBigFloatPosZero(20), nil},
 
 		{"long whole", wholeNumber, nil},
 		{"long mixed", mixedNumber, nil},
@@ -204,8 +209,12 @@ func TestBigFloatOrdering(t *testing.T) {
 		{"-12345.0 * 2^-10000 (19)", newBigFloat64(-12345.0, -10000, 19), nil},
 
 		// zeros
-		{"-0.0", newBigFloatNegZero(0), nil},
-		{"+0.0", newBigFloatPosZero(0), nil},
+		{"-0.0 (20)", newBigFloatNegZero(20), nil},
+		{"-0.0 (10)", newBigFloatNegZero(10), nil},
+		{"-0.0 (0)", newBigFloatNegZero(0), nil},
+		{"+0.0 (0)", newBigFloatPosZero(0), nil},
+		{"+0.0 (10)", newBigFloatPosZero(10), nil},
+		{"+0.0 (20)", newBigFloatPosZero(20), nil},
 
 		// very small positive numbers
 		{"12345.0 * 2^-10000 (19)", newBigFloat64(12345.0, -10000, 19), nil},
