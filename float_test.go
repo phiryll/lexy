@@ -12,10 +12,10 @@ import (
 // Bit masks for the sign, exponent, and matissa of the
 // IEEE 754 32- and 64- floating point representations.
 const (
-	maskSign32 uint32 = 0x80_00_00_00
+	// maskSign32 uint32 = 0x80_00_00_00
 	maskExp32  uint32 = 0x7F_80_00_00
 	maskMant32 uint32 = 0x00_7F_FF_FF
-	maskSign64 uint64 = 0x80_00_00_00_00_00_00_00
+	// maskSign64 uint64 = 0x80_00_00_00_00_00_00_00
 	maskExp64  uint64 = 0x7F_F0_00_00_00_00_00_00
 	maskMant64 uint64 = 0x00_0F_FF_FF_FF_FF_FF_FF
 )
