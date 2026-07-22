@@ -110,7 +110,7 @@ func (bigIntCodec) nilsLast() Codec[*big.Int] {
 // the standard library just doesn't expose that information.
 // A description of the encoding and why it does what it does follows.
 //
-// Shift a copy of the big.Float so that:
+// If not infinite or zero, shift a copy of the big.Float so that:
 //
 //	all significant bits are to the left of the point,
 //	the high bit of the high byte is 1, and
@@ -156,7 +156,12 @@ func (bigIntCodec) nilsLast() Codec[*big.Int] {
 //	write prefixNilFirst/Last if value is nil and return immediately
 //	write prefixNonNil
 //	write int8: negInf/negFinite/negZero/posZero/posFinite/posInf
-//	if infinite or zero, we're done
+//	if infinite, we're done
+//	if zero
+//		write int32 precision
+//			negate precision first if Float is negative
+//		write uint8 rounding mode
+//		we're done
 //	write int32 exponent
 //		negate exponent first if Float is negative
 //	write the (big-endian) bytes of the big.Int of the shifted mantissa
@@ -213,7 +218,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	shift := computeShift(exp, prec)
 
 	isInf := value.IsInf()
-	isZero := prec == 0
+	isZero := value.Sign() == 0
 
 	var kind int8
 	switch {
@@ -231,9 +236,17 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 		kind = posFinite
 	}
 	buf = stdInt8.Append(buf, kind)
-	if isInf || isZero {
+	if isInf {
 		return buf
 	}
+	if isZero {
+		if signbit {
+			prec = -prec
+		}
+		buf = stdInt32.Append(buf, int32(prec))
+		return modeCodec.Append(buf, mode)
+	}
+
 	mantSize := numBytes(prec)
 	start := len(buf)
 	// 9 = 4 (exp) + 4 (prec) + 1 (mode)
@@ -269,7 +282,7 @@ func (c bigFloatCodec) Append(buf []byte, value *big.Float) []byte {
 	return buf
 }
 
-//nolint:cyclop
+//nolint:cyclop,funlen
 func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	done, buf := c.prefix.Put(buf, value == nil)
 	if done {
@@ -284,7 +297,7 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 	shift := computeShift(exp, prec)
 
 	isInf := value.IsInf()
-	isZero := prec == 0
+	isZero := value.Sign() == 0
 
 	var kind int8
 	switch {
@@ -302,11 +315,18 @@ func (c bigFloatCodec) Put(buf []byte, value *big.Float) []byte {
 		kind = posFinite
 	}
 	buf = stdInt8.Put(buf, kind)
-	if isInf || isZero {
+	if isInf {
 		return buf
 	}
-	mantSize := numBytes(prec)
+	if isZero {
+		if signbit {
+			prec = -prec
+		}
+		buf = stdInt32.Put(buf, int32(prec))
+		return modeCodec.Put(buf, mode)
+	}
 
+	mantSize := numBytes(prec)
 	var tmp big.Float
 	tmp.SetMantExp(value, shift)
 	mantInt, acc := tmp.Int(nil)
@@ -343,10 +363,16 @@ func (c bigFloatCodec) Get(buf []byte) (*big.Float, []byte) {
 		return value.SetInf(signbit), buf
 	}
 	if kind == negZero || kind == posZero {
+		//nolint:govet
+		prec, buf := stdInt32.Get(buf)
+		mode, buf := modeCodec.Get(buf)
 		var value big.Float
 		if signbit {
+			prec = -prec
 			value.Neg(&value)
 		}
+		value.SetPrec(uint(prec))
+		value.SetMode(mode)
 		return &value, buf
 	}
 

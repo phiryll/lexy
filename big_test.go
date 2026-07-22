@@ -102,6 +102,19 @@ func newBigFloat64(f float64, shift int, prec uint) *big.Float {
 	return value
 }
 
+func newBigFloatPosZero(prec uint) *big.Float {
+	var value big.Float
+	value.SetPrec(prec)
+	return &value
+}
+
+func newBigFloatNegZero(prec uint) *big.Float {
+	var value big.Float
+	value.SetPrec(prec)
+	value.Neg(&value)
+	return &value
+}
+
 func newBigFloat(s string) *big.Float {
 	var value big.Float
 	// Parse truncates to 64 bits if precision is currently 0.
@@ -114,14 +127,9 @@ func newBigFloat(s string) *big.Float {
 
 func TestBigFloat(t *testing.T) {
 	t.Parallel()
-	var negInf, posInf, negZero, posZero big.Float
+	var negInf, posInf big.Float
 	negInf.SetInf(true)
 	posInf.SetInf(false)
-	negZero.Neg(&negZero)
-	assert.True(t, negZero.Signbit())
-	assert.False(t, posZero.Signbit())
-	assert.Equal(t, 0, negZero.Cmp(&posZero))
-	assert.NotEqual(t, &negZero, &posZero)
 
 	wholeNumber := newBigFloat(manyDigits + manyDigits)
 	mixedNumber := newBigFloat(manyDigits + "." + manyDigits)
@@ -132,12 +140,12 @@ func TestBigFloat(t *testing.T) {
 	testCodec(t, codec, fillTestData(codec, []testCase[*big.Float]{
 		{"nil", nil, nil},
 		// example in implementation comments
-		{"seven(3)", newBigFloat64(7.0, 0, 3), nil},
-		{"seven(4)", newBigFloat64(7.0, 0, 4), nil},
-		{"seven(10)", newBigFloat64(7.0, 0, 10), nil},
-		{"-seven(3)", newBigFloat64(-7.0, 0, 3), nil},
-		{"-seven(4)", newBigFloat64(-7.0, 0, 4), nil},
-		{"-seven(10)", newBigFloat64(-7.0, 0, 10), nil},
+		{"seven (3)", newBigFloat64(7.0, 0, 3), nil},
+		{"seven (4)", newBigFloat64(7.0, 0, 4), nil},
+		{"seven (10)", newBigFloat64(7.0, 0, 10), nil},
+		{"-seven (3)", newBigFloat64(-7.0, 0, 3), nil},
+		{"-seven (4)", newBigFloat64(-7.0, 0, 4), nil},
+		{"-seven (10)", newBigFloat64(-7.0, 0, 10), nil},
 
 		{"tiny", newBigFloat64(12345.0, -100, 20), nil},
 		{"mixed", newBigFloat64(12345.0, -10, 20), nil},
@@ -148,8 +156,13 @@ func TestBigFloat(t *testing.T) {
 
 		{"-Inf", &negInf, nil},
 		{"+Inf", &posInf, nil},
-		{"-0", &negZero, nil},
-		{"+0", &posZero, nil},
+
+		{"-0.0 (0)", newBigFloatNegZero(0), nil},
+		{"-0.0 (10)", newBigFloatNegZero(10), nil},
+		{"-0.0 (20)", newBigFloatNegZero(20), nil},
+		{"+0.0 (0)", newBigFloatPosZero(0), nil},
+		{"+0.0 (10)", newBigFloatPosZero(10), nil},
+		{"+0.0 (20)", newBigFloatPosZero(20), nil},
 
 		{"long whole", wholeNumber, nil},
 		{"long mixed", mixedNumber, nil},
@@ -159,14 +172,9 @@ func TestBigFloat(t *testing.T) {
 
 func TestBigFloatOrdering(t *testing.T) {
 	t.Parallel()
-	var negInf, posInf, negZero, posZero big.Float
+	var negInf, posInf big.Float
 	negInf.SetInf(true)
 	posInf.SetInf(false)
-	negZero.Neg(&negZero)
-	assert.True(t, negZero.Signbit())
-	assert.False(t, posZero.Signbit())
-	assert.Equal(t, 0, negZero.Cmp(&posZero))
-	assert.NotEqual(t, &negZero, &posZero)
 
 	// For the same matissa, a higher exponent (first) or precision is closer to infinity.
 	testOrdering(t, lexy.BigFloat(), []testCase[*big.Float]{
@@ -201,8 +209,12 @@ func TestBigFloatOrdering(t *testing.T) {
 		{"-12345.0 * 2^-10000 (19)", newBigFloat64(-12345.0, -10000, 19), nil},
 
 		// zeros
-		{"-0.0", &negZero, nil},
-		{"+0.0", &posZero, nil},
+		{"-0.0 (20)", newBigFloatNegZero(20), nil},
+		{"-0.0 (10)", newBigFloatNegZero(10), nil},
+		{"-0.0 (0)", newBigFloatNegZero(0), nil},
+		{"+0.0 (0)", newBigFloatPosZero(0), nil},
+		{"+0.0 (10)", newBigFloatPosZero(10), nil},
+		{"+0.0 (20)", newBigFloatPosZero(20), nil},
 
 		// very small positive numbers
 		{"12345.0 * 2^-10000 (19)", newBigFloat64(12345.0, -10000, 19), nil},
