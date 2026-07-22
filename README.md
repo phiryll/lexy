@@ -100,7 +100,8 @@ A user-defined `Codec` handling multiple types could be created, but it is not r
 and it would still require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Different `Codecs` will generally not produce encodings with consistent orderings with respect to each other.
-For example, the encoding for `int8(1)` will be lexicographically greater than the encoding for `uint8(100)`.
+For example, the encoding for (signed) `int8(1)` will be lexicographically greater than
+the encoding for (unsigned) `uint8(100)`, even though `1` is less than `100`.
 
 The `Codecs` provided by lexy can encode `nil` to be less than or greater than
 the encodings for non-`nil` values, for types that allow `nil` values.
