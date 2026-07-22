@@ -1,7 +1,6 @@
 # lexy
 
 [![Build Status](https://github.com/phiryll/lexy/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/phiryll/lexy/actions/workflows/test.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/phiryll/lexy)](https://goreportcard.com/report/github.com/phiryll/lexy)
 [![Go Reference](https://pkg.go.dev/badge/github.com/phiryll/lexy)](https://pkg.go.dev/github.com/phiryll/lexy)
 
 Lexicographical Byte Order Encodings
@@ -9,7 +8,7 @@ Lexicographical Byte Order Encodings
 Lexy is a library for order-preserving lexicographical binary encodings.
 Most common Go types and user-defined types are supported,
 and it allows for encodings ordered differently than a type's natural ordering.
-Lexy uses generics and requires Go 1.19 to use. It has been tested with Go versions 1.19 and 1.22.
+Lexy uses generics and requires Go 1.24 to use. It has been tested with Go versions 1.24 and 1.26.
 Lexy has no non-test dependencies.
 
 It may be more efficient to use another encoding if lexicographical unsigned byte ordering is not needed.
@@ -101,7 +100,8 @@ A user-defined `Codec` handling multiple types could be created, but it is not r
 and it would still require a concrete wrapper type to conform to the `Codec[T]` interface.
 
 Different `Codecs` will generally not produce encodings with consistent orderings with respect to each other.
-For example, the encoding for `int8(1)` will be lexicographically greater than the encoding for `uint8(100)`.
+For example, the encoding for (signed) `int8(1)` will be lexicographically greater than
+the encoding for (unsigned) `uint8(100)`, even though `1` is less than `100`.
 
 The `Codecs` provided by lexy can encode `nil` to be less than or greater than
 the encodings for non-`nil` values, for types that allow `nil` values.
